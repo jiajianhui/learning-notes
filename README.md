@@ -4,12 +4,14 @@
 
 ## 目录
 
+- `ai/`：AI 应用相关概念笔记
 - `github/`：GitHub 相关笔记
 - `frontend/`：前端相关笔记
 - `tools/`：终端、CLI、工具链相关笔记
 
 ## 当前内容
 
+- `ai/AI应用开发概念总览.md`
 - `github/GitHub核心功能速查.md`
 - `frontend/前端常见术语关系速查.md`
 - `tools/终端、Shell、CLI、Node.js关系速查.md`
@@ -20,4 +22,3 @@
 - 日常直接在 `main` 维护
 - 小改动直接提交
 - 后面内容多了再细分目录
-
