@@ -317,7 +317,37 @@ https://docs.github.com/articles/finding-open-source-projects-on-github
 
 ---
 
-## 9. 先学什么
+## 9. 本地文件夹推送到 GitHub 的 CLI 流程
+
+先决条件：
+
+- 本地已经有一个普通文件夹
+- GitHub 上已经创建好一个空仓库
+
+| 步骤 | 命令 | 作用 |
+|---|---|---|
+| 进入文件夹 | `cd your-folder` | 进入项目目录 |
+| 初始化 Git | `git init -b main` | 把文件夹变成 Git 仓库，并设主分支为 `main` |
+| 查看状态 | `git status` | 看当前仓库状态 |
+| 添加文件 | `git add .` | 把当前文件加入暂存区 |
+| 第一次提交 | `git commit -m "init: add learning notes"` | 生成第一次提交 |
+| 连接远程仓库 | `git remote add origin <仓库地址>` | 绑定 GitHub 仓库 |
+| 推送到 GitHub | `git push -u origin main` | 把本地 `main` 推到 GitHub |
+
+最小流程：
+
+`cd your-folder -> git init -b main -> git add . -> git commit -m "init: ..." -> git remote add origin <仓库地址> -> git push -u origin main`
+
+补充：
+
+- `origin` 是远程仓库的默认名字
+- 第一次推送用 `-u`，后面直接 `git push` 即可
+- 如果你把 `main` 拼成 `mian`，会推送失败
+- 如果还没有 `commit`，也不能直接 `push`
+
+---
+
+## 10. 先学什么
 
 建议顺序：
 
@@ -329,7 +359,7 @@ https://docs.github.com/articles/finding-open-source-projects-on-github
 
 ---
 
-## 10. 一句话总结
+## 11. 一句话总结
 
 GitHub 不只是“存代码”，它的核心价值是：
 
