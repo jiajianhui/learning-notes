@@ -12,6 +12,7 @@
 ## 当前内容
 
 - `ai/AI应用开发概念总览.md`
+- `ai/AI应用开发实践.md`
 - `github/GitHub核心功能速查.md`
 - `frontend/前端常见术语关系速查.md`
 - `tools/终端、Shell、CLI、Node.js关系速查.md`
