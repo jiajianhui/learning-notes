@@ -63,7 +63,23 @@
 
 `你点名使用，或者系统根据任务匹配后使用。`
 
-### 1.3 skill 文件里通常有什么？
+### 1.3 skill 和 `tool calling` 的区别
+
+可以先这样理解：
+
+`skill` 更偏向存在于 `CLI / agent` 环境中，而不是普通 Node.js 项目运行时；
+`tool calling` 更偏向你自己项目里的运行逻辑。
+
+例如在普通 Node.js AI 项目里，核心一般是：
+
+- prompt
+- tool calling
+- 后端业务代码
+- 外部 API
+
+而 `skill` 更像是 `Codex`、`Claude Code` 这类 agent 宿主环境里的能力说明书。
+
+### 1.4 skill 文件里通常有什么？
 
 一个最小 skill 至少会有一个 `SKILL.md` 文件。
 
@@ -84,11 +100,11 @@ your-skill/
 - `scripts/`：可重复执行的脚本
 - `assets/`：模板、素材等输出资源
 
-### 1.4 `SKILL.md` 是干什么的？
+### 1.5 `SKILL.md` 是干什么的？
 
 `SKILL.md` 是 skill 的核心文件，通常包含两部分。
 
-#### 1.4.1 元信息
+#### 1.5.1 元信息
 
 一般写在 YAML frontmatter 里，例如：
 
@@ -106,7 +122,7 @@ description: Use this skill when the user asks to locate likely files, trace cal
 
 因为 Codex 会根据这些信息判断这个 skill 在什么场景下可能有用。
 
-#### 1.4.2 正文说明
+#### 1.5.2 正文说明
 
 正文部分会描述这类任务应该怎么做。
 
@@ -117,7 +133,7 @@ description: Use this skill when the user asks to locate likely files, trace cal
 - 哪些操作要优先
 - 哪些误区要避免
 
-### 1.5 skill 和普通代码、plugin 有什么区别？
+### 1.6 skill 和普通代码、plugin 有什么区别？
 
 可以这样区分：
 
@@ -127,7 +143,7 @@ description: Use this skill when the user asks to locate likely files, trace cal
 
 所以 skill 更偏“方法和规则”，不一定自己完成底层执行。
 
-### 1.6 一个简单示例
+### 1.7 一个简单示例
 
 假设有一个 skill 叫 `bug-triage`，作用是快速定位 bug 相关代码。
 
@@ -145,7 +161,7 @@ Codex 可能会按这个 skill 的规则去做：
 4. 只阅读必要代码，不盲目扫全仓库
 5. 最后总结可能的修复点
 
-### 1.7 一句话总结
+### 1.8 一句话总结
 
 在 Codex CLI 里，`skill` 可以理解成：
 
