@@ -1,0 +1,308 @@
+# 10. 常见误区：用七层体系重新排疑
+
+## 问题背景
+
+现代前端最容易让人困惑的地方，是很多技术经常一起出现：
+
+```text
+Vite + React
+Vite + Vue
+React + Next.js
+Vue + Nuxt.js
+TypeScript + React
+TypeScript + Vue
+```
+
+它们一起出现，不代表它们是同一类东西。本文属于七层体系中的第七层：学习方法层，专门把常见误区放回七层地图里解释。
+
+## 核心解释
+
+先重新看七层：
+
+```text
+第七层：学习方法层
+如何看项目 / 如何判断技术栈 / 如何规划学习路线
+
+第六层：应用框架层
+Next.js / Nuxt.js
+
+第五层：应用组织层
+路由 / 状态管理 / 组件通信
+
+第四层：工程化层
+Vite / 构建工具 / 开发服务器 / 打包
+
+第三层：UI 框架层
+React / Vue
+
+第二层：语言增强层
+TypeScript
+
+第一层：基础层
+HTML / CSS / JavaScript / DOM
+```
+
+判断任何疑问时，先问：它属于哪一层？
+
+## 常见问题
+
+### Vite 是不是 React/Vue？
+
+不是。
+
+```text
+Vite：第四层，工程化工具
+React/Vue：第三层，UI 框架
+```
+
+Vite 负责启动开发服务器、热更新、打包。React/Vue 负责写组件和界面。
+
+你可以有：
+
+```text
+Vite + React
+Vite + Vue
+Vite + Vanilla TS
+```
+
+所以看到 `vite.config.ts`，只能说明项目用了 Vite 或类似 Vite 的配置，不能直接说明用了 React/Vue。
+
+### React 和 Next.js 是什么关系？
+
+```text
+React：第三层 UI 框架
+Next.js：第六层应用框架，基于 React
+```
+
+React 解决组件和 UI 问题。Next.js 在 React 之上增加应用结构、路由约定、渲染模式等能力。
+
+一句话：
+
+```text
+写 Next.js 仍然要写 React 组件。
+```
+
+### Vue 和 Nuxt.js 是什么关系？
+
+```text
+Vue：第三层 UI 框架
+Nuxt.js：第六层应用框架，基于 Vue
+```
+
+Vue 负责组件写法。Nuxt 在 Vue 之上增加应用结构、文件路由、渲染模式等能力。
+
+一句话：
+
+```text
+写 Nuxt.js 仍然要写 Vue 组件。
+```
+
+### TypeScript 是不是一门新语言？
+
+它可以被看作一门语言，但对前端学习来说，更实用的理解是：
+
+```text
+TypeScript = JavaScript + 类型系统
+```
+
+它属于第二层：语言增强层。
+
+它不是 UI 框架，不负责组件，也不负责打包。它最终通常会被转换成 JavaScript 运行。
+
+### 会 React 还要不要学原生 JavaScript？
+
+要。
+
+React 建立在 JavaScript 之上。你写 React 时仍然会用到：
+
+- 函数。
+- 数组和对象。
+- 模块导入导出。
+- 异步。
+- 事件。
+- 闭包。
+- DOM 和浏览器基本概念。
+
+不会 JavaScript，就很容易把普通 JS 问题误以为是 React 问题。
+
+### 会 Vue 学 React 难不难？
+
+不算从零开始，但需要换表达方式。
+
+可以迁移：
+
+- 组件化。
+- props。
+- 状态驱动视图。
+- 事件处理。
+- 路由和状态管理的应用组织思维。
+
+需要重新学：
+
+- JSX / TSX。
+- hooks。
+- React 状态更新方式。
+- React 生态常见工具。
+
+核心思想能迁移，具体写法要重学。
+
+### 为什么有些项目没有 React/Vue？
+
+因为不是所有前端项目都需要 UI 框架。
+
+如果项目只是：
+
+- 简单页面。
+- 小交互。
+- 原生 DOM 操作。
+- 独立工具页。
+
+它可能用：
+
+```text
+HTML + CSS + JavaScript
+或
+Vite + Vanilla TS
+```
+
+没有 React/Vue 不代表不是前端项目，只是没有使用第三层 UI 框架。
+
+### 为什么项目里有 vite.config.ts 但不是 Vue/React？
+
+因为 Vite 可以服务于 Vanilla TS 项目。
+
+示例：
+
+```text
+src/
+  main.ts
+vite.config.ts
+package.json
+```
+
+```ts
+document.querySelector("#app")?.addEventListener("click", () => {
+  console.log("click");
+});
+```
+
+这个项目用了 Vite 作为工程工具，但 UI 直接用原生 DOM 写。
+
+### 为什么有些项目只有 HTML、CSS、main.ts？
+
+这通常是基础层 + 语言增强层 + 工程化层的组合：
+
+```text
+HTML / CSS / DOM
+TypeScript
+Vite 或其他构建工具
+```
+
+它没有引入 React/Vue，所以不属于 UI 框架项目。
+
+这种项目适合学习：
+
+- DOM。
+- 事件。
+- TypeScript 基础。
+- Vite 启动和打包。
+
+### 框架、库、工具、应用框架有什么区别？
+
+| 名词 | 通俗理解 | 例子 |
+|---|---|---|
+| 库 | 提供某类能力，你主动调用它 | 某些工具函数库 |
+| UI 框架 | 给你一套构建界面的方式 | React / Vue |
+| 工具 | 帮你开发、构建、检查、打包 | Vite |
+| 应用框架 | 规定更完整的应用结构和运行方式 | Next.js / Nuxt.js |
+
+边界有时不是绝对的，但这个分类足够帮助入门判断。
+
+### Vite、React、Vue、Next、Nuxt 应该怎么分层理解？
+
+| 技术 | 层级 | 解决问题 |
+|---|---|---|
+| Vite | 第四层：工程化层 | 开发服务器、热更新、打包 |
+| React | 第三层：UI 框架层 | 用组件写界面 |
+| Vue | 第三层：UI 框架层 | 用组件写界面 |
+| Next.js | 第六层：应用框架层 | 基于 React 的完整应用方案 |
+| Nuxt.js | 第六层：应用框架层 | 基于 Vue 的完整应用方案 |
+
+关系图：
+
+```text
+TypeScript 可用于这些项目
+        ↓
+React / Vue 写 UI
+        ↓
+Vite 可作为普通项目工程工具
+        ↓
+路由和状态管理组织应用
+        ↓
+Next / Nuxt 提供更上层应用框架
+```
+
+严格说 Vite 在工程化层，不是 React/Vue 的下一层业务依赖；它更像开发和构建环境。但从学习顺序上，通常学完框架后再理解它更自然。
+
+### 初学者应该先学框架还是先学基础？
+
+建议先学基础，再学框架；但不需要把基础学到“完美”才开始框架。
+
+合理节奏：
+
+```text
+HTML/CSS/JS 基础
+  ↓
+做几个原生小页面
+  ↓
+学 React 或 Vue
+  ↓
+在框架项目里补 JS、DOM、CSS
+  ↓
+学 Vite、路由、状态管理、Next/Nuxt
+```
+
+框架能帮助你理解现代项目，但基础决定你遇到问题时能不能看懂原因。
+
+## 技术关系
+
+把常见误区放回七层：
+
+| 误区 | 正确分层 |
+|---|---|
+| Vite 是 React/Vue | Vite 第四层，React/Vue 第三层 |
+| Next.js 和 React 同一类 | Next 第六层，React 第三层 |
+| Nuxt.js 和 Vue 同一类 | Nuxt 第六层，Vue 第三层 |
+| TypeScript 是框架 | TypeScript 第二层 |
+| 路由就是 React/Vue 本身 | 路由是第五层应用组织 |
+| 状态管理是必须一开始学 | 状态管理是复杂应用的组织能力 |
+| 会框架就不用 JS | 框架依赖 JS |
+
+## 学习建议
+
+每当你看到新名词，先不要急着学 API。先填这张表：
+
+| 问题 | 示例答案 |
+|---|---|
+| 它属于哪一层？ | Vite 属于工程化层 |
+| 它解决什么问题？ | 启动开发服务器和打包 |
+| 它依赖什么？ | JS 模块、项目结构、Node 工具链 |
+| 它常和谁搭配？ | React、Vue、Vanilla TS |
+| 在项目里怎么识别？ | `vite.config.ts`、`scripts: vite` |
+
+这样你会先建立位置感，再学习细节。
+
+## 小结
+
+现代前端排疑的核心不是背定义，而是分层。
+
+```text
+Vite 和 React/Vue 不是同一层
+React/Vue 和 Next/Nuxt 不是同一层
+TypeScript 和 React/Vue 不是同一层
+路由、状态管理是应用组织层的问题
+学习方法层负责把这些技术串起来
+```
+
+当你能先分层，再看关系，很多“这到底是什么”的问题会自然变清楚。
+

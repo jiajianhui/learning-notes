@@ -1,0 +1,129 @@
+# 现代前端体系与学习方法
+
+## 问题背景
+
+这套文档不是 API 手册，也不是某个框架的详细教程。它想解决的是另一个更基础的问题：
+
+你看到 `HTML`、`CSS`、`JavaScript`、`TypeScript`、`React`、`Vue`、`Vite`、`Next.js`、`Nuxt.js` 这些词时，能不能判断它们分别站在哪一层、解决什么问题、彼此怎么配合。
+
+很多前端学习的困惑不是因为某个语法太难，而是因为一开始就把不同层级的东西混在一起了：把 `Vite` 当成框架，把 `Next.js` 当成 React 的替代品，把 `TypeScript` 当成另一套前端技术。读完这套文档，你应该能先建立一张技术地图，再往每个方向深入。
+
+## 核心解释
+
+### 适合谁阅读
+
+这套文档适合：
+
+- 有一点 HTML / CSS / JavaScript 基础，但知识还比较散。
+- 接触过 React 或 Vue，但还不清楚它们在现代前端里的位置。
+- 经常看到 Vite、TypeScript、Next.js、Nuxt.js 等名词，却分不清它们分别解决什么问题。
+- 想学会通过 `package.json`、`main.ts`、`App.vue`、`vite.config.ts` 等真实项目文件判断技术栈。
+
+### 现代前端七层技术地图
+
+```text
+第七层：学习方法层
+如何看项目 / 如何判断技术栈 / 如何规划学习路线
+
+第六层：应用框架层
+Next.js / Nuxt.js
+
+第五层：应用组织层
+路由 / 状态管理 / 组件通信
+
+第四层：工程化层
+Vite / 构建工具 / 开发服务器 / 打包
+
+第三层：UI 框架层
+React / Vue
+
+第二层：语言增强层
+TypeScript
+
+第一层：基础层
+HTML / CSS / JavaScript / DOM
+```
+
+也可以横向看：
+
+| 层级 | 关键词 | 主要解决的问题 | 常见误区 |
+|---|---|---|---|
+| 第一层：基础层 | HTML / CSS / JS / DOM | 页面结构、样式、交互、浏览器操作 | 以为会框架就不用学原生基础 |
+| 第二层：语言增强层 | TypeScript | 给 JavaScript 增加类型约束 | 以为 TypeScript 替代了 JavaScript |
+| 第三层：UI 框架层 | React / Vue | 用组件和数据驱动方式构建界面 | 以为 React/Vue 包办全部工程问题 |
+| 第四层：工程化层 | Vite / 构建工具 | 开发服务器、热更新、打包、资源处理 | 以为 Vite 是 React 或 Vue |
+| 第五层：应用组织层 | 路由 / 状态管理 / 组件通信 | 组织页面、数据流和复杂交互 | 以为路由和状态管理是框架本体 |
+| 第六层：应用框架层 | Next.js / Nuxt.js | 在 React/Vue 上提供完整应用方案 | 以为 Next/Nuxt 和 React/Vue 是同一类 |
+| 第七层：学习方法层 | 看项目 / 判断技术栈 / 学习路线 | 把技术串成可判断、可学习的体系 | 只背名词，不会看真实项目 |
+
+## 技术关系
+
+### 为什么这些技术不是同一类东西
+
+它们不是一组平级选项，而是不同层的角色：
+
+| 技术 | 更像什么 | 所在层级 |
+|---|---|---|
+| HTML / CSS / JavaScript / DOM | 浏览器能直接理解的基础能力 | 第一层 |
+| TypeScript | JavaScript 的类型增强 | 第二层 |
+| React / Vue | 写 UI 和组件的框架 | 第三层 |
+| Vite | 让项目跑起来、打包起来的工程工具 | 第四层 |
+| React Router / Vue Router / Redux / Pinia | 组织页面和状态的工具 | 第五层 |
+| Next.js / Nuxt.js | 基于 React/Vue 的完整应用框架 | 第六层 |
+| 学习路线和项目判断方法 | 把技术地图用起来的方法 | 第七层 |
+
+所以：
+
+- `Vite + React` 是“构建工具 + UI 框架”。
+- `Vite + Vue` 也是“构建工具 + UI 框架”。
+- `Next.js` 基于 `React`，但比普通 React 项目多了路由、渲染模式、应用结构等能力。
+- `Nuxt.js` 基于 `Vue`，但比普通 Vue 项目更偏完整应用框架。
+- `TypeScript` 可以和 React、Vue、Next、Nuxt 一起用，但它不是 UI 框架。
+
+### 基础、框架、工具、应用框架怎么区分
+
+| 类别 | 代表 | 一句话理解 |
+|---|---|---|
+| 基础 | HTML / CSS / JS / DOM | 浏览器页面的底层材料 |
+| 语言增强 | TypeScript | 让 JS 开发更可控 |
+| UI 框架 | React / Vue | 用组件方式写界面 |
+| 工具 | Vite / 构建工具 | 让开发、热更新、打包更顺畅 |
+| 应用组织工具 | Router / Store | 管页面切换和跨组件数据 |
+| 应用框架 | Next.js / Nuxt.js | 在 UI 框架上提供完整应用结构 |
+
+学习时建议从下往上理解，因为上层技术往往建立在下层概念之上。比如你不理解 DOM，就很难真正理解 React/Vue 为什么要“数据驱动视图”；你不理解 JavaScript 模块，就很难理解 Vite 为什么能启动项目。
+
+做项目时通常会从上往下组合，因为项目目标先决定应用形态：如果要做官网，可能选 `Nuxt.js` 或 `Next.js`；如果要做后台管理系统，可能选 `Vite + Vue + Vue Router + Pinia` 或 `Vite + React + React Router + Zustand`；然后再落到底层的组件、CSS、JS/TS。
+
+## 学习建议
+
+### 推荐阅读顺序
+
+建议按文件编号阅读：
+
+1. `01-frontend-big-picture.md`：先理解前端为什么从页面变成应用。
+2. `02-html-css-javascript-foundation.md`：建立 HTML / CSS / JS / DOM 的底层关系。
+3. `03-javascript-to-typescript.md`：理解 TypeScript 为什么常见，但不是替代 JavaScript。
+4. `04-frameworks-react-and-vue.md`：理解 React / Vue 为什么出现，以及它们的共同思想。
+5. `05-vite-and-build-tools.md`：理解 Vite 和构建工具到底管什么。
+6. `06-spa-routing-and-state.md`：理解 SPA、前端路由和状态管理。
+7. `07-nextjs-and-nuxtjs.md`：理解 Next/Nuxt 作为应用框架的定位。
+8. `08-how-to-read-a-frontend-project.md`：学会通过真实文件判断技术栈。
+9. `09-learning-path.md`：根据不同目标规划学习路线。
+10. `10-common-confusions.md`：集中排疑，把常见混淆重新放回七层体系。
+11. `glossary.md`：查术语。
+12. `exercises.md`：用练习检验自己是否真的建立地图。
+
+## 小结
+
+### 学完后应该建立什么认知
+
+你不需要一次记住所有 API。更重要的是能回答这些问题：
+
+- 这个技术属于哪一层？
+- 它解决的是页面、语言、组件、工程、组织方式，还是应用框架问题？
+- 它依赖哪些基础？
+- 它和上一层、下一层怎么配合？
+- 在真实项目里，我应该看哪些文件判断它是否存在？
+
+当你能用这些问题去看项目时，现代前端就不再是一堆名词，而是一张可以逐层展开的地图。
