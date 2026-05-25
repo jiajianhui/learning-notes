@@ -101,18 +101,18 @@ HTML / CSS / JavaScript / DOM
 
 建议按文件编号阅读：
 
-1. `01-frontend-big-picture.md`：先理解前端为什么从页面变成应用。
-2. `02-html-css-javascript-foundation.md`：建立 HTML / CSS / JS / DOM 的底层关系。
-3. `03-javascript-to-typescript.md`：理解 TypeScript 为什么常见，但不是替代 JavaScript。
-4. `04-frameworks-react-and-vue.md`：理解 React / Vue 为什么出现，以及它们的共同思想。
-5. `05-vite-and-build-tools.md`：理解 Vite 和构建工具到底管什么。
-6. `06-spa-routing-and-state.md`：理解 SPA、前端路由和状态管理。
-7. `07-nextjs-and-nuxtjs.md`：理解 Next/Nuxt 作为应用框架的定位。
-8. `08-how-to-read-a-frontend-project.md`：学会通过真实文件判断技术栈。
-9. `09-learning-path.md`：根据不同目标规划学习路线。
-10. `10-common-confusions.md`：集中排疑，把常见混淆重新放回七层体系。
-11. `glossary.md`：查术语。
-12. `exercises.md`：用练习检验自己是否真的建立地图。
+1. `01-前端大图景-从页面到应用.md`：先理解前端为什么从页面变成应用。
+2. `02-HTML-CSS-JavaScript基础关系.md`：建立 HTML / CSS / JS / DOM 的底层关系。
+3. `03-从JavaScript到TypeScript.md`：理解 TypeScript 为什么常见，但不是替代 JavaScript。
+4. `04-React和Vue-UI框架层.md`：理解 React / Vue 为什么出现，以及它们的共同思想。
+5. `05-Vite和构建工具.md`：理解 Vite 和构建工具到底管什么。
+6. `06-SPA前端路由和状态管理.md`：理解 SPA、前端路由和状态管理。
+7. `07-Nextjs和Nuxtjs应用框架.md`：理解 Next/Nuxt 作为应用框架的定位。
+8. `08-如何阅读前端项目.md`：学会通过真实文件判断技术栈。
+9. `09-现代前端学习路线.md`：根据不同目标规划学习路线。
+10. `10-常见误区和排疑.md`：集中排疑，把常见混淆重新放回七层体系。
+11. `术语表.md`：查术语。
+12. `练习题.md`：用练习检验自己是否真的建立地图。
 
 ## 小结
 
