@@ -1,4 +1,4 @@
-# 03. 从 JavaScript 到 TypeScript
+# 04. 从 JavaScript 到 TypeScript
 
 ## 问题背景
 
@@ -186,4 +186,3 @@ TypeScript 位于第二层：语言增强层。
 ```text
 JavaScript 决定前端能运行什么，TypeScript 帮你更可靠地写 JavaScript。
 ```
-

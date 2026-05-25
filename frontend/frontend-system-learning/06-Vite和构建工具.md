@@ -1,4 +1,4 @@
-# 05. Vite 和构建工具：工程化层
+# 06. Vite 和构建工具：工程化层
 
 ## 问题背景
 
@@ -240,4 +240,3 @@ Vite 看 scripts 和 vite.config.ts
 React/Vue 看 dependencies、入口文件和组件文件
 Next/Nuxt 看 scripts、配置文件和目录约定
 ```
-

@@ -1,4 +1,4 @@
-# 附录. Node.js 和包管理工具在前端中的位置
+# 03. Node.js 和包管理工具在前端中的位置
 
 ## 问题背景
 
@@ -18,7 +18,7 @@ npm run dev
 
 它们看起来不像 HTML/CSS/JavaScript，也不像 React/Vue，但现代前端项目又几乎离不开它们。
 
-本文是七层体系的工程化补充。它不讲后端，不讲部署，只解释：Node.js 和包管理工具为什么会出现在前端项目里。
+本文是七层体系的工程化前置理解。它不讲后端，不讲部署，只解释：Node.js 和包管理工具为什么会出现在前端项目里。
 
 ```text
 核心位置：
@@ -73,6 +73,81 @@ yarn dev
 ```
 
 它们不是框架，也不是构建工具。它们更像“项目依赖和命令的管理器”。
+
+### 一开始没有 Node.js，为什么后来前端离不开它
+
+早期前端确实不需要 Node.js。
+
+那时候一个网站可能就是：
+
+```text
+index.html
+style.css
+main.js
+```
+
+浏览器直接打开 HTML，加载 CSS 和 JS。要用一个库，就下载一个 JS 文件，或者通过 `<script>` 标签引入。
+
+```html
+<script src="./some-library.js"></script>
+```
+
+这种方式在简单页面里没有问题，但项目变复杂后会遇到很多麻烦：
+
+| 变化 | 早期方式的问题 | 后来的解决方式 |
+|---|---|---|
+| JS 文件变多 | 手动管理加载顺序很麻烦 | 模块化和构建工具 |
+| 第三方库变多 | 下载、升级、版本管理麻烦 | npm / pnpm 管依赖 |
+| 想写 TypeScript | 浏览器不能直接运行 TS | 构建工具转成 JS |
+| 想写 React JSX | 浏览器不能直接理解 JSX | 构建工具转成 JS |
+| 想写 Vue 单文件组件 | 浏览器不能直接理解 `.vue` | Vue 插件和构建流程 |
+| 想要热更新 | 手动刷新效率低 | 开发服务器和 HMR |
+| 想打包生产代码 | 手动合并压缩不现实 | Vite / Webpack / Rollup |
+
+所以不是“前端天然需要 Node.js”，而是现代前端开发方式需要一个本地工具运行环境。Node.js 正好承担了这个角色。
+
+### React / Vue 是不是必须绑定 Node.js
+
+严格说，不是。
+
+React 和 Vue 都可以用很轻量的方式通过 `<script>` 标签引入，做一些简单 demo 或小页面。
+
+但真实现代项目里，它们几乎都会和 Node.js、npm/pnpm 绑定在一起，因为常见开发方式依赖这些能力：
+
+| 技术写法 | 为什么需要工具链 |
+|---|---|
+| React JSX / TSX | 需要转换成浏览器能运行的 JavaScript |
+| Vue `.vue` 单文件组件 | 需要解析 template、script、style |
+| TypeScript | 需要类型检查和转换 |
+| npm 包生态 | 需要包管理工具安装依赖 |
+| Vite 开发服务器 | 需要 Node.js 在本地运行 |
+| 生产打包 | 需要构建工具处理模块和资源 |
+
+所以更准确的说法是：
+
+```text
+React/Vue 本身不是因为“必须依赖 Node.js”才存在
+现代 React/Vue 项目是因为 JSX/SFC/TS/依赖管理/开发服务器/打包流程，才强烈依赖 Node.js 和 npm 生态
+```
+
+这也是为什么你会看到：
+
+```text
+React 项目：
+package.json
+node_modules
+main.tsx
+vite.config.ts
+
+Vue 项目：
+package.json
+node_modules
+main.ts
+App.vue
+vite.config.ts
+```
+
+这些文件不是 React/Vue 的“业务代码本体”，而是现代前端工程化的一部分。
 
 ## 技术关系
 
@@ -245,4 +320,3 @@ Next / Nuxt：应用框架
 ```
 
 它们经常一起出现，但不是同一类东西。
-
