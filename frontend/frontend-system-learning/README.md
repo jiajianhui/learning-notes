@@ -17,6 +17,7 @@
 - 有一点 HTML / CSS / JavaScript 基础，但知识还比较散。
 - 接触过 React 或 Vue，但还不清楚它们在现代前端里的位置。
 - 经常看到 Vite、TypeScript、Next.js、Nuxt.js 等名词，却分不清它们分别解决什么问题。
+- 经常执行 `npm run dev`，但还不清楚 Node.js、npm、pnpm 和前端项目是什么关系。
 - 想学会通过 `package.json`、`main.ts`、`App.vue`、`vite.config.ts` 等真实项目文件判断技术栈。
 
 ### 现代前端七层技术地图
@@ -95,24 +96,28 @@ HTML / CSS / JavaScript / DOM
 
 做项目时通常会从上往下组合，因为项目目标先决定应用形态：如果要做官网，可能选 `Nuxt.js` 或 `Next.js`；如果要做后台管理系统，可能选 `Vite + Vue + Vue Router + Pinia` 或 `Vite + React + React Router + Zustand`；然后再落到底层的组件、CSS、JS/TS。
 
+还有一类工具经常和前端项目一起出现：`Node.js`、`npm`、`pnpm`、`yarn`。它们不是 UI 框架，也不是应用框架，更像是工程化层背后的工具运行环境和依赖管理方式。具体可以看 `附录-Node和包管理工具.md`。
+
 ## 学习建议
 
 ### 推荐阅读顺序
 
 建议按文件编号阅读：
 
-1. `01-前端大图景-从页面到应用.md`：先理解前端为什么从页面变成应用。
-2. `02-HTML-CSS-JavaScript基础关系.md`：建立 HTML / CSS / JS / DOM 的底层关系。
-3. `03-从JavaScript到TypeScript.md`：理解 TypeScript 为什么常见，但不是替代 JavaScript。
-4. `04-React和Vue-UI框架层.md`：理解 React / Vue 为什么出现，以及它们的共同思想。
-5. `05-Vite和构建工具.md`：理解 Vite 和构建工具到底管什么。
-6. `06-SPA前端路由和状态管理.md`：理解 SPA、前端路由和状态管理。
-7. `07-Nextjs和Nuxtjs应用框架.md`：理解 Next/Nuxt 作为应用框架的定位。
-8. `08-如何阅读前端项目.md`：学会通过真实文件判断技术栈。
-9. `09-现代前端学习路线.md`：根据不同目标规划学习路线。
-10. `10-常见误区和排疑.md`：集中排疑，把常见混淆重新放回七层体系。
-11. `术语表.md`：查术语。
-12. `练习题.md`：用练习检验自己是否真的建立地图。
+1. `00-最小实战主线.md`：先知道如何用同一个小功能贯穿整套技术地图。
+2. `01-前端大图景-从页面到应用.md`：理解前端为什么从页面变成应用，以及现代前端大致如何发展出来。
+3. `02-HTML-CSS-JavaScript基础关系.md`：建立 HTML / CSS / JS / DOM 的底层关系。
+4. `03-从JavaScript到TypeScript.md`：理解 TypeScript 为什么常见，但不是替代 JavaScript。
+5. `04-React和Vue-UI框架层.md`：理解 React / Vue 为什么出现，以及它们的共同思想。
+6. `05-Vite和构建工具.md`：理解 Vite 和构建工具到底管什么。
+7. `06-SPA前端路由和状态管理.md`：理解 SPA、前端路由和状态管理。
+8. `07-Nextjs和Nuxtjs应用框架.md`：理解 Next/Nuxt 作为应用框架的定位。
+9. `08-如何阅读前端项目.md`：学会通过真实文件判断技术栈。
+10. `09-现代前端学习路线.md`：根据不同目标规划学习路线。
+11. `10-常见误区和排疑.md`：集中排疑，把常见混淆重新放回七层体系。
+12. `附录-Node和包管理工具.md`：补齐 Node.js、npm、pnpm、package.json、node_modules 的工具链位置。
+13. `术语表.md`：查术语。
+14. `练习题.md`：用练习检验自己是否真的建立地图。
 
 ## 小结
 
