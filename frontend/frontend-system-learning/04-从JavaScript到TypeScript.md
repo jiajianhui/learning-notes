@@ -72,6 +72,30 @@ formatPrice("19.9"); // 类型错误
 
 TypeScript 写完后需要被转换成 JavaScript，浏览器最终运行的仍然是 JavaScript。
 
+### 这篇最重要的判断句
+
+看到 `.ts`、`.tsx`、`tsconfig.json` 时，不要以为浏览器直接运行了 TypeScript。
+
+```text
+你写的是 TypeScript
+工具检查类型
+工具把它转换成 JavaScript
+浏览器最终运行 JavaScript
+```
+
+| 你看到的现象 | 背后真正负责的是 |
+|---|---|
+| 编辑器提示参数类型错了 | TypeScript 类型系统 |
+| `main.ts` 能在浏览器里工作 | 构建工具把 TS 转成 JS |
+| React 里写 Props 类型 | TypeScript 帮组件约束入参 |
+| 接口数据有字段提示 | TypeScript 描述了数据结构 |
+
+一句话：
+
+```text
+TypeScript 提升的是开发阶段的可靠性，不是替代 JavaScript 的运行时。
+```
+
 ## 技术关系
 
 ### TypeScript 不是替代 JavaScript

@@ -63,6 +63,25 @@ scripts 里有 nuxt dev 或 nuxi dev
 有 pages/ 或 app.vue
 ```
 
+### 这篇最重要的判断句
+
+Next/Nuxt 不是把 React/Vue 干掉，而是在它们上面加了一层应用约定。
+
+| 你看到的线索 | 更可能说明什么 |
+|---|---|
+| `next dev` | Next.js 是项目入口 |
+| `nuxt dev` / `nuxi dev` | Nuxt.js 是项目入口 |
+| `app/` 里的 `page.tsx` | Next.js 文件路由 |
+| `pages/index.vue` | Nuxt.js 文件路由 |
+| `next.config.ts` | Next.js 应用配置 |
+| `nuxt.config.ts` | Nuxt.js 应用配置 |
+
+一句话：
+
+```text
+React/Vue 负责组件怎么写，Next/Nuxt 负责应用怎么组织。
+```
+
 ## 技术关系
 
 ### Next.js 和 React 的关系

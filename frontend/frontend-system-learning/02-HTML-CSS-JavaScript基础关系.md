@@ -108,6 +108,31 @@ title.textContent = "新的标题";
 
 React 和 Vue 虽然让你少写很多 DOM 操作，但它们最终仍然会更新真实 DOM。
 
+### 这篇最重要的判断句
+
+不管你以后写 React、Vue、Next 还是 Nuxt，浏览器最终理解的仍然是：
+
+```text
+HTML
+CSS
+JavaScript
+DOM
+```
+
+| 你在框架里看到的写法 | 背后对应的基础 |
+|---|---|
+| JSX / Vue template | HTML 结构表达 |
+| className / class / scoped CSS | CSS 样式规则 |
+| onClick / @click | JavaScript 事件 |
+| state 改变后页面更新 | 框架替你更新 DOM |
+| 组件挂载到 `#root` / `#app` | 最终仍然进入 DOM 树 |
+
+一句话：
+
+```text
+框架改变的是写法和组织方式，不改变浏览器的底层模型。
+```
+
 ## 技术关系
 
 ### 浏览器如何理解 HTML / CSS / JS
@@ -235,4 +260,3 @@ DOM：浏览器中的页面对象模型
 ```
 
 React、Vue、Vite、Next、Nuxt 都不能让你跳过这层。框架越高级，越需要你知道它最终是在帮你组织和更新什么。
-

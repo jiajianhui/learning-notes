@@ -103,6 +103,16 @@ Vite 帮你创建和运行项目
 React/Vue 决定你用什么方式写 UI
 ```
 
+再拆细一点：
+
+```text
+npm：执行 package.json 里的 scripts
+Vite：启动开发服务器、热更新、打包
+React/Vue：描述和更新界面
+TypeScript：提供类型检查和类型提示
+插件：让 Vite 理解 JSX、TSX、.vue 等开发写法
+```
+
 ## 技术关系
 
 ### 构建工具负责什么

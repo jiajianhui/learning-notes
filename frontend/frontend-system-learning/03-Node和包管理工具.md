@@ -265,6 +265,17 @@ React/Vue 负责写界面
 
 它们不是同一层。
 
+再换成不同项目也一样：
+
+| scripts 里写什么 | `npm run dev` 实际启动谁 | 项目类型倾向 |
+|---|---|---|
+| `"dev": "vite"` | Vite | Vite 项目，可能是 Vanilla / React / Vue |
+| `"dev": "next dev"` | Next.js | Next.js 项目 |
+| `"dev": "nuxt dev"` | Nuxt.js | Nuxt.js 项目 |
+| `"dev": "nuxi dev"` | Nuxt.js 工具链 | Nuxt.js 项目 |
+
+所以判断项目入口时，不要只看有没有 `react` 或 `vue`，要先看 `scripts.dev` 到底启动了谁。
+
 ### 放回七层体系
 
 Node.js 和包管理工具不是七层中的独立业务层，更像是工程化层背后的基础设施。
