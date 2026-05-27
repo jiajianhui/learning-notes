@@ -37,13 +37,13 @@ addBtnEl.addEventListener("click", () => {
     return;
   }
 
-  // 加入 todo
+  // 加入 todo —— 更改数据
   todos.push(content);
 
   // 重置输入框
   inputEl.value = "";
 
-  // 渲染列表
+  // 渲染列表 —— 更改页面
   renderList();
   console.log(todos);
 });
