@@ -47,7 +47,74 @@ React / Vue 想解决的就是这个麻烦：
 
 ---
 
-### 2. 组件化是什么
+### 2. 数据驱动视图是什么
+
+数据驱动视图的意思是：你把“数据和页面的关系”写进组件里。数据变了，框架根据这层关系更新页面。
+
+代码上，它通常体现为：把状态变量直接写进 JSX 或 template 里。
+
+原生 DOM 写法是：
+
+```js
+let count = 0;
+
+button.addEventListener("click", () => {
+  count += 1;
+  span.textContent = String(count);
+});
+```
+
+这里你要做两件事：
+
+```text
+1. 改数据 count
+2. 手动改页面 span.textContent
+```
+
+React 写法是：
+
+```tsx
+import { useState } from "react";
+
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <>
+      <button onClick={() => setCount(count + 1)}>+1</button>
+      <span>{count}</span>
+    </>
+  );
+}
+```
+
+Vue 写法是：
+
+```vue
+<script setup>
+import { ref } from "vue";
+
+const count = ref(0);
+</script>
+
+<template>
+  <button @click="count++">+1</button>
+  <span>{{ count }}</span>
+</template>
+```
+
+重点看 `span` 那一行：
+
+```text
+React: <span>{count}</span>
+Vue:   <span>{{ count }}</span>
+```
+
+这就是数据驱动视图：页面上这一块依赖 `count`。点击按钮时，你只改 `count`，不用自己 `querySelector` 找到 `span`，也不用自己写 `span.textContent = ...`。框架会根据新的 `count` 更新页面。
+
+---
+
+### 3. 组件化是什么
 
 组件就是把页面拆成小块。
 
@@ -73,13 +140,30 @@ props
 
 ---
 
-### 3. 声明式 UI 是什么
+### 4. 声明式 UI 是什么
 
-原生 DOM 更像命令式：
+命令式和声明式的区别，不在于有没有三元运算符，而在于你是在“命令页面怎么改”，还是在“描述页面应该是什么样”。
+
+在 React/Vue 这个语境下，可以先粗略记成：
+
+```text
+命令式：你手动管理 DOM 怎么变。
+声明式：你描述 UI 应该长什么样，框架负责更新 DOM。
+```
+
+更准确一点说，命令式关心“更新步骤”，声明式关心“最终状态”。React/Vue 做的事，就是让你少写 DOM 更新步骤，多写 UI 和数据的对应关系。
+
+原生 DOM 更像命令式。你拿到一个真实 DOM 元素，然后亲自改它：
 
 ```js
-button.style.display = isVisible ? "block" : "none";
+if (isVisible) {
+  button.style.display = "block";
+} else {
+  button.style.display = "none";
+}
 ```
+
+这段代码的重点不是 `if/else`，而是 `button.style.display = ...`。你在命令这个按钮：现在把 `display` 改成 `block`，或者改成 `none`。
 
 React / Vue 更像声明式：
 
@@ -90,8 +174,8 @@ React / Vue 更像声明式：
 React：
 
 ```tsx
-function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
-  return isLoggedIn ? <Profile /> : <LoginButton />;
+function SaveButton({ isVisible }: { isVisible: boolean }) {
+  return isVisible ? <button>保存</button> : null;
 }
 ```
 
@@ -99,14 +183,15 @@ Vue：
 
 ```vue
 <template>
-  <Profile v-if="isLoggedIn" />
-  <LoginButton v-else />
+  <button v-if="isVisible">保存</button>
 </template>
 ```
 
+这两段的重点是：你没有直接操作某个真实按钮的 `style.display`。你只是描述“`isVisible` 为真时有按钮，为假时没有按钮”。至于真实 DOM 要创建、删除还是更新，由框架处理。
+
 ---
 
-### 4. React 和 Vue 的共同点
+### 5. React 和 Vue 的共同点
 
 | 共同点 | 说明 |
 |---|---|
@@ -124,7 +209,7 @@ React/Vue 负责 UI，不负责启动项目，也不等于路由或状态管理�
 
 ---
 
-### 5. React 和 Vue 的差异
+### 6. React 和 Vue 的差异
 
 | 维度 | React | Vue |
 |---|---|---|
