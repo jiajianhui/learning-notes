@@ -2,7 +2,7 @@
 
 ## 问题背景
 
-你看现代前端项目时，经常会看到这些文件：
+现代前端项目里经常看到：
 
 ```text
 main.ts
@@ -12,55 +12,71 @@ vite.config.ts
 tsconfig.json
 ```
 
-于是很容易产生疑问：TypeScript 是不是一门新的前端语言？学了 TypeScript 还要不要学 JavaScript？
-
-本文属于七层体系中的第二层：语言增强层。
+于是很容易误会：
 
 ```text
-上一层基础：HTML / CSS / JavaScript / DOM
-当前层：TypeScript
-下一层：React / Vue 等 UI 框架经常使用 TypeScript
+TypeScript 是不是一套新的前端？
+学了 TypeScript 还要不要学 JavaScript？
 ```
+
+本文属于第二层：语言增强层。
+
+```text
+JavaScript 是底座。
+TypeScript 是 JavaScript 的类型增强。
+```
+
+| 问题 | 答案 |
+|---|---|
+| 解决什么 | 给 JS 增加类型约束，让项目更好维护 |
+| 依赖什么 | JavaScript 基础 |
+| 上一层关系 | 建立在 HTML / CSS / JS / DOM 之上 |
+| 下一层关系 | React/Vue 常用 TS 描述 props、state、接口数据 |
+
+---
 
 ## 核心解释
 
-### JavaScript 在前端中的核心地位
+### 1. 浏览器最终运行的仍然是 JavaScript
 
-浏览器原生执行的是 JavaScript。无论你写 React、Vue、Next.js、Nuxt.js，最终都离不开 JavaScript 的运行模型。
+不管你写 React、Vue、Next 还是 Nuxt，最后都离不开 JavaScript。
 
 JavaScript 负责：
 
-- 描述页面交互。
-- 处理数据和逻辑。
-- 调用浏览器 API。
-- 组织模块。
-- 驱动框架运行。
+```text
+交互逻辑
+数据处理
+模块组织
+异步请求
+浏览器 API 调用
+框架运行
+```
 
-所以 TypeScript 不是绕开 JavaScript，而是站在 JavaScript 上。
+TypeScript 不是绕开 JavaScript，而是站在 JavaScript 上。
 
-### TypeScript 是什么
+---
 
-TypeScript 可以简单理解为：
+### 2. TypeScript 到底加了什么
+
+一句话：
 
 ```text
 TypeScript = JavaScript + 类型系统
 ```
 
-比如 JavaScript：
+JavaScript：
 
 ```js
 function formatPrice(price) {
   return price.toFixed(2);
 }
-```
 
-如果传错参数，可能运行时才报错：
-
-```js
 formatPrice("19.9");
 ```
 
-TypeScript 会提前提醒：
+可能运行时才发现传错了。
+
+TypeScript：
 
 ```ts
 function formatPrice(price: number) {
@@ -70,143 +86,132 @@ function formatPrice(price: number) {
 formatPrice("19.9"); // 类型错误
 ```
 
-TypeScript 写完后需要被转换成 JavaScript，浏览器最终运行的仍然是 JavaScript。
+编辑器和工具会提前提醒你。
 
-### 这篇最重要的判断句
+---
 
-看到 `.ts`、`.tsx`、`tsconfig.json` 时，不要以为浏览器直接运行了 TypeScript。
+### 3. TypeScript 解决的是维护问题
 
-```text
-你写的是 TypeScript
-工具检查类型
-工具把它转换成 JavaScript
-浏览器最终运行 JavaScript
-```
+项目小的时候，很多约定靠脑子记。
 
-| 你看到的现象 | 背后真正负责的是 |
-|---|---|
-| 编辑器提示参数类型错了 | TypeScript 类型系统 |
-| `main.ts` 能在浏览器里工作 | 构建工具把 TS 转成 JS |
-| React 里写 Props 类型 | TypeScript 帮组件约束入参 |
-| 接口数据有字段提示 | TypeScript 描述了数据结构 |
-
-一句话：
+项目大了以后，你会开始问：
 
 ```text
-TypeScript 提升的是开发阶段的可靠性，不是替代 JavaScript 的运行时。
+这个函数参数是什么？
+接口返回什么字段？
+组件 props 怎么传？
+todo 有没有 id？
 ```
+
+TypeScript 把这些约定写出来：
+
+```ts
+type Todo = {
+  id: number;
+  text: string;
+  done: boolean;
+};
+
+const todos: Todo[] = [];
+```
+
+这不是为了“看起来高级”，而是为了少在运行时踩低级坑。
+
+---
 
 ## 技术关系
 
-### TypeScript 不是替代 JavaScript
+### 不要把 TypeScript 当运行时
 
-| 问题 | JavaScript | TypeScript |
-|---|---|---|
-| 浏览器能否直接运行 | 能 | 通常需要编译成 JS |
-| 是否有静态类型检查 | 弱 | 强 |
-| 是否改变运行时本质 | 是运行时语言 | 不改变 JS 运行时 |
-| 学习前提 | 基础语法和运行机制 | 先懂 JS 再学类型 |
+看到 `.ts`、`.tsx`、`tsconfig.json` 时，要这样理解：
 
-一个常见误区是：学 TypeScript 就不用学 JavaScript。实际正好相反，TypeScript 的很多概念都建立在 JavaScript 上，比如对象、数组、函数、模块、异步、闭包。
-
-### TypeScript 解决什么问题
-
-TypeScript 主要解决“代码规模变大后的可维护性”问题。
-
-| 场景 | 没有类型时的问题 | TypeScript 带来的帮助 |
-|---|---|---|
-| 函数参数 | 不知道该传什么 | 参数类型清楚 |
-| 接口数据 | 不知道字段有哪些 | 数据结构可声明 |
-| 组件 props | 使用方容易传错 | 编辑器提前提示 |
-| 重构代码 | 改名和改字段容易漏 | 类型检查能发现影响范围 |
-| 多人协作 | 约定藏在脑子里 | 类型变成显式文档 |
-
-React 组件 props 示例：
-
-```tsx
-type UserCardProps = {
-  name: string;
-  age: number;
-};
-
-function UserCard(props: UserCardProps) {
-  return <div>{props.name}：{props.age}</div>;
-}
+```text
+你写 TypeScript
+工具检查类型
+工具把 TS 转成 JS
+浏览器运行 JS
 ```
 
-Vue 组件 props 示例：
+| 现象 | 背后是谁 |
+|---|---|
+| 参数类型报错 | TypeScript |
+| `main.ts` 能在浏览器工作 | Vite 等工具转换 |
+| React props 有类型提示 | TypeScript 描述组件入参 |
+| 浏览器真正执行 | JavaScript |
 
-```vue
-<script setup lang="ts">
-defineProps<{
-  name: string;
-  age: number;
-}>();
-</script>
-```
-
-类型让组件怎么用变得更清楚。
-
-### 为什么现代项目经常使用 TypeScript
-
-现代 React / Vue / Next / Nuxt 项目经常用 TypeScript，是因为这些项目通常具备几个特点：
-
-- 组件多。
-- 数据结构多。
-- 文件多。
-- 协作人数多。
-- 重构频繁。
-- 编辑器提示很重要。
-
-TypeScript 能把很多错误提前到开发阶段发现，而不是等用户点击页面后才发现。
+---
 
 ### TypeScript 和其他层的关系
 
 ```text
-HTML / CSS / JS / DOM
-        ↓
-TypeScript 增强 JS 的可维护性
-        ↓
-React / Vue 用 TS 描述 props、state、事件、数据
-        ↓
-Vite / Next / Nuxt 负责把 TS 转成浏览器可运行的 JS
+第一层：HTML / CSS / JS / DOM
+第二层：TypeScript 增强 JS
+第三层：React / Vue 常用 TS 描述 props、state、数据
+第四层：Vite 等工具负责把 TS 处理成 JS
 ```
 
-它不是 UI 框架，也不是构建工具，而是语言增强层。
+它不是 UI 框架，也不是构建工具。
+
+---
+
+### Swift 背景下怎么看 TS
+
+你长期写 Swift，TypeScript 会更顺手一些。
+
+| Swift 里的习惯 | TypeScript 里的价值 |
+|---|---|
+| 明确类型 | 函数参数、对象字段更清楚 |
+| 编译期提示 | 提前发现一部分错误 |
+| 结构化建模 | 用 `type` / `interface` 描述数据 |
+| 重构依赖 IDE | 类型系统帮助找影响范围 |
+
+但要注意：
+
+```text
+先懂 JavaScript，再用 TypeScript。
+不要把 TypeScript 当成跳过 JS 的捷径。
+```
+
+---
 
 ## 学习建议
 
-初学者学 TypeScript，不要一开始钻进复杂类型体操。更实用的目标是能写、能读、能改真实项目。
+初学 TypeScript，先学实用部分：
 
-建议先掌握：
-
-| 内容 | 学到什么程度 |
+| 内容 | 目标 |
 |---|---|
-| 基本类型 | `string`、`number`、`boolean`、数组、对象 |
+| 基本类型 | `string`、`number`、`boolean` |
+| 数组和对象 | 能描述列表和数据结构 |
 | 函数类型 | 能给参数和返回值加类型 |
-| type / interface | 能描述对象结构和组件 props |
-| 联合类型 | 能理解 `string | number` 这种写法 |
-| 可选属性 | 能理解 `name?: string` |
-| 泛型基础 | 能读懂常见的 `Array<T>`、`Promise<T>` |
-| 类型推断 | 知道很多时候不用手写所有类型 |
+| `type` / `interface` | 能描述接口数据和 props |
+| 联合类型 | 能读懂 `string | number` |
+| 可选属性 | 能读懂 `name?: string` |
+| 类型推断 | 知道不是每个变量都要手写类型 |
 
-暂时可以少碰：
+先别急着碰：
 
-- 复杂条件类型。
-- 大量嵌套泛型。
-- 类型体操题。
-- 为了炫技而写的复杂类型工具。
+```text
+复杂条件类型
+类型体操
+过深的泛型嵌套
+为了炫技写的工具类型
+```
 
-更好的练习方式是：把一个小 JS 项目改成 TS 项目，给函数、数据、组件 props 补类型。
+最好的练习就是下一步：
+
+```text
+把原生 JS demo 改成 Vite + Vanilla TS。
+```
+
+---
 
 ## 小结
 
 TypeScript 位于第二层：语言增强层。
 
-它不是 React，不是 Vue，也不是 Vite。它的核心价值是给 JavaScript 增加类型系统，让项目更容易维护、重构和协作。
-
-记住这句话就够了：
-
 ```text
-JavaScript 决定前端能运行什么，TypeScript 帮你更可靠地写 JavaScript。
+JavaScript 决定前端能运行什么。
+TypeScript 帮你更可靠地写 JavaScript。
 ```
+
+它不是 React，不是 Vue，也不是 Vite。

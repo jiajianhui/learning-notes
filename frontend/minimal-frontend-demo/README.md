@@ -1,4 +1,4 @@
-# 计数器练习
+# 最小前端 Demo
 
 这个目录对应 `frontend-system-learning/00-阅读导引和最小实战主线.md`。
 

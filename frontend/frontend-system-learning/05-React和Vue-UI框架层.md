@@ -2,93 +2,92 @@
 
 ## 问题背景
 
-很多人第一次接触现代前端，就是从 React 或 Vue 开始的。于是很容易以为“前端 = React/Vue”。但从七层体系看，React 和 Vue 只是第三层：UI 框架层。
+很多人第一次接触现代前端，就是 React 或 Vue。
 
-它们确实很重要，因为真实项目中的页面和交互通常都通过它们组织。但它们不是语言、不是构建工具，也不是完整应用框架。
-
-本文属于七层体系中的第三层：UI 框架层。
+于是很容易误会：
 
 ```text
-上一层：TypeScript 可以增强 React/Vue 开发体验
-当前层：React / Vue 负责构建 UI 和组件
-下一层：Vite 等工具让 React/Vue 项目能开发和打包
-再上一层：路由、状态管理、Next/Nuxt 会继续组织应用
+前端 = React/Vue
+React/Vue = 整个项目
 ```
+
+都不对。
+
+React 和 Vue 属于第三层：UI 框架层。
+
+```text
+上一层：TypeScript 可以增强写法
+当前层：React / Vue 负责 UI 和组件
+下一层：Vite、Router、Store、Next/Nuxt 会继续加入
+```
+
+---
 
 ## 核心解释
 
-### 为什么会出现 React / Vue
+### 1. 它们为什么出现
 
-如果只用原生 DOM 写复杂页面，常见问题是：
+原生 DOM 写复杂页面时，你会一直做这件事：
 
-- 页面结构越来越碎。
-- 数据变化后要手动找 DOM、改 DOM。
-- 同一段 UI 逻辑难复用。
-- 状态分散在很多变量和 DOM 上。
-- 项目变大后很难维护。
+```text
+数据变了
+找到 DOM
+手动修改 DOM
+再处理事件
+再维护列表
+```
 
-React 和 Vue 的核心目标都是：让你用组件和数据来描述界面，而不是到处手动操作 DOM。
+React / Vue 想解决的就是这个麻烦：
 
-### 组件化是什么
+```text
+用组件组织页面。
+用数据描述界面。
+数据变了，框架更新页面。
+```
 
-组件就是把页面拆成可复用的小模块。
+---
+
+### 2. 组件化是什么
+
+组件就是把页面拆成小块。
 
 ```text
 App
 ├── Header
-├── Sidebar
-├── UserList
-│   └── UserCard
+├── TodoList
+│   └── TodoItem
 └── Footer
 ```
 
-每个组件通常包含：
+每个组件通常关心：
 
-- 自己的结构。
-- 自己的样式。
-- 自己的状态和交互。
-- 对外暴露的 props。
-
-React 示例：
-
-```tsx
-type UserCardProps = {
-  name: string;
-};
-
-function UserCard({ name }: UserCardProps) {
-  return <div className="user-card">{name}</div>;
-}
+```text
+结构
+样式
+状态
+事件
+props
 ```
 
-Vue 示例：
+组件化的价值不是“文件变多”，而是让页面变成可理解、可复用、可维护的小单元。
 
-```vue
-<script setup lang="ts">
-defineProps<{
-  name: string;
-}>();
-</script>
+---
 
-<template>
-  <div class="user-card">{{ name }}</div>
-</template>
-```
+### 3. 声明式 UI 是什么
 
-### 声明式 UI 是什么
-
-声明式 UI 的意思是：你描述“在某个数据状态下，界面应该是什么样”，而不是一步步命令浏览器怎么改 DOM。
-
-命令式思路：
+原生 DOM 更像命令式：
 
 ```js
-if (isLoggedIn) {
-  document.querySelector("#login").style.display = "none";
-  document.querySelector("#profile").style.display = "block";
-}
+button.style.display = isVisible ? "block" : "none";
 ```
 
-声明式思路：
+React / Vue 更像声明式：
+
+```text
+当数据是这个状态时，界面应该长这样。
+```
+
+React：
 
 ```tsx
 function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
@@ -96,7 +95,7 @@ function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
 }
 ```
 
-Vue 里也是类似：
+Vue：
 
 ```vue
 <template>
@@ -105,145 +104,145 @@ Vue 里也是类似：
 </template>
 ```
 
-### 数据驱动视图是什么
+---
 
-数据变化，界面自动重新表达这个数据。
-
-```text
-state 改变 -> 框架重新计算 UI -> 更新 DOM
-```
-
-你不需要手动说“把第几个 DOM 节点文字改成什么”，而是更新数据，让框架处理界面更新。
-
-### 这篇最重要的判断句
-
-React 和 Vue 最重要的共同点不是语法，而是它们都把你从“手动操作 DOM”带到“用数据描述 UI”。
-
-| 你写的东西 | 谁在工作 |
-|---|---|
-| React `useState` | React 记录状态并触发重新渲染 |
-| Vue `ref` | Vue 记录响应式数据并更新视图 |
-| JSX / TSX | React 用 JavaScript 表达 UI |
-| Vue template | Vue 用模板表达 UI |
-| props | 父组件把数据交给子组件 |
-| 组件重新显示 | 框架根据数据变化更新 DOM |
-
-一句话：
-
-```text
-React/Vue 负责 UI 和组件，不负责启动项目，也不等于路由或状态管理。
-```
-
-## 技术关系
-
-### React 和 Vue 的共同点
+### 4. React 和 Vue 的共同点
 
 | 共同点 | 说明 |
 |---|---|
-| 都是 UI 框架 | 都用来构建界面 |
+| 都是 UI 框架 | 负责构建界面 |
 | 都支持组件化 | 页面拆成组件 |
-| 都强调数据驱动视图 | 数据变化后更新界面 |
-| 都能配 TypeScript | 提升大型项目可维护性 |
-| 都常和 Vite 搭配 | Vite 负责开发服务器和构建 |
-| 都需要路由和状态管理生态 | 复杂应用会引入相关工具 |
+| 都是数据驱动视图 | 数据变化后更新页面 |
+| 都能配 TypeScript | 提升维护性 |
+| 都常和 Vite 搭配 | Vite 管工程化 |
 
-### React 和 Vue 的差异
+最重要的一句：
+
+```text
+React/Vue 负责 UI，不负责启动项目，也不等于路由或状态管理。
+```
+
+---
+
+### 5. React 和 Vue 的差异
 
 | 维度 | React | Vue |
 |---|---|---|
-| 主要写法 | JSX / TSX | 单文件组件 `.vue` |
-| 模板风格 | 更接近 JavaScript 表达式 | 更接近 HTML 模板 |
-| 状态思路 | `useState`、hooks | `ref`、`reactive`、组合式 API |
-| 官方完整度 | 更偏核心库 + 生态选择 | 官方生态更集中，如 Vue Router、Pinia |
-| 上手感受 | JS 思维更强 | 模板语义更直观 |
+| UI 表达 | JSX / TSX | `.vue` template |
+| 感觉 | 用 JavaScript 写 UI | 写增强版 HTML |
+| 状态 | `useState`、Hooks | `ref`、`reactive` |
+| 生态 | 选择更多、更分散 | 官方生态更集中 |
 
-React 文件常见：
+同一个列表：
 
-```text
-src/
-  main.tsx
-  App.tsx
+React：
+
+```tsx
+<ul>
+  {todos.map((todo) => (
+    <li key={todo.id}>{todo.text}</li>
+  ))}
+</ul>
 ```
 
-Vue 文件常见：
+Vue：
 
-```text
-src/
-  main.ts
-  App.vue
+```vue
+<ul>
+  <li v-for="todo in todos" :key="todo.id">
+    {{ todo.text }}
+  </li>
+</ul>
 ```
 
-### React / Vue 和其他层的关系
+---
+
+## 技术关系
+
+React / Vue 在七层里是第三层：
 
 ```text
 基础层：HTML / CSS / JS / DOM
-  ↓
 语言增强层：TypeScript
-  ↓
 UI 框架层：React / Vue
-  ↓
-工程化层：Vite 帮它们运行、热更新、打包
-  ↓
-应用组织层：Router / Store 组织页面和状态
-  ↓
-应用框架层：Next.js / Nuxt.js 提供更完整应用方案
+工程化层：Vite
+应用组织层：Router / Store
+应用框架层：Next / Nuxt
 ```
 
-React 和 Vue 位于 UI 框架层，不负责所有事情。
+看到 React/Vue，只能说明项目用了 UI 框架，不能自动推出：
+
+```text
+一定用了 Vite
+一定用了路由
+一定用了状态管理
+一定是 Next/Nuxt
+```
+
+这些都要继续看 `package.json`、入口文件和目录结构。
+
+---
 
 ## 学习建议
 
-### 初学者如何选择 React 或 Vue
+初学者先选一个学深，不要同时纠结两个。
 
-可以按目标选择：
-
-| 目标 | 倾向选择 |
+| 目标 | 倾向 |
 |---|---|
-| 想进入 React 生态、Next.js、很多海外项目 | React |
-| 想上手快、模板直观、学习 Nuxt.js | Vue |
-| 做后台管理系统，团队已有技术栈 | 跟团队 |
-| 主要目标是理解现代前端 | 任选一个学深，再迁移另一个 |
+| 想进 React / Next 生态 | React |
+| 想上手更模板化、以后看 Nuxt | Vue |
+| 团队已有技术栈 | 跟团队 |
+| 只是建立现代前端理解 | 任选一个，再迁移另一个 |
 
-不要把选择框架当成信仰问题。它们解决的是同一类问题，只是表达方式不同。
+学框架时先抓这些：
 
-### 会 Vue 再学 React，哪些可以迁移
+```text
+组件怎么拆
+props 怎么传
+状态怎么变
+事件怎么处理
+列表和表单怎么写
+数据变了页面为什么会更新
+```
 
-可以迁移：
+不要一开始沉迷 API 数量。
 
-- 组件化思想。
-- props 传参。
-- 状态驱动视图。
-- 事件处理。
-- 路由、状态管理这类应用组织意识。
-- TypeScript 的基本使用。
+---
+
+### 会 Vue 再学 React，哪些能迁移
+
+能迁移：
+
+```text
+组件化
+props
+状态驱动视图
+事件处理
+列表渲染
+路由和状态管理意识
+```
 
 需要重新理解：
 
-- JSX / TSX 写法。
-- React hooks。
-- React 的状态更新和渲染机制。
-- 受控组件。
-- React 生态里更分散的工具选择。
+```text
+JSX / TSX
+Hooks
+React 状态更新方式
+受控组件
+React 生态里更分散的工具选择
+```
 
-### 学框架时最该抓住什么
+所以不是从零开始，但也不是换个语法就结束。
 
-不要一开始沉迷 API 列表。先抓住这几个核心问题：
-
-- 一个页面如何拆组件？
-- 父组件如何传数据给子组件？
-- 子组件如何通知父组件？
-- 数据变化时界面如何更新？
-- 什么时候需要全局状态？
-- 路由如何让不同页面切换？
+---
 
 ## 小结
 
-React 和 Vue 属于第三层：UI 框架层。
-
-它们解决的是“如何用组件和数据构建界面”的问题。它们依赖 HTML/CSS/JS，也常和 TypeScript、Vite、路由、状态管理一起出现。
-
-最重要的认知是：
+React 和 Vue 解决的是 UI 组织问题。
 
 ```text
-React/Vue 不是前端全部，它们是现代前端体系中负责 UI 的核心层。
+原生 DOM：你手动同步数据和页面。
+React/Vue：你用数据描述页面，框架负责更新。
 ```
+
+它们很重要，但不是现代前端的全部。

@@ -2,235 +2,197 @@
 
 ## 问题背景
 
-学完 React 或 Vue 后，你很快会遇到这些词：
+学完 React 或 Vue，很快会遇到：
 
 ```text
 SPA
-前端路由
-React Router
-Vue Router
-Redux
-Zustand
-Pinia
+Router
 props
 state
 store
+Redux
+Zustand
+Pinia
 ```
 
-这些不是和 React/Vue 平级的 UI 框架，也不是 Vite 那样的构建工具。它们主要解决“应用如何组织”的问题。
+这些不是新的 UI 框架，也不是 Vite 那样的构建工具。
 
-本文属于七层体系中的第五层：应用组织层。
+它们属于第五层：应用组织层。
 
 ```text
-上一层：Vite 等工程化工具让项目能运行和构建
-当前层：路由 / 状态管理 / 组件通信组织复杂应用
-下一层：Next.js / Nuxt.js 会把很多应用组织能力内置或约定化
+React/Vue 解决“组件怎么写”。
+Router/Store 解决“多个页面和多个组件怎么组织”。
 ```
+
+| 问题 | 答案 |
+|---|---|
+| 解决什么 | 页面切换、组件通信、跨组件共享数据 |
+| 依赖什么 | React/Vue 这类 UI 框架和运行中的前端项目 |
+| 上一层关系 | Vite 让项目运行，Router/Store 组织应用内部结构 |
+| 下一层关系 | Next/Nuxt 会把路由和应用结构进一步约定化 |
+
+---
 
 ## 核心解释
 
-### SPA 是什么
+### 1. SPA 是什么
 
-SPA 是 Single Page Application，单页应用。
+SPA = Single Page Application，单页应用。
 
-这里的“单页”不是说只有一个页面内容，而是说浏览器通常只加载一个入口 HTML，之后页面内容主要由 JavaScript 在前端切换。
+“单页”不是说只有一个功能，而是说：
 
 ```text
-用户打开 index.html
-  ↓
-加载 JS 应用
-  ↓
-点击导航
-  ↓
-前端根据 URL 显示不同组件
-  ↓
+浏览器先加载一个入口 HTML
+后续页面切换主要由 JavaScript 控制
 不一定整页刷新
 ```
 
-### 传统多页面和 SPA 的区别
-
-| 维度 | 传统多页面 | SPA |
-|---|---|---|
-| 页面跳转 | 通常请求新的 HTML | 前端切换组件 |
-| 首次加载 | 每页独立加载 | 先加载应用入口 |
-| 交互体验 | 更接近文档站 | 更接近应用 |
-| 路由控制 | 主要由服务器决定 | 前端路由负责 |
-| 常见技术 | 多个 HTML 页面 | React/Vue + Router |
-
-传统多页面：
+传统多页面像这样：
 
 ```text
-/about.html  -> 服务器返回 about.html
-/contact.html -> 服务器返回 contact.html
+/about.html -> 请求新的 HTML
+/users.html -> 再请求新的 HTML
 ```
 
-SPA：
+SPA 更像这样：
 
 ```text
-/about -> 前端路由显示 About 组件
-/contact -> 前端路由显示 Contact 组件
+/about -> 显示 About 组件
+/users -> 显示 Users 组件
 ```
 
-### 前端路由是什么
+---
 
-前端路由负责根据 URL 决定显示哪个页面组件。
+### 2. 前端路由管什么
 
-React Router 大概像这样：
-
-```tsx
-import { createBrowserRouter } from "react-router-dom";
-
-const router = createBrowserRouter([
-  { path: "/", element: <Home /> },
-  { path: "/users", element: <Users /> },
-]);
-```
-
-Vue Router 大概像这样：
-
-```ts
-import { createRouter, createWebHistory } from "vue-router";
-
-const router = createRouter({
-  history: createWebHistory(),
-  routes: [
-    { path: "/", component: Home },
-    { path: "/users", component: Users },
-  ],
-});
-```
-
-路由不是负责“画按钮”的，它负责“这个地址对应哪个页面”。
-
-### 为什么 React / Vue 项目通常需要路由
-
-如果项目只有一个页面，比如一个计数器，不需要路由。
-
-但如果有这些页面：
+路由管 URL 和页面组件的对应关系。
 
 ```text
-/login
-/dashboard
-/users
-/settings
+/counter -> CounterPage
+/todos   -> TodoPage
+/login   -> LoginPage
 ```
 
-就需要路由来组织页面切换。否则你只能用大量条件判断手动控制显示哪个组件，项目会很乱。
-
-### 状态管理是什么
-
-状态就是影响界面的数据。
-
-例如：
-
-- 当前登录用户。
-- 购物车数量。
-- 当前主题。
-- 列表筛选条件。
-- 弹窗是否打开。
-- 表单输入值。
-
-状态管理就是决定这些数据放在哪里、怎么改、谁能读。
-
-### 这篇最重要的判断句
-
-当项目从“一个组件”变成“多个页面 + 多个组件”时，问题就从 UI 写法变成了应用组织。
-
-| 你看到的现象 | 背后真正负责的是 |
-|---|---|
-| URL 从 `/` 变成 `/users` | 前端路由 |
-| 页面没有整页刷新 | SPA + 前端路由 |
-| 父组件给子组件传数据 | props |
-| 一个组件自己记输入框内容 | state |
-| 多个页面共享登录用户 | store / 状态管理 |
+它不负责“按钮怎么画”，也不负责“登录用户数据放哪”。
 
 一句话：
 
 ```text
-Router 管页面位置，State 管局部变化，Store 管共享数据。
+Router 管页面位置。
 ```
+
+---
+
+### 3. 状态管理管什么
+
+状态就是影响页面的数据：
+
+```text
+输入框内容
+弹窗开关
+当前用户
+购物车数量
+列表筛选条件
+```
+
+状态管理要回答：
+
+```text
+数据放在哪里？
+谁能读？
+谁能改？
+改了之后哪些组件要更新？
+```
+
+---
+
+### 4. props、state、store 的区别
+
+| 名词 | 适合什么 | 范围 |
+|---|---|---|
+| props | 父组件传给子组件的数据 | 父子之间 |
+| state | 当前组件自己的变化 | 局部 |
+| store | 多个页面或远距离组件共享的数据 | 全局或模块 |
+
+别一上来把所有东西都放 store。
+
+| 数据 | 更常见的位置 |
+|---|---|
+| 输入框内容 | state |
+| 弹窗开关 | state / 父组件 |
+| 父组件传子组件 | props |
+| 登录用户 | store |
+| 多页面共享 count | store |
+| 当前 URL | router |
+
+---
 
 ## 技术关系
 
-### props、state、store 的区别
+### 常见工具在哪一层
 
-| 名词 | 适合放什么 | 作用范围 |
+| 工具 | 生态 | 解决什么 |
 |---|---|---|
-| props | 父组件传给子组件的数据 | 父子组件之间 |
-| state | 当前组件自己的内部状态 | 单个组件或局部组件树 |
-| store | 多个页面或组件共享的状态 | 全局或模块级 |
+| React Router | React | 前端路由 |
+| Vue Router | Vue | 前端路由 |
+| Redux | React 常见 | 全局状态 |
+| Zustand | React 常见 | 轻量状态 |
+| Pinia | Vue 常见 | 全局状态 |
 
-关系图：
+它们依赖 React/Vue 项目，但不是 React/Vue 本身。
 
-```text
-父组件
-  └── props 传给子组件
+---
 
-组件内部
-  └── state 管自己的变化
-
-多个远距离组件
-  └── store 共享状态
-```
-
-不要一上来就把所有数据放进 store。很多状态只属于一个组件，放在组件内部更清楚。
-
-### 常见工具处在哪一层
-
-| 工具 | 常见生态 | 所在层级 | 解决什么 |
-|---|---|---|---|
-| React Router | React | 第五层 | 前端路由 |
-| Vue Router | Vue | 第五层 | 前端路由 |
-| Redux | React 常见 | 第五层 | 全局状态管理 |
-| Zustand | React 常见 | 第五层 | 轻量状态管理 |
-| Pinia | Vue 常见 | 第五层 | 全局状态管理 |
-
-它们依赖 UI 框架项目，但不是 UI 框架本身。
-
-### 和上一层、下一层的关系
+### 和其他层怎么配合
 
 ```text
-React / Vue：负责组件怎么写
-Vite：负责项目怎么跑
-路由：负责 URL 对应哪个页面组件
-状态管理：负责跨组件数据如何共享
-Next / Nuxt：把路由和应用结构进一步框架化
+React/Vue：组件怎么写
+Vite：项目怎么跑
+Router：URL 对应哪个页面
+Store：共享数据怎么放
+Next/Nuxt：把路由和结构进一步约定化
 ```
 
-在普通 Vite + React/Vue 项目里，你通常要自己选路由和状态管理工具。
+在普通 Vite + React/Vue 项目里，路由和状态管理通常要自己选。
 
-在 Next.js / Nuxt.js 里，路由往往有框架约定，比如基于文件目录生成路由。
+在 Next/Nuxt 里，路由往往被框架约定了一部分。
+
+---
 
 ## 学习建议
 
-初学者最容易混淆的地方是：以为每个概念都必须马上用。
+按这个顺序学，不容易乱：
 
-更好的顺序是：
-
-1. 先学组件自己的 `state`。
-2. 再学父子组件用 `props` 通信。
-3. 页面多了再学前端路由。
-4. 数据真的跨很多组件共享时，再学 store。
-5. 不要为了“现代”而提前引入复杂状态管理。
+```text
+先学组件内部 state
+再学 props
+页面多了再学 Router
+数据真的跨组件共享，再学 Store
+```
 
 判断是否需要 store，可以问：
 
-| 问题 | 如果答案是“是” |
-|---|---|
-| 这个数据是否被很多远距离组件使用？ | 可以考虑 store |
-| 刷新页面后是否需要重新获取？ | 先区分本地状态和服务端数据 |
-| 只是一个弹窗开关吗？ | 通常放组件 state 就够 |
-| 只是父组件传子组件吗？ | 用 props 就够 |
+```text
+这个数据是否被很多远距离组件使用？
+是不是多个页面都需要？
+只是一个局部输入框吗？
+只是父子组件传值吗？
+```
+
+如果只是局部状态，别急着上全局状态管理。
+
+---
 
 ## 小结
 
-第五层解决的是“应用如何组织”。
+第五层解决的是“应用怎么组织”。
 
 ```text
-SPA：一种前端应用形态
-前端路由：负责地址和页面组件的对应关系
-状态管理：负责复杂数据在组件之间的共享和更新
-props/state/store：不同范围的数据组织方式
+SPA：应用形态
+Router：页面位置
+props：父子传值
+state：局部状态
+store：共享状态
 ```
 
-React/Vue 让你能写组件，路由和状态管理让多个组件组成一个真正的应用。
+React/Vue 让你写组件；Router/Store 让组件组成更像应用的东西。

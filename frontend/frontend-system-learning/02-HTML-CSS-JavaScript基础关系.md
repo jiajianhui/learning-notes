@@ -2,115 +2,212 @@
 
 ## 问题背景
 
-很多初学者会问：如果我已经在学 React 或 Vue，还要不要认真学 HTML、CSS、JavaScript？
+学了 React 或 Vue，还要不要学原生基础？
 
-答案是：要。React 和 Vue 不是浏览器的原生语言，它们最终仍然要落到 HTML、CSS、JavaScript 和 DOM 上。你可以用框架提高开发效率，但不能绕过浏览器的基本规则。
+要。框架会改变写法，但不会改变浏览器的底层模型。
 
-本文属于七层体系中的第一层：基础层。
+本文属于第一层：基础层。
 
 ```text
-第一层：基础层
 HTML / CSS / JavaScript / DOM
-
-上一层：没有更底的前端应用层
-下一层：TypeScript、React、Vue、Vite 等都建立在这些基础之上
 ```
+
+| 问题 | 答案 |
+|---|---|
+| 解决什么 | 让浏览器能显示页面、应用样式、响应交互 |
+| 依赖什么 | 浏览器本身 |
+| 下一层关系 | TypeScript、React/Vue、Vite 都建立在这一层之上 |
+
+你现在写过 `minimal-frontend-demo/01-html-css-js`，这篇要做的事很简单：把你刚写过的代码放回基础层理解。
+
+---
 
 ## 核心解释
 
-### HTML 是结构
+### 1. 三件事分工不同
 
-HTML 负责描述页面里有什么内容，以及内容之间的大致结构。
+| 技术 | 负责什么 | 在你的 demo 里像什么 |
+|---|---|---|
+| HTML | 页面结构 | `span`、`button`、`input`、`ul` |
+| CSS | 页面样式 | 颜色、间距、布局 |
+| JavaScript | 交互逻辑 | 点击加一、添加待办、删除待办 |
+| DOM | JS 操作页面的接口 | `querySelector`、`textContent`、`appendChild` |
 
-```html
-<article>
-  <h1>现代前端学习</h1>
-  <p>先理解结构、样式和交互。</p>
-  <button>开始学习</button>
-</article>
+所以不要把前端理解成“写 JS”。前端最底层一直是：
+
+```text
+结构 + 样式 + 逻辑 + 浏览器对象模型
 ```
 
-它更关心：
+---
 
-- 这里是标题还是段落。
-- 这里是按钮还是输入框。
-- 页面内容如何组织。
-- 元素之间是什么层级关系。
+### 2. HTML 是结构
 
-### CSS 是样式
+HTML 负责“页面里有什么”。
 
-CSS 负责让结构变得可见、可读、好看。
+```html
+<p>当前计数：<span id="span">0</span></p>
+<button id="btn">+</button>
+
+<input id="input" type="text">
+<button id="addBtn">添加</button>
+<ul id="ul"></ul>
+```
+
+这里的重点不是好不好看，而是给 JavaScript 留下可操作的目标。
+
+---
+
+### 3. CSS 是样式
+
+CSS 负责“页面长什么样”。
 
 ```css
-article {
+main {
   max-width: 720px;
-  margin: 0 auto;
+  margin: 40px auto;
+  font-family: system-ui, sans-serif;
 }
 
 button {
-  padding: 8px 12px;
+  padding: 6px 12px;
+  border: 1px solid #222;
   border-radius: 6px;
+  cursor: pointer;
+}
+
+li {
+  margin-top: 8px;
 }
 ```
 
-它更关心：
+CSS 不负责点击逻辑，也不负责数据变化。它只负责让元素有布局、尺寸、颜色、间距和状态样式。
 
-- 颜色、字体、间距。
-- 布局方式。
-- 响应式适配。
-- 动画和状态样式。
+---
 
-### JavaScript 是交互和逻辑
+### 4. JavaScript 通过 DOM 找到 HTML
 
-JavaScript 负责让页面“动起来”，处理用户行为和业务逻辑。
+你的代码里有这些选择：
 
 ```js
-const button = document.querySelector("button");
+const spanEl = document.querySelector("#span");
+const btnEl = document.querySelector("#btn");
+const inputEl = document.querySelector("#input");
+const ulEl = document.querySelector("#ul");
+```
 
-button.addEventListener("click", () => {
-  alert("开始学习");
+这就是 DOM 的意义：
+
+```text
+HTML 是页面结构。
+DOM 是浏览器把 HTML 变成的对象树。
+JavaScript 通过 DOM API 操作页面。
+```
+
+如果 HTML 里没有对应的 `id`，JS 就找不到元素。
+
+---
+
+### 5. 数据不会自动同步到页面
+
+原生写法里，数据和页面是分开的。
+
+```js
+let total = 0;
+
+btnEl.addEventListener("click", () => {
+  total += 1;
+  spanEl.textContent = String(total);
 });
 ```
 
-它更关心：
+`total += 1` 只改变变量。
 
-- 点击后发生什么。
-- 数据如何计算。
-- 请求结果如何展示。
-- 页面状态如何变化。
-
-### DOM 是什么
-
-DOM 可以理解成浏览器把 HTML 解析后形成的“页面对象树”。
-
-```html
-<body>
-  <h1>标题</h1>
-  <button>按钮</button>
-</body>
-```
-
-浏览器会把它理解成类似这样的结构：
-
-```text
-document
-└── body
-    ├── h1
-    └── button
-```
-
-JavaScript 通过 DOM API 操作页面：
+真正让页面变化的是：
 
 ```js
-const title = document.querySelector("h1");
-title.textContent = "新的标题";
+spanEl.textContent = String(total);
 ```
 
-React 和 Vue 虽然让你少写很多 DOM 操作，但它们最终仍然会更新真实 DOM。
+待办列表也是一样：
 
-### 这篇最重要的判断句
+```js
+todos.push(content);
+renderList();
+```
 
-不管你以后写 React、Vue、Next 还是 Nuxt，浏览器最终理解的仍然是：
+数组变了不等于页面变了。你还要重新渲染列表。
+
+---
+
+## 技术关系
+
+### 原生基础和框架的关系
+
+| 原生写法 | React / Vue 里的对应概念 |
+|---|---|
+| HTML 标签 | JSX / Vue template |
+| CSS 样式 | 组件样式、scoped CSS、CSS Modules |
+| `addEventListener` | `onClick` / `@click` |
+| 普通变量 | state / ref |
+| 手动改 DOM | 框架根据数据更新 DOM |
+
+框架不是把基础替换掉，而是把基础重新组织了一遍。
+
+---
+
+### 同一个计数器的三种写法
+
+原生 JavaScript：
+
+```js
+let total = 0;
+const spanEl = document.querySelector("#span");
+const btnEl = document.querySelector("#btn");
+
+btnEl.addEventListener("click", () => {
+  total += 1;
+  spanEl.textContent = String(total);
+});
+```
+
+React：
+
+```tsx
+function Counter() {
+  const [total, setTotal] = useState(0);
+
+  return <button onClick={() => setTotal(total + 1)}>点击 {total} 次</button>;
+}
+```
+
+Vue：
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+
+const total = ref(0);
+</script>
+
+<template>
+  <button @click="total++">点击 {{ total }} 次</button>
+</template>
+```
+
+对比重点：
+
+| 写法 | 状态在哪里 | 页面怎么更新 |
+|---|---|---|
+| 原生 JS | 普通变量 `total` | 手动改 `textContent` |
+| React | `useState` | React 重新渲染 |
+| Vue | `ref` | Vue 响应式更新 |
+
+---
+
+### 浏览器实际理解的仍然是这些
+
+不管你以后写什么框架，浏览器最终理解的是：
 
 ```text
 HTML
@@ -119,144 +216,41 @@ JavaScript
 DOM
 ```
 
-| 你在框架里看到的写法 | 背后对应的基础 |
-|---|---|
-| JSX / Vue template | HTML 结构表达 |
-| className / class / scoped CSS | CSS 样式规则 |
-| onClick / @click | JavaScript 事件 |
-| state 改变后页面更新 | 框架替你更新 DOM |
-| 组件挂载到 `#root` / `#app` | 最终仍然进入 DOM 树 |
+React 的 JSX、Vue 的 template、TypeScript 的类型，最后都要经过工具处理，变成浏览器能运行的东西。
 
-一句话：
-
-```text
-框架改变的是写法和组织方式，不改变浏览器的底层模型。
-```
-
-## 技术关系
-
-### 浏览器如何理解 HTML / CSS / JS
-
-简化后可以看成：
-
-```text
-HTML -> 解析成 DOM 树
-CSS -> 解析成样式规则
-JavaScript -> 执行逻辑，读取或修改 DOM
-
-DOM + CSS -> 渲染成你看到的页面
-```
-
-关系图：
-
-```text
-HTML 负责骨架
-  ↓
-DOM 是浏览器理解后的页面结构
-  ↑
-JavaScript 读取和修改 DOM
-  ↓
-CSS 控制 DOM 元素如何显示
-```
-
-### 原生能力和框架能力的关系
-
-| 原生前端能力 | 框架里的对应能力 |
-|---|---|
-| HTML 标签 | JSX / Vue Template |
-| CSS 样式 | CSS Modules / scoped CSS / 组件样式 |
-| DOM 操作 | React/Vue 的渲染机制 |
-| 事件监听 | `onClick` / `@click` |
-| 数据变化后手动改页面 | 数据驱动视图 |
-
-举个对比：
-
-原生写法：
-
-```js
-let count = 0;
-const button = document.querySelector("#counter");
-
-button.addEventListener("click", () => {
-  count += 1;
-  button.textContent = `点击 ${count} 次`;
-});
-```
-
-React 写法：
-
-```tsx
-function Counter() {
-  const [count, setCount] = useState(0);
-
-  return (
-    <button onClick={() => setCount(count + 1)}>
-      点击 {count} 次
-    </button>
-  );
-}
-```
-
-Vue 写法：
-
-```vue
-<script setup lang="ts">
-import { ref } from "vue";
-
-const count = ref(0);
-</script>
-
-<template>
-  <button @click="count++">点击 {{ count }} 次</button>
-</template>
-```
-
-框架让你少关心“怎么手动改 DOM”，更多关心“数据是什么，界面应该长什么样”。
+---
 
 ## 学习建议
 
-基础层不需要一开始学到极深，但要达到能读懂项目的程度。
+基础层不用一次学成专家，但要够用。
 
-### HTML 建议掌握
-
-| 能力 | 为什么重要 |
+| 方向 | 先学到什么程度 |
 |---|---|
-| 常见标签 | React/Vue 模板本质上还是在描述 HTML |
-| 表单元素 | 真实项目经常有输入、选择、提交 |
-| 语义化 | 有助于可访问性和页面结构理解 |
-| 元素嵌套规则 | 避免写出浏览器解析异常的结构 |
+| HTML | 常见标签、表单、语义化、嵌套关系 |
+| CSS | 盒模型、Flex、Grid、定位、响应式 |
+| JavaScript | 变量、函数、数组、对象、事件、模块、异步 |
+| DOM | 能查找元素、监听事件、修改文本、创建节点 |
 
-### CSS 建议掌握
+现在最该复盘你的原生 demo：
 
-| 能力 | 为什么重要 |
-|---|---|
-| 盒模型 | 布局问题的基础 |
-| Flex / Grid | 现代布局最常用 |
-| 定位 | 弹窗、浮层、固定栏都依赖它 |
-| 响应式 | 页面要适配不同屏幕 |
-| 状态样式 | hover、focus、disabled 很常见 |
+```text
+HTML 提供了哪些元素？
+JS 用哪些 id 找到它们？
+哪些代码只改了数据？
+哪些代码真的改了页面？
+```
 
-### JavaScript 建议掌握
-
-| 能力 | 为什么重要 |
-|---|---|
-| 变量、函数、对象、数组 | 所有框架代码都离不开 |
-| 模块导入导出 | 现代项目文件组织基础 |
-| Promise / async await | 请求和异步逻辑基础 |
-| DOM API | 理解框架最终在操作什么 |
-| 事件机制 | 点击、输入、提交都基于事件 |
-
-不要把基础当成“学完才准学框架”的门槛。更好的方式是：先掌握基本模型，再通过框架项目反复补基础。
+---
 
 ## 小结
 
-第一层是现代前端的地基：
+第一层是地基。
 
 ```text
-HTML：页面结构
-CSS：视觉表现
-JavaScript：交互逻辑
-DOM：浏览器中的页面对象模型
+HTML 负责结构
+CSS 负责样式
+JavaScript 负责逻辑
+DOM 让 JS 能操作页面
 ```
 
-React、Vue、Vite、Next、Nuxt 都不能让你跳过这层。框架越高级，越需要你知道它最终是在帮你组织和更新什么。
+你以后学 React/Vue，不是为了忘掉基础，而是为了少写混乱的手动 DOM 操作。

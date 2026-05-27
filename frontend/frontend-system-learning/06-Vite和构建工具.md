@@ -2,7 +2,16 @@
 
 ## 问题背景
 
-很多人看到创建项目时有这些选项：
+你会经常看到：
+
+```text
+npm create vite@latest
+vite.config.ts
+npm run dev
+localhost:5173
+```
+
+也会看到 Vite 创建项目时让你选：
 
 ```text
 Vanilla
@@ -10,7 +19,7 @@ Vue
 React
 ```
 
-又看到项目里有 `vite.config.ts`，于是容易误以为：
+这很容易让人误会：
 
 ```text
 Vite = React？
@@ -18,37 +27,51 @@ Vite = Vue？
 用了 Vite 就一定用了框架？
 ```
 
-这些都不准确。本文属于七层体系中的第四层：工程化层。
+都不是。
 
-```text
-上一层：React / Vue 负责写 UI
-当前层：Vite / 构建工具负责开发服务器、热更新、打包
-下一层：路由、状态管理等应用组织能力会运行在项目之上
-```
+本文属于第四层：工程化层。
+
+| 问题 | 答案 |
+|---|---|
+| 解决什么 | 开发服务器、代码转换、热更新、生产打包 |
+| 依赖什么 | Node.js、npm、JavaScript 模块和项目文件 |
+| 上一层关系 | React/Vue 写 UI，Vite 帮项目跑起来 |
+| 下一层关系 | Router/Store 等应用组织能力运行在项目之上 |
+
+---
 
 ## 核心解释
 
-### Vite 是什么
+### 1. Vite 是什么
 
-Vite 是现代前端构建工具。你可以先把它理解成：
+先粗暴记：
 
 ```text
-Vite = 本地开发服务器 + 构建打包工具 + 资源处理工具
+Vite = 开发服务器 + 代码转换 + 热更新 + 打包
 ```
 
-它负责让你在开发时运行项目：
+开发时：
 
-```json
-{
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  }
-}
+```bash
+npm run dev
 ```
 
-也负责把生产代码打包成浏览器可部署的静态资源：
+背后通常是：
+
+```text
+npm 读取 package.json
+执行 scripts.dev
+启动 vite
+浏览器打开 localhost
+```
+
+生产时：
+
+```bash
+npm run build
+```
+
+Vite 会生成类似：
 
 ```text
 dist/
@@ -58,195 +81,170 @@ dist/
     index-xxxx.css
 ```
 
-### Vite 为什么不是 React / Vue
+---
 
-React 和 Vue 是写界面的框架。Vite 是让项目开发和构建更顺畅的工具。
+### 2. Vite 为什么不是 React / Vue
 
-| 技术 | 所在层 | 负责什么 |
+分工不同。
+
+| 技术 | 层级 | 负责什么 |
 |---|---|---|
 | React | UI 框架层 | 写组件和界面 |
 | Vue | UI 框架层 | 写组件和界面 |
-| Vite | 工程化层 | 启动、热更新、打包、资源处理 |
+| Vite | 工程化层 | 启动、转换、热更新、打包 |
 
-所以你会看到这些组合：
+所以可以有：
 
 ```text
+Vite + Vanilla TS
 Vite + React
 Vite + Vue
-Vite + Vanilla TS
 ```
 
-Vite 可以配框架，也可以不配框架。
+Vite 是项目怎么跑，React/Vue 是 UI 怎么写。
 
-### 为什么很多人误以为 Vite = React 或 Vue
+---
 
-因为创建项目时，Vite 经常作为入口工具：
-
-```text
-npm create vite@latest
-```
-
-它会让你选择模板：
-
-```text
-React
-Vue
-Vanilla
-```
-
-初学者会把“创建项目的工具”和“项目使用的框架”混在一起。
-
-更准确的理解是：
-
-```text
-Vite 帮你创建和运行项目
-React/Vue 决定你用什么方式写 UI
-```
-
-再拆细一点：
-
-```text
-npm：执行 package.json 里的 scripts
-Vite：启动开发服务器、热更新、打包
-React/Vue：描述和更新界面
-TypeScript：提供类型检查和类型提示
-插件：让 Vite 理解 JSX、TSX、.vue 等开发写法
-```
-
-## 技术关系
-
-### 构建工具负责什么
+### 3. 浏览器不认识哪些现代写法
 
 现代项目里你可能写：
 
-- TypeScript。
-- JSX / TSX。
-- Vue 单文件组件。
-- CSS 模块。
-- 图片、字体等资源引用。
-- 多文件模块导入。
+```text
+TypeScript
+JSX / TSX
+.vue 单文件组件
+import / export
+CSS、图片、字体资源
+```
 
-浏览器最终需要的是普通 HTML、CSS、JavaScript 和静态资源。构建工具负责把开发写法处理成浏览器能运行的结果。
+浏览器最终需要的是普通 HTML、CSS、JavaScript 和静态资源。
 
-| 职责 | 说明 |
+Vite 的价值就是帮你从“开发写法”走到“浏览器能运行”。
+
+---
+
+### 4. 开发服务器和打包不是一回事
+
+| 概念 | 发生在什么时候 | 目的 |
+|---|---|---|
+| 开发服务器 | 本地开发时 | 让你在 `localhost` 预览、热更新 |
+| 打包 | 准备发布前 | 生成生产环境文件，如 `dist/` |
+
+```text
+npm run dev    -> 开发服务器
+npm run build  -> 生产打包
+```
+
+开发服务器不是正式后端服务，打包结果也不是你的源码目录。
+
+---
+
+### 5. Vanilla TS 是什么
+
+Vanilla 的意思是“不使用 React/Vue 这类 UI 框架”。
+
+```text
+Vanilla TS = TypeScript + 原生 DOM API + 构建工具
+```
+
+典型线索：
+
+```text
+src/main.ts
+document.querySelector
+addEventListener
+没有 react/vue/next/nuxt
+```
+
+所以有 Vite，不代表一定有 React/Vue。
+
+---
+
+## 技术关系
+
+### Vite 和常见技术的关系
+
+| 项目 | Vite 的角色 |
 |---|---|
-| 开发服务器 | 本地启动项目，通常是 `localhost` |
-| 热更新 | 修改文件后页面快速更新 |
-| 模块处理 | 处理 `import` / `export` |
-| TypeScript 转换 | 把 TS 转为 JS |
-| 框架插件 | 处理 React JSX 或 Vue SFC |
-| 打包 | 生成生产环境文件 |
-| 资源处理 | 处理 CSS、图片、字体等 |
+| Vanilla TS | 运行和打包原生 TS 项目 |
+| React | 配合 React 插件处理 JSX / TSX |
+| Vue | 配合 Vue 插件处理 `.vue` 文件 |
+| Next.js | 通常由 Next 自己做项目入口 |
+| Nuxt.js | 可能内部用 Vite，但入口是 Nuxt |
 
-### 开发服务器是什么
+判断项目入口时，看 `package.json`：
 
-开发服务器是本地开发时运行项目的服务。
+| scripts.dev | 优先判断 |
+|---|---|
+| `vite` | Vite 项目 |
+| `next dev` | Next.js 项目 |
+| `nuxt dev` / `nuxi dev` | Nuxt.js 项目 |
 
-```text
-npm run dev
-  ↓
-vite 启动开发服务器
-  ↓
-浏览器打开 http://localhost:5173
-```
+---
 
-它不是正式部署，也不是后端业务服务。它主要服务于本地开发体验。
+### vite.config.ts 能说明什么
 
-### 打包是什么
-
-打包是把开发目录转换成生产目录。
-
-开发时：
-
-```text
-src/
-  main.tsx
-  App.tsx
-  components/
-```
-
-打包后：
-
-```text
-dist/
-  index.html
-  assets/
-    index-a1b2c3.js
-    index-d4e5f6.css
-```
-
-真实用户访问的通常是打包后的文件，而不是你的 `src/` 源码。
-
-### 什么是 Vanilla TS 项目
-
-Vanilla 的意思是“不使用 React/Vue 这类 UI 框架”。Vanilla TS 就是：
-
-```text
-TypeScript + 原生 DOM API + 构建工具
-```
-
-典型文件：
-
-```text
-src/
-  main.ts
-index.html
-package.json
-vite.config.ts
-```
-
-代码可能是：
+React + Vite：
 
 ```ts
-const app = document.querySelector<HTMLDivElement>("#app");
+import react from "@vitejs/plugin-react";
 
-if (app) {
-  app.innerHTML = "<button>保存</button>";
-}
+export default {
+  plugins: [react()],
+};
 ```
 
-它用了 Vite，但没有 React 或 Vue。
+Vue + Vite：
 
-### Vite 和 React / Vue / Next / Nuxt 的关系
+```ts
+import vue from "@vitejs/plugin-vue";
 
-| 对象 | 和 Vite 的关系 |
-|---|---|
-| React | Vite 可以通过 `@vitejs/plugin-react` 支持 React |
-| Vue | Vite 可以通过 `@vitejs/plugin-vue` 支持 Vue |
-| Vanilla TS | Vite 可以直接运行原生 TS 项目 |
-| Next.js | Next.js 自带自己的应用框架和构建体系，一般不需要你单独配 Vite |
-| Nuxt.js | Nuxt 是 Vue 应用框架，内部可能使用 Vite 作为构建能力的一部分，但你通常以 Nuxt 为入口 |
+export default {
+  plugins: [vue()],
+};
+```
 
-判断层级时要看“谁是项目入口”：
+Vanilla TS 可能没有框架插件。
 
 ```text
-scripts 里是 vite dev -> 多半是 Vite 项目
-scripts 里是 next dev -> Next.js 项目
-scripts 里是 nuxt dev 或 nuxi dev -> Nuxt.js 项目
+有 vite.config.ts：说明有 Vite 相关配置。
+有 React/Vue 插件：才进一步说明用了对应框架。
 ```
+
+---
 
 ## 学习建议
 
-学 Vite 不需要一开始深入插件开发。先掌握这些就够用：
+初学 Vite 先会这些就够：
 
-- 会看 `package.json` 的 `scripts`。
-- 知道 `npm run dev` 是启动开发服务器。
-- 知道 `npm run build` 是打包生产代码。
-- 能看懂 `vite.config.ts` 里用了 React 插件还是 Vue 插件。
-- 知道 Vite 可以和 React、Vue、Vanilla TS 搭配。
+```text
+看懂 package.json 的 scripts
+知道 npm run dev 是启动开发服务器
+知道 npm run build 是打包
+知道 vite.config.ts 是工程配置
+知道 Vite 可以搭 React、Vue、Vanilla TS
+```
 
-重点不是背 Vite 配置项，而是理解它处在工程化层。
+先别急着研究插件开发。
+
+你下一步做 `02-vite-vanilla-ts` 时，重点感受：
+
+```text
+同样是计数器 + 列表，
+业务功能没变，
+项目运行方式变成了 npm + Vite。
+```
+
+---
 
 ## 小结
 
 Vite 属于第四层：工程化层。
 
-它不是 React，也不是 Vue。它负责让现代前端项目更容易开发、热更新、转换和打包。
-
-最实用的判断方式是：
-
 ```text
-Vite 看 scripts 和 vite.config.ts
-React/Vue 看 dependencies、入口文件和组件文件
-Next/Nuxt 看 scripts、配置文件和目录约定
+React/Vue 管 UI。
+Vite 管开发、转换、热更新和打包。
+npm run dev 背后是谁，要看 scripts.dev。
 ```
+
+这个判断非常重要。
