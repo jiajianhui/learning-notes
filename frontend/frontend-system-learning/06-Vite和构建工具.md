@@ -235,6 +235,43 @@ Vanilla TS 可能没有框架插件。
 项目运行方式变成了 npm + Vite。
 ```
 
+### 读完 06 做什么
+
+读完 06，做第二版：
+
+```text
+frontend/minimal-frontend-demo/02-vite-vanilla-ts/
+```
+
+推荐初始化方式：
+
+```bash
+cd frontend/minimal-frontend-demo
+npm create vite@latest 02-vite-vanilla-ts -- --template vanilla-ts
+cd 02-vite-vanilla-ts
+npm install
+npm run dev
+```
+
+功能仍然和 01 一样：
+
+```text
+计数器
+Todo 输入
+添加 Todo
+删除 Todo
+```
+
+这一版的重点：
+
+| 观察点 | 你要能说清楚 |
+|---|---|
+| `npm run dev` | npm 读取 `package.json`，启动 Vite |
+| `src/main.ts` | 入口从普通 JS 变成 TypeScript |
+| `querySelector<HTMLButtonElement>` | TS 在帮助你描述 DOM 元素类型 |
+| `const todos: string[] = []` | TS 在帮助你描述数组内容 |
+| 页面更新方式 | 仍然是手动 DOM，不是框架自动更新 |
+
 ---
 
 ## 小结

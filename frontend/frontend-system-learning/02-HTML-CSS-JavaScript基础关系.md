@@ -231,7 +231,7 @@ React 的 JSX、Vue 的 template、TypeScript 的类型，最后都要经过工�
 | JavaScript | 变量、函数、数组、对象、事件、模块、异步 |
 | DOM | 能查找元素、监听事件、修改文本、创建节点 |
 
-现在最该复盘你的原生 demo：
+做 01 原生 demo 时，盯住这几个问题：
 
 ```text
 HTML 提供了哪些元素？
@@ -239,6 +239,25 @@ JS 用哪些 id 找到它们？
 哪些代码只改了数据？
 哪些代码真的改了页面？
 ```
+
+### 读完 02 做什么
+
+读完 02，做第一版：
+
+```text
+frontend/minimal-frontend-demo/01-html-css-js/
+```
+
+功能保持不变：
+
+```text
+计数器
+Todo 输入
+添加 Todo
+删除 Todo
+```
+
+这一版只用 HTML / CSS / JavaScript，不用 Node、Vite、React、Vue。
 
 ---
 

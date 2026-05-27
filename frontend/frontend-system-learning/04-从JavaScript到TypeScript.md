@@ -246,10 +246,20 @@ function TodoItem({ todo }: TodoItemProps) {
 为了炫技写的工具类型
 ```
 
-最好的练习就是下一步：
+这些类型写法后面会在 Vite + Vanilla TS 版里用上：
+
+| 原生 JS 写法 | TS 里可以怎么理解 |
+|---|---|
+| `let total = 0` | TS 会推断 `total` 是 `number` |
+| `const todos = []` | 更清楚的写法是 `const todos: string[] = []` |
+| `document.querySelector("#btn")` | 可以写成 `document.querySelector<HTMLButtonElement>("#btn")` |
+| `{ id, text, done }` | 可以抽成 `type Todo = { ... }` |
+
+Vite + Vanilla TS 版本放到读完 06 之后做。
 
 ```text
-把原生 JS demo 改成 Vite + Vanilla TS。
+04 讲的是 TypeScript 属于哪一层。
+06 才讲 Vite 怎么启动项目、处理 TS、提供开发服务器。
 ```
 
 ---

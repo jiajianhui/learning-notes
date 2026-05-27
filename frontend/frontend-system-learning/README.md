@@ -144,16 +144,22 @@ Router 和 Store 也不是一件事。
 14 练习题
 ```
 
-配合练习节奏：
+### 项目实践节点
+
+练习原则只有一个：
 
 ```text
-看 00
-做 minimal-frontend-demo/01-html-css-js
-看 01 / 02
-看 03 / 04 / 06
-做 minimal-frontend-demo/02-vite-vanilla-ts
-再进入 Vue / React
+同一个计数器 + 列表项目，用不同技术实现。
 ```
+
+文档可以连续读；真正需要动手写代码的节点只有这些：
+
+| 读到哪里 | 做哪个版本 | 技术重点 |
+|---|---|---|
+| 读完 02 | `minimal-frontend-demo/01-html-css-js` | 原生 HTML / CSS / JavaScript |
+| 读完 06 | `minimal-frontend-demo/02-vite-vanilla-ts` | Vite + Vanilla TypeScript |
+| 读完 05 和 06 | `minimal-frontend-demo/03-vue` 或 `04-react` | 用 UI 框架重写同一功能 |
+| 读完 07 | `minimal-frontend-demo/05-router`、`06-state-management` | 在框架版上加路由和共享状态 |
 
 ---
 
