@@ -150,6 +150,7 @@ Vanilla TS = TypeScript + 原生 DOM API + 构建工具
 典型线索：
 
 ```text
+index.html 引入 /src/main.ts
 src/main.ts
 document.querySelector
 addEventListener
@@ -276,7 +277,8 @@ Todo 输入
 | 观察点 | 你要能说清楚 |
 |---|---|
 | `npm run dev` | npm 读取 `package.json`，启动 Vite |
-| `src/main.ts` | 入口从普通 JS 变成 TypeScript |
+| `index.html` | 浏览器先加载的 HTML 入口，里面引入 `/src/main.ts` |
+| `src/main.ts` | 应用脚本入口从普通 JS 变成 TypeScript |
 | `querySelector<HTMLButtonElement>` | TS 在帮助你描述 DOM 元素类型 |
 | `const todos: string[] = []` | TS 在帮助你描述数组内容 |
 | 页面更新方式 | 仍然是手动 DOM，不是框架自动更新 |
