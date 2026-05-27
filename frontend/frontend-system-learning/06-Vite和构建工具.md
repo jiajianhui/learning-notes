@@ -182,7 +182,16 @@ addEventListener
 
 ---
 
-### vite.config.ts 能说明什么
+### 从 vite.config.ts 看插件线索
+
+`vite.config.ts` 是 Vite 的配置文件。它不能单独说明“这是 React 项目”或“这是 Vue 项目”，但可以看出 Vite 配了哪些插件。
+
+判断顺序可以这样记：
+
+```text
+先看 package.json 的 scripts.dev，判断项目由谁启动。
+再看 vite.config.ts 的 plugins，判断 Vite 配合了哪些技术。
+```
 
 React + Vite：
 
