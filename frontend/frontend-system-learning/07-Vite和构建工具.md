@@ -247,13 +247,15 @@ Vanilla TS 可能没有框架插件。
 
 ### 读完 07 做什么
 
-读完 07，先做第二版：
+读完 07，依次做三个版本：
 
 ```text
 frontend/minimal-frontend-demo/02-vite-vanilla-ts/
+frontend/minimal-frontend-demo/03-vue/
+frontend/minimal-frontend-demo/04-react/
 ```
 
-推荐初始化方式：
+第二版推荐初始化方式：
 
 ```bash
 cd frontend/minimal-frontend-demo
@@ -272,7 +274,23 @@ Todo 输入
 删除 Todo
 ```
 
-这一版的重点：
+三个版本的主要差异：
+
+| 版本 | 状态放哪里 | 页面怎么写 | DOM 谁来更新 |
+|---|---|---|---|
+| Vanilla TS | 普通变量和数组 | 用 `querySelector` 找元素，再创建 / 修改 DOM | 你手动更新 DOM |
+| Vue | `ref` 等响应式数据 | 用 template 描述数据和页面的关系 | Vue 根据响应式数据更新 DOM |
+| React | `useState` 状态 | 用 JSX 描述数据和页面的关系 | React 根据 state 重新渲染 UI |
+
+所以这三个版本不是功能差异，而是页面更新方式差异：
+
+```text
+Vanilla TS：你改数据后，手动操作 DOM。
+Vue：你改响应式数据，Vue 更新 DOM。
+React：你调用 setState，React 更新 DOM。
+```
+
+第二版的重点：
 
 | 观察点 | 你要能说清楚 |
 |---|---|
@@ -281,16 +299,36 @@ Todo 输入
 | `src/main.ts` | 应用脚本入口从普通 JS 变成 TypeScript |
 | `querySelector<HTMLButtonElement>` | TS 在帮助你描述 DOM 元素类型 |
 | `const todos: string[] = []` | TS 在帮助你描述数组内容 |
-| 页面更新方式 | 仍然是手动 DOM，不是框架自动更新 |
+| 页面更新方式 | 数据变了以后，你仍然手动操作 DOM |
 
-做完这一版后，再用 06 里的 Vue / React 最小语法，继续做：
+第三版和第四版继续用同一个功能，但换成 Vue / React：
 
 ```text
 frontend/minimal-frontend-demo/03-vue/
 frontend/minimal-frontend-demo/04-react/
 ```
 
-这三个版本功能相同，区别是页面更新方式不同。
+Vue 版重点：
+
+| 观察点 | 你要能说清楚 |
+|---|---|
+| `npm run dev` | 仍然是 Vite 启动项目 |
+| `src/main.ts` | 创建 Vue 应用，并挂载到 `#app` |
+| `App.vue` | 页面结构、状态和事件写在单文件组件里 |
+| `ref` | 用响应式数据保存 count、输入内容和 todos |
+| `v-model` / `@click` / `v-for` | 表单、事件和列表渲染由 Vue 模板表达 |
+| 页面更新方式 | 改响应式数据，由 Vue 管理 DOM 更新 |
+
+React 版重点：
+
+| 观察点 | 你要能说清楚 |
+|---|---|
+| `npm run dev` | 仍然是 Vite 启动项目 |
+| `src/main.tsx` | 创建 React 根节点，并渲染 `<App />` |
+| `App.tsx` | 页面结构、状态和事件写在组件函数里 |
+| `useState` | 用状态保存 count、输入内容和 todos |
+| `value` / `onChange` / `onClick` / `map` | 表单、事件和列表渲染由 JSX 表达 |
+| 页面更新方式 | 调用 setState，由 React 管理 DOM 更新 |
 
 ---
 
