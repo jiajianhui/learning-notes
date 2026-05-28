@@ -1,4 +1,4 @@
-# 06. Vite 和构建工具：工程化层
+# 07. Vite 和构建工具：工程化层
 
 ## 问题背景
 
@@ -245,9 +245,9 @@ Vanilla TS 可能没有框架插件。
 项目运行方式变成了 npm + Vite。
 ```
 
-### 读完 06 做什么
+### 读完 07 做什么
 
-读完 06，做第二版：
+读完 07，先做第二版：
 
 ```text
 frontend/minimal-frontend-demo/02-vite-vanilla-ts/
@@ -282,6 +282,15 @@ Todo 输入
 | `querySelector<HTMLButtonElement>` | TS 在帮助你描述 DOM 元素类型 |
 | `const todos: string[] = []` | TS 在帮助你描述数组内容 |
 | 页面更新方式 | 仍然是手动 DOM，不是框架自动更新 |
+
+做完这一版后，再用 06 里的 Vue / React 最小语法，继续做：
+
+```text
+frontend/minimal-frontend-demo/03-vue/
+frontend/minimal-frontend-demo/04-react/
+```
+
+这三个版本功能相同，区别是页面更新方式不同。
 
 ---
 

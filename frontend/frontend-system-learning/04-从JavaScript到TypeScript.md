@@ -255,11 +255,11 @@ function TodoItem({ todo }: TodoItemProps) {
 | `document.querySelector("#btn")` | 可以写成 `document.querySelector<HTMLButtonElement>("#btn")` |
 | `{ id, text, done }` | 可以抽成 `type Todo = { ... }` |
 
-Vite + Vanilla TS 版本放到读完 06 之后做。
+Vite + Vanilla TS 版本放到读完 07 之后做。
 
 ```text
 04 讲的是 TypeScript 属于哪一层。
-06 才讲 Vite 怎么启动项目、处理 TS、提供开发服务器。
+07 才讲 Vite 怎么启动项目、处理 TS、提供开发服务器。
 ```
 
 ---

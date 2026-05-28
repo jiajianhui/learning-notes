@@ -99,7 +99,7 @@ Router 和 Store 也不是一件事。
 学习时建议从下往上理解：
 
 ```text
-基础 -> TypeScript -> React/Vue -> Vite -> Router/Store -> Next/Nuxt
+基础 -> TypeScript -> React/Vue 思想 -> React/Vue 最小语法 -> Vite -> Router/Store -> Next/Nuxt
 ```
 
 做项目时通常从目标往下组合：
@@ -133,15 +133,16 @@ Router 和 Store 也不是一件事。
 03 Node 和包管理工具
 04 JavaScript 到 TypeScript
 05 React 和 Vue
-06 Vite 和构建工具
-07 SPA、路由和状态管理
-08 Next 和 Nuxt
-09 如何阅读前端项目
-10 学习路线
-11 常见误区
-12 未来网站开发展望
-13 术语表
-14 练习题
+06 React 和 Vue 最小语法
+07 Vite 和构建工具
+08 SPA、路由和状态管理
+09 Next 和 Nuxt
+10 如何阅读前端项目
+11 学习路线
+12 常见误区
+13 未来网站开发展望
+14 术语表
+15 练习题
 ```
 
 ### 项目实践节点
@@ -152,14 +153,16 @@ Router 和 Store 也不是一件事。
 同一个计数器 + 列表项目，用不同技术实现。
 ```
 
-文档可以连续读；真正需要动手写代码的节点只有这些：
+文档可以连续读；真正动手时按下面顺序做：
 
-| 读到哪里 | 做哪个版本 | 技术重点 |
-|---|---|---|
-| 读完 02 | `minimal-frontend-demo/01-html-css-js` | 原生 HTML / CSS / JavaScript |
-| 读完 06 | `minimal-frontend-demo/02-vite-vanilla-ts` | Vite + Vanilla TypeScript |
-| 读完 05 和 06 | `minimal-frontend-demo/03-vue` 或 `04-react` | 用 UI 框架重写同一功能 |
-| 读完 07 | `minimal-frontend-demo/05-router`、`06-state-management` | 在框架版上加路由和共享状态 |
+| 顺序 | 前置条件 | 做哪个版本 | 技术重点 |
+|---|---|---|---|
+| 1 | 读完 02 | `minimal-frontend-demo/01-html-css-js` | 原生 HTML / CSS / JavaScript |
+| 2 | 读完 07 | `minimal-frontend-demo/02-vite-vanilla-ts` | Vite + Vanilla TypeScript |
+| 3 | 读完 07 | `minimal-frontend-demo/03-vue`、`04-react` | 用 Vue / React 重写同一功能 |
+| 4 | 读完 08，并已有框架版 | `minimal-frontend-demo/05-router`、`06-state-management` | 在框架版上加路由和共享状态 |
+
+这里容易绕的一点是：05 讲 React/Vue 为什么出现，06 讲写 demo 够用的最小语法，07 讲 Vite 怎么把这些项目跑起来。读完 07 后，就可以依次做 TS、Vue、React 三个版本。
 
 ---
 

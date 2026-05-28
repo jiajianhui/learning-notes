@@ -26,9 +26,10 @@
 
 ```text
 读完 02：做 01-html-css-js/
-读完 06：做 02-vite-vanilla-ts/
-读完 05 + 06：再选 Vue 或 React 做框架版
-读完 07：再加路由和状态管理
+读完 07：依次做 02-vite-vanilla-ts/、03-vue/、04-react/
+读完 08：再加路由和状态管理
 ```
+
+不要理解成 Vite、Vue、React 是三条散线。实践顺序是：先用 Vite + Vanilla TS 复刻原生版本，再用 Vue 和 React 分别重写同一个功能。
 
 现在先把 `01-html-css-js/` 吃透。不要急着进入 Vite、Vue 或 React。
