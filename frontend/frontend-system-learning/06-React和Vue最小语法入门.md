@@ -373,6 +373,25 @@ function App() {
 
 ---
 
+### 4. 做完 Demo 后的语法复盘入口
+
+如果做完 Vue / React Todo demo 后，开始困惑这些问题：
+
+```text
+const add = () => {} 为什么也是函数？
+箭头函数什么时候自动 return？
+为什么返回对象要写成 ({ name: "Tom" })？
+Vue 为什么能 splice，React 为什么常用 filter？
+```
+
+先不用急着把它们都塞进 React / Vue 里理解。它们大多是 JavaScript 基础语法问题，可以读完 `07` 并做完 Vue / React demo 后，再回看：
+
+```text
+06A 做完 Vue / React 后的 JS 语法补洞
+```
+
+---
+
 ## 技术关系
 
 ### Vue 和 React 的共同主线

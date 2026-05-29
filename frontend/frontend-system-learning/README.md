@@ -135,6 +135,7 @@ Router 和 Store 也不是一件事。
 05 React 和 Vue
 06 React 和 Vue 最小语法
 07 Vite 和构建工具
+06A 做完 Vue / React 后的 JS 语法补洞（做完 demo 后回看）
 08 SPA、路由和状态管理
 09 Next 和 Nuxt
 10 如何阅读前端项目
@@ -163,6 +164,8 @@ Router 和 Store 也不是一件事。
 | 4 | 读完 08，并已有框架版 | `minimal-frontend-demo/05-router`、`06-state-management` | 在框架版上加路由和共享状态 |
 
 这里容易绕的一点是：05 讲 React/Vue 为什么出现，06 讲写 demo 够用的最小语法，07 讲 Vite 怎么把这些项目跑起来。读完 07 后，就可以依次做 TS、Vue、React 三个版本。
+
+做完 `03-vue` 和 `04-react` 后，如果卡在函数、箭头函数、返回对象、`splice` / `filter` 这些语法点，再回看 `06A`。它是复盘章节，不需要第一次读到 `06` 时就完全掌握。
 
 ---
 
