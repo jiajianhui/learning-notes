@@ -13,6 +13,16 @@ React/Vue：数据变了，框架帮你更新页面。
 
 这一篇只讲够写“计数器 + Todo”用的最小语法。
 
+主线先记这一条：
+
+```text
+声明状态
+-> 把状态显示到页面
+-> 事件里修改状态
+-> 输入框同步状态
+-> 数组渲染成列表
+```
+
 不讲：
 
 ```text
@@ -31,7 +41,7 @@ Context
 
 ## 核心解释
 
-### 1. 框架代码在写什么
+### 1. 框架代码的主线：状态驱动 UI
 
 原生 DOM 里，你通常这样想：
 
@@ -55,7 +65,21 @@ React / Vue 里，你要换成这样想：
 
 ---
 
-### 2. Vue 最小语法
+### 2. Vue 最小语法：在模板里使用状态
+
+这一节分七步看：
+
+```text
+2.1 .vue 文件分两块
+2.2 显示数据：用 {{ }}
+2.3 响应式状态：用 ref
+2.4 点击事件：用 @click
+2.5 输入框：用 v-model
+2.6 列表渲染：用 v-for
+2.7 Todo 最小版：把前面几步串起来
+```
+
+##### 2.1 `.vue` 文件分两块
 
 Vue 常见写法是 `.vue` 单文件组件：
 
@@ -76,7 +100,7 @@ const message = "你好 Vue";
 | `<script setup>` | 写数据、函数、事件逻辑 |
 | `<template>` | 写页面结构 |
 
-### Vue：显示数据
+##### 2.2 显示数据：用 `{{ }}`
 
 ```vue
 <script setup lang="ts">
@@ -90,7 +114,7 @@ const title = "待办列表";
 
 `{{ title }}` 表示把数据插进页面。
 
-### Vue：响应式状态
+##### 2.3 响应式状态：用 `ref`
 
 页面会变化的数据，用 `ref`：
 
@@ -118,7 +142,7 @@ count.value += 1;
 {{ count }}
 ```
 
-### Vue：点击事件
+##### 2.4 点击事件：用 `@click`
 
 ```vue
 <script setup lang="ts">
@@ -135,7 +159,7 @@ const count = ref(0);
 
 `@click` 就是监听点击。
 
-### Vue：输入框
+##### 2.5 输入框：用 `v-model`
 
 ```vue
 <script setup lang="ts">
@@ -152,7 +176,7 @@ const content = ref("");
 
 `v-model` 表示输入框内容和 `content` 互相同步。
 
-### Vue：列表渲染
+##### 2.6 列表渲染：用 `v-for`
 
 ```vue
 <script setup lang="ts">
@@ -172,7 +196,7 @@ const todos = ref<string[]>(["学 HTML", "学 TS"]);
 
 `v-for` 用来循环列表。
 
-### Vue：Todo 最小版
+##### 2.7 Todo 最小版：把前面几步串起来
 
 ```vue
 <script setup lang="ts">
@@ -214,7 +238,21 @@ function removeTodo(index: number) {
 
 ---
 
-### 3. React 最小语法
+### 3. React 最小语法：在函数里返回 UI
+
+这一节也分七步看：
+
+```text
+3.1 组件函数和 JSX
+3.2 显示数据：用 {}
+3.3 状态：用 useState
+3.4 点击事件：用 onClick
+3.5 输入框：用 value + onChange
+3.6 列表渲染：用 map
+3.7 Todo 最小版：把前面几步串起来
+```
+
+##### 3.1 组件函数和 JSX
 
 React 常见写法是组件函数 + JSX：
 
@@ -234,7 +272,7 @@ function App() {
 | `return (...)` | 返回 UI |
 | `{message}` | 把 JS 数据插进 JSX |
 
-### React：显示数据
+##### 3.2 显示数据：用 `{}`
 
 ```tsx
 function App() {
@@ -246,7 +284,7 @@ function App() {
 
 JSX 里用 `{}` 放 JavaScript 表达式。
 
-### React：状态
+##### 3.3 状态：用 `useState`
 
 页面会变化的数据，用 `useState`：
 
@@ -262,7 +300,7 @@ function App() {
 
 `count` 是当前数据，`setCount` 用来更新数据。
 
-### React：点击事件
+##### 3.4 点击事件：用 `onClick`
 
 ```tsx
 import { useState } from "react";
@@ -281,7 +319,7 @@ function App() {
 
 React 里事件名用驼峰：`onClick`。
 
-### React：输入框
+##### 3.5 输入框：用 `value` + `onChange`
 
 ```tsx
 import { useState } from "react";
@@ -308,7 +346,7 @@ value 负责显示当前值
 onChange 负责把用户输入写回状态
 ```
 
-### React：列表渲染
+##### 3.6 列表渲染：用 `map`
 
 ```tsx
 const todos = ["学 HTML", "学 TS"];
@@ -324,7 +362,7 @@ return (
 
 React 里用 `map` 把数组变成 JSX 列表。
 
-### React：Todo 最小版
+##### 3.7 Todo 最小版：把前面几步串起来
 
 ```tsx
 import { useState } from "react";
@@ -373,7 +411,7 @@ function App() {
 
 ---
 
-### 4. 做完 Demo 后的语法复盘入口
+### 4. 做完 Demo 后，再回看 JS 语法
 
 如果做完 Vue / React Todo demo 后，开始困惑这些问题：
 
@@ -394,7 +432,7 @@ Vue 为什么能 splice，React 为什么常用 filter？
 
 ## 技术关系
 
-### Vue 和 React 的共同主线
+### 共同主线：状态驱动 UI
 
 | 任务 | Vue | React |
 |---|---|---|
@@ -403,7 +441,6 @@ Vue 为什么能 splice，React 为什么常用 filter？
 | 点击事件 | `@click="addTodo"` | `onClick={addTodo}` |
 | 输入框 | `v-model="content"` | `value` + `onChange` |
 | 列表渲染 | `v-for` | `map` |
-| 条件显示 | `v-if` | `condition ? ... : ...` |
 
 两者语法不同，但都在做同一件事：
 
@@ -413,7 +450,7 @@ Vue 为什么能 splice，React 为什么常用 filter？
 状态变化 -> 框架更新 UI
 ```
 
-### 和 Vanilla TS 的区别
+### 和 Vanilla TS 的区别：少手动操作 DOM
 
 Vanilla TS 里：
 
@@ -451,6 +488,18 @@ Vue / React 里：
 删除按钮怎么知道删哪一项？
 ```
 
+如果卡住，可以按这个顺序回看：
+
+| 卡住的地方 | 回看哪一节 |
+|---|---|
+| 看不懂 Vue 文件分几块 | 2.1 `.vue` 文件分两块 |
+| 不知道页面怎么显示数据 | 2.2 / 3.2 显示数据 |
+| 不知道按钮怎么改数据 | 2.4 / 3.4 点击事件 |
+| 不知道输入框怎么同步数据 | 2.5 / 3.5 输入框 |
+| 不知道列表怎么渲染 | 2.6 / 3.6 列表渲染 |
+| Todo 代码串不起来 | 2.7 / 3.7 Todo 最小版 |
+| 做完后卡在 JS 语法 | 06A JS 语法补洞 |
+
 能回答这些，就可以开始做 `03-vue` 或 `04-react`。
 
 真正复杂的组件通信、路由、状态管理，后面再学。
@@ -463,10 +512,10 @@ Vue / React 里：
 
 ```text
 状态
-事件
-列表
-表单
-条件显示
+-> 显示数据
+-> 事件修改状态
+-> 输入框同步状态
+-> 数组渲染列表
 ```
 
 Vue 更像增强版 HTML：

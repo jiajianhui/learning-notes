@@ -33,11 +33,19 @@ TypeScript 是 JavaScript 的类型增强。
 | 上一层关系 | 建立在 HTML / CSS / JS / DOM 之上 |
 | 下一层关系 | React/Vue 常用 TS 描述 props、state、API 返回数据 |
 
+主线先记这一条：
+
+```text
+JavaScript 负责运行
+-> TypeScript 负责提前检查类型
+-> 工具再把 TypeScript 转成 JavaScript
+```
+
 ---
 
 ## 核心解释
 
-### 1. 浏览器最终运行的仍然是 JavaScript
+### 1. 浏览器最终运行的仍然是 JavaScript：TS 不能跳过 JS
 
 不管你写 React、Vue、Next 还是 Nuxt，最后都离不开 JavaScript。
 
@@ -56,7 +64,7 @@ TypeScript 不是绕开 JavaScript，而是站在 JavaScript 上。
 
 ---
 
-### 2. TypeScript 到底加了什么
+### 2. TypeScript 到底加了什么：给 JS 加类型系统
 
 一句话：
 
@@ -90,7 +98,7 @@ formatPrice("19.9"); // 类型错误
 
 ---
 
-### 3. TypeScript 解决的是维护问题
+### 3. TypeScript 解决的是维护问题：把约定写出来
 
 项目小的时候，很多约定靠脑子记。
 
@@ -170,7 +178,7 @@ function TodoItem({ todo }: TodoItemProps) {
 
 ## 技术关系
 
-### 不要把 TypeScript 当运行时
+### 1. 不要把 TypeScript 当运行时
 
 看到 `.ts`、`.tsx`、`tsconfig.json` 时，要这样理解：
 
@@ -190,7 +198,7 @@ function TodoItem({ todo }: TodoItemProps) {
 
 ---
 
-### TypeScript 和其他层的关系
+### 2. TypeScript 和其他层的关系
 
 ```text
 第一层：HTML / CSS / JS / DOM
@@ -203,7 +211,7 @@ function TodoItem({ todo }: TodoItemProps) {
 
 ---
 
-### Swift 背景下怎么看 TS
+### 3. Swift 背景下怎么看 TS
 
 你长期写 Swift，TypeScript 会更顺手一些。
 
