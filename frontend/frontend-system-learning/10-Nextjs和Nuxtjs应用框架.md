@@ -1,4 +1,4 @@
-# 09. Next.js 和 Nuxt.js：应用框架层
+# 10. Next.js 和 Nuxt.js：应用框架层
 
 ## 问题背景
 

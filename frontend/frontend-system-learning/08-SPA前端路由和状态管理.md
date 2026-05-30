@@ -144,9 +144,9 @@ Router 管页面位置。
 |---|---|---|
 | React Router | React | 前端路由 |
 | Vue Router | Vue | 前端路由 |
-| Redux | React 常见 | 全局状态 |
-| Zustand | React 常见 | 轻量状态 |
-| Pinia | Vue 常见 | 全局状态 |
+| Redux | React 常见 | 全局状态管理 |
+| Zustand | React 常见 | 轻量级全局状态管理 |
+| Pinia | Vue 常见 | 全局状态管理 |
 
 它们依赖 React/Vue 项目，但不是 React/Vue 本身。
 
@@ -190,9 +190,17 @@ Next/Nuxt：把路由和结构进一步约定化
 
 如果只是局部状态，别急着上全局状态管理。
 
-### 读完 08 做什么：加两个页面和共享状态
+### 读完 08 做什么：先看 09，再加两个页面和共享状态
 
-读完 08 后，继续沿用同一个功能，在 Vue 或 React 版上加两个页面：
+读完 08 后，先看：
+
+```text
+09 Router 和 Store 最小语法
+```
+
+它会快速展示 React Router + Zustand、Vue Router + Pinia 的最小写法。
+
+然后继续沿用同一个功能，在 Vue 或 React 版上加两个页面：
 
 ```text
 /counter  -> 计数器页
