@@ -16,7 +16,8 @@ Store 管共享数据。
 ```text
 定义两个页面
 -> 用 Router 切换页面
--> 定义一个 store
+
+定义一个 store
 -> 两个页面共用同一个 count
 ```
 
@@ -67,204 +68,7 @@ TodosPage 里看到的 count 也跟着变
 
 ---
 
-### 2. React Router 最小语法：URL 对应组件
-
-React 常见路由工具是 `react-router-dom`。
-
-安装：
-
-```bash
-npm install react-router-dom
-```
-
-最小文件结构可以先这样：
-
-```text
-src/
-  App.tsx
-  pages/
-    CounterPage.tsx
-    TodosPage.tsx
-```
-
-`App.tsx` 里放路由：
-
-```tsx
-import { BrowserRouter, Link, Navigate, Route, Routes } from "react-router-dom";
-import { CounterPage } from "./pages/CounterPage";
-import { TodosPage } from "./pages/TodosPage";
-
-export default function App() {
-  return (
-    <BrowserRouter>
-      <nav>
-        <Link to="/counter">计数器</Link>
-        <Link to="/todos">列表</Link>
-      </nav>
-
-      <Routes>
-        <Route path="/" element={<Navigate to="/counter" replace />} />
-        <Route path="/counter" element={<CounterPage />} />
-        <Route path="/todos" element={<TodosPage />} />
-      </Routes>
-    </BrowserRouter>
-  );
-}
-```
-
-先记这几个写法：
-
-| 写法 | 你可以怎么理解 |
-|---|---|
-| `BrowserRouter` | 开启前端路由能力 |
-| `Link to="/counter"` | 点击后切换 URL，不整页刷新 |
-| `Routes` | 放一组路由规则 |
-| `Route path="/counter"` | URL 是 `/counter` 时显示哪个组件 |
-| `Navigate` | 访问 `/` 时自动跳到 `/counter` |
-
-页面组件先保持很简单：
-
-```tsx
-export function CounterPage() {
-  return <h1>计数器页</h1>;
-}
-```
-
-```tsx
-export function TodosPage() {
-  return <h1>列表页</h1>;
-}
-```
-
-到这里，Router 已经完成了自己的工作：
-
-```text
-URL 是 /counter -> 显示 CounterPage
-URL 是 /todos   -> 显示 TodosPage
-```
-
----
-
-### 3. Zustand 最小语法：把 count 放到共享 store
-
-React 里想轻量管理共享状态，可以用 Zustand。
-
-安装：
-
-```bash
-npm install zustand
-```
-
-新建 store 文件：
-
-```text
-src/
-  stores/
-    useCounterStore.ts
-```
-
-```ts
-import { create } from "zustand";
-
-type CounterState = {
-  count: number;
-  increase: () => void;
-  reset: () => void;
-};
-
-export const useCounterStore = create<CounterState>((set) => ({
-  count: 0,
-  increase: () => set((state) => ({ count: state.count + 1 })),
-  reset: () => set({ count: 0 }),
-}));
-```
-
-先记住：
-
-| 写法 | 你可以怎么理解 |
-|---|---|
-| `create(...)` | 创建一个 store |
-| `count` | 共享数据 |
-| `increase` | 修改共享数据的方法 |
-| `set(...)` | 通知 Zustand 更新 store |
-| `useCounterStore(...)` | 组件里读取 store 的 Hook |
-
-`CounterPage.tsx` 使用 store：
-
-```tsx
-import { useCounterStore } from "../stores/useCounterStore";
-
-export function CounterPage() {
-  const count = useCounterStore((state) => state.count);
-  const increase = useCounterStore((state) => state.increase);
-  const reset = useCounterStore((state) => state.reset);
-
-  return (
-    <main>
-      <h1>计数器页</h1>
-      <p>count: {count}</p>
-      <button onClick={increase}>+1</button>
-      <button onClick={reset}>重置</button>
-    </main>
-  );
-}
-```
-
-`TodosPage.tsx` 也读取同一个 store：
-
-```tsx
-import { useState } from "react";
-import { useCounterStore } from "../stores/useCounterStore";
-
-export function TodosPage() {
-  const [content, setContent] = useState("");
-  const [todos, setTodos] = useState<string[]>([]);
-  const count = useCounterStore((state) => state.count);
-
-  function addTodo() {
-    const text = content.trim();
-
-    if (!text) {
-      return;
-    }
-
-    setTodos([...todos, text]);
-    setContent("");
-  }
-
-  return (
-    <main>
-      <h1>列表页</h1>
-      <p>共享 count: {count}</p>
-
-      <input
-        value={content}
-        onChange={(event) => setContent(event.target.value)}
-      />
-      <button onClick={addTodo}>添加</button>
-
-      <ul>
-        {todos.map((todo) => (
-          <li key={todo}>{todo}</li>
-        ))}
-      </ul>
-    </main>
-  );
-}
-```
-
-这里要看懂一个点：
-
-```text
-todos 还是 TodosPage 自己的局部 state。
-count 才放进 store，因为它要跨页面共享。
-```
-
-不要因为学了 store，就把所有数据都放进 store。
-
----
-
-### 4. Vue Router 最小语法：URL 对应页面组件
+### 2. Vue Router 最小语法：URL 对应页面组件
 
 Vue 常见路由工具是 `vue-router`。
 
@@ -360,7 +164,7 @@ URL 是 /todos   -> 显示 TodosPage.vue
 
 ---
 
-### 5. Pinia 最小语法：把 count 放到共享 store
+### 3. Pinia 最小语法：把 count 放到共享 store
 
 Vue 里常见状态管理工具是 Pinia。
 
@@ -477,26 +281,221 @@ function addTodo() {
 </template>
 ```
 
-这里和 React 版一样：
+这里要看懂的是“数据被谁使用，就放在哪里”：
+
+- `todos` 只在 `TodosPage.vue` 里添加和展示，所以继续放在这个页面自己的 `ref`。
+- `count` 要给 `CounterPage.vue` 和 `TodosPage.vue` 共用，所以放进 `store`。
+
+不要因为学了 store，就把所有数据都放进 store。
+
+---
+
+### 4. React Router 最小语法：URL 对应组件
+
+React 常见路由工具是 `react-router-dom`。
+
+安装：
+
+```bash
+npm install react-router-dom
+```
+
+最小文件结构可以先这样：
 
 ```text
-todos 还是 TodosPage 自己的局部 ref。
-count 才放进 store，因为它要跨页面共享。
+src/
+  App.tsx
+  pages/
+    CounterPage.tsx
+    TodosPage.tsx
 ```
+
+`App.tsx` 里放路由：
+
+```tsx
+import { BrowserRouter, Link, Navigate, Route, Routes } from "react-router-dom";
+import { CounterPage } from "./pages/CounterPage";
+import { TodosPage } from "./pages/TodosPage";
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <nav>
+        <Link to="/counter">计数器</Link>
+        <Link to="/todos">列表</Link>
+      </nav>
+
+      <Routes>
+        <Route path="/" element={<Navigate to="/counter" replace />} />
+        <Route path="/counter" element={<CounterPage />} />
+        <Route path="/todos" element={<TodosPage />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+```
+
+先记这几个写法：
+
+| 写法 | 你可以怎么理解 |
+|---|---|
+| `BrowserRouter` | 开启前端路由能力 |
+| `Link to="/counter"` | 点击后切换 URL，不整页刷新 |
+| `Routes` | 放一组路由规则 |
+| `Route path="/counter"` | URL 是 `/counter` 时显示哪个组件 |
+| `Navigate` | 访问 `/` 时自动跳到 `/counter` |
+
+页面组件先保持很简单：
+
+```tsx
+export function CounterPage() {
+  return <h1>计数器页</h1>;
+}
+```
+
+```tsx
+export function TodosPage() {
+  return <h1>列表页</h1>;
+}
+```
+
+到这里，Router 已经完成了自己的工作：
+
+```text
+URL 是 /counter -> 显示 CounterPage
+URL 是 /todos   -> 显示 TodosPage
+```
+
+---
+
+### 5. Zustand 最小语法：把 count 放到共享 store
+
+React 里想轻量管理共享状态，可以用 Zustand。
+
+安装：
+
+```bash
+npm install zustand
+```
+
+新建 store 文件：
+
+```text
+src/
+  stores/
+    useCounterStore.ts
+```
+
+```ts
+import { create } from "zustand";
+
+type CounterState = {
+  count: number;
+  increase: () => void;
+  reset: () => void;
+};
+
+export const useCounterStore = create<CounterState>((set) => ({
+  count: 0,
+  increase: () => set((state) => ({ count: state.count + 1 })),
+  reset: () => set({ count: 0 }),
+}));
+```
+
+先记住：
+
+| 写法 | 你可以怎么理解 |
+|---|---|
+| `create(...)` | 创建一个 store |
+| `count` | 共享数据 |
+| `increase` | 修改共享数据的方法 |
+| `set(...)` | 通知 Zustand 更新 store |
+| `useCounterStore(...)` | 组件里读取 store 的 Hook |
+
+`CounterPage.tsx` 使用 store：
+
+```tsx
+import { useCounterStore } from "../stores/useCounterStore";
+
+export function CounterPage() {
+  const count = useCounterStore((state) => state.count);
+  const increase = useCounterStore((state) => state.increase);
+  const reset = useCounterStore((state) => state.reset);
+
+  return (
+    <main>
+      <h1>计数器页</h1>
+      <p>count: {count}</p>
+      <button onClick={increase}>+1</button>
+      <button onClick={reset}>重置</button>
+    </main>
+  );
+}
+```
+
+`TodosPage.tsx` 也读取同一个 store：
+
+```tsx
+import { useState } from "react";
+import { useCounterStore } from "../stores/useCounterStore";
+
+export function TodosPage() {
+  const [content, setContent] = useState("");
+  const [todos, setTodos] = useState<string[]>([]);
+  const count = useCounterStore((state) => state.count);
+
+  function addTodo() {
+    const text = content.trim();
+
+    if (!text) {
+      return;
+    }
+
+    setTodos([...todos, text]);
+    setContent("");
+  }
+
+  return (
+    <main>
+      <h1>列表页</h1>
+      <p>共享 count: {count}</p>
+
+      <input
+        value={content}
+        onChange={(event) => setContent(event.target.value)}
+      />
+      <button onClick={addTodo}>添加</button>
+
+      <ul>
+        {todos.map((todo) => (
+          <li key={todo}>{todo}</li>
+        ))}
+      </ul>
+    </main>
+  );
+}
+```
+
+这里要看懂的是“数据被谁使用，就放在哪里”：
+
+- `todos` 只在 `TodosPage` 里添加和展示，所以继续放在这个页面自己的 `state`。
+- `count` 要给 `CounterPage` 和 `TodosPage` 共用，所以放进 `store`。
+
+不要因为学了 store，就把所有数据都放进 store。
 
 ---
 
 ## 技术关系
 
-### 1. React 和 Vue 的对应关系
+### 1. Vue 和 React 的对应关系
 
-| 任务 | React | Vue |
+| 任务 | Vue | React |
 |---|---|---|
-| 路由工具 | React Router | Vue Router |
-| 导航链接 | `Link` | `RouterLink` |
-| 页面出口 | `Routes` + `Route` | `RouterView` |
-| 轻量 store | Zustand | Pinia |
-| 组件里读 store | `useCounterStore(...)` | `useCounterStore()` |
+| 路由工具 | Vue Router | React Router |
+| 导航链接 | `RouterLink` | `Link` |
+| 页面出口 | `RouterView` | `Routes` + `Route` |
+| 轻量 store | Pinia | Zustand |
+| 组件里读 store | `useCounterStore()` | `useCounterStore(...)` |
 
 语法不同，但主线一样：
 
@@ -562,10 +561,10 @@ Store 适合放：
 | 卡住的地方 | 回看哪一节 |
 |---|---|
 | 不知道 URL 怎么换页面 | 2 / 4 Router 最小语法 |
-| 不知道导航链接怎么写 | `Link` / `RouterLink` |
-| 不知道页面显示在哪里 | `Routes` + `Route` / `RouterView` |
+| 不知道导航链接怎么写 | RouterLink / Link |
+| 不知道页面显示在哪里 | RouterView / Routes + Route |
 | 不知道共享 count 放哪 | 3 / 5 Store 最小语法 |
-| 不知道哪些数据该放 store | 技术关系第 2 节 |
+| 不确定数据该放页面里还是 store 里 | Router 和 Store 不要混在一起 |
 
 现在不需要背 API。你只要能说清楚：
 
@@ -589,16 +588,16 @@ Router：URL -> 页面组件
 Store：共享数据 -> 多个组件一起用
 ```
 
-React 里常见组合：
-
-```text
-React Router + Zustand
-```
-
 Vue 里常见组合：
 
 ```text
 Vue Router + Pinia
 ```
 
-读完这一篇，就可以在已有 React/Vue demo 上加两个页面，再把 `count` 从单个组件挪到 store 里。
+React 里常见组合：
+
+```text
+React Router + Zustand
+```
+
+读完这一篇，就可以在已有 Vue/React demo 上加两个页面，再把 `count` 从单个组件挪到 store 里。
