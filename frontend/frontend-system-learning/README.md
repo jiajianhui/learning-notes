@@ -171,11 +171,13 @@ Router 和 Store 也不是一件事。
 | 1 | 读完 02 | `minimal-frontend-demo/01-html-css-js` | 原生 HTML / CSS / JavaScript |
 | 2 | 读完 07 | `minimal-frontend-demo/02-vite-vanilla-ts` | Vite + Vanilla TypeScript |
 | 3 | 读完 07 | `minimal-frontend-demo/03-vue`、`04-react` | 用 Vue / React 重写同一功能 |
-| 4 | 读完 09，并已有框架版 | `minimal-frontend-demo/05-router`、`06-state-management` | 在框架版上加路由和共享状态 |
+| 4 | 读完 09，并已有框架版 | `minimal-frontend-demo/05-router`、`06-store` | 在框架版上加路由和共享状态 |
 
 这里容易绕的一点是：05 讲 React/Vue 为什么出现，06 讲写 demo 够用的最小语法，07 讲 Vite 怎么把这些项目跑起来。读完 07 后，就可以依次做 TS、Vue、React 三个版本。
 
 做完 `03-vue` 和 `04-react` 后，如果卡在函数、箭头函数、返回对象、`splice` / `filter` 这些语法点，再回看 `06A`。它是复盘章节，不需要第一次读到 `06` 时就完全掌握。
+
+做完 `06-store` 后，如果卡在 React / Zustand 里的箭头函数、回调函数、`state` 参数和 Pinia 的 `this`，再回看 `09A`。
 
 ---
 
