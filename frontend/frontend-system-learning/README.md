@@ -146,6 +146,7 @@ Router 和 Store 也不是一件事。
 06A 做完 Vue / React 后的 JS 语法补洞（做完 demo 后回看）
 08 SPA、路由和状态管理
 09 Router 和 Store 最小语法
+09A 箭头函数和回调函数：看懂 React 和 Zustand 里的函数写法（做完 store demo 后回看）
 10 Next 和 Nuxt
 11 如何阅读前端项目
 12 学习路线
