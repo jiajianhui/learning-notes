@@ -72,7 +72,7 @@ https://www.makingsoftware.com/
 - 多个内容章节
 - 图形/插画占位
 - quote 或重点语句
-- 结尾 CTA
+- 结尾 CTA（行动入口，比如继续阅读、查看项目或联系作者）
 
 首屏要有记忆点。
 
