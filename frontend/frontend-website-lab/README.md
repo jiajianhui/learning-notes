@@ -53,6 +53,7 @@ React、Vue、Vite、Next、Nuxt 之间是什么关系？
 ```text
 现在先用本地数组、JSON、Markdown 模拟内容
 -> 以后再用 Node.js + Express + PostgreSQL 动态管理内容
+-> 中间可以试 Ghost 这类成熟 CMS，学习它怎么提高内容站效率
 ```
 
 ---
@@ -228,9 +229,10 @@ Making Software：sticky 章节导航 / 滚动过程中的视觉变化
 | 读完 [00](./00-学习目标和阶段路线.md)、[01](./01-优秀网站拆解清单.md)、[02](./02-Nextjs-Tailwind启动方式.md)、[03](./03-设计拆解方法.md) | 做 [01-funes-style-minimal-site](./projects/01-funes-style-minimal-site/) | 已经知道目标、会拆参考站、项目能跑起来，也知道怎么把设计感觉翻译成 Tailwind |
 | 做完 Funes，并按 [04-项目复盘模板](./04-项目复盘模板.md) 写复盘 | 做 [02-aeroprecipe-style-data-site](./projects/02-aeroprecipe-style-data-site/) | 先练过极简页面，再进入本地数据、卡片、筛选和响应式侧栏 |
 | 做完 Aeroprecipe，并读 [05](./05-未来内容管理和后端路线.md) 里“当前阶段：用本地内容模拟真实网站”这一部分 | 做 [03-lux-style-editorial-site](./projects/03-lux-style-editorial-site/) | Lux 更接近产品 + 文章内容站，需要有内容结构意识，但还不需要真的做 CMS |
-| 做完 Lux，并继续按 [04-项目复盘模板](./04-项目复盘模板.md) 记录可迁移点 | 做 [04-makingsoftware-style-visual-site](./projects/04-makingsoftware-style-visual-site/) | 前面已经练过列表、数据和图文节奏，最后再挑战章节叙事和滚动视觉 |
+| 做完 Lux，并读 [06-好用工具和 CMS 提效路线](./06-好用工具和CMS提效路线.md) | 本地试一次 Ghost，记录成熟 CMS 解决了哪些问题 | Lux 最像产品 + 内容站，这时试 Ghost 最容易理解“工具为什么能提效” |
+| 试完 Ghost，并继续按 [04-项目复盘模板](./04-项目复盘模板.md) 记录可迁移点 | 做 [04-makingsoftware-style-visual-site](./projects/04-makingsoftware-style-visual-site/) | 前面已经练过列表、数据和图文节奏，最后再挑战章节叙事和滚动视觉 |
 | 四个练习都做完，并回看每次复盘里的可迁移点 | 做 [05-personal-lux-style-site](./projects/05-personal-lux-style-site/) | 这一步不再临摹单个网站，而是把前面练到的能力合成自己的个人网站 |
-| 个人网站第一版能跑起来 | 回看 [05-未来内容管理和后端路线.md](./05-未来内容管理和后端路线.md) | 再考虑以后怎么接 Markdown、CMS、后端或数据库 |
+| 个人网站第一版能跑起来 | 回看 [05-未来内容管理和后端路线.md](./05-未来内容管理和后端路线.md) 和 [06](./06-好用工具和CMS提效路线.md) | 再考虑以后怎么接 Markdown、CMS、后端或数据库 |
 
 每个项目结束后都要写复盘。
 
