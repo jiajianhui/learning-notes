@@ -72,6 +72,25 @@ React、Vue、Vite、Next、Nuxt 之间是什么关系？
 - hover、滚动、切换、筛选这些交互如何克制地增强体验
 - 如何用 Next.js + TailwindCSS 把这些设计判断落到代码里
 
+如果这套目录只能记住一条训练规则，就是这句：
+
+```text
+不要只写感受，要写能指导实现的观察。
+```
+
+比如：
+
+```text
+不写：这个网站很高级。
+要写：它几乎没有阴影，主要靠边框、留白和字号层级建立秩序。
+```
+
+这句话不是写作技巧，而是整套练习的观察标准。
+
+它单独展开在：
+
+- [01A-把高级感写成可实现的观察.md](./01A-把高级感写成可实现的观察.md)
+
 一句话：
 
 ```text
@@ -226,7 +245,7 @@ Making Software：sticky 章节导航 / 滚动过程中的视觉变化
 
 | 读到哪里 | 开始做什么 | 为什么这时做 |
 |---|---|---|
-| 读完 [00](./00-学习目标和阶段路线.md)、[01](./01-优秀网站拆解清单.md)、[02](./02-Nextjs-Tailwind启动方式.md)、[03](./03-设计拆解方法.md) | 做 [01-funes-style-minimal-site](./projects/01-funes-style-minimal-site/) | 已经知道目标、会拆参考站、项目能跑起来，也知道怎么把设计感觉翻译成 Tailwind |
+| 读完 [00](./00-学习目标和阶段路线.md)、[01](./01-优秀网站拆解清单.md)、[01A](./01A-把高级感写成可实现的观察.md)、[02](./02-Nextjs-Tailwind启动方式.md)、[03](./03-设计拆解方法.md) | 做 [01-funes-style-minimal-site](./projects/01-funes-style-minimal-site/) | 已经知道目标、会拆参考站、项目能跑起来，也知道怎么把设计感觉翻译成 Tailwind |
 | 做完 Funes，并按 [04-项目复盘模板](./04-项目复盘模板.md) 写复盘 | 做 [02-aeroprecipe-style-data-site](./projects/02-aeroprecipe-style-data-site/) | 先练过极简页面，再进入本地数据、卡片、筛选和响应式侧栏 |
 | 做完 Aeroprecipe，并读 [05](./05-未来内容管理和后端路线.md) 里“当前阶段：用本地内容模拟真实网站”这一部分 | 做 [03-lux-style-editorial-site](./projects/03-lux-style-editorial-site/) | Lux 更接近产品 + 文章内容站，需要有内容结构意识，但还不需要真的做 CMS |
 | 做完 Lux，并读 [06-好用工具和 CMS 提效路线](./06-好用工具和CMS提效路线.md) | 本地试一次 Ghost，记录成熟 CMS 解决了哪些问题 | Lux 最像产品 + 内容站，这时试 Ghost 最容易理解“工具为什么能提效” |
