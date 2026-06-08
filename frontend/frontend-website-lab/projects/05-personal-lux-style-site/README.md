@@ -129,6 +129,19 @@ content/projects/*.mdx
 
 当前更推荐先用 TypeScript 数据文件，因为它最直接，适合先把页面做稳。
 
+内容管理后面再升级，不要一开始就选 CMS：
+
+```text
+本地 TypeScript / MDX 内容
+-> 页面结构和视觉气质稳定
+-> 再选择 Payload CMS 或自建 Express API
+-> 最后再接 PostgreSQL
+```
+
+如果目标是先用成熟后台提高效率，重点看 Payload。
+
+如果目标是练后端能力，再自己写 Node.js + Express + PostgreSQL。
+
 ---
 
 ### 2. 建议的数据结构
