@@ -69,7 +69,7 @@ README 只做入口和导航，不重复展开完整路线。
 | 2 | [02-aeroprecipe-style-data-site](./projects/02-aeroprecipe-style-data-site/) | 数据内容站：卡片、筛选、侧栏、响应式布局 |
 | 3 | [03-lux-style-editorial-site](./projects/03-lux-style-editorial-site/) | 编辑类图片内容站：大图、文章卡片、首页视觉节奏 |
 | 4 | [04-makingsoftware-style-visual-site](./projects/04-makingsoftware-style-visual-site/) | 视觉叙事站：章节、图形、滚动节奏、个性表达 |
-| 5 | [05-personal-lux-style-site](./projects/05-personal-lux-style-site/) | 最终个人网站：把前四站能力合成自己的作品 |
+| 5 | [05-personal-lux-style-site](./projects/05-personal-lux-style-site/) | 个人网站：放自己的产品、文章、项目和介绍 |
 
 ---
 
