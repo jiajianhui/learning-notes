@@ -1,3 +1,17 @@
+/*
+ * 这个文件是全站根布局：Next 会用它包住所有路由页面，并在这里接入全局字体、全局样式和页面元信息。
+ *
+ * 1. 导入：Metadata 约束 metadata 对象；Geist/Geist_Mono 生成字体 className；globals.css 引入全局样式。
+ *
+ * 2. 字体：这里不是在用字体，而是把字体变量挂到 <html> 上，供后代组件使用。
+ *    geistSans.variable 创建 --font-geist-sans，geistMono.variable 创建 --font-geist-mono。
+ *    后代组件写 font-sans/font-mono 时，才是在消费这些变量。
+ *
+ * 3. 页面信息：metadata 生成 <title> 和 meta description，并由 Metadata 类型约束写法。
+ *
+ * 4. 组件：RootLayout 从 props 对象里解构出 children，并用 Readonly<...> 给参数加类型约束。
+ *    children 是当前路由页面，最终会被放进 <body> 渲染。
+ */
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";

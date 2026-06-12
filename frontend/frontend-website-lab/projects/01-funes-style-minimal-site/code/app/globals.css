@@ -1,3 +1,10 @@
+/*
+ * 这个文件是全局样式入口：引入 Tailwind，定义全站颜色/字体 token，并设置 body 基础样式。
+ *
+ * 1. Tailwind：@import "tailwindcss" 启用工具类，例如 flex、px-4、bg-white。
+ * 2. 变量：:root 定义默认颜色；暗色模式下 @media 覆盖这些变量。
+ * 3. 主题：@theme inline 把变量注册成 Tailwind token；body 读取变量作为默认样式。
+ */
 @import "tailwindcss";
 
 :root {
