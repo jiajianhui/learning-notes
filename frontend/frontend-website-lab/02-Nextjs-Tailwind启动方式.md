@@ -42,19 +42,19 @@ npx create-next-app@latest .
 TypeScript: Yes
 ESLint: Yes
 Tailwind CSS: Yes
-src/ directory: Yes 或 No 都可以，当前练习推荐 Yes
+src/ directory: No（默认）
 App Router: Yes
-Turbopack: Yes
+Turbopack: No
 Import alias: 默认即可
 ```
 
-如果想一次性传参数，可以使用：
+Turbopack 可能更快，但如果电脑明显发热或风扇很响，当前练习先用 Webpack 更稳。
+
+如果想在当前目录一次性传参数，可以使用：
 
 ```bash
-npx create-next-app@latest my-site --typescript --tailwind --eslint --app --src-dir
+npx create-next-app@latest . --typescript --tailwind --eslint --app --webpack
 ```
-
-说明：Next.js 官方 `create-next-app` 支持 Tailwind 初始化；新版本也会提示是否使用推荐默认项。
 
 ---
 
@@ -63,21 +63,20 @@ npx create-next-app@latest my-site --typescript --tailwind --eslint --app --src-
 单个练习项目推荐这样组织：
 
 ```text
-src/
-  app/
-    globals.css
-    layout.tsx
-    page.tsx
-  components/
-    site-header.tsx
-    site-footer.tsx
-    hero.tsx
-    card.tsx
-  data/
-    posts.ts
-    items.ts
-  lib/
-    utils.ts
+app/
+  globals.css
+  layout.tsx
+  page.tsx
+components/
+  site-header.tsx
+  site-footer.tsx
+  hero.tsx
+  card.tsx
+data/
+  posts.ts
+  items.ts
+lib/
+  utils.ts
 public/
   images/
 ```
@@ -153,25 +152,14 @@ export const posts = [
 
 ## 学习建议
 
-### 1. 每次启动前检查
+### 1. 开发、检查和构建分别什么时候跑
 
-```bash
-npm install
-npm run dev
-```
-
-常用脚本：
-
-```bash
-npm run lint
-npm run build
-```
-
-项目完成时至少跑一次：
-
-```bash
-npm run build
-```
+| 命令 | 什么时候用 |
+|---|---|
+| `npm install` | 第一次进入项目时安装依赖 |
+| `npm run dev` | 平时开发时启动本地服务 |
+| `npm run build` | 做完一版或部署前运行；它比 `dev` 更严格，有些问题开发时看不出来，构建时才会报错 |
+| `npm run lint` | 如果 `package.json` 里有这个命令，用来做代码检查；常见工具是 ESLint 或 Biome |
 
 ### 2. 做项目时先别追求目录完美
 

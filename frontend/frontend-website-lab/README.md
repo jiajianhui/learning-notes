@@ -81,8 +81,8 @@ README 只做入口和导航，不重复展开完整路线。
 README.md
 -> 设计观察、截图索引、复盘、能迁移到个人网站的 1 到 2 个点
 
-src/
--> 工程代码
+app/、components/、data/、lib/
+-> 页面、组件、本地数据和工具函数
 
 public/images/
 -> 页面真正使用的图片素材

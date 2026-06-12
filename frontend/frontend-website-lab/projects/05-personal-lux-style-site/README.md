@@ -115,9 +115,9 @@ Next.js + React + TypeScript + TailwindCSS
 第一版仍然先用本地内容，不急着接后端：
 
 ```text
-src/data/articles.ts
-src/data/projects.ts
-src/data/profile.ts
+data/articles.ts
+data/projects.ts
+data/profile.ts
 ```
 
 或者：
