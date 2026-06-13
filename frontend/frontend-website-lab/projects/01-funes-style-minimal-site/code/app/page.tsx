@@ -53,7 +53,7 @@ export default function Home() {
         {/* 一级筛选 */}
         <div className="flex gap-1 px-2">
           {options.map((item) => (
-            <p
+            <button
               key={item}
               onClick={() => typeClick(item)}
               className={`px-1 cursor-pointer ${
@@ -63,14 +63,14 @@ export default function Home() {
               }`}
             >
               {item}
-            </p>
+            </button>
           ))}
         </div>
 
         {/* 二级筛选 */}
         <div className="flex gap-1 px-2">
           {subOptions[currentType].map((item) => (
-            <p
+            <button
               key={item}
               onClick={() => setCurrentStatus(item)}
               className={`px-1 cursor-pointer ${
@@ -80,7 +80,7 @@ export default function Home() {
               }`}
             >
               {item}
-            </p>
+            </button>
           ))}
         </div>
       </div>
@@ -90,10 +90,14 @@ export default function Home() {
         <div className="flex flex-col pt-5">
           {filterData.map((item) => (
             // 列表项
-            <div key={item.id} className="flex py-1 px-2 hover:bg-gray-100">
-              <p className="min-w-30">{item.code}</p>
-              <p className="min-w-96">{item.author}</p>
-              <p className="flex-1">{item.title}</p>
+            <div
+              key={item.id}
+              className="grid gap-2 grid-cols-[1fr_1fr] py-6 md:grid-cols-[6rem_15rem_1fr_15rem] md:py-1 px-2 hover:bg-gray-100"
+            >
+              <p>{item.code}</p>
+              <p>{item.author}</p>
+              {/* col-span-2 —— 元素横向占 2 列 */}
+              <p className="col-span-2 md:col-span-1">{item.title}</p>
               <p>{item.note}</p>
             </div>
           ))}

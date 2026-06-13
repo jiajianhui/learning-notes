@@ -7,8 +7,8 @@ export const works = [
     type: "book",
     status: "to-read",
     author: "Viktor E. Frankl",
-    title: "Man's Search for Meaning",
-    note: "On suffering, meaning, and spiritual freedom.",
+    title: "Man's Search for Meaning — suffering, survival, and meaning",
+    note: "Start with the preface.",
   },
   {
     id: 2,
@@ -25,7 +25,7 @@ export const works = [
     type: "book",
     status: "to-read",
     author: "Tim Hwang",
-    title: "Subprime Attention Crisis",
+    title: "Subprime Attention Crisis — advertising and the attention market",
     note: "",
   },
   {
@@ -43,8 +43,8 @@ export const works = [
     type: "book",
     status: "reading",
     author: "Albert Camus",
-    title: "The Myth of Sisyphus",
-    note: "Read slowly; focus on absurdity and revolt.",
+    title: "The Myth of Sisyphus — absurdity, freedom, and revolt",
+    note: "Read slowly.",
   },
   {
     id: 6,
@@ -61,8 +61,8 @@ export const works = [
     type: "book",
     status: "reading",
     author: "村上春树",
-    title: "海边的卡夫卡",
-    note: "梦境、孤独、命运感比较强。",
+    title: "海边的卡夫卡——梦境、逃离与命运",
+    note: "适合夜里读。",
   },
   {
     id: 8,
@@ -79,7 +79,7 @@ export const works = [
     type: "book",
     status: "have-read",
     author: "Daniel Keyes",
-    title: "Flowers for Algernon",
+    title: "Flowers for Algernon — intelligence, loneliness, and loss",
     note: "",
   },
   {
@@ -97,8 +97,8 @@ export const works = [
     type: "book",
     status: "have-read",
     author: "John Berger",
-    title: "Ways of Seeing",
-    note: "Useful as a reference for visual design and ways of seeing images.",
+    title: "Ways of Seeing — images, advertising, and power",
+    note: "Good for design references.",
   },
   {
     id: 12,
@@ -106,7 +106,7 @@ export const works = [
     type: "book",
     status: "have-read",
     author: "刘慈欣",
-    title: "三体",
+    title: "三体——文明危机与宇宙尺度",
     note: "",
   },
 
@@ -118,7 +118,7 @@ export const works = [
     status: "to-listen",
     author: "Radiohead",
     title: "OK Computer",
-    note: "Best listened to in full at night.",
+    note: "Listen in full.",
   },
   {
     id: 14,
@@ -126,7 +126,7 @@ export const works = [
     type: "album",
     status: "to-listen",
     author: "Pink Floyd",
-    title: "The Dark Side of the Moon",
+    title: "The Dark Side of the Moon — time, money, madness, and mortality",
     note: "",
   },
   {
@@ -135,7 +135,7 @@ export const works = [
     type: "album",
     status: "to-listen",
     author: "Frank Ocean",
-    title: "Blonde",
+    title: "Blonde — memory, youth, and heartbreak",
     note: "",
   },
   {
@@ -153,8 +153,9 @@ export const works = [
     type: "album",
     status: "listening",
     author: "Kendrick Lamar",
-    title: "To Pimp a Butterfly",
-    note: "Dense lyrics, rich production, and heavy social themes.",
+    title:
+      "To Pimp a Butterfly — jazz, funk, rap, identity, and social conflict",
+    note: "Pay attention to the lyrics.",
   },
   {
     id: 18,
@@ -171,7 +172,7 @@ export const works = [
     type: "album",
     status: "listening",
     author: "Massive Attack",
-    title: "Mezzanine",
+    title: "Mezzanine — bass, shadow, and urban unease",
     note: "",
   },
   {
@@ -188,9 +189,9 @@ export const works = [
     code: "24A09",
     type: "album",
     status: "have-listened",
-    author: "坂本龍一",
-    title: "async",
-    note: "Quiet and restrained; good for focused work.",
+    author: "Ryuichi Sakamoto",
+    title: "async — silence, fragments, and farewell",
+    note: "",
   },
   {
     id: 22,
@@ -207,7 +208,7 @@ export const works = [
     type: "album",
     status: "have-listened",
     author: "David Bowie",
-    title: "Low",
+    title: "Low — cold synth textures and distance",
     note: "",
   },
   {
@@ -216,7 +217,7 @@ export const works = [
     type: "album",
     status: "have-listened",
     author: "周杰伦",
-    title: "范特西",
+    title: "范特西——流行旋律与东方想象",
     note: "",
   },
 
@@ -227,8 +228,9 @@ export const works = [
     type: "podcast",
     status: "to-listen",
     author: "Lex Fridman",
-    title: "Artificial Intelligence Podcast",
-    note: "Good for notes on AI and tech interviews.",
+    title:
+      "Artificial Intelligence Podcast — long conversations on AI and human nature",
+    note: "Save useful ideas.",
   },
   {
     id: 26,
@@ -263,7 +265,8 @@ export const works = [
     type: "podcast",
     status: "listening",
     author: "Acquired",
-    title: "Company Histories and Strategy",
+    title:
+      "Company Histories and Strategy — founders, markets, and compounding",
     note: "",
   },
   {
@@ -273,7 +276,7 @@ export const works = [
     status: "listening",
     author: "声东击西",
     title: "科技、商业与文化观察",
-    note: "适合通勤时听。",
+    note: "通勤听。",
   },
   {
     id: 31,
@@ -300,7 +303,7 @@ export const works = [
     status: "have-listened",
     author: "忽左忽右",
     title: "从东亚电影聊到现代性",
-    note: "可作为电影和社会议题的参考。",
+    note: "",
   },
   {
     id: 34,
@@ -326,7 +329,8 @@ export const works = [
     type: "podcast",
     status: "have-listened",
     author: "Huberman Lab",
-    title: "Sleep, Focus, and Human Performance",
+    title:
+      "Sleep, Focus, and Human Performance — behavior, health, and the nervous system",
     note: "",
   },
 
@@ -336,17 +340,17 @@ export const works = [
     code: "24Q01",
     type: "quote",
     status: "random",
-    author: "Albert Camus",
+    author: "阿尔贝·加缪",
     title: "在隆冬，我终于知道，我身上有一个不可战胜的夏天。",
-    note: "可以作为页面里的醒目引文。",
+    note: "可做醒目引文。",
   },
   {
     id: 38,
     code: "24Q02",
     type: "quote",
     status: "random",
-    author: "John Berger",
-    title: "观看先于语言。孩子先观看，后辨认，再说话。",
+    author: "约翰·伯格",
+    title: "观看先于语言。",
     note: "",
   },
   {
@@ -363,9 +367,9 @@ export const works = [
     code: "24Q04",
     type: "quote",
     status: "random",
-    author: "Viktor E. Frankl",
+    author: "维克多·弗兰克尔",
     title: "人所拥有的最后自由，是选择自己态度的自由。",
-    note: "和意义、选择、意志相关。",
+    note: "",
   },
   {
     id: 41,
@@ -381,8 +385,8 @@ export const works = [
     code: "24Q06",
     type: "quote",
     status: "random",
-    author: "Hermann Hesse",
-    title: "每个人都不只是他自己，他也是独特而复杂的世界。",
+    author: "赫尔曼·黑塞",
+    title: "每个人都是一个独特而复杂的世界。",
     note: "",
   },
   {
@@ -400,7 +404,7 @@ export const works = [
     type: "quote",
     status: "random",
     author: "余华",
-    title: "人是为了活着本身而活着，而不是为了活着之外的任何事物而活着。",
+    title: "人是为了活着本身而活着。",
     note: "",
   },
   {
@@ -408,7 +412,7 @@ export const works = [
     code: "24Q09",
     type: "quote",
     status: "random",
-    author: "Daniel Keyes",
+    author: "丹尼尔·凯斯",
     title: "智力和教育并没有带来快乐，反而让我看见更多失落。",
     note: "",
   },
@@ -417,8 +421,8 @@ export const works = [
     code: "24Q10",
     type: "quote",
     status: "random",
-    author: "George Orwell",
-    title: "在欺骗普遍存在的时代，说出真相就是一种革命行为。",
+    author: "乔治·奥威尔",
+    title: "说出真相就是一种革命行为。",
     note: "",
   },
   {
@@ -448,7 +452,7 @@ export const works = [
     status: "to-play",
     author: "FromSoftware",
     title: "Elden Ring",
-    note: "Strong open-world exploration.",
+    note: "Explore without rushing.",
   },
   {
     id: 50,
@@ -456,7 +460,7 @@ export const works = [
     type: "game",
     status: "to-play",
     author: "Team Cherry",
-    title: "Hollow Knight",
+    title: "Hollow Knight — ruins, silence, and hidden paths",
     note: "",
   },
   {
@@ -465,7 +469,7 @@ export const works = [
     type: "game",
     status: "to-play",
     author: "CD Projekt Red",
-    title: "Cyberpunk 2077",
+    title: "Cyberpunk 2077 — body, power, identity, and corporate control",
     note: "",
   },
   {
@@ -483,7 +487,8 @@ export const works = [
     type: "game",
     status: "playing",
     author: "Nintendo",
-    title: "The Legend of Zelda: Breath of the Wild",
+    title:
+      "The Legend of Zelda: Breath of the Wild — freedom, physics, and quiet adventure",
     note: "",
   },
   {
@@ -501,7 +506,7 @@ export const works = [
     type: "game",
     status: "playing",
     author: "ConcernedApe",
-    title: "Stardew Valley",
+    title: "Stardew Valley — routine, community, and calm progress",
     note: "",
   },
   {
@@ -519,8 +524,8 @@ export const works = [
     type: "game",
     status: "have-played",
     author: "ZA/UM",
-    title: "Disco Elysium",
-    note: "Text-heavy; useful as a narrative design reference.",
+    title: "Disco Elysium — politics, memory, failure, and identity",
+    note: "Narrative reference.",
   },
   {
     id: 58,
@@ -537,8 +542,8 @@ export const works = [
     type: "game",
     status: "have-played",
     author: "Rockstar Games",
-    title: "Red Dead Redemption 2",
-    note: "A reference for worldbuilding and immersion.",
+    title: "Red Dead Redemption 2 — decline, loyalty, and atmosphere",
+    note: "Worldbuilding reference.",
   },
   {
     id: 60,
@@ -546,7 +551,7 @@ export const works = [
     type: "game",
     status: "have-played",
     author: "Valve",
-    title: "Portal 2",
+    title: "Portal 2 — spatial logic and clean interaction design",
     note: "",
   },
 
@@ -558,7 +563,7 @@ export const works = [
     status: "to-watch",
     author: "Krzysztof Kieślowski",
     title: "Dekalog",
-    note: "Watch slowly, one episode at a time.",
+    note: "One episode at a time.",
   },
   {
     id: 62,
@@ -566,7 +571,7 @@ export const works = [
     type: "drama",
     status: "to-watch",
     author: "Djibril Diop Mambéty",
-    title: "Touki Bouki",
+    title: "Touki Bouki — escape, youth, and visual energy",
     note: "",
   },
   {
@@ -584,7 +589,7 @@ export const works = [
     type: "drama",
     status: "to-watch",
     author: "Wong Kar-wai",
-    title: "In the Mood for Love",
+    title: "In the Mood for Love — desire, distance, and missed timing",
     note: "",
   },
   {
@@ -602,8 +607,9 @@ export const works = [
     type: "drama",
     status: "watching",
     author: "Hideaki Anno",
-    title: "Neon Genesis Evangelion",
-    note: "Strong mood, symbolism, and character psychology.",
+    title:
+      "Neon Genesis Evangelion — loneliness, trauma, symbols, and teenage psychology",
+    note: "Symbol-heavy.",
   },
   {
     id: 67,
@@ -620,7 +626,7 @@ export const works = [
     type: "drama",
     status: "watching",
     author: "Vince Gilligan",
-    title: "Breaking Bad",
+    title: "Breaking Bad — pride, transformation, and moral collapse",
     note: "",
   },
   {
@@ -638,7 +644,7 @@ export const works = [
     type: "drama",
     status: "have-watched",
     author: "Shingo Tamagawa",
-    title: "PUPARIA",
+    title: "PUPARIA — memory, decay, beauty, and unease",
     note: "",
   },
   {
@@ -647,8 +653,8 @@ export const works = [
     type: "drama",
     status: "have-watched",
     author: "Christopher Nolan",
-    title: "Interstellar",
-    note: "A reference for sci-fi imagery and emotional storytelling.",
+    title: "Interstellar — time, gravity, family, and cosmic scale",
+    note: "Sci-fi visual reference.",
   },
   {
     id: 72,
