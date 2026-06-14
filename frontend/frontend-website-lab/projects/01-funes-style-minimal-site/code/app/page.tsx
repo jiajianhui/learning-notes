@@ -47,18 +47,28 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col p-2 pt-4 font-mono text-sm">
+    <div className="flex flex-col py-4 font-mono text-sm min-h-screen">
+      <header className="flex justify-end items-center border-y border-gray-200 px-4 md:px-20">
+        <p className="py-1">
+          To think is to forget a difference, to generalize, to abstract.
+        </p>
+
+        {/* self-stretch —— 在交叉轴方向上拉满父级 */}
+        <div className="w-px self-stretch bg-gray-200 mx-4" />
+        <p>funes</p>
+      </header>
+
       {/* 筛选栏 */}
-      <div className="h-10">
+      <div className="h-10 my-4">
         {/* 一级筛选 */}
-        <div className="flex gap-1 px-2">
+        <div className="flex gap-1 px-4">
           {options.map((item) => (
             <button
               key={item}
               onClick={() => typeClick(item)}
               className={`px-1 cursor-pointer ${
                 currentType === item
-                  ? "bg-zinc-600 text-white"
+                  ? "bg-zinc-500 text-white"
                   : "hover:bg-zinc-300 hover:text-white"
               }`}
             >
@@ -68,14 +78,14 @@ export default function Home() {
         </div>
 
         {/* 二级筛选 */}
-        <div className="flex gap-1 px-2">
+        <div className="flex gap-1 px-4">
           {subOptions[currentType].map((item) => (
             <button
               key={item}
               onClick={() => setCurrentStatus(item)}
               className={`px-1 cursor-pointer ${
                 currentStatus === item
-                  ? "bg-zinc-600 text-white"
+                  ? "bg-zinc-500 text-white"
                   : "hover:bg-zinc-300 hover:text-white"
               }`}
             >
@@ -85,24 +95,29 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 数据列表 */}
-      <div>
-        <div className="flex flex-col pt-5">
-          {filterData.map((item) => (
-            // 列表项
-            <div
-              key={item.id}
-              className="grid gap-2 grid-cols-[1fr_1fr] py-6 md:grid-cols-[6rem_15rem_1fr_15rem] md:py-1 px-2 hover:bg-gray-100"
-            >
-              <p>{item.code}</p>
-              <p>{item.author}</p>
-              {/* col-span-2 —— 元素横向占 2 列 */}
-              <p className="col-span-2 md:col-span-1">{item.title}</p>
-              <p>{item.note}</p>
-            </div>
-          ))}
-        </div>
+      {/* 数据列表；flex-1 想撑开剩余空间，父元素必须先有一个“可用高度” */}
+      <div className="flex flex-1 flex-col">
+        {filterData.map((item) => (
+          // 列表项
+          <div
+            key={item.id}
+            className="grid gap-2 grid-cols-[1fr_1fr] py-6 md:grid-cols-[6rem_15rem_1fr_15rem] md:py-1 px-4 hover:bg-gray-100"
+          >
+            <p>{item.code}</p>
+            <p>{item.author}</p>
+            {/* col-span-2 —— 元素横向占 2 列 */}
+            <p className="col-span-2 md:col-span-1">{item.title}</p>
+            <p>{item.note}</p>
+          </div>
+        ))}
       </div>
+
+      {/* footer */}
+      <footer className="flex justify-start items-center border-y border-gray-200 px-4 md:px-20 mt-10">
+        <p className="py-1">alguien</p>
+        <div className="w-px self-stretch bg-gray-200 mx-4" />
+        <p>Ya no nos quedan más que citas. La lengua es un sistema de citas.</p>
+      </footer>
     </div>
   );
 }
