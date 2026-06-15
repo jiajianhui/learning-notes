@@ -94,7 +94,7 @@ export function SiteBody() {
           </div>
         </div>
 
-        {/* 数据列表；flex-1 想撑开剩余空间，父元素必须先有一个“可用高度” */}
+        {/* 数据列表；flex-1 撑开剩余空间，父元素必须先有一个“可用高度” */}
         <div className="flex flex-1 flex-col">
           {filterData.map((item) => (
             // 列表项
