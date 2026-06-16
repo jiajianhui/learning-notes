@@ -1,20 +1,23 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+// 定义字体，然后在页面中使用字体：在global.css中将tailwindd默认字体改为自己的字体，方便调用
+const cutiveMono = localFont({
+  src: "./fonts/cutive-mono-400-latin.woff2",
+  variable: "--font-cutive-mono",
+  display: "swap"
+});
+const inconsolata = localFont({
+  src: "./fonts/inconsolata-700-latin.woff2",
+  variable: "--font-inconsolata",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "02-aeroprecipe-style-data-site",
-  description: "relax",
+  description: "relax"
 };
 
 export default function RootLayout({
@@ -25,7 +28,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      // 只是把字体变量注册到了 html 上，但你没有真正使用字体。
+      // 移除了antialiased，它会让字体边缘更平滑，但视觉上也会变细、变轻
+      className={`${cutiveMono.variable} ${inconsolata.variable} h-full`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
