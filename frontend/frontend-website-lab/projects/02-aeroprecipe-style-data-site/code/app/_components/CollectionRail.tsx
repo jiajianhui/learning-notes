@@ -4,7 +4,6 @@
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 
-import Image from "next/image";
 
 // 引入数据
 import { collectionCards } from "../datas/collectionCards";
@@ -30,7 +29,12 @@ export function CollectionRail() {
           // 卡片要有固定宽度 / 最小宽度，否则 flex 子项会被压缩，无法滚动
           <div
             key={card.id}
-            className="min-w-xl mr-4 bg-gray-100 p-12 flex items-center cursor-pointer select-none"
+            className="min-w-xl mr-4 bg-gray-100 p-12 flex items-center cursor-pointer select-none pr-46 bg-no-repeat"
+            style={{
+              backgroundImage: `url(${card.image})`,
+              backgroundSize: card.imageSize,
+              backgroundPosition: card.imagePosition,
+            }}
           >
             {/* 文字 */}
             <div>
@@ -41,15 +45,6 @@ export function CollectionRail() {
                 {card.description}
               </p>
             </div>
-
-            {/* 图片 */}
-            <Image
-              src={card.image}
-              alt={card.imageAlt}
-              width={card.imageWidth}
-              height={card.imageHeight}
-              className={card.imageClassName}
-            />
           </div>
         ))}
       </div>

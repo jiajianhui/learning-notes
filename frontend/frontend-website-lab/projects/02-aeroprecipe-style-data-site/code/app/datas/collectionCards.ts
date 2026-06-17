@@ -4,9 +4,10 @@ export type CollectionCard = {
   description: string;
   image: string;
   imageAlt: string;
-  imageWidth: number;
-  imageHeight: number;
-  imageClassName: string;
+  imageSize: string;
+  imagePosition: string;
+  mobileImageSize: string;
+  mobileImagePosition: string;
 };
 
 export const collectionCards: CollectionCard[] = [
@@ -16,9 +17,10 @@ export const collectionCards: CollectionCard[] = [
     description: "Looking for something new? Explore the latest AeroPress recipes and get inspired!",
     image: "/illustrations/explore_the_latest.svg",
     imageAlt: "Explore the latest illustration",
-    imageWidth: 110,
-    imageHeight: 136,
-    imageClassName: "size-28",
+    imageSize: "110px",
+    imagePosition: "right 40px center",
+    mobileImageSize: "90px",
+    mobileImagePosition: "right 30px center",
   },
   {
     id: "championship",
@@ -26,9 +28,10 @@ export const collectionCards: CollectionCard[] = [
     description: "Brew like the best - here's a list of tried and true recipes from AeroPress Champions.",
     image: "/illustrations/WAC.svg",
     imageAlt: "Championship Recipes illustration",
-    imageWidth: 140,
-    imageHeight: 140,
-    imageClassName: "size-32",
+    imageSize: "140px",
+    imagePosition: "right 40px center",
+    mobileImageSize: "110px",
+    mobileImagePosition: "right 20px center",
   },
   {
     id: "share",
@@ -36,9 +39,10 @@ export const collectionCards: CollectionCard[] = [
     description: "Coffee with friends - or two for you. Here are recipes to get more coffee from your AeroPress.",
     image: "/illustrations/friends.svg",
     imageAlt: "Share with a friend illustration",
-    imageWidth: 230,
-    imageHeight: 100,
-    imageClassName: "w-56",
+    imageSize: "230px",
+    imagePosition: "right -30px center",
+    mobileImageSize: "150px",
+    mobileImagePosition: "right -20px center",
   },
   {
     id: "low-on-beans",
@@ -46,9 +50,10 @@ export const collectionCards: CollectionCard[] = [
     description: "Running low on beans? Don't worry! This collection showcases recipes big on flavour & low on bean count.",
     image: "/illustrations/lowOnBeans.svg",
     imageAlt: "Low on beans illustration",
-    imageWidth: 80,
-    imageHeight: 112,
-    imageClassName: "w-20",
+    imageSize: "80px",
+    imagePosition: "right 60px center",
+    mobileImageSize: "60px",
+    mobileImagePosition: "right 50px center",
   },
   {
     id: "fast",
@@ -56,9 +61,10 @@ export const collectionCards: CollectionCard[] = [
     description: "In a rush? These recipes under 1:30 will help you get to where you're going, quicker.",
     image: "/illustrations/fast.svg",
     imageAlt: "Fast and furious illustration",
-    imageWidth: 75,
-    imageHeight: 152,
-    imageClassName: "w-20",
+    imageSize: "75px",
+    imagePosition: "right 50px center",
+    mobileImageSize: "60px",
+    mobileImagePosition: "right 40px center",
   },
   {
     id: "espresso",
@@ -66,9 +72,10 @@ export const collectionCards: CollectionCard[] = [
     description: "Yeah we know the AeroPress isn't made for espresso BUT these recipes will get you close.",
     image: "/illustrations/espressoul.svg",
     imageAlt: "AeroPress espresso illustration",
-    imageWidth: 140,
-    imageHeight: 140,
-    imageClassName: "size-32",
+    imageSize: "140px",
+    imagePosition: "right 20px center",
+    mobileImageSize: "120px",
+    mobileImagePosition: "right 0px center",
   },
   {
     id: "milk",
@@ -76,8 +83,9 @@ export const collectionCards: CollectionCard[] = [
     description: "You put milk in your coffee?! Ok, ok - here are some AeroPress recipes for milk coffee lovers.",
     image: "/illustrations/a_dash_of_milk.svg",
     imageAlt: "A dash of milk illustration",
-    imageWidth: 140,
-    imageHeight: 140,
-    imageClassName: "size-32",
+    imageSize: "140px",
+    imagePosition: "right 40px center",
+    mobileImageSize: "100px",
+    mobileImagePosition: "right 20px center",
   },
 ];
