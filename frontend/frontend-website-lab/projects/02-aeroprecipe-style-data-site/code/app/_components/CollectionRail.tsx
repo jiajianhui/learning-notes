@@ -22,7 +22,8 @@ export function CollectionRail() {
   );
 
   return (
-    <div ref={emblaRef} className="overflow-hidden  m-4 lg:my-6  lg:mx-12">
+    <div ref={emblaRef} className="overflow-hidden m-4 lg:my-6 lg:mx-12">
+      {/* flex 默认有一个隐藏效果：align-items: stretch—— 子元素，高度默认会被拉到一样高 */}
       <div className="flex">
         {collectionCards.map((card) => (
           // 卡片要有固定宽度 / 最小宽度，否则 flex 子项会被压缩，无法滚动
@@ -30,7 +31,7 @@ export function CollectionRail() {
           <div
             key={card.id}
             className="
-              z-10 relative min-w-screen mr-2 lg:min-w-xl lg:mr-4 
+              z-10 relative min-w-full lg:min-w-xl mr-4 
               bg-gray-100 p-12 flex items-center 
               cursor-pointer select-none pr-30 lg:pr-46
             "

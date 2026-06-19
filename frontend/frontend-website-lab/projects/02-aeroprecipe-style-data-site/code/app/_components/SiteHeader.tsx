@@ -19,14 +19,17 @@ export function SiteHeader() {
 
       <div className="flex items-center gap-6">
         {/* 导航 */}
-        {navTitle.map((item) => (
-          <p key={item}>{item}</p>
-        ))}
+        <div className="hidden lg:flex gap-6">
+          {navTitle.map((item) => (
+            <p key={item}>{item}</p>
+          ))}
+        </div>
 
-        <div className="w-px h-10 bg-zinc-300" />
+        {/* 分割线 */}
+        <div className="w-px h-10 bg-zinc-300 hidden lg:block" />
 
         {/* 登陆、搜索 */}
-        <button>Sign in</button>
+        <button className="hidden lg:block">Sign in</button>
         <button className="px-4 py-2 rounded-sm bg-zinc-950 text-white">
           Join
         </button>
