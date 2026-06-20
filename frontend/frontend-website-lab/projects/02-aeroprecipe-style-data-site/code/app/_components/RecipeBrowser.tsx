@@ -2,15 +2,29 @@ import Image from "next/image";
 import xx from "@/public/recipeIcon/cat_crown.svg";
 import yy from "@/public/recipeIcon/icon_video.svg";
 
+// 筛选分组的数据模型
+type FilterGroup = {
+  title: string;
+  layout: string;
+  optionWidth: string;
+  options: FilterOption[];
+};
+
+// 筛选项的数据模型
+type FilterOption = {
+  label: string;
+  icon?: string;
+};
+
 // 筛选数据
-const filterGroups = [
+const filterGroups: FilterGroup[] = [
   {
     title: "Category",
     layout: "flex-col",
     optionWidth: "w-full",
     options: [
       { label: "Championship", icon: "/recipeIcon/cat_crown.svg" },
-      { label: "Experimental" },
+      { label: "Experimental", icon: "/recipeIcon/cat_experimental.svg" },
       { label: "From a Barista", icon: "/recipeIcon/noun_tamper.svg" },
       { label: "From an Enthusiast", icon: "/recipeIcon/icon_enthusiast.svg" },
     ],
@@ -19,19 +33,29 @@ const filterGroups = [
     title: "Orientation",
     layout: "flex-row",
     optionWidth: "w-full",
-    options: [{ label: "Standard" }, { label: "Inverted" }],
+    options: [
+      { label: "Standard", icon: "/recipeIcon/icon_aeropress_standard.svg" },
+      { label: "Inverted", icon: "/recipeIcon/icon_aeropress_inverted.svg" },
+    ],
   },
   {
     title: "Filter type",
     layout: "flex-row",
     optionWidth: "w-full",
-    options: [{ label: "Paper" }, { label: "Metal" }],
+    options: [
+      { label: "Paper", icon: "/recipeIcon/icon_filter_paper.svg" },
+      { label: "Metal", icon: "/recipeIcon/icon_filter_metal.svg" },
+    ],
   },
   {
     title: "Brew time (minutes)",
     layout: "flex-row",
     optionWidth: "w-full",
-    options: [{ label: "<2" }, { label: "2-5" }, { label: "5+" }],
+    options: [
+      { label: "<2", icon: "/recipeIcon/icon_timer_fast.svg" },
+      { label: "2-5", icon: "/recipeIcon/icon_timer_medium.svg" },
+      { label: "5+", icon: "/recipeIcon/icon_timer_slow.svg" },
+    ],
   },
   {
     title: "Amount of coffee",
@@ -50,12 +74,12 @@ const filterGroups = [
     layout: "flex-row flex-wrap",
     optionWidth: "auto",
     options: [
+      { label: "AeroPress Go", icon: "/recipeIcon/aeropress_go.svg" },
       { label: "Has Video", icon: "/recipeIcon/icon_video.svg" },
-      { label: "Espresso Style" },
-      { label: "Milk" },
-      { label: "Iced" },
-      { label: "Low dose" },
-      { label: "Two cups" },
+      { label: "Cold", icon: "/recipeIcon/icon_cold.svg" },
+      { label: "Fruit Filter", icon: "/recipeIcon/fruit_filter.svg" },
+      { label: "AeroPress XL", icon: "/recipeIcon/icon_aeropress_xl.svg" },
+      { label: "Sweet", icon: "/recipeIcon/icon_sweet.svg" },
     ],
   },
 ];
@@ -90,9 +114,9 @@ export function RecipeBrowser() {
                   </div>
                 </div>
                 <h3 className="text-lg font-display py-3">
-                  James Hoffmann's Ultimate AeroPress Recipe
+                  James Hoffmann&apos;s Ultimate AeroPress Recipe
                 </h3>
-                <p>James Hoffmann's Ultimate AeroPress Recipe</p>
+                <p>James Hoffmann&apos;s Ultimate AeroPress Recipe</p>
               </div>
             ))}
           </div>
@@ -108,7 +132,7 @@ export function RecipeBrowser() {
             <div>
               <p className="text-lg font-display">My recipes only</p>
               <p className="font-sans">
-                Show recipes you've created, public and private
+                Show recipes you&apos;ve created, public and private
               </p>
             </div>
 
