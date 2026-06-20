@@ -1,6 +1,65 @@
 import Image from "next/image";
 import xx from "@/public/recipeIcon/cat_crown.svg";
 import yy from "@/public/recipeIcon/icon_video.svg";
+
+// 筛选数据
+const filterGroups = [
+  {
+    title: "Category",
+    layout: "flex-col",
+    optionWidth: "w-full",
+    options: [
+      { label: "Championship", icon: "/recipeIcon/cat_crown.svg" },
+      { label: "Experimental" },
+      { label: "From a Barista", icon: "/recipeIcon/noun_tamper.svg" },
+      { label: "From an Enthusiast", icon: "/recipeIcon/icon_enthusiast.svg" },
+    ],
+  },
+  {
+    title: "Orientation",
+    layout: "flex-row",
+    optionWidth: "w-full",
+    options: [{ label: "Standard" }, { label: "Inverted" }],
+  },
+  {
+    title: "Filter type",
+    layout: "flex-row",
+    optionWidth: "w-full",
+    options: [{ label: "Paper" }, { label: "Metal" }],
+  },
+  {
+    title: "Brew time (minutes)",
+    layout: "flex-row",
+    optionWidth: "w-full",
+    options: [{ label: "<2" }, { label: "2-5" }, { label: "5+" }],
+  },
+  {
+    title: "Amount of coffee",
+    layout: "flex-row",
+    optionWidth: "w-full",
+    options: [{ label: "<15g" }, { label: "15-20g" }, { label: ">20g" }],
+  },
+  {
+    title: "Amount of water",
+    layout: "flex-row",
+    optionWidth: "w-full",
+    options: [{ label: "<200" }, { label: "200-300" }, { label: ">300" }],
+  },
+  {
+    title: "Tags",
+    layout: "flex-row flex-wrap",
+    optionWidth: "auto",
+    options: [
+      { label: "Has Video", icon: "/recipeIcon/icon_video.svg" },
+      { label: "Espresso Style" },
+      { label: "Milk" },
+      { label: "Iced" },
+      { label: "Low dose" },
+      { label: "Two cups" },
+    ],
+  },
+];
+
 export function RecipeBrowser() {
   return (
     <div>
@@ -53,110 +112,36 @@ export function RecipeBrowser() {
               </p>
             </div>
 
-            <div>
-              <p className="text-lg font-display">Category</p>
-              <div className="flex flex-col gap-2 py-1">
-                {Array.from({ length: 4 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 font-sans bg-amber-100 px-2 py-1"
-                  >
-                    <Image src={xx} alt="" className="size-4" />
-                    <p>Championship</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* 数据渲染 */}
+            {filterGroups.map((group) => (
+              <div key={group.title}>
+                {/* 标题 */}
+                <p className="text-lg font-display">{group.title}</p>
 
-            <div>
-              <p className="text-lg font-display">Orientation</p>
-              <div className="flex justify-between gap-2 py-1">
-                {Array.from({ length: 2 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 font-sans bg-amber-100 px-2 py-1 w-full"
-                  >
-                    <Image src={yy} alt="" className="size-4" />
-                    <p>Standard</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+                {/* 选项 */}
+                <div className={`flex ${group.layout} gap-2 py-1`}>
+                  {group.options.map((item) => (
+                    <div
+                      key={item.label}
+                      className={`flex items-center gap-2 font-sans bg-amber-100 px-2 py-1 ${group.optionWidth}`}
+                    >
+                      {/* && 是短路渲染：左边有值时才渲染右边的 Image */}
+                      {item.icon && (
+                        <Image
+                          src={item.icon}
+                          width={1}
+                          height={1}
+                          alt=""
+                          className="size-4"
+                        />
+                      )}
 
-            <div>
-              <p className="text-lg font-display">Filter type</p>
-              <div className="flex justify-between gap-2 py-1">
-                {Array.from({ length: 2 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 font-sans bg-amber-100 px-2 py-1 w-full"
-                  >
-                    <Image src={yy} alt="" className="size-4" />
-                    <p>Paper</p>
-                  </div>
-                ))}
+                      <p>{item.label}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-
-            <div>
-              <p className="text-lg font-display">Brew time (minutes)</p>
-              <div className="flex justify-between gap-2 py-1">
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 font-sans bg-amber-100 px-2 py-1 w-full"
-                  >
-                    <Image src={yy} alt="" className="size-4" />
-                    <p>2~5</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="text-lg font-display">Amount of coffee</p>
-              <div className="flex justify-between gap-2 py-1">
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 font-sans bg-amber-100 px-2 py-1 w-full"
-                  >
-                    <Image src={yy} alt="" className="size-4" />
-                    <p>20~30</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="text-lg font-display">Amount of water</p>
-              <div className="flex justify-between gap-2 py-1">
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 font-sans bg-amber-100 px-2 py-1 w-full"
-                  >
-                    <Image src={yy} alt="" className="size-4" />
-                    <p>200~300</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="text-lg font-display">Tags</p>
-              <div className="flex flex-wrap gap-2 py-1">
-                {Array.from({ length: 17 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 font-sans bg-amber-100 px-2 py-1"
-                  >
-                    <Image src={yy} alt="" className="size-4" />
-                    <p>Has Video</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
