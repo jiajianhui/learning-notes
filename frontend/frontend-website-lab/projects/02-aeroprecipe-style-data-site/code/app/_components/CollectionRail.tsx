@@ -32,7 +32,7 @@ export function CollectionRail() {
             key={card.id}
             className="
               z-10 relative min-w-full lg:min-w-xl mr-4 
-              bg-gray-100 p-12 flex items-center 
+              bg-card-bg p-12 flex items-center 
               cursor-pointer select-none pr-30 lg:pr-46
             "
           >

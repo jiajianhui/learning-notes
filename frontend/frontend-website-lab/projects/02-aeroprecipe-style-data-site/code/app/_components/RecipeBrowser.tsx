@@ -123,7 +123,7 @@ export function RecipeBrowser() {
         </div>
 
         {/* 筛选栏——sticky + h-screen + overflow-y-auto 实现吸顶滚动 */}
-        <div className="max-w-100 h-screen overflow-y-auto bg-amber-50 sticky top-0  border-l border-gray-200">
+        <div className="max-w-100 h-screen overflow-y-auto bg-card-bg sticky top-0  border-l border-gray-200">
           <div className="p-8 flex flex-col gap-4">
             <p className=" font-display">Refine your recipe search</p>
 
@@ -147,7 +147,7 @@ export function RecipeBrowser() {
                   {group.options.map((item) => (
                     <div
                       key={item.label}
-                      className={`flex items-center gap-2 font-sans bg-amber-100 px-2 py-1 ${group.optionWidth}`}
+                      className={`flex items-center gap-2 font-sans bg-option-bg px-2 py-2 ${group.optionWidth}`}
                     >
                       {/* && 是短路渲染：左边有值时才渲染右边的 Image */}
                       {item.icon && (

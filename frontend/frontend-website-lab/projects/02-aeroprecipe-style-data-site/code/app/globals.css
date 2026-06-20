@@ -3,6 +3,10 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* 自定义颜色变量 */
+  --card-bg: #F9F9F5;
+  --option-bg: #F4F2EA;
 }
 
 @theme inline {
@@ -10,6 +14,10 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-cutive-mono);
   --font-display: var(--font-inconsolata);
+
+  /* 映射为 Tailwind 颜色类 */
+  --color-card-bg: var(--card-bg);
+  --color-option-bg: var(--option-bg);
 }
 
 @media (prefers-color-scheme: dark) {
