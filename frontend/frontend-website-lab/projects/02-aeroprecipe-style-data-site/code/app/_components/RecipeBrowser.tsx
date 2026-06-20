@@ -223,7 +223,7 @@ const recipeCards = [
 export function RecipeBrowser() {
   return (
     <div>
-      <div className="flex  border-t border-gray-200">
+      <div className="flex border-t border-gray-200">
         <div>
           {/* 标题栏 */}
           <div className="flex justify-between text-sm sticky top-0 backdrop-blur-3xl font-sans px-12 py-6">
@@ -275,7 +275,8 @@ export function RecipeBrowser() {
         </div>
 
         {/* 筛选栏——sticky + h-screen + overflow-y-auto 实现吸顶滚动 */}
-        <div className="max-w-100 h-screen overflow-y-auto bg-card-bg sticky top-0  border-l border-gray-200">
+        {/* 筛选栏没写固定宽度时，会先按内部内容估算宽度，但因为它作为 flex 子元素默认允许被压缩，所以空间不够时会被左侧 grid 挤窄，文字就换行了。 */}
+        <div className="min-w-100 h-screen overflow-y-auto bg-card-bg sticky top-0  border-l border-gray-200">
           <div className="p-8 flex flex-col gap-4">
             <p className=" font-display">Refine your recipe search</p>
 
