@@ -5,7 +5,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 
 // 引入数据
-import { collectionCards } from "../datas/collectionCards";
+import { collectionCards } from "@/data/collectionCards";
 
 export function CollectionRail() {
   const [emblaRef] = useEmblaCarousel(
