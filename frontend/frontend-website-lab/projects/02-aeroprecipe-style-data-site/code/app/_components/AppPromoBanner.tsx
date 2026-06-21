@@ -6,7 +6,7 @@ import Image from "next/image";
 
 export function AppPromoBanner() {
   return (
-    <div className="col-span-full p-10 bg-option-bg flex flex-col gap-4 pr-70 relative overflow-hidden">
+    <div className="col-span-full p-4 pr-60 md:p-10 md:pr-70 bg-option-bg flex flex-col gap-2 md:gap-4 relative overflow-hidden rounded-lg">
       <h3 className="font-display text-xl">Download the We Make Coffee app</h3>
       <p className="font-sans">
         Introducing We Make Coffee - the AeroPrecipe experience you know and
@@ -22,7 +22,11 @@ export function AppPromoBanner() {
         </div>
       </div>
 
-      <Image src={shots} alt="" className="absolute w-40 right-14 rotate-4" />
+      <Image
+        src={shots}
+        alt=""
+        className="absolute w-40 right-14 top-10 rotate-4"
+      />
     </div>
   );
 }

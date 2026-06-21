@@ -34,6 +34,7 @@ export function CollectionRail() {
               z-10 relative min-w-full md:min-w-xl mr-4 
               bg-card-bg p-12 flex items-center 
               cursor-pointer select-none pr-30 md:pr-46
+               rounded-lg
             "
           >
             {/* 文字 */}

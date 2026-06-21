@@ -83,8 +83,8 @@ export function RecipeBrowser() {
             hidden lg:block
           "
         >
-          <div className="p-8 flex flex-col gap-4">
-            <div className="flex items-center gap-2">
+          <div className="px-8 flex flex-col gap-6">
+            <div className="flex items-center gap-2 pt-6">
               <Image src={refine} alt="" className="size-4.5" />
               <p className=" font-display">Refine your recipe search</p>
             </div>
@@ -109,7 +109,7 @@ export function RecipeBrowser() {
                   {group.options.map((item) => (
                     <div
                       key={item.label}
-                      className={`flex items-center gap-2 font-sans bg-option-bg px-2 py-2 ${group.optionWidth}`}
+                      className={`flex items-center gap-2 font-sans bg-option-bg px-2.5 py-1.5 rounded-md ${group.optionWidth}`}
                     >
                       {/* && 是短路渲染：左边有值时才渲染右边的 Image */}
                       {item.icon && (
