@@ -62,7 +62,7 @@ export function RecipeBrowser() {
                   </div>
 
                   {/* 标题 */}
-                  <h3 className="text-lg font-display py-3">{item.title}</h3>
+                  <h3 className="text-lg font-display py-2">{item.title}</h3>
                   {/* 描述 */}
                   <p>{item.description}</p>
                 </div>
