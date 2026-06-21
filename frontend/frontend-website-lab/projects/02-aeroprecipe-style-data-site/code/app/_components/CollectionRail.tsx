@@ -31,9 +31,9 @@ export function CollectionRail() {
           <div
             key={card.id}
             className="
-              z-10 relative min-w-full lg:min-w-xl mr-4 
+              z-10 relative min-w-full md:min-w-xl mr-4 
               bg-card-bg p-12 flex items-center 
-              cursor-pointer select-none pr-30 lg:pr-46
+              cursor-pointer select-none pr-30 md:pr-46
             "
           >
             {/* 文字 */}
@@ -53,8 +53,8 @@ export function CollectionRail() {
                 [background-size:var(--mobile-image-size)] 
                 [background-position:var(--mobile-image-position)]
 
-                lg:[background-size:var(--image-size)]
-                lg:[background-position:var(--image-position)]
+                md:[background-size:var(--image-size)]
+                md:[background-position:var(--image-position)]
               "
               style={
                 {

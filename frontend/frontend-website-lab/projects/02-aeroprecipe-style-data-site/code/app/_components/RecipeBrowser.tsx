@@ -22,7 +22,7 @@ export function RecipeBrowser() {
           </div>
 
           {/* 网格卡片 */}
-          <div className="px-12 grid gap-8 grid-cols-3">
+          <div className="px-12 grid gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
             {recipeCards.map((item) => (
               <div
                 key={item.id}
@@ -66,7 +66,13 @@ export function RecipeBrowser() {
 
         {/* 筛选栏——sticky + h-screen + overflow-y-auto 实现吸顶滚动 */}
         {/* 筛选栏没写固定宽度时，会先按内部内容估算宽度，但因为它作为 flex 子元素默认允许被压缩(auto而非shrink-0)，所以空间不够时会被左侧 grid 挤窄，文字就换行了。 */}
-        <div className="min-w-100 h-screen overflow-y-auto bg-card-bg sticky top-0  border-l border-gray-200">
+        <div
+          className="
+            min-w-100 h-screen overflow-y-auto bg-card-bg 
+            sticky top-0  border-l border-gray-200
+            hidden lg:block
+          "
+        >
           <div className="p-8 flex flex-col gap-4">
             <div className="flex items-center gap-2">
               <Image src={refine} alt="" className="size-4.5" />
