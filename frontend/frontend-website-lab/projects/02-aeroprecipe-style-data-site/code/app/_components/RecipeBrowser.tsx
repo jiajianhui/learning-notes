@@ -10,56 +10,66 @@ import refine from "@/public/recipeIcon/icon_filter_refine.svg";
 import { recipeCards } from "@/data/recipeData";
 import { filterGroups } from "@/data/recipeData";
 
+// 引入组件
+import { AppPromoBanner } from "./AppPromoBanner";
+
+import { Fragment } from "react/jsx-runtime";
+
 export function RecipeBrowser() {
   return (
     <div>
       <div className="flex border-t border-gray-200">
         <div>
           {/* 标题栏 */}
-          <div className="flex justify-between text-sm sticky top-0 backdrop-blur-3xl font-sans px-12 py-6">
+          <div className="flex justify-between text-sm sticky z-10 top-0 backdrop-blur-3xl font-sans px-12 py-6">
             <p>AeroPress® recipes! Viewing: all recipes (360)</p>
             <p className="font-display">Sort by:</p>
           </div>
 
           {/* 网格卡片 */}
           <div className="px-12 grid gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-            {recipeCards.map((item) => (
-              <div
-                key={item.id}
-                className="font-sans py-2 border-t border-gray-200 hover:border-gray-600 cursor-pointer"
-              >
-                {/* 小字部分 */}
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex gap-2 items-center">
-                    <Image
-                      src={item.sourceIcon}
-                      width={1}
-                      height={1}
-                      alt=""
-                      className="size-4"
-                    />
-                    <p className="w-full">{item.source}</p>
+            {recipeCards.map((item, index) => (
+              
+              // Fragment 是 React 提供的空标签，用来包住多个并列元素，不会额外生成真实 DOM，类似<> </>(短语法不能写 key)
+              // key 只是 React 识别这一轮 map 渲染结果的内部标识，不会出现在真实 DOM 上
+              <Fragment key={index}>
+                <div className="font-sans py-2 border-t border-gray-200 hover:border-gray-600 cursor-pointer">
+                  {/* 小字部分 */}
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex gap-2 items-center">
+                      <Image
+                        src={item.sourceIcon}
+                        width={1}
+                        height={1}
+                        alt=""
+                        className="size-4"
+                      />
+                      <p className="w-full">{item.source}</p>
+                    </div>
+
+                    <div className="flex gap-2 items-center">
+                      {item.hasVideo && (
+                        <Image src={video} alt="" className="size-3.5" />
+                      )}
+
+                      {item.isCold && (
+                        <Image src={cold} alt="" className="size-3.5" />
+                      )}
+
+                      <Image src={good} alt="" className="size-4 -mr-1.5" />
+                      <p>{item.votes}</p>
+                    </div>
                   </div>
 
-                  <div className="flex gap-2 items-center">
-                    {item.hasVideo && (
-                      <Image src={video} alt="" className="size-3.5" />
-                    )}
-
-                    {item.isCold && (
-                      <Image src={cold} alt="" className="size-3.5" />
-                    )}
-
-                    <Image src={good} alt="" className="size-4 -mr-1.5" />
-                    <p>{item.votes}</p>
-                  </div>
+                  {/* 标题 */}
+                  <h3 className="text-lg font-display py-3">{item.title}</h3>
+                  {/* 描述 */}
+                  <p>{item.description}</p>
                 </div>
 
-                {/* 标题 */}
-                <h3 className="text-lg font-display py-3">{item.title}</h3>
-                {/* 描述 */}
-                <p>{item.description}</p>
-              </div>
+                {/* index 为 5 时，这一轮会同时渲染卡片和一个横跨整行的 banner */}
+                {index === 5 && <AppPromoBanner />}
+              </Fragment>
             ))}
           </div>
         </div>
