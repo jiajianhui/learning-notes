@@ -47,26 +47,30 @@ export function CollectionRail() {
               </p>
             </div>
 
-            {/* 背景图；注意Tailwind 的“任意属性”不要有空格 */}
+            {/* 背景图；注意Tailwind 的“任意属性”不要有空格（已将任意属性写法改为Tailwind 工具类） */}
+            {/* 核心 —— 先在 style 中根据当前 card 数据，动态定义 CSS 变量；再在 className 中通过 Tailwind 使用这些变量 */}
+            
+            {/* style 提供动态值，CSS 变量保存值，Tailwind 读取变量并应用样式 */}
             <div
               className="
                 z-0 absolute right-0 top-0 w-full h-full bg-no-repeat 
-                [background-size:var(--mobile-image-size)] 
-                [background-position:var(--mobile-image-position)]
 
-                md:[background-size:var(--image-size)]
-                md:[background-position:var(--image-position)]
+                bg-size-(--mobile-image-size)
+                bg-position-(--mobile-image-position)
+                md:bg-size-(--image-size)
+                md:bg-position-(--image-position)
               "
               style={
                 {
                   backgroundImage: `url(${card.image})`,
 
-                  // 定义 CSS 变量
+                  // 定义 CSS 变量，这些变量定义在当前这个 <div> 自己身上
                   "--image-size": card.imageSize,
                   "--mobile-image-size": card.mobileImageSize,
                   "--image-position": card.imagePosition,
                   "--mobile-image-position": card.mobileImagePosition,
                 } as React.CSSProperties & Record<string, string>
+                // 类型断言，这个对象既包含标准 React CSS 属性，也允许包含自定义 CSS 变量。
               }
             />
           </div>
