@@ -2,6 +2,7 @@
 import { SiteHeader } from "./_components/SiteHeader";
 import { CollectionRail } from "./_components/CollectionRail";
 import { RecipeBrowser } from "./_components/RecipeBrowser";
+import { SiteFooter } from "./_components/SiteFooter";
 
 export default function Home() {
   
@@ -10,6 +11,7 @@ export default function Home() {
       <SiteHeader />
       <CollectionRail />
       <RecipeBrowser />
+      <SiteFooter />
     </div>
   );
 }

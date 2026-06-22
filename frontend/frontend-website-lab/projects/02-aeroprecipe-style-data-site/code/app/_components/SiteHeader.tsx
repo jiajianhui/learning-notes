@@ -13,7 +13,7 @@ export function SiteHeader() {
   ];
 
   return (
-    <header className="flex justify-between items-center font-display px-12 py-4 border-b border-zinc-300">
+    <header className="flex justify-between items-center font-display px-12 py-4 border-b border-gray-200">
       {/* 标题 */}
       <h1 className="flex-1 text-lg">AeroPrecipe.</h1>
 
@@ -26,7 +26,7 @@ export function SiteHeader() {
         </div>
 
         {/* 分割线 */}
-        <div className="w-px h-10 bg-zinc-300 hidden lg:block" />
+        <div className="w-px h-10 bg-gray-200 hidden lg:block" />
 
         {/* 登陆、搜索 */}
         <button className="hidden lg:block">Sign in</button>

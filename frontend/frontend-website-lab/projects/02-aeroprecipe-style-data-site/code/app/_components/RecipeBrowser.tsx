@@ -27,13 +27,12 @@ export function RecipeBrowser() {
           </div>
 
           {/* 网格卡片 */}
-          <div className="px-12 grid gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+          <div className="px-12 pb-20 grid gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
             {recipeCards.map((item, index) => (
-              
               // Fragment 是 React 提供的空标签，用来包住多个并列元素，不会额外生成真实 DOM，类似<> </>(短语法不能写 key)
               // key 只是 React 识别这一轮 map 渲染结果的内部标识，不会出现在真实 DOM 上
               <Fragment key={index}>
-                <div className="font-sans py-2 border-t border-gray-200 hover:border-gray-600 cursor-pointer">
+                <div className="font-sans pt-2 border-t border-gray-200 hover:border-gray-600 cursor-pointer">
                   {/* 小字部分 */}
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex gap-2 items-center">
@@ -62,7 +61,7 @@ export function RecipeBrowser() {
                   </div>
 
                   {/* 标题 */}
-                  <h3 className="text-lg font-display py-2">{item.title}</h3>
+                  <h3 className="text-lg font-display py-1">{item.title}</h3>
                   {/* 描述 */}
                   <p>{item.description}</p>
                 </div>
@@ -83,17 +82,17 @@ export function RecipeBrowser() {
             hidden lg:block
           "
         >
-          <div className="px-8 flex flex-col gap-6">
-            <div className="flex items-center gap-2 pt-6">
+          <div className="pl-8 pr-12 pb-20 flex flex-col pt-6 gap-6">
+            <div className="flex items-center gap-2 text-sm">
               <Image src={refine} alt="" className="size-4.5" />
               <p className=" font-display">Refine your recipe search</p>
             </div>
 
             <div className="h-px bg-gray-200 w-full"></div>
 
-            <div>
-              <p className="text-lg font-display">My recipes only</p>
-              <p className="font-sans">
+            <div className="flex flex-col gap-2">
+              <p className="font-display">My recipes only</p>
+              <p className="font-sans text-sm opacity-60">
                 Show recipes you&apos;ve created, public and private
               </p>
             </div>
@@ -102,10 +101,10 @@ export function RecipeBrowser() {
             {filterGroups.map((group) => (
               <div key={group.title}>
                 {/* 标题 */}
-                <p className="text-lg font-display">{group.title}</p>
+                <p className="font-display">{group.title}</p>
 
                 {/* 选项 */}
-                <div className={`flex ${group.layout} gap-2 py-1`}>
+                <div className={`flex ${group.layout} gap-1.5 py-1`}>
                   {group.options.map((item) => (
                     <div
                       key={item.label}

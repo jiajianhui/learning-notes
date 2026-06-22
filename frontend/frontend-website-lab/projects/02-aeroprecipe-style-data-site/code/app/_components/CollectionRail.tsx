@@ -22,7 +22,7 @@ export function CollectionRail() {
   );
 
   return (
-    <div ref={emblaRef} className="overflow-hidden m-4 lg:my-6 lg:mx-12">
+    <div ref={emblaRef} className="overflow-hidden m-4 lg:mx-12">
       {/* flex 默认有一个隐藏效果：align-items: stretch—— 子元素，高度默认会被拉到一样高 */}
       <div className="flex">
         {collectionCards.map((card) => (
@@ -34,7 +34,7 @@ export function CollectionRail() {
               z-10 relative min-w-full md:min-w-xl mr-4 
               bg-card-bg p-12 flex items-center 
               cursor-pointer select-none pr-30 md:pr-46
-               rounded-lg
+              rounded-lg
             "
           >
             {/* 文字 */}
