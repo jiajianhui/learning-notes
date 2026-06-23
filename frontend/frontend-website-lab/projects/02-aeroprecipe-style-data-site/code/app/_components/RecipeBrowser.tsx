@@ -74,7 +74,11 @@ export function RecipeBrowser() {
         </div>
 
         {/* 筛选栏——sticky + h-screen + overflow-y-auto 实现吸顶滚动 */}
-        {/* 筛选栏没写固定宽度时，会先按内部内容估算宽度，但因为它作为 flex 子元素默认允许被压缩(auto而非shrink-0)，所以空间不够时会被左侧 grid 挤窄，文字就换行了。 */}
+        {/* 筛选栏作为 flex 子元素且未设置固定宽度时，
+            flex-basis: auto 会根据 width 或内容计算初始宽度；
+            同时默认 flex-shrink: 1，空间不足时会被压缩，
+            因而可能被左侧 grid 区域挤窄，导致文字换行。 
+        */}
         <div
           className="
             min-w-100 h-screen overflow-y-auto bg-card-bg 
