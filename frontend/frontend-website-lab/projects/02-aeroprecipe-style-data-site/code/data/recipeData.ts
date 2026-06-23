@@ -83,7 +83,8 @@ export const filterGroups: FilterGroup[] = [
 // 网格卡片数据
 export const recipeCards = [
   {
-    id: 1,
+    id: 0,
+    slug: "james-hoffmanns-ultimate-aeropress-recipe",
     source: "From a Barista",
     sourceIcon: "/recipeIcon/noun_tamper.svg",
     title: "James Hoffmann's Ultimate AeroPress Recipe",
@@ -93,7 +94,8 @@ export const recipeCards = [
     votes: 1116,
   },
   {
-    id: 2,
+    id: 1,
+    slug: "13g-that-makes-you-happy",
     source: "From an Enthusiast",
     sourceIcon: "/recipeIcon/icon_enthusiast.svg",
     title: "13g that makes you happy",
@@ -104,7 +106,8 @@ export const recipeCards = [
     votes: 851,
   },
   {
-    id: 3,
+    id: 2,
+    slug: "james-hoffmann",
     source: "From a Barista",
     sourceIcon: "/recipeIcon/noun_tamper.svg",
     title: "James Hoffmann",
@@ -115,7 +118,8 @@ export const recipeCards = [
     votes: 543,
   },
   {
-    id: 4,
+    id: 3,
+    slug: "love-me-some-acid",
     source: "Championship",
     sourceIcon: "/recipeIcon/cat_crown.svg",
     title: "Love me some acid",
@@ -126,7 +130,8 @@ export const recipeCards = [
     votes: 465,
   },
   {
-    id: 5,
+    id: 4,
+    slug: "tim-wendelboe",
     source: "From a Barista",
     sourceIcon: "/recipeIcon/noun_tamper.svg",
     title: "Tim Wendelboe",
@@ -137,7 +142,8 @@ export const recipeCards = [
     votes: 386,
   },
   {
-    id: 6,
+    id: 5,
+    slug: "smooooothy",
     source: "From a Barista",
     sourceIcon: "/recipeIcon/noun_tamper.svg",
     title: "Smooooothy!",
@@ -147,7 +153,8 @@ export const recipeCards = [
     votes: 290,
   },
   {
-    id: 7,
+    id: 6,
+    slug: "aeropress-iced-latte",
     source: "From an Enthusiast",
     sourceIcon: "/recipeIcon/icon_enthusiast.svg",
     title: "AeroPress Iced Latte",
@@ -158,7 +165,8 @@ export const recipeCards = [
     votes: 261,
   },
   {
-    id: 8,
+    id: 7,
+    slug: "the-only-aeropress-recipe-youll-ever-need",
     source: "From a Barista",
     sourceIcon: "/recipeIcon/noun_tamper.svg",
     title: "The only AeroPress recipe you'll ever need",
@@ -169,7 +177,8 @@ export const recipeCards = [
     votes: 239,
   },
   {
-    id: 9,
+    id: 8,
+    slug: "two-big-cups-one-brew",
     source: "From an Enthusiast",
     sourceIcon: "/recipeIcon/icon_enthusiast.svg",
     title: "Two Big Cups - One Brew",
@@ -180,7 +189,8 @@ export const recipeCards = [
     votes: 173,
   },
   {
-    id: 10,
+    id: 9,
+    slug: "v60-style-aeropress-light-roast",
     source: "From an Enthusiast",
     sourceIcon: "/recipeIcon/icon_enthusiast.svg",
     title: "V60 Style Aeropress (light roast)",
@@ -191,7 +201,8 @@ export const recipeCards = [
     votes: 151,
   },
   {
-    id: 11,
+    id: 10,
+    slug: "aeropress-espresso",
     source: "From a Barista",
     sourceIcon: "/recipeIcon/noun_tamper.svg",
     title: "AeroPress Espresso",
@@ -202,7 +213,8 @@ export const recipeCards = [
     votes: 131,
   },
   {
-    id: 12,
+    id: 11,
+    slug: "for-the-sweetest-cup",
     source: "From a Barista",
     sourceIcon: "/recipeIcon/noun_tamper.svg",
     title: "For the sweetest cup",

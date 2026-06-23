@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 
 // 引入图标
 import cold from "@/public/recipeIcon/icon_cold.svg";
@@ -86,39 +87,41 @@ export function RecipeBrowser() {
               // Fragment 是 React 提供的空标签，用来包住多个并列元素，不会额外生成真实 DOM，类似<> </>(短语法不能写 key)
               // key 只是 React 识别这一轮 map 渲染结果的内部标识，不会出现在真实 DOM 上
               <Fragment key={index}>
-                <div className="font-sans pt-2 border-t border-gray-200 hover:border-gray-600 cursor-pointer">
-                  {/* 小字部分 */}
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex gap-2 items-center">
-                      <Image
-                        src={item.sourceIcon}
-                        width={1}
-                        height={1}
-                        alt=""
-                        className="size-4"
-                      />
-                      <p className="w-full">{item.source}</p>
+                <Link href={`/recipes/${item.slug}`}>
+                  <div className="font-sans pt-2 border-t border-gray-200 hover:border-gray-600 cursor-pointer">
+                    {/* 小字部分 */}
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex gap-2 items-center">
+                        <Image
+                          src={item.sourceIcon}
+                          width={1}
+                          height={1}
+                          alt=""
+                          className="size-4"
+                        />
+                        <p className="w-full">{item.source}</p>
+                      </div>
+
+                      <div className="flex gap-2 items-center">
+                        {item.hasVideo && (
+                          <Image src={video} alt="" className="size-3.5" />
+                        )}
+
+                        {item.isCold && (
+                          <Image src={cold} alt="" className="size-3.5" />
+                        )}
+
+                        <Image src={good} alt="" className="size-4 -mr-1.5" />
+                        <p>{item.votes}</p>
+                      </div>
                     </div>
 
-                    <div className="flex gap-2 items-center">
-                      {item.hasVideo && (
-                        <Image src={video} alt="" className="size-3.5" />
-                      )}
-
-                      {item.isCold && (
-                        <Image src={cold} alt="" className="size-3.5" />
-                      )}
-
-                      <Image src={good} alt="" className="size-4 -mr-1.5" />
-                      <p>{item.votes}</p>
-                    </div>
+                    {/* 标题 */}
+                    <h3 className="text-lg font-display py-1">{item.title}</h3>
+                    {/* 描述 */}
+                    <p>{item.description}</p>
                   </div>
-
-                  {/* 标题 */}
-                  <h3 className="text-lg font-display py-1">{item.title}</h3>
-                  {/* 描述 */}
-                  <p>{item.description}</p>
-                </div>
+                </Link>
 
                 {/* index 为 5 时，这一轮会同时渲染卡片和一个横跨整行的 banner */}
                 {index === 5 && <AppPromoBanner />}
