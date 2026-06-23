@@ -1,3 +1,4 @@
+"use client";
 import Image from "next/image";
 
 // 引入图标
@@ -5,6 +6,8 @@ import cold from "@/public/recipeIcon/icon_cold.svg";
 import video from "@/public/recipeIcon/icon_video.svg";
 import good from "@/public/recipeIcon/icon_like.svg";
 import refine from "@/public/recipeIcon/icon_filter_refine.svg";
+
+import arrow from "@/public/chevron-down.svg";
 
 // 引入网格卡片和筛选栏所需的数据
 import { recipeCards } from "@/data/recipeData";
@@ -15,15 +18,66 @@ import { AppPromoBanner } from "./AppPromoBanner";
 
 import { Fragment } from "react/jsx-runtime";
 
+// select 数据
+const sortOptions = [
+  { label: "Most votes", value: "votes-desc" },
+  { label: "Least votes", value: "votes-asc" },
+  { label: "Newest", value: "newest" },
+  { label: "Oldest", value: "oldest" },
+  { label: "Name A-Z", value: "name-asc" },
+  { label: "Name Z-A", value: "name-desc" },
+  { label: "Shuffle", value: "shuffle" },
+];
+
+import { useState } from "react";
+
 export function RecipeBrowser() {
+  const [currentSelect, setSelect] = useState(sortOptions[0].value);
+
   return (
     <div>
       <div className="flex border-t border-gray-200">
         <div>
           {/* 标题栏 */}
-          <div className="flex justify-between text-sm sticky z-10 top-0 backdrop-blur-3xl font-sans px-12 py-6">
+          <div className="flex items-center text-sm sticky z-10 top-0 backdrop-blur-3xl font-sans px-12 py-6">
             <p>AeroPress® recipes! Viewing: all recipes (360)</p>
-            <p className="font-display">Sort by:</p>
+
+            <div className="flex absolute right-12 items-center justify-baseline gap-2">
+              <p className="font-display">Sort by:</p>
+
+              {/* 下拉框 */}
+              <div className="relative">
+                <select
+                  value={currentSelect}
+                  // 用户切换 option
+                  // → 浏览器触发 change 事件
+                  // → React 接收到事件并调用 onChange
+                  // → e.target.value 获取当前选中的 option.value
+                  // → setSelect 更新 select 状态
+                  onChange={(e) => setSelect(e.target.value)}
+                  className="
+                    appearance-none outline-none cursor-pointer 
+                    pl-3 pr-8 py-1 border rounded-sm bg-white
+                    border-zinc-400 focus:border-zinc-300 focus:ring-1 focus:ring-zinc-300
+                  "
+                >
+                  {/* 渲染选项 */}
+                  {sortOptions.map((item) => (
+                    <option key={item.label} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+                <Image
+                  src={arrow}
+                  alt=""
+                  // pointer-events-none 不接收鼠标点击，点击事件会穿透到下面的 <select>。
+                  // top-1/2 元素顶部位于父元素高度的 50%，也就是先把图标顶部放到父元素垂直中线。
+                  // -translate-y-1/2 向上移动自身高度的 50%，让图标真正垂直居中。
+                  className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 size-4"
+                />
+              </div>
+            </div>
           </div>
 
           {/* 网格卡片 */}
