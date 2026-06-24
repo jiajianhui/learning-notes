@@ -30,8 +30,9 @@ export const recipes: Recipe[] = [
     },
 
     introduction: [
-      "A simple and reliable AeroPress recipe suitable as a starting point for further experimentation.",
-      "The method uses a gentle swirl instead of stirring before the final press.",
+      "James Hoffmann's Ultimate AeroPress recipe - the AeroPress recipe everyone has been waiting for!",
+      "James presents us with a simple, and tasty recipe that throws away a lot of AeroPress misconceptions such as rinsing your paper filter and preheating your AeroPress. James also prefers to swirl, not stir.",
+      "This recipe is a great starting point for any AeroPress enthusiast - once you get it wired, use it as a base for other recipe experiments."
     ],
 
     notes: [

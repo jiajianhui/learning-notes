@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 
+// 导入组件
+import { SiteHeader } from "./_components/SiteHeader";
+
 
 // 定义字体，然后在页面中使用字体：在global.css中将tailwindd默认字体改为自己的字体，方便调用
 const cutiveMono = localFont({
@@ -32,7 +35,11 @@ export default function RootLayout({
       // 移除了antialiased，它会让字体边缘更平滑，但视觉上也会变细、变轻
       className={`${cutiveMono.variable} ${inconsolata.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <SiteHeader />
+        {children}
+
+      </body>
     </html>
   );
 }
