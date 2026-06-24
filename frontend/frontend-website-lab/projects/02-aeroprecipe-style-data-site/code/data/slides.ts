@@ -1,20 +1,11 @@
-export type CollectionCard = {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  imageAlt: string;
-  imageSize: string;
-  imagePosition: string;
-  mobileImageSize: string;
-  mobileImagePosition: string;
-};
+import { Slide } from "./types/slide";
 
-export const collectionCards: CollectionCard[] = [
+export const slides: Slide[] = [
   {
     id: "latest",
     title: "Explore the latest",
-    description: "Looking for something new? Explore the latest AeroPress recipes and get inspired!",
+    description:
+      "Looking for something new? Explore the latest AeroPress recipes and get inspired!",
     image: "/illustrations/explore_the_latest.svg",
     imageAlt: "Explore the latest illustration",
     imageSize: "110px",
@@ -25,7 +16,8 @@ export const collectionCards: CollectionCard[] = [
   {
     id: "championship",
     title: "Championship Recipes",
-    description: "Brew like the best - here's a list of tried and true recipes from AeroPress Champions.",
+    description:
+      "Brew like the best - here's a list of tried and true recipes from AeroPress Champions.",
     image: "/illustrations/WAC.svg",
     imageAlt: "Championship Recipes illustration",
     imageSize: "140px",
@@ -36,7 +28,8 @@ export const collectionCards: CollectionCard[] = [
   {
     id: "share",
     title: "Share with a friend",
-    description: "Coffee with friends - or two for you. Here are recipes to get more coffee from your AeroPress.",
+    description:
+      "Coffee with friends - or two for you. Here are recipes to get more coffee from your AeroPress.",
     image: "/illustrations/friends.svg",
     imageAlt: "Share with a friend illustration",
     imageSize: "230px",
@@ -47,7 +40,8 @@ export const collectionCards: CollectionCard[] = [
   {
     id: "low-on-beans",
     title: "Low on beans",
-    description: "Running low on beans? Don't worry! This collection showcases recipes big on flavour & low on bean count.",
+    description:
+      "Running low on beans? Don't worry! This collection showcases recipes big on flavour & low on bean count.",
     image: "/illustrations/lowOnBeans.svg",
     imageAlt: "Low on beans illustration",
     imageSize: "80px",
@@ -58,7 +52,8 @@ export const collectionCards: CollectionCard[] = [
   {
     id: "fast",
     title: "Fast & furious",
-    description: "In a rush? These recipes under 1:30 will help you get to where you're going, quicker.",
+    description:
+      "In a rush? These recipes under 1:30 will help you get to where you're going, quicker.",
     image: "/illustrations/fast.svg",
     imageAlt: "Fast and furious illustration",
     imageSize: "75px",
@@ -69,7 +64,8 @@ export const collectionCards: CollectionCard[] = [
   {
     id: "espresso",
     title: "AeroPress espresso",
-    description: "Yeah we know the AeroPress isn't made for espresso BUT these recipes will get you close.",
+    description:
+      "Yeah we know the AeroPress isn't made for espresso BUT these recipes will get you close.",
     image: "/illustrations/espressoul.svg",
     imageAlt: "AeroPress espresso illustration",
     imageSize: "140px",
@@ -80,7 +76,8 @@ export const collectionCards: CollectionCard[] = [
   {
     id: "milk",
     title: "A dash of milk",
-    description: "You put milk in your coffee?! Ok, ok - here are some AeroPress recipes for milk coffee lovers.",
+    description:
+      "You put milk in your coffee?! Ok, ok - here are some AeroPress recipes for milk coffee lovers.",
     image: "/illustrations/a_dash_of_milk.svg",
     imageAlt: "A dash of milk illustration",
     imageSize: "140px",

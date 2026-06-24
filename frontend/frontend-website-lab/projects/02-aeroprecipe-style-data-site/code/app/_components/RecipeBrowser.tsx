@@ -11,8 +11,8 @@ import refine from "@/public/recipeIcon/icon_filter_refine.svg";
 import arrow from "@/public/chevron-down.svg";
 
 // 引入网格卡片和筛选栏所需的数据
-import { recipeCards } from "@/data/recipeData";
-import { filterGroups } from "@/data/recipeData";
+import { recipes } from "@/data/recipeData";
+import { filterGroups } from "@/data/filterData";
 
 // 引入组件
 import { AppPromoBanner } from "./AppPromoBanner";
@@ -83,7 +83,7 @@ export function RecipeBrowser() {
 
           {/* 网格卡片 */}
           <div className="px-12 pb-20 grid gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-            {recipeCards.map((item, index) => (
+            {recipes.map((item, index) => (
               // Fragment 是 React 提供的空标签，用来包住多个并列元素，不会额外生成真实 DOM，类似<> </>(短语法不能写 key)
               // key 只是 React 识别这一轮 map 渲染结果的内部标识，不会出现在真实 DOM 上
               <Fragment key={index}>

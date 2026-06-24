@@ -5,9 +5,9 @@ import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 
 // 引入数据
-import { collectionCards } from "@/data/collectionCards";
+import { slides } from "@/data/slides";
 
-export function CollectionRail() {
+export function HomeSlide() {
   const [emblaRef] = useEmblaCarousel(
     {
       align: "start",
@@ -25,7 +25,7 @@ export function CollectionRail() {
     <div ref={emblaRef} className="overflow-hidden m-4 lg:mx-12">
       {/* flex 默认有一个隐藏效果：align-items: stretch—— 子元素，高度默认会被拉到一样高 */}
       <div className="flex">
-        {collectionCards.map((card) => (
+        {slides.map((card) => (
           // 卡片要有固定宽度 / 最小宽度，否则 flex 子项会被压缩，无法滚动
 
           <div
