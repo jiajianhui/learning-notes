@@ -36,6 +36,38 @@
 * 动态 `className` 拼接：使用模板字符串，将固定的 Tailwind 类名和动态类名组合起来，例如`flex ${group.optionWidth}`。
   
 * Next.js `Image` 尺寸处理：`width` 和 `height` 提供图片比例，`1 × 1` 表示正方形；`size-4` 控制图片实际显示尺寸。
+  
+* Next.js 动态路由：使用 `[参数名]` 作为目录名，例如 `[id]`、`[slug]`。中括号里的名称可以自定义，但目录名使用 `[slug]` 时，详情页中就必须通过 `params.slug` 读取动态参数。
+
+* 动态详情页：多个不同内容的详情页可以共用同一个页面文件，通过 URL 中的动态参数查找并展示对应的数据。
+
+* `slug`：行业中常用的命名，表示适合放进 URL 的可读字符串。通常由标题转换而来，规则包括：转为小写、空格替换为 `-`、去掉引号和括号等特殊符号。`title` 用于页面展示，`slug` 用于路由跳转，`id` 用于唯一标识数据。
+
+  ```text
+  James Hoffmann's Ultimate AeroPress Recipe
+  ↓
+  james-hoffmanns-ultimate-aeropress-recipe
+  ```
+
+* 普通函数的参数可以是任何类型；React 函数组件则按照 React 的设计，只接收一个统一的 `props` 对象，传入组件的所有属性都会被收集到这个对象中。
+
+* `props` 是组件收到的整个数据对象，`params` 是其中保存路由参数的属性，`Promise` 表示“稍后才会拿到结果”，`resolve` 表示这个结果已经成功产生。
+
+
+* 默认导出与具名导出：默认导出使用 `export default`，一个文件只能有一个，导入时不加 `{}`，名称可以自定义；具名导出使用 `export`，一个文件可以有多个，导入时需要加 `{}`，名称默认与导出名称一致。
+
+  ```tsx
+  // 默认导出
+  export default RecipeCard;
+  import RecipeCard from "./RecipeCard";
+
+  // 具名导出
+  export { RecipeCard };
+  import { RecipeCard } from "./RecipeCard";
+
+  // 具名导入重命名
+  import { RecipeCard as Card } from "./RecipeCard";
+  ```
 
 
 

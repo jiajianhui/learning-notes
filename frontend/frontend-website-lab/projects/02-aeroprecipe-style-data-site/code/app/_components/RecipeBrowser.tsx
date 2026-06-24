@@ -89,17 +89,17 @@ export function RecipeBrowser() {
               <Fragment key={index}>
                 <Link href={`/recipes/${item.slug}`}>
                   <div className="font-sans pt-2 border-t border-gray-200 hover:border-gray-600 cursor-pointer">
-                    {/* 小字部分 */}
+                    {/* source、status */}
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex gap-2 items-center">
                         <Image
-                          src={item.sourceIcon}
+                          src={item.source.icon}
                           width={1}
                           height={1}
                           alt=""
                           className="size-4"
                         />
-                        <p className="w-full">{item.source}</p>
+                        <p className="w-full">{item.source.name}</p>
                       </div>
 
                       <div className="flex gap-2 items-center">
@@ -112,7 +112,7 @@ export function RecipeBrowser() {
                         )}
 
                         <Image src={good} alt="" className="size-4 -mr-1.5" />
-                        <p>{item.votes}</p>
+                        <p>{item.stats.votes}</p>
                       </div>
                     </div>
 
