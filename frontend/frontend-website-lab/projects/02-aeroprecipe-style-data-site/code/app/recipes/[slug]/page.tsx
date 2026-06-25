@@ -10,12 +10,26 @@ type Props = {
 import { recipes } from "@/data/recipeData";
 
 import { Status } from "./_components/Status";
+import { notFound } from "next/navigation";
+import Image from "next/image";
 
 export default async function RecipeDetail({ params }: Props) {
-
+  // 1、拿到路由参数 slug
   const { slug } = await params;
 
-  const recipe = recipes[0];
+  // 2、查找对应的数据
+  const recipe = recipes.find((item) => item.slug === slug);
+
+  // 3、类型收窄
+  /* 
+    find() 可能找不到数据，此时 recipe 是 undefined。
+    先排除 undefined，TypeScript 才能把 recipe 从
+    Recipe | undefined 收窄为 Recipe，后面才能安全访问属性。
+  */
+  if (!recipe) {
+    // 没找到对应数据，显示 Next.js 的 404 页面
+    notFound();
+  }
 
   return (
     <div className="px-12">
@@ -23,8 +37,6 @@ export default async function RecipeDetail({ params }: Props) {
       <div className=" sticky top-0 bg-white py-8 mb-8 border-b border-gray-200">
         {/* 标题 */}
         <div className="flex items-center justify-between">
-          {/* <h1>detail {slug}</h1> */}
-
           {/* 标题 */}
           <h2 className="font-display text-2xl">{recipe.title}</h2>
 
@@ -40,7 +52,7 @@ export default async function RecipeDetail({ params }: Props) {
         </div>
 
         {/* 统计区域 */}
-        <div className="flex gap-12 font-sans pt-4">
+        <div className="flex gap-6 font-sans pt-4">
           <Status
             name={recipe.meta.source.name}
             icon={recipe.meta.source.icon}
@@ -50,6 +62,19 @@ export default async function RecipeDetail({ params }: Props) {
             <p>Creator:</p>
             <Status name={recipe.meta.creator.name} />
           </div>
+
+          {recipe.isCold && (
+            <div className="flex items-center gap-1">
+              <Image
+                src="/recipeIcon/icon_cold.svg"
+                width={1}
+                height={1}
+                alt=""
+                className="size-3"
+              />
+              <p>This is a cold recipe</p>
+            </div>
+          )}
 
           <Status
             name={`${recipe.meta.saves} saves`}
@@ -85,7 +110,7 @@ export default async function RecipeDetail({ params }: Props) {
                     {item.text}
                   </h3>
                 );
-              
+
               // 列表
               case "list":
                 return (
@@ -97,7 +122,7 @@ export default async function RecipeDetail({ params }: Props) {
                     ))}
                   </ul>
                 );
-              
+
               // 视频
               case "video":
                 return (
