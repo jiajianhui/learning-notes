@@ -12,9 +12,11 @@ import { recipes } from "@/data/recipeData";
 import { Status } from "./_components/Status";
 
 export default async function RecipeDetail({ params }: Props) {
+
   const { slug } = await params;
 
-  const recipe = recipes[0]
+  const recipe = recipes[0];
+
   return (
     <div className="px-12">
       {/* 标题、统计区域 */}
@@ -29,7 +31,7 @@ export default async function RecipeDetail({ params }: Props) {
           {/* 标签 */}
           <div className="flex gap-3 font-sans text-sm ">
             <p className="text-fuchsia-400 px-2 py-0.5 border border-fuchsia-400 rounded">
-              Upvote (1116)
+              Upvote {recipe.meta.likes}
             </p>
             <p className="text-zinc-800 px-2 py-0.5 border border-zinc-800 rounded">
               Save
@@ -39,53 +41,79 @@ export default async function RecipeDetail({ params }: Props) {
 
         {/* 统计区域 */}
         <div className="flex gap-12 font-sans pt-4">
-          <Status name={recipe.source.name} icon={recipe.source.icon} />
+          <Status
+            name={recipe.meta.source.name}
+            icon={recipe.meta.source.icon}
+          />
 
           <div className="flex items-center gap-1">
             <p>Creator:</p>
-            <Status name={recipe.creator.name} />
+            <Status name={recipe.meta.creator.name} />
           </div>
 
           <Status
-            name={`${recipe.stats.saves} saves`}
-            icon={recipe.source.icon}
+            name={`${recipe.meta.saves} saves`}
+            icon={recipe.meta.source.icon}
           />
 
           <Status
-            name={`${recipe.stats.comments} comments`}
-            icon={recipe.source.icon}
+            name={`${recipe.meta.comments} comments`}
+            icon={recipe.meta.source.icon}
           />
 
-          <Status name="Private notes (10)" icon={recipe.source.icon} />
+          <Status name="Private notes (10)" icon={recipe.meta.source.icon} />
         </div>
       </div>
 
-      {/* 内容区域 */}
       <div className="flex flex-col gap-8">
-        {/* 介绍 */}
+        {/* 内容区域 */}
         <div className="flex flex-col gap-4 pr-70">
-          {recipe.introduction.map((item) => (
-            <p key={item} className="font-sans leading-loose">
-              {item}
-            </p>
-          ))}
+          {recipe.content.map((item, index) => {
+            switch (item.type) {
+              // 段落
+              case "paragraph":
+                return (
+                  <p key={index} className="font-sans leading-loose">
+                    {item.text}
+                  </p>
+                );
+
+              // 标题
+              case "heading":
+                return (
+                  <h3 key={index} className="font-display">
+                    {item.text}
+                  </h3>
+                );
+              
+              // 列表
+              case "list":
+                return (
+                  <ul key={index}>
+                    {item.items.map((item) => (
+                      <li key={item} className="font-sans leading-loose">
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                );
+              
+              // 视频
+              case "video":
+                return (
+                  <div
+                    key={index}
+                    className="w-full h-100 pr-40 bg-option-bg"
+                  />
+                );
+
+              default:
+                break;
+            }
+          })}
         </div>
 
-        {/* notes */}
-        <div className="flex flex-col gap-4 pr-70">
-          <h4 className="font-display">Quick notes:</h4>
-          {recipe.notes.map((item) => (
-            <p key={item} className="font-sans leading-loose">
-              {item}
-            </p>
-          ))}
-        </div>
-
-        {/* video */}
-        <div className="pr-70">
-          <div className="w-full h-100 pr-40 bg-option-bg" />
-        </div>
-
+        {/* 分割线 */}
         <div className="h-px w-full bg-gray-200 my-6" />
 
         {/* 步骤 */}

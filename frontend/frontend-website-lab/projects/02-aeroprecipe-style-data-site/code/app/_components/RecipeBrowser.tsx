@@ -93,17 +93,17 @@ export function RecipeBrowser() {
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex gap-2 items-center">
                         <Image
-                          src={item.source.icon}
+                          src={item.meta.source.icon}
                           width={1}
                           height={1}
                           alt=""
                           className="size-4"
                         />
-                        <p className="w-full">{item.source.name}</p>
+                        <p className="w-full">{item.meta.source.name}</p>
                       </div>
 
                       <div className="flex gap-2 items-center">
-                        {item.hasVideo && (
+                        {item.content.some((item) => item.type === "video") && (
                           <Image src={video} alt="" className="size-3.5" />
                         )}
 
@@ -112,14 +112,14 @@ export function RecipeBrowser() {
                         )}
 
                         <Image src={good} alt="" className="size-4 -mr-1.5" />
-                        <p>{item.stats.votes}</p>
+                        <p>{item.meta.likes}</p>
                       </div>
                     </div>
 
                     {/* 标题 */}
                     <h3 className="text-lg font-display py-1">{item.title}</h3>
                     {/* 描述 */}
-                    <p>{item.description}</p>
+                    <p>{item.intro}</p>
                   </div>
                 </Link>
 

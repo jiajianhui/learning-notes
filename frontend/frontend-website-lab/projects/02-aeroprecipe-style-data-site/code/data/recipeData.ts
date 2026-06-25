@@ -1,78 +1,81 @@
-import { Recipe } from "./types/recipe";
+import type { Recipe } from "@/data/types/recipe/recipe";
 
-// 网格卡片数据
 export const recipes: Recipe[] = [
   {
     id: 0,
     slug: "james-hoffmanns-ultimate-aeropress-recipe",
-
-    source: {
-      name: "From a Barista",
-      icon: "/recipeIcon/noun_tamper.svg",
-    },
-
     title: "James Hoffmann's Ultimate AeroPress Recipe",
-    description: "James Hoffmann's Ultimate AeroPress Recipe",
-
-    hasVideo: true,
+    intro: "James Hoffmann's Ultimate AeroPress Recipe",
     isCold: false,
-
-    stats: {
-      votes: 1116,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista",
+      },
+      creator: {
+        name: "James Hoffmann",
+      },
+      likes: 1116,
       saves: 0,
       comments: 0,
+      privateNotes: 0,
     },
-
-    creator: {
-      name: "James Hoffmann",
-      introduction:
-        "James Hoffmann presents a simple AeroPress method that challenges common assumptions about rinsing and preheating.",
-    },
-
-    introduction: [
-      "James Hoffmann's Ultimate AeroPress recipe - the AeroPress recipe everyone has been waiting for!",
-      "James presents us with a simple, and tasty recipe that throws away a lot of AeroPress misconceptions such as rinsing your paper filter and preheating your AeroPress. James also prefers to swirl, not stir.",
-      "This recipe is a great starting point for any AeroPress enthusiast - once you get it wired, use it as a base for other recipe experiments."
-    ],
-
-    notes: [
-      "Use water between 90°C and 95°C for medium roast coffee.",
-      "Use water between 85°C and 90°C for dark roast coffee.",
-      "There is no need to rinse the filter or preheat the brewer.",
-    ],
-
-    recipeDetails: {
-      orientation: "Standard",
-      brewTime: 200,
-      filterType: "Paper",
-      filterCount: 1,
-      ratio: "1:18.2",
-    },
-
-    coffee: {
-      amount: 11,
-      unit: "g",
-      description: "Light roast",
-    },
-
-    grind: {
-      size: "Finer end of medium",
-    },
-
-    water: {
-      amount: 200,
-      unit: "g",
-      temperatureCelsius: 99,
-      temperatureFahrenheit: 210,
-    },
-
-    equipment: [
+    content: [
       {
-        name: "AeroPress",
-        url: "https://aeropress.com/",
+        type: "paragraph",
+        text: "James Hoffmann's Ultimate AeroPress recipe is a simple, repeatable method and a strong starting point for anyone learning the brewer.",
+      },
+      {
+        type: "paragraph",
+        text: "The method challenges several common AeroPress habits: the brewer does not need to be preheated, the paper filter does not need to be rinsed, and a gentle swirl is preferred over stirring.",
+      },
+      {
+        type: "paragraph",
+        text: "Once the basic technique feels consistent, it can be used as a foundation for experimenting with roast level, water temperature, grind size and steep time.",
+      },
+      {
+        type: "heading",
+        text: "Quick notes",
+      },
+      {
+        type: "list",
+        items: [
+          "For medium roast coffee, try water between 90°C and 95°C.",
+          "For dark roast coffee, try water between 85°C and 90°C.",
+          "Press gently and allow roughly 30 seconds for the plunge.",
+        ],
+      },
+      {
+        type: "linkParagraph",
+        text: "For a detailed explanation of the technique, watch ",
+        linkText: "James Hoffmann's original video",
+        href: "https://www.youtube.com/watch?v=j6VlT_jUVPc",
+      },
+      {
+        type: "linkParagraph",
+        text: "For a stronger coffee designed for milk drinks, see ",
+        linkText: "James Hoffmann's espresso-style AeroPress recipe",
+        href: "/recipes/james-hoffmann",
+      },
+      {
+        type: "heading",
+        text: "Grind settings recommended by users",
+      },
+      {
+        type: "list",
+        items: [
+          "1Zpresso JX Pro: around 3.2.0 for a light roast.",
+          "Baratza Encore: around 12–14.",
+          "Comandante C40: around 11–16 clicks.",
+          "Timemore C2: around 11 clicks for light roast or 12–14 for medium roast.",
+        ],
+      },
+      {
+        type: "video",
+        title: "The Ultimate AeroPress Technique",
+        url: "https://www.youtube.com/embed/j6VlT_jUVPc",
       },
     ],
-
     steps: [
       {
         id: 1,
@@ -107,84 +110,100 @@ export const recipes: Recipe[] = [
         text: "Serve the coffee and enjoy.",
       },
     ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 200,
+        filter: "Paper filter",
+      },
+      coffee: {
+        amount: 11,
+        unit: "g",
+        description: "Light roast",
+      },
+      grind: {
+        level: "Finer end of medium",
+      },
+      water: {
+        amount: 200,
+        temperature: 99,
+        unit: "g",
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          url: "https://aeropress.com/",
+        },
+      ],
+    },
   },
-
   {
     id: 1,
     slug: "13g-that-makes-you-happy",
-
-    source: {
-      name: "From an Enthusiast",
-      icon: "/recipeIcon/icon_enthusiast.svg",
-    },
-
     title: "13g that makes you happy",
-    description:
+    intro:
       "Quick & simple. Guaranteed happiness with this clean, balanced and sweet cup.",
-
-    hasVideo: true,
     isCold: false,
-
-    stats: {
-      votes: 851,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast",
+      },
+      creator: {
+        name: "Sigit Tri",
+      },
+      likes: 851,
       saves: 0,
       comments: 0,
+      privateNotes: 0,
     },
-
-    creator: {
-      name: "Sigit Tri",
-      introduction:
-        "Sigit Tri created a simple recipe designed to produce a balanced, sweet and well-extracted cup.",
-    },
-
-    introduction: [
-      "This recipe works well with many different coffee processing methods.",
-      "It uses a short bloom followed by a longer inverted immersion.",
-    ],
-
-    notes: [
-      "Add five more stirs or extend the bloom by 10 seconds when more extraction is needed.",
-      "A variation uses 13.5g of coffee with water at 88°C.",
-    ],
-
-    recipeDetails: {
-      orientation: "Inverted",
-      brewTime: 150,
-      filterType: "Paper",
-      filterCount: 1,
-      ratio: "1:13.8",
-    },
-
-    coffee: {
-      amount: 13,
-      unit: "g",
-      description: "Honey processed coffee",
-    },
-
-    grind: {
-      size: "Coarse",
-    },
-
-    water: {
-      amount: 180,
-      unit: "g",
-      temperatureCelsius: 90,
-      temperatureFahrenheit: 194,
-    },
-
-    equipment: [
+    content: [
       {
-        name: "AeroPress",
-        url: "https://aeropress.com/",
+        type: "paragraph",
+        text: "This inverted recipe is intended to work with a wide range of coffee processing methods while producing a balanced, sweet and well-extracted cup.",
       },
       {
-        name: "Hario Buono Gooseneck Kettle",
+        type: "paragraph",
+        text: "A short bloom is followed by a longer immersion, making the method easy to remember and forgiving when the coffee or roast changes.",
       },
       {
-        name: "Hario V60 Drip Scale",
+        type: "heading",
+        text: "Recipe updates",
+      },
+      {
+        type: "paragraph",
+        text: "For more extraction, add five extra stirs during the second mixing stage or extend the bloom by about ten seconds.",
+      },
+      {
+        type: "paragraph",
+        text: "A later variation increased the dose slightly and lowered the water temperature:",
+      },
+      {
+        type: "list",
+        items: [
+          "Use 13.5 grams of coffee.",
+          "Lower the water temperature to 88°C.",
+        ],
+      },
+      {
+        type: "paragraph",
+        text: "The variation produces a rounder body and a long, sweet aftertaste.",
+      },
+      {
+        type: "heading",
+        text: "Grind settings recommended by users",
+      },
+      {
+        type: "list",
+        items: [
+          "Comandante C40: around 29–30 clicks for a light roast.",
+          "Fellow Ode: setting 3 for medium-dark or light roast.",
+          "Timemore C2: around 14 clicks for medium roast or 20 for dark roast.",
+          "Timemore C3 Pro: around 14 clicks for medium roast.",
+        ],
       },
     ],
-
     steps: [
       {
         id: 1,
@@ -215,79 +234,110 @@ export const recipes: Recipe[] = [
         text: "Rest the coffee briefly before serving.",
       },
     ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 150,
+        filter: "Paper filter",
+      },
+      coffee: {
+        amount: 13,
+        unit: "g",
+        description: "Honey processed coffee",
+      },
+      grind: {
+        level: "Coarse",
+      },
+      water: {
+        amount: 180,
+        temperature: 90,
+        unit: "g",
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          url: "https://aeropress.com/",
+        },
+        {
+          id: 2,
+          name: "Hario Buono Gooseneck Kettle",
+        },
+        {
+          id: 3,
+          name: "Hario V60 Drip Scale",
+        },
+      ],
+    },
   },
-
   {
     id: 2,
     slug: "james-hoffmann",
-
-    source: {
-      name: "From a Barista",
-      icon: "/recipeIcon/noun_tamper.svg",
-    },
-
     title: "James Hoffmann",
-    description:
+    intro:
       "James Hoffmann's AeroPress recipe for making a good milk based coffee at home.",
-
-    hasVideo: true,
     isCold: false,
-
-    stats: {
-      votes: 543,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista",
+      },
+      creator: {
+        name: "James Hoffmann",
+      },
+      likes: 543,
       saves: 0,
       comments: 0,
+      privateNotes: 0,
     },
-
-    creator: {
-      name: "James Hoffmann",
-      introduction:
-        "James Hoffmann developed this concentrated AeroPress recipe as the coffee base for a milk drink.",
-    },
-
-    introduction: [
-      "This method produces a small and strong coffee suitable for combining with warm or steamed milk.",
-      "The coffee should be ground slightly coarser than espresso but finer than a typical filter grind.",
-    ],
-
-    notes: [
-      "Use water immediately after boiling.",
-      "Press through the bubbling sound to extract as much liquid as possible.",
-      "The recipe should produce approximately 65g to 70g of concentrated coffee.",
-    ],
-
-    recipeDetails: {
-      orientation: "Inverted",
-      brewTime: 120,
-      filterType: "Paper",
-      filterCount: 1,
-      ratio: "1:5",
-    },
-
-    coffee: {
-      amount: 18,
-      unit: "g",
-      description: "Dark roast or espresso blend",
-    },
-
-    grind: {
-      size: "Fine to medium-fine",
-    },
-
-    water: {
-      amount: 90,
-      unit: "g",
-      temperatureCelsius: 100,
-      temperatureFahrenheit: 212,
-    },
-
-    equipment: [
+    content: [
       {
-        name: "AeroPress",
-        url: "https://aeropress.com/",
+        type: "paragraph",
+        text: "James Hoffmann developed this concentrated AeroPress recipe as the coffee component for a cappuccino, latte or flat white made without an espresso machine.",
+      },
+      {
+        type: "paragraph",
+        text: "Use water immediately after boiling and grind slightly coarser than espresso but finer than a normal filter grind.",
+      },
+      {
+        type: "paragraph",
+        text: "The coffee should be stirred thoroughly so that no dry clumps remain, then brewed briefly before a slow press.",
+      },
+      {
+        type: "paragraph",
+        text: "For this recipe, every gram of liquid matters, so continue pressing through the final bubbling sound. The result should be approximately 65–70 grams of concentrated coffee.",
+      },
+      {
+        type: "linkParagraph",
+        text: "For the complete milk-drink walkthrough, watch ",
+        linkText: "James Hoffmann's original video",
+        href: "https://www.youtube.com/watch?v=ZgIVfU0xBjA",
+      },
+      {
+        type: "linkParagraph",
+        text: "For a lighter filter-style cup, try ",
+        linkText: "James Hoffmann's Ultimate AeroPress Recipe",
+        href: "/recipes/james-hoffmanns-ultimate-aeropress-recipe",
+      },
+      {
+        type: "heading",
+        text: "Grind settings recommended by users",
+      },
+      {
+        type: "list",
+        items: [
+          "Baratza Encore: around 12.",
+          "Comandante C40: around 14 clicks for medium roast or 20 for lighter roast.",
+          "Timemore C2: around 12 clicks for medium to medium-dark roast.",
+          "Hario Slim: around 7 clicks.",
+        ],
+      },
+      {
+        type: "video",
+        title: "Milk Drinks at Home Without an Espresso Machine",
+        url: "https://www.youtube.com/embed/ZgIVfU0xBjA",
       },
     ],
-
     steps: [
       {
         id: 1,
@@ -330,77 +380,88 @@ export const recipes: Recipe[] = [
         text: "Add warm, steamed or frothed milk before serving.",
       },
     ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 120,
+        filter: "Paper filter",
+      },
+      coffee: {
+        amount: 18,
+        unit: "g",
+        description: "Dark roast or espresso blend",
+      },
+      grind: {
+        level: "Fine to medium-fine",
+      },
+      water: {
+        amount: 90,
+        temperature: 100,
+        unit: "g",
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          url: "https://aeropress.com/",
+        },
+      ],
+    },
   },
-
   {
     id: 3,
     slug: "love-me-some-acid",
-
-    source: {
-      name: "Championship",
-      icon: "/recipeIcon/cat_crown.svg",
-    },
-
     title: "Love me some acid",
-    description:
+    intro:
       "2018 Portugal Aeropress Champion shares a recipe to hero the acidy fruitiness of the coffee.",
-
-    hasVideo: true,
     isCold: false,
-
-    stats: {
-      votes: 465,
+    meta: {
+      source: {
+        icon: "/recipeIcon/cat_crown.svg",
+        name: "Championship",
+      },
+      creator: {
+        name: "Kata Muhel",
+      },
+      likes: 465,
       saves: 0,
       comments: 0,
+      privateNotes: 0,
     },
-
-    creator: {
-      name: "Kata Muhel",
-      introduction: "Kata Muhel is the 2018 Portuguese AeroPress champion.",
-    },
-
-    introduction: [
-      "This championship recipe is designed to emphasize bright acidity and fruity flavours.",
-      "It combines relatively cool brewing water with a short immersion and press.",
-    ],
-
-    notes: [
-      "Use two rinsed paper filters.",
-      "The final pressing stage should take approximately 15 seconds.",
-    ],
-
-    recipeDetails: {
-      orientation: "Inverted",
-      brewTime: 105,
-      filterType: "Paper",
-      filterCount: 2,
-      ratio: "1:11.5",
-    },
-
-    coffee: {
-      amount: 20,
-      unit: "g",
-      description: "A vibrant, light-roasted coffee",
-    },
-
-    grind: {
-      size: "Medium",
-    },
-
-    water: {
-      amount: 230,
-      unit: "g",
-      temperatureCelsius: 81,
-      temperatureFahrenheit: 177,
-    },
-
-    equipment: [
+    content: [
       {
-        name: "AeroPress",
-        url: "https://aeropress.com/",
+        type: "paragraph",
+        text: "Kata Muhel created this recipe after winning the 2018 Portuguese AeroPress Championship.",
+      },
+      {
+        type: "paragraph",
+        text: "The method is designed to highlight bright acidity and fruity flavours by combining cool brewing water with a short immersion and a quick press.",
+      },
+      {
+        type: "heading",
+        text: "Recipe notes",
+      },
+      {
+        type: "list",
+        items: [
+          "Use two rinsed paper filters.",
+          "Keep the final pressing stage to approximately 15 seconds.",
+        ],
+      },
+      {
+        type: "heading",
+        text: "Grind settings recommended by users",
+      },
+      {
+        type: "list",
+        items: [
+          "1Zpresso JX Pro: around 29 full points.",
+          "Baratza Encore: around 16–20.",
+          "Comandante C40: around 23–25 clicks for light roast.",
+          "Porlex: around 10 clicks.",
+        ],
       },
     ],
-
     steps: [
       {
         id: 1,
@@ -435,79 +496,84 @@ export const recipes: Recipe[] = [
         text: "Serve immediately.",
       },
     ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 105,
+        filter: "Two paper filters",
+      },
+      coffee: {
+        amount: 20,
+        unit: "g",
+        description: "A vibrant, light-roasted coffee",
+      },
+      grind: {
+        level: "Medium",
+      },
+      water: {
+        amount: 230,
+        temperature: 81,
+        unit: "g",
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          url: "https://aeropress.com/",
+        },
+      ],
+    },
   },
-
   {
     id: 4,
     slug: "tim-wendelboe",
-
-    source: {
-      name: "From a Barista",
-      icon: "/recipeIcon/noun_tamper.svg",
-    },
-
     title: "Tim Wendelboe",
-    description:
+    intro:
       "A simple AeroPress recipe for a filter like coffee, as used in Tim Wendelboe cafe in Oslo, Norway.",
-
-    hasVideo: true,
     isCold: false,
-
-    stats: {
-      votes: 386,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista",
+      },
+      creator: {
+        name: "Tim Wendelboe",
+        url: "https://timwendelboe.no/",
+      },
+      likes: 386,
       saves: 0,
       comments: 0,
+      privateNotes: 0,
     },
-
-    creator: {
-      name: "Tim Wendelboe",
-      profileUrl: "https://timwendelboe.no/",
-      introduction:
-        "Tim Wendelboe is a Norwegian coffee professional and one of the founders of the World AeroPress Championship.",
-    },
-
-    introduction: [
-      "This is the standard AeroPress recipe used at the Tim Wendelboe café in Oslo.",
-      "It produces a light, clean cup similar to filter coffee.",
-    ],
-
-    notes: [
-      "Stir exactly three times before steeping.",
-      "Stir another three times after the 60-second steep.",
-    ],
-
-    recipeDetails: {
-      orientation: "Standard",
-      brewTime: 90,
-      filterType: "Paper",
-      filterCount: 1,
-      ratio: "1:14.3",
-    },
-
-    coffee: {
-      amount: 14,
-      unit: "g",
-      description: "A light-roasted coffee of your choice",
-    },
-
-    grind: {
-      size: "Medium",
-    },
-
-    water: {
-      amount: 200,
-      unit: "g",
-      temperatureCelsius: 96,
-      temperatureFahrenheit: 204,
-    },
-
-    equipment: [
+    content: [
       {
-        name: "AeroPress",
-        url: "https://aeropress.com/",
+        type: "paragraph",
+        text: "Tim Wendelboe helped found the World AeroPress Championship and played an important role in popularising the brewer.",
+      },
+      {
+        type: "paragraph",
+        text: "This is the standard method used at the Tim Wendelboe café in Oslo and is designed to produce a light, clean cup similar to filter coffee.",
+      },
+      {
+        type: "linkParagraph",
+        text: "For a shorter and stronger cup, try ",
+        linkText: "Tim Wendelboe's stronger AeroPress recipe",
+        href: "/recipes/tim-wendelboe-stronger",
+      },
+      {
+        type: "heading",
+        text: "Brewing notes",
+      },
+      {
+        type: "list",
+        items: [
+          "Rinse the paper filter before brewing.",
+          "Stir exactly three times before the steep.",
+          "After 60 seconds, stir three more times before pressing.",
+          "A medium grind works well; Tim recommends roughly 15–20 clicks on a Comandante.",
+        ],
       },
     ],
-
     steps: [
       {
         id: 1,
@@ -542,77 +608,67 @@ export const recipes: Recipe[] = [
         text: "Replace the plunger and press steadily into a cup or server.",
       },
     ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 90,
+        filter: "Paper filter",
+      },
+      coffee: {
+        amount: 14,
+        unit: "g",
+        description: "A light-roasted coffee of your choice",
+      },
+      grind: {
+        level: "Medium",
+      },
+      water: {
+        amount: 200,
+        temperature: 96,
+        unit: "g",
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          url: "https://aeropress.com/",
+        },
+      ],
+    },
   },
-
   {
     id: 5,
     slug: "smooooothy",
-
-    source: {
-      name: "From a Barista",
-      icon: "/recipeIcon/noun_tamper.svg",
-    },
-
     title: "Smooooothy!",
-    description: "Learn how to brew a sweet and balanced cup of coffee.",
-
-    hasVideo: true,
+    intro: "Learn how to brew a sweet and balanced cup of coffee.",
     isCold: false,
-
-    stats: {
-      votes: 290,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista",
+      },
+      creator: {
+        name: "AmirHossein Adib",
+      },
+      likes: 290,
       saves: 0,
       comments: 0,
+      privateNotes: 0,
     },
-
-    creator: {
-      name: "AmirHossein Adib",
-      introduction:
-        "AmirHossein Adib created this method for a smooth, sweet and balanced cup.",
-    },
-
-    introduction: [
-      "The recipe uses East African coffee and a two-stage pour.",
-      "A short bloom is followed by a longer immersion before pressing.",
-    ],
-
-    notes: [
-      "Use two paper filters.",
-      "Rinse and preheat both filters before brewing.",
-    ],
-
-    recipeDetails: {
-      orientation: "Standard",
-      brewTime: 130,
-      filterType: "Paper",
-      filterCount: 2,
-      ratio: "1:15.7",
-    },
-
-    coffee: {
-      amount: 14,
-      unit: "g",
-      description: "East African coffee from Ethiopia or Kenya",
-    },
-
-    grind: {
-      size: "Medium-fine",
-    },
-
-    water: {
-      amount: 220,
-      unit: "g",
-      temperatureCelsius: 92,
-      temperatureFahrenheit: 197,
-    },
-
-    equipment: [
+    content: [
       {
-        name: "AeroPress",
-        url: "https://aeropress.com/",
+        type: "paragraph",
+        text: "This recipe is intended for anyone who wants a smooth and tasty cup of coffee.",
+      },
+      {
+        type: "paragraph",
+        text: "It uses East African coffee, a short bloom and a two-stage pour to create a sweet and balanced result.",
+      },
+      {
+        type: "paragraph",
+        text: "Give it a try and adjust the grind slightly finer or coarser to suit the coffee you are using.",
       },
     ],
-
     steps: [
       {
         id: 1,
@@ -647,81 +703,76 @@ export const recipes: Recipe[] = [
         text: "Finish the press at approximately 2:10.",
       },
     ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 130,
+        filter: "Two paper filters",
+      },
+      coffee: {
+        amount: 14,
+        unit: "g",
+        description: "East African coffee from Ethiopia or Kenya",
+      },
+      grind: {
+        level: "Medium-fine",
+      },
+      water: {
+        amount: 220,
+        temperature: 92,
+        unit: "g",
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          url: "https://aeropress.com/",
+        },
+      ],
+    },
   },
-
   {
     id: 6,
     slug: "aeropress-iced-latte",
-
-    source: {
-      name: "From an Enthusiast",
-      icon: "/recipeIcon/icon_enthusiast.svg",
-    },
-
     title: "AeroPress Iced Latte",
-    description:
+    intro:
       "Dark chocolate, sandalwood and umami seaweed. Full bodied and gives a good kick!",
-
-    hasVideo: true,
     isCold: true,
-
-    stats: {
-      votes: 261,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast",
+      },
+      creator: {
+        name: "Mark C",
+      },
+      likes: 261,
       saves: 0,
       comments: 0,
+      privateNotes: 0,
     },
-
-    creator: {
-      name: "Mark C",
-      introduction:
-        "Mark C created this concentrated AeroPress recipe for an iced milk drink.",
-    },
-
-    introduction: [
-      "A full-bodied iced latte with dark chocolate, sandalwood and savoury flavour notes.",
-      "The concentrated coffee is pressed directly over cold milk and ice.",
-    ],
-
-    notes: [
-      "Prepare five ice cubes and approximately 130ml of milk.",
-      "The listed brewing ratio only covers the coffee and hot water.",
-    ],
-
-    recipeDetails: {
-      orientation: "Inverted",
-      brewTime: 140,
-      filterType: "Paper",
-      filterCount: 1,
-      ratio: "1:3.3",
-    },
-
-    coffee: {
-      amount: 18,
-      unit: "g",
-      description: "Monsooned Malabar",
-    },
-
-    grind: {
-      size: "Medium-fine",
-    },
-
-    water: {
-      amount: 60,
-      unit: "g",
-      temperatureCelsius: 92,
-      temperatureFahrenheit: 197,
-    },
-
-    equipment: [
+    content: [
       {
-        name: "AeroPress",
-        url: "https://aeropress.com/",
+        type: "paragraph",
+        text: "This recipe produces a strong, full-bodied coffee for an iced latte, with dark chocolate, sandalwood and savoury flavour notes.",
       },
       {
-        name: "Porlex Mini Hand Grinder",
+        type: "paragraph",
+        text: "The concentrated coffee is brewed inverted and pressed directly over cold milk and ice.",
+      },
+      {
+        type: "heading",
+        text: "Before brewing",
+      },
+      {
+        type: "list",
+        items: [
+          "Prepare five ice cubes.",
+          "Add approximately 130 ml of milk to the serving glass.",
+          "Use a medium-fine grind; the original recipe used about five clicks on a Porlex Mini.",
+        ],
       },
     ],
-
     steps: [
       {
         id: 1,
@@ -752,88 +803,91 @@ export const recipes: Recipe[] = [
         text: "Flip the AeroPress over the glass and press for 20 seconds.",
       },
     ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 140,
+        filter: "Paper filter",
+      },
+      coffee: {
+        amount: 18,
+        unit: "g",
+        description: "Monsooned Malabar",
+      },
+      grind: {
+        level: "Medium-fine",
+      },
+      water: {
+        amount: 60,
+        temperature: 92,
+        unit: "g",
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          url: "https://aeropress.com/",
+        },
+        {
+          id: 2,
+          name: "Porlex Mini Hand Grinder",
+        },
+      ],
+    },
   },
-
   {
     id: 7,
     slug: "the-only-aeropress-recipe-youll-ever-need",
-
-    source: {
-      name: "From a Barista",
-      icon: "/recipeIcon/noun_tamper.svg",
-    },
-
     title: "The only AeroPress recipe you'll ever need",
-    description:
+    intro:
       "The crew at The Coffee Compass offer us a simple, versatile and tasty AeroPress recipe.",
-
-    hasVideo: true,
     isCold: false,
-
-    stats: {
-      votes: 239,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista",
+      },
+      creator: {
+        name: "The Coffee Compass",
+        url: "https://www.thecoffeecompass.com/",
+      },
+      likes: 239,
       saves: 0,
       comments: 0,
+      privateNotes: 0,
     },
-
-    creator: {
-      name: "The Coffee Compass",
-      profileUrl: "https://www.thecoffeecompass.com/",
-      introduction:
-        "The Coffee Compass created this method around simplicity, versatility and efficient coffee use.",
-    },
-
-    introduction: [
-      "A straightforward recipe that works with many different coffee beans.",
-      "The method uses a relatively small dose and a long immersion.",
-    ],
-
-    notes: [
-      "Use two rinsed paper filters.",
-      "The recipe is designed to produce a full cup without using an unnecessarily large coffee dose.",
-    ],
-
-    recipeDetails: {
-      orientation: "Standard",
-      brewTime: 270,
-      filterType: "Paper",
-      filterCount: 2,
-      ratio: "1:15",
-    },
-
-    coffee: {
-      amount: 15,
-      unit: "g",
-      description: "Any coffee you prefer",
-    },
-
-    grind: {
-      size: "Medium",
-    },
-
-    water: {
-      amount: 225,
-      unit: "g",
-      temperatureCelsius: 98,
-      temperatureFahrenheit: 208,
-    },
-
-    equipment: [
+    content: [
       {
-        name: "AeroPress",
-        url: "https://aeropress.com/",
+        type: "paragraph",
+        text: "This method from The Coffee Compass focuses on simplicity, versatility and efficient use of coffee.",
       },
       {
-        name: "Hario V60 Drip Scale",
+        type: "paragraph",
+        text: "It is designed to make a full and satisfying cup with a modest 15-gram dose rather than relying on the unusually high coffee ratios found in many competition recipes.",
       },
       {
-        name: "Comandante C40 Grinder",
+        type: "heading",
+        text: "Why it works",
       },
       {
-        name: "Brewista Artisan Gooseneck Kettle",
+        type: "paragraph",
+        text: "A medium grind and long immersion give the water enough time to extract flavour without requiring a large amount of coffee.",
+      },
+      {
+        type: "list",
+        items: [
+          "Use two rinsed paper filters.",
+          "Break the crust gently after the first minute.",
+          "Begin pressing at four minutes and finish at approximately 4:30.",
+        ],
+      },
+      {
+        type: "linkParagraph",
+        text: "Read more brewing articles from ",
+        linkText: "The Coffee Compass",
+        href: "https://www.thecoffeecompass.com/",
       },
     ],
-
     steps: [
       {
         id: 1,
@@ -860,87 +914,96 @@ export const recipes: Recipe[] = [
         text: "Finish the press at approximately 4:30 and serve.",
       },
     ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 270,
+        filter: "Two paper filters",
+      },
+      coffee: {
+        amount: 15,
+        unit: "g",
+        description: "Any coffee you prefer",
+      },
+      grind: {
+        level: "Medium",
+      },
+      water: {
+        amount: 225,
+        temperature: 98,
+        unit: "g",
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          url: "https://aeropress.com/",
+        },
+        {
+          id: 2,
+          name: "Hario V60 Drip Scale",
+        },
+        {
+          id: 3,
+          name: "Comandante C40 Grinder",
+        },
+        {
+          id: 4,
+          name: "Brewista Artisan Gooseneck Kettle",
+        },
+      ],
+    },
   },
-
   {
     id: 8,
     slug: "two-big-cups-one-brew",
-
-    source: {
-      name: "From an Enthusiast",
-      icon: "/recipeIcon/icon_enthusiast.svg",
-    },
-
     title: "Two Big Cups - One Brew",
-    description:
+    intro:
       "AeroPress for 2! This recipe produces one large cup of coffee, or enough to share with a friend :)",
-
-    hasVideo: true,
     isCold: false,
-
-    stats: {
-      votes: 173,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast",
+      },
+      creator: {
+        name: "Niklas Backpack of Freedom",
+      },
+      likes: 173,
       saves: 0,
       comments: 0,
+      privateNotes: 0,
     },
-
-    creator: {
-      name: "Niklas Backpack of Freedom",
-      introduction:
-        "Niklas created this recipe for filling a travel mug or sharing coffee with another person.",
-    },
-
-    introduction: [
-      "The AeroPress is used to make a concentrated brew before adding bypass water.",
-      "The final recipe produces approximately 400g of coffee.",
-    ],
-
-    notes: [
-      "Use two or three filters to highlight floral flavours in light-roasted coffee.",
-      "The final 150g of water is added as bypass water after pressing.",
-    ],
-
-    recipeDetails: {
-      orientation: "Standard",
-      brewTime: 150,
-      filterType: "Paper",
-      filterCount: 1,
-      ratio: "1:13.3",
-    },
-
-    coffee: {
-      amount: 30,
-      unit: "g",
-      description: "Any coffee, preferably a light roast",
-    },
-
-    grind: {
-      size: "Medium-fine",
-    },
-
-    water: {
-      amount: 400,
-      unit: "g",
-      temperatureCelsius: 93,
-      temperatureFahrenheit: 199,
-    },
-
-    equipment: [
+    content: [
       {
-        name: "AeroPress",
-        url: "https://aeropress.com/",
+        type: "paragraph",
+        text: "This recipe is useful when filling a travel mug or brewing enough coffee to share with another person.",
       },
       {
-        name: "Hario V60 Drip Scale",
+        type: "paragraph",
+        text: "The AeroPress first produces a concentrated brew, then 150 grams of bypass water is added after pressing to reach approximately 400 grams in the final drink.",
       },
       {
-        name: "Hario Buono Gooseneck Kettle",
+        type: "paragraph",
+        text: "The original recipe was developed with a light-roasted Yirgacheffe, although it can be adapted to many different coffees.",
       },
       {
-        name: "Porlex Mini Hand Grinder",
+        type: "heading",
+        text: "Filter recommendation",
+      },
+      {
+        type: "paragraph",
+        text: "For more floral character from a light roast, use two or even three paper filters.",
+      },
+      {
+        type: "heading",
+        text: "Grinder note",
+      },
+      {
+        type: "paragraph",
+        text: "The original setting was five clicks on a Porlex Mini. A 30-gram dose nearly fills that grinder to its maximum capacity.",
       },
     ],
-
     steps: [
       {
         id: 1,
@@ -983,82 +1046,95 @@ export const recipes: Recipe[] = [
         text: "Mix and serve.",
       },
     ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 150,
+        filter: "Paper filter",
+      },
+      coffee: {
+        amount: 30,
+        unit: "g",
+        description: "Any coffee, preferably a light roast",
+      },
+      grind: {
+        level: "Medium-fine",
+      },
+      water: {
+        amount: 400,
+        temperature: 93,
+        unit: "g",
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          url: "https://aeropress.com/",
+        },
+        {
+          id: 2,
+          name: "Hario V60 Drip Scale",
+        },
+        {
+          id: 3,
+          name: "Hario Buono Gooseneck Kettle",
+        },
+        {
+          id: 4,
+          name: "Porlex Mini Hand Grinder",
+        },
+      ],
+    },
   },
-
   {
     id: 9,
     slug: "v60-style-aeropress-light-roast",
-
-    source: {
-      name: "From an Enthusiast",
-      icon: "/recipeIcon/icon_enthusiast.svg",
-    },
-
     title: "V60 Style Aeropress (light roast)",
-    description:
+    intro:
       "For a V60 style brew with your AeroPress (the light roast version).",
-
-    hasVideo: true,
     isCold: false,
-
-    stats: {
-      votes: 151,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast",
+      },
+      creator: {
+        name: "u/skelathon0703 on Reddit",
+      },
+      likes: 151,
       saves: 0,
       comments: 0,
+      privateNotes: 0,
     },
-
-    creator: {
-      name: "u/skelathon0703 on Reddit",
-      introduction:
-        "This recipe adapts a light-roast V60-style brew for the AeroPress.",
-    },
-
-    introduction: [
-      "The method uses a fine grind and a relatively large amount of water.",
-      "It avoids blooming and stirring to create a cleaner filter-style cup.",
-    ],
-
-    notes: [
-      "Use two normal paper filters or one Aesir filter.",
-      "Do not stir the coffee.",
-      "Do not use a separate bloom stage.",
-    ],
-
-    recipeDetails: {
-      orientation: "Standard",
-      brewTime: 70,
-      filterType: "Paper",
-      filterCount: 2,
-      ratio: "1:15.3",
-    },
-
-    coffee: {
-      amount: 17,
-      unit: "g",
-      description: "Light roast",
-    },
-
-    grind: {
-      size: "Fine",
-    },
-
-    water: {
-      amount: 260,
-      unit: "g",
-      temperatureCelsius: 95,
-      temperatureFahrenheit: 203,
-    },
-
-    equipment: [
+    content: [
       {
-        name: "AeroPress",
-        url: "https://aeropress.com/",
+        type: "paragraph",
+        text: "This method aims to create a clean V60-style cup using an AeroPress and a light-roasted coffee.",
       },
       {
-        name: "Aesir Filter",
+        type: "heading",
+        text: "Key characteristics",
+      },
+      {
+        type: "list",
+        items: [
+          "Use two paper filters or one Aesir filter.",
+          "Use a fine grind.",
+          "Do not stir.",
+          "Do not use a separate bloom stage.",
+        ],
+      },
+      {
+        type: "linkParagraph",
+        text: "Using a darker coffee? See the ",
+        linkText: "dark-roast version of this recipe",
+        href: "/recipes/v60-style-aeropress-dark",
+      },
+      {
+        type: "paragraph",
+        text: "Pour quickly, create a vacuum with the plunger and stop pressing before the final hiss for a cleaner result.",
       },
     ],
-
     steps: [
       {
         id: 1,
@@ -1097,78 +1173,83 @@ export const recipes: Recipe[] = [
         text: "Serve and enjoy.",
       },
     ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 70,
+        filter: "Two paper filters",
+      },
+      coffee: {
+        amount: 17,
+        unit: "g",
+        description: "Light roast",
+      },
+      grind: {
+        level: "Fine",
+      },
+      water: {
+        amount: 260,
+        temperature: 95,
+        unit: "g",
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          url: "https://aeropress.com/",
+        },
+        {
+          id: 2,
+          name: "Aesir Filter",
+        },
+      ],
+    },
   },
-
   {
     id: 10,
     slug: "aeropress-espresso",
-
-    source: {
-      name: "From a Barista",
-      icon: "/recipeIcon/noun_tamper.svg",
-    },
-
     title: "AeroPress Espresso",
-    description:
+    intro:
       "A great recipe to use as a base for brewing 'espresso' type coffee on the Aeropress",
-
-    hasVideo: true,
     isCold: false,
-
-    stats: {
-      votes: 131,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista",
+      },
+      creator: {
+        name: "Coffee Lovers TV",
+      },
+      likes: 131,
       saves: 0,
       comments: 0,
+      privateNotes: 0,
     },
-
-    creator: {
-      name: "Coffee Lovers TV",
-      introduction:
-        "Coffee Lovers TV created this high-pressure AeroPress method for a short espresso-style drink.",
-    },
-
-    introduction: [
-      "This recipe uses a fine grind, a high dose and a small amount of water.",
-      "It can be adjusted by changing the bloom, orientation or filter type.",
-    ],
-
-    notes: [
-      "A metal filter can be tested as an alternative to the paper filter.",
-      "Press firmly and quickly to generate as much pressure as possible.",
-    ],
-
-    recipeDetails: {
-      orientation: "Standard",
-      brewTime: 30,
-      filterType: "Paper",
-      filterCount: 1,
-      ratio: "1:3",
-    },
-
-    coffee: {
-      amount: 20,
-      unit: "g",
-      description: "Medium to dark roast",
-    },
-
-    grind: {
-      size: "Fine, similar to sand",
-    },
-
-    water: {
-      amount: 60,
-      unit: "g",
-      temperatureCelsius: 98,
-      temperatureFahrenheit: 208,
-    },
-
-    equipment: [
+    content: [
       {
-        name: "AeroPress",
-        url: "https://aeropress.com/",
+        type: "paragraph",
+        text: "There are many ways to imitate espresso with an AeroPress, but this method focuses on the most important variable: creating as much pressure as the brewer can safely provide.",
+      },
+      {
+        type: "paragraph",
+        text: "The recipe uses a fine grind, a high coffee dose and a small amount of water. Bloom time, brewer orientation and filter choice can all be adjusted to change the final result.",
+      },
+      {
+        type: "paragraph",
+        text: "The standard version uses a paper filter, although a metal filter is worth trying when you want more body and texture.",
+      },
+      {
+        type: "linkParagraph",
+        text: "For a fuller explanation of the method, watch ",
+        linkText: "Coffee Lovers TV's original video",
+        href: "https://www.youtube.com/watch?v=aAGJ-QzTbjc",
+      },
+      {
+        type: "video",
+        title: "How to Make Espresso With an AeroPress",
+        url: "https://www.youtube.com/embed/aAGJ-QzTbjc",
       },
     ],
-
     steps: [
       {
         id: 1,
@@ -1195,77 +1276,81 @@ export const recipes: Recipe[] = [
         text: "Remove the AeroPress from the scale and press quickly.",
       },
     ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 30,
+        filter: "Paper filter",
+      },
+      coffee: {
+        amount: 20,
+        unit: "g",
+        description: "Medium to dark roast",
+      },
+      grind: {
+        level: "Fine, similar to sand",
+      },
+      water: {
+        amount: 60,
+        temperature: 98,
+        unit: "g",
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          url: "https://aeropress.com/",
+        },
+      ],
+    },
   },
-
   {
     id: 11,
     slug: "for-the-sweetest-cup",
-
-    source: {
-      name: "From a Barista",
-      icon: "/recipeIcon/noun_tamper.svg",
-    },
-
     title: "For the sweetest cup",
-    description: "Slow press for the sweetness. Bypass for the bright acidity.",
-
-    hasVideo: false,
+    intro: "Slow press for the sweetness. Bypass for the bright acidity.",
     isCold: false,
-
-    stats: {
-      votes: 125,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista",
+      },
+      creator: {
+        name: "Damaring Kalpika",
+      },
+      likes: 125,
       saves: 0,
       comments: 0,
+      privateNotes: 0,
     },
-
-    creator: {
-      name: "Damaring Kalpika",
-      introduction:
-        "Damaring Kalpika is the 2017 Indonesian AeroPress champion.",
-    },
-
-    introduction: [
-      "This recipe was developed at Koffiesome in Yogyakarta using honey-processed coffee from Gayo, North Sumatra.",
-      "It is designed to produce a sweet and clean cup with bright acidity.",
-    ],
-
-    notes: [
-      "Use two paper filters.",
-      "Add bypass water after pressing to maintain the intended final ratio.",
-    ],
-
-    recipeDetails: {
-      orientation: "Inverted",
-      brewTime: 120,
-      filterType: "Paper",
-      filterCount: 2,
-      ratio: "1:10",
-    },
-
-    coffee: {
-      amount: 24,
-      unit: "g",
-      description: "Coffee with prominent sweet flavour notes",
-    },
-
-    grind: {
-      size: "Medium",
-    },
-
-    water: {
-      amount: 240,
-      unit: "g",
-      temperatureCelsius: 92,
-      temperatureFahrenheit: 197,
-    },
-
-    equipment: [
+    content: [
       {
-        name: "AeroPress",
-        url: "https://aeropress.com/",
+        type: "paragraph",
+        text: "Damaring Kalpika developed this recipe after becoming the 2017 Indonesian AeroPress Champion.",
+      },
+      {
+        type: "linkParagraph",
+        text: "The method was refined at ",
+        linkText: "Koffiesome in Yogyakarta",
+        href: "https://www.instagram.com/koffiesome/",
+      },
+      {
+        type: "paragraph",
+        text: "It was created around honey-processed coffee from Gayo, North Sumatra, with the goal of producing a sweet and clean cup with bright acidity.",
+      },
+      {
+        type: "heading",
+        text: "Recipe notes",
+      },
+      {
+        type: "list",
+        items: [
+          "Use two paper filters.",
+          "Press slowly to emphasise sweetness.",
+          "Add bypass water after pressing to keep the intended final coffee-to-water ratio close to 1:10.",
+        ],
       },
     ],
-
     steps: [
       {
         id: 1,
@@ -1300,5 +1385,32 @@ export const recipes: Recipe[] = [
         text: "Add the required bypass water, mix well and serve.",
       },
     ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 120,
+        filter: "Two paper filters",
+      },
+      coffee: {
+        amount: 24,
+        unit: "g",
+        description: "Coffee with prominent sweet flavour notes",
+      },
+      grind: {
+        level: "Medium",
+      },
+      water: {
+        amount: 240,
+        temperature: 92,
+        unit: "g",
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          url: "https://aeropress.com/",
+        },
+      ],
+    },
   },
 ];
