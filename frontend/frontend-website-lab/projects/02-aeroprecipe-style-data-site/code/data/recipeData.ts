@@ -1,6 +1,6 @@
 import type { Recipe } from "@/data/types/recipe/recipe";
 
-export const recipes: Recipe[] = [
+export const recipeData: Recipe[] = [
   {
     id: 0,
     slug: "james-hoffmanns-ultimate-aeropress-recipe",
@@ -16,9 +16,9 @@ export const recipes: Recipe[] = [
         name: "James Hoffmann",
       },
       likes: 1116,
-      saves: 0,
-      comments: 0,
-      privateNotes: 0,
+      saves: 532,
+      comments: 128,
+      privateNotes: 9,
     },
     content: [
       {
@@ -154,9 +154,9 @@ export const recipes: Recipe[] = [
         name: "Sigit Tri",
       },
       likes: 851,
-      saves: 0,
-      comments: 0,
-      privateNotes: 0,
+      saves: 374,
+      comments: 92,
+      privateNotes: 7,
     },
     content: [
       {
@@ -286,9 +286,9 @@ export const recipes: Recipe[] = [
         name: "James Hoffmann",
       },
       likes: 543,
-      saves: 0,
-      comments: 0,
-      privateNotes: 0,
+      saves: 218,
+      comments: 54,
+      privateNotes: 4,
     },
     content: [
       {
@@ -424,9 +424,9 @@ export const recipes: Recipe[] = [
         name: "Kata Muhel",
       },
       likes: 465,
-      saves: 0,
-      comments: 0,
-      privateNotes: 0,
+      saves: 186,
+      comments: 42,
+      privateNotes: 3,
     },
     content: [
       {
@@ -541,9 +541,9 @@ export const recipes: Recipe[] = [
         url: "https://timwendelboe.no/",
       },
       likes: 386,
-      saves: 0,
-      comments: 0,
-      privateNotes: 0,
+      saves: 154,
+      comments: 38,
+      privateNotes: 5,
     },
     content: [
       {
@@ -651,9 +651,9 @@ export const recipes: Recipe[] = [
         name: "AmirHossein Adib",
       },
       likes: 290,
-      saves: 0,
-      comments: 0,
-      privateNotes: 0,
+      saves: 108,
+      comments: 26,
+      privateNotes: 2,
     },
     content: [
       {
@@ -747,9 +747,9 @@ export const recipes: Recipe[] = [
         name: "Mark C",
       },
       likes: 261,
-      saves: 0,
-      comments: 0,
-      privateNotes: 0,
+      saves: 94,
+      comments: 22,
+      privateNotes: 3,
     },
     content: [
       {
@@ -852,9 +852,9 @@ export const recipes: Recipe[] = [
         url: "https://www.thecoffeecompass.com/",
       },
       likes: 239,
-      saves: 0,
-      comments: 0,
-      privateNotes: 0,
+      saves: 82,
+      comments: 18,
+      privateNotes: 4,
     },
     content: [
       {
@@ -970,9 +970,9 @@ export const recipes: Recipe[] = [
         name: "Niklas Backpack of Freedom",
       },
       likes: 173,
-      saves: 0,
-      comments: 0,
-      privateNotes: 0,
+      saves: 62,
+      comments: 14,
+      privateNotes: 2,
     },
     content: [
       {
@@ -1102,9 +1102,9 @@ export const recipes: Recipe[] = [
         name: "u/skelathon0703 on Reddit",
       },
       likes: 151,
-      saves: 0,
-      comments: 0,
-      privateNotes: 0,
+      saves: 48,
+      comments: 10,
+      privateNotes: 1,
     },
     content: [
       {
@@ -1221,9 +1221,9 @@ export const recipes: Recipe[] = [
         name: "Coffee Lovers TV",
       },
       likes: 131,
-      saves: 0,
-      comments: 0,
-      privateNotes: 0,
+      saves: 42,
+      comments: 8,
+      privateNotes: 2,
     },
     content: [
       {
@@ -1319,9 +1319,9 @@ export const recipes: Recipe[] = [
         name: "Damaring Kalpika",
       },
       likes: 125,
-      saves: 0,
-      comments: 0,
-      privateNotes: 0,
+      saves: 36,
+      comments: 7,
+      privateNotes: 1,
     },
     content: [
       {

@@ -7,7 +7,7 @@ type Props = {
   }>;
 };
 
-import { recipes } from "@/data/recipeData";
+import { recipeData } from "@/data/recipeData";
 
 import { Status } from "./_components/Status";
 import { notFound } from "next/navigation";
@@ -18,7 +18,7 @@ export default async function RecipeDetail({ params }: Props) {
   const { slug } = await params;
 
   // 2、查找对应的数据
-  const recipe = recipes.find((item) => item.slug === slug);
+  const recipe = recipeData.find((item) => item.slug === slug);
 
   // 3、类型收窄
   /* 
