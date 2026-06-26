@@ -7,7 +7,7 @@ import Image from "next/image";
 
 export function Status({ name, icon }: StatusProps) {
   return (
-    <div className="flex items-center gap-1 text-sm border-b border-b-zinc-500">
+    <div className="flex items-center gap-1 text-sm border-b border-b-zinc-700">
       {icon && (
         <Image
           src={icon}

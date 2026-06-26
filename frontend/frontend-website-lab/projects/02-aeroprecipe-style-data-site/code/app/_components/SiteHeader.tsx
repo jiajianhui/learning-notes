@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 // 引入图片
 import search from "@/public/icons/search.svg"
@@ -15,13 +16,15 @@ export function SiteHeader() {
   return (
     <header className="flex justify-between items-center font-display px-12 py-4 border-b border-gray-200">
       {/* 标题 */}
-      <h1 className="flex-1 text-lg">AeroPrecipe.</h1>
+      <Link href="/" className="text-lg">
+        AeroPrecipe.
+      </Link>
 
       <div className="flex items-center gap-6">
         {/* 导航 */}
         <div className="hidden lg:flex gap-6">
           {navTitle.map((item) => (
-            <p key={item}>{item}</p>
+            <Link href="/" key={item}>{item}</Link>
           ))}
         </div>
 

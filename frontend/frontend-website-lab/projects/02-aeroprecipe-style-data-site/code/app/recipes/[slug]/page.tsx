@@ -78,15 +78,18 @@ export default async function RecipeDetail({ params }: Props) {
 
           <Status
             name={`${recipe.meta.saves} saves`}
-            icon={recipe.meta.source.icon}
+            icon="/detail/bookmark.svg"
           />
 
           <Status
             name={`${recipe.meta.comments} comments`}
-            icon={recipe.meta.source.icon}
+            icon="/detail/comments.svg"
           />
 
-          <Status name="Private notes (10)" icon={recipe.meta.source.icon} />
+          <Status
+            name="Private notes (10)"
+            icon="/detail/private-notes.svg"
+          />
         </div>
       </div>
 
