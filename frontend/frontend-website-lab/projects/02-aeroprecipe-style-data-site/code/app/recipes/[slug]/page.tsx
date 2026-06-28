@@ -12,6 +12,7 @@ import { recipeData } from "@/data/recipeData";
 import { Status } from "./_components/Status";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import { Tag } from "./_components/Tag";
 
 export default async function RecipeDetail({ params }: Props) {
   // 1、拿到路由参数 slug
@@ -158,108 +159,112 @@ export default async function RecipeDetail({ params }: Props) {
       </div>
 
       {/* Recipe overview */}
-      <div className="w-140 border-l border-gray-200 px-6 flex flex-col gap-8">
+      <div className="w-95 shrink-0 border-l border-gray-200 pl-4 pr-12 flex flex-col gap-8">
         <p className="font-display py-6 border-b border-gray-200">
           Recipe overview
         </p>
         <div className="flex flex-wrap gap-2">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-2 bg-option-bg text-sm rounded-sm py-1 px-2"
-            >
-              <Image
-                src="/recipeIcon/aeropress_go.svg"
-                width={1}
-                height={1}
-                alt=""
-                className="size-4"
-              />
-              <p className="font-sans">Inverted</p>
-            </div>
-          ))}
+          <Tag
+            icon={
+              recipe.overview.brew.method === "inverted"
+                ? "/recipeIcon/icon_aeropress_inverted.svg"
+                : "/recipeIcon/icon_aeropress_standard.svg"
+            }
+            name={recipe.overview.brew.method}
+          />
+
+          <Tag
+            icon="/recipeIcon/icon_timer_fast.svg"
+            name={recipe.overview.brew.time}
+          />
+          <Tag
+            icon="/recipeIcon/icon_filter_paper.svg"
+            name={recipe.overview.brew.filter}
+          />
         </div>
 
+        {/* Coffee */}
         <div className="flex flex-col gap-2">
           <p className=" font-display">Coffee:</p>
+
           <div className="flex flex-wrap gap-2">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-2 bg-option-bg text-sm rounded-sm py-1 px-2"
-              >
-                <Image
-                  src="/recipeIcon/aeropress_go.svg"
-                  width={1}
-                  height={1}
-                  alt=""
-                  className="size-4"
-                />
-                <p className="font-sans">Inverted</p>
-              </div>
-            ))}
+            <Tag
+              icon="/detail/scale.svg"
+              name={`${recipe.overview.coffee.amount}${recipe.overview.coffee.unit}`}
+            />
+            {recipe.overview.coffee.description && (
+              <Tag
+                icon="/detail/coffee-bean.svg"
+                name={recipe.overview.coffee.description}
+              />
+            )}
           </div>
         </div>
 
+        {/* Grind */}
         <div className="flex flex-col gap-2">
           <p className=" font-display">Grind Settings:</p>
           <div className="flex flex-wrap gap-2">
-            {Array.from({ length: 1 }).map((_, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-2 bg-option-bg text-sm rounded-sm py-1 px-2"
-              >
-                <Image
-                  src="/recipeIcon/aeropress_go.svg"
-                  width={1}
-                  height={1}
-                  alt=""
-                  className="size-4"
-                />
-                <p className="font-sans">Inverted</p>
+            <Tag icon="/detail/grind.svg" name={recipe.overview.grind.level} />
+            {recipe.overview.grind.grinder && (
+              <div className="font-sans text-sm bg-option-bg w-full rounded-sm">
+                <div className="flex flex-col gap-3 p-6 rounded-sm">
+                  {`${recipe.overview.grind.grinder.setting} clicks on a Comandante ${recipe.overview.grind.grinder.model}`}
+                  <div className="group flex items-center justify-center gap-2 py-0.5 border border-black rounded-sm bg-option-bg hover:bg-black text-black hover:text-white">
+                    <Image
+                      src="/detail/change-grinder.svg"
+                      width={1}
+                      height={1}
+                      alt=""
+                      className="size-3 group-hover:invert"
+                    />
+                    <p>Change grinder</p>
+                  </div>
+                </div>
+                <p className="p-6 border-t border-gray-300">
+                  Powered by{" "}
+                  <span className="font-display underline">Beean Coffee</span>
+                </p>
               </div>
-            ))}
-            <div className="w-full h-40 bg-option-bg" />
+            )}
           </div>
         </div>
 
+        {/* Water */}
         <div className="flex flex-col gap-2">
           <p className=" font-display">Water:</p>
           <div className="flex flex-wrap gap-2">
-            {Array.from({ length: 2 }).map((_, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-2 bg-option-bg text-sm rounded-sm py-1 px-2"
-              >
-                <Image
-                  src="/recipeIcon/aeropress_go.svg"
-                  width={1}
-                  height={1}
-                  alt=""
-                  className="size-4"
-                />
-                <p className="font-sans">Inverted</p>
-              </div>
-            ))}
+            <Tag
+              icon="/detail/water.svg"
+              name={`${recipe.overview.water.amount}g`}
+            />
+            <Tag
+              icon="/detail/temperature.svg"
+              name={`${recipe.overview.water.temperature}°C`}
+            />
           </div>
         </div>
 
+        {/* Equipment */}
         <div className="flex flex-col gap-2">
-          <p className=" font-display">WaEquipment:</p>
+          <p className=" font-display">Equipment:</p>
           <div className="flex flex-col gap-2">
-            {Array.from({ length: 3 }).map((_, index) => (
+            {recipe.overview.equipment.map((item, index) => (
               <div
                 key={index}
                 className="flex items-center gap-2 bg-option-bg text-sm rounded-sm p-5"
               >
-                <Image
-                  src="/recipeIcon/aeropress_go.svg"
-                  width={1}
-                  height={1}
-                  alt=""
-                  className="size-6"
-                />
-                <p className="font-sans">Hario Buono Gooseneck Kettle</p>
+                {item.image && (
+                  <Image
+                    src={item.image}
+                    width={1}
+                    height={1}
+                    alt=""
+                    className="size-6"
+                  />
+                )}
+
+                <p className="font-sans">{item.name}</p>
               </div>
             ))}
           </div>

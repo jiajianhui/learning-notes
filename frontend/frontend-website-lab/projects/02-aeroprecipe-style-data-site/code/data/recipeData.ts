@@ -393,6 +393,10 @@ export const recipeData: Recipe[] = [
       },
       grind: {
         level: "Fine to medium-fine",
+        grinder: {
+          model: "C40",
+          setting: "22",
+        },
       },
       water: {
         amount: 90,
