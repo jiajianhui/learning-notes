@@ -295,22 +295,27 @@ export default async function RecipeDetail({ params }: Props) {
           <p className=" font-display">Equipment:</p>
           <div className="flex flex-col gap-2">
             {recipe.overview.equipment.map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-2 bg-option-bg text-sm rounded-sm p-5"
-              >
-                {item.image && (
+              <a href={item.url} key={index} target="_black">
+                <div className="flex items-center gap-2 bg-option-bg rounded-sm px-5 py-3">
                   <Image
                     src={item.image}
                     width={1}
                     height={1}
                     alt=""
-                    className="size-6"
+                    className="w-4 "
                   />
-                )}
 
-                <p className="font-sans">{item.name}</p>
-              </div>
+                  <p className="font-sans w-full pl-2">{item.name}</p>
+
+                  <Image
+                    src="/detail/external-link.svg"
+                    alt=""
+                    width={1}
+                    height={1}
+                    className="size-4.5"
+                  />
+                </div>
+              </a>
             ))}
           </div>
         </div>

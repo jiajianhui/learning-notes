@@ -36,7 +36,7 @@ export type RecipeOverview = {
   equipment: {
     id: number;
     name: string;
-    image?: string;
-    url?: string;
+    image: string;
+    url: string;
   }[];
 };

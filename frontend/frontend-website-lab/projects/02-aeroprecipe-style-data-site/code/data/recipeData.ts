@@ -123,6 +123,10 @@ export const recipeData: Recipe[] = [
       },
       grind: {
         level: "Finer end of medium",
+        grinder: {
+          model: "C40",
+          setting: "24",
+        },
       },
       water: {
         amount: 200,
@@ -133,7 +137,20 @@ export const recipeData: Recipe[] = [
         {
           id: 1,
           name: "AeroPress",
-          url: "https://aeropress.com/",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/",
+        },
+        {
+          id: 2,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.google.com/search",
+        },
+        {
+          id: 3,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.apple.com/mac/",
         },
       ],
     },
@@ -257,15 +274,20 @@ export const recipeData: Recipe[] = [
         {
           id: 1,
           name: "AeroPress",
-          url: "https://aeropress.com/",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/",
         },
         {
           id: 2,
           name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/ipad/",
         },
         {
           id: 3,
-          name: "Hario V60 Drip Scale",
+          name: "Porlex Mini Hand Grinder",
+          image: "/detail/imgs/porlex_mini_sml.png",
+          url: "https://www.google.com/chrome",
         },
       ],
     },
@@ -407,7 +429,26 @@ export const recipeData: Recipe[] = [
         {
           id: 1,
           name: "AeroPress",
-          url: "https://aeropress.com/",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/watch/",
+        },
+        {
+          id: 2,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/maps",
+        },
+        {
+          id: 3,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.apple.com/iphone/",
+        },
+        {
+          id: 4,
+          name: "Brewista Artisan Gooseneck Kettle",
+          image: "/detail/imgs/brewista_artisan_kettle_sml.png",
+          url: "https://www.google.com/",
         },
       ],
     },
@@ -513,6 +554,10 @@ export const recipeData: Recipe[] = [
       },
       grind: {
         level: "Medium",
+        grinder: {
+          model: "Encore",
+          setting: "15",
+        },
       },
       water: {
         amount: 230,
@@ -523,7 +568,14 @@ export const recipeData: Recipe[] = [
         {
           id: 1,
           name: "AeroPress",
-          url: "https://aeropress.com/",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/",
+        },
+        {
+          id: 2,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.google.com/",
         },
       ],
     },
@@ -625,6 +677,10 @@ export const recipeData: Recipe[] = [
       },
       grind: {
         level: "Medium",
+        grinder: {
+          model: "C40",
+          setting: "20",
+        },
       },
       water: {
         amount: 200,
@@ -635,7 +691,20 @@ export const recipeData: Recipe[] = [
         {
           id: 1,
           name: "AeroPress",
-          url: "https://aeropress.com/",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/search",
+        },
+        {
+          id: 2,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.apple.com/mac/",
+        },
+        {
+          id: 3,
+          name: "Brewista Artisan Gooseneck Kettle",
+          image: "/detail/imgs/brewista_artisan_kettle_sml.png",
+          url: "https://www.apple.com/ipad/",
         },
       ],
     },
@@ -720,6 +789,10 @@ export const recipeData: Recipe[] = [
       },
       grind: {
         level: "Medium-fine",
+        grinder: {
+          model: "JX Pro",
+          setting: "2.8.0",
+        },
       },
       water: {
         amount: 220,
@@ -730,7 +803,14 @@ export const recipeData: Recipe[] = [
         {
           id: 1,
           name: "AeroPress",
-          url: "https://aeropress.com/",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/maps",
+        },
+        {
+          id: 2,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.google.com/chrome",
         },
       ],
     },
@@ -820,6 +900,10 @@ export const recipeData: Recipe[] = [
       },
       grind: {
         level: "Medium-fine",
+        grinder: {
+          model: "Porlex Mini",
+          setting: "5",
+        },
       },
       water: {
         amount: 60,
@@ -830,11 +914,26 @@ export const recipeData: Recipe[] = [
         {
           id: 1,
           name: "AeroPress",
-          url: "https://aeropress.com/",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/chrome",
         },
         {
           id: 2,
           name: "Porlex Mini Hand Grinder",
+          image: "/detail/imgs/porlex_mini_sml.png",
+          url: "https://www.google.com/gmail",
+        },
+        {
+          id: 3,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.apple.com/iphone/",
+        },
+        {
+          id: 4,
+          name: "Brewista Artisan Gooseneck Kettle",
+          image: "/detail/imgs/brewista_artisan_kettle_sml.png",
+          url: "https://www.apple.com/",
         },
       ],
     },
@@ -931,6 +1030,10 @@ export const recipeData: Recipe[] = [
       },
       grind: {
         level: "Medium",
+        grinder: {
+          model: "Fellow Ode",
+          setting: "5",
+        },
       },
       water: {
         amount: 225,
@@ -941,19 +1044,26 @@ export const recipeData: Recipe[] = [
         {
           id: 1,
           name: "AeroPress",
-          url: "https://aeropress.com/",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/",
         },
         {
           id: 2,
           name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.apple.com/mac/",
         },
         {
           id: 3,
           name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.apple.com/ipad/",
         },
         {
           id: 4,
           name: "Brewista Artisan Gooseneck Kettle",
+          image: "/detail/imgs/brewista_artisan_kettle_sml.png",
+          url: "https://www.apple.com/iphone/",
         },
       ],
     },
@@ -1063,6 +1173,10 @@ export const recipeData: Recipe[] = [
       },
       grind: {
         level: "Medium-fine",
+        grinder: {
+          model: "Baratza Encore",
+          setting: "12",
+        },
       },
       water: {
         amount: 400,
@@ -1073,19 +1187,26 @@ export const recipeData: Recipe[] = [
         {
           id: 1,
           name: "AeroPress",
-          url: "https://aeropress.com/",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/watch/",
         },
         {
           id: 2,
           name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.google.com/",
         },
         {
           id: 3,
           name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.google.com/search",
         },
         {
           id: 4,
           name: "Porlex Mini Hand Grinder",
+          image: "/detail/imgs/porlex_mini_sml.png",
+          url: "https://www.google.com/maps",
         },
       ],
     },
@@ -1200,11 +1321,20 @@ export const recipeData: Recipe[] = [
         {
           id: 1,
           name: "AeroPress",
-          url: "https://aeropress.com/",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/chrome",
         },
         {
           id: 2,
-          name: "Aesir Filter",
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.google.com/gmail",
+        },
+        {
+          id: 3,
+          name: "Porlex Mini Hand Grinder",
+          image: "/detail/imgs/porlex_mini_sml.png",
+          url: "https://www.apple.com/iphone/",
         },
       ],
     },
@@ -1293,6 +1423,10 @@ export const recipeData: Recipe[] = [
       },
       grind: {
         level: "Fine, similar to sand",
+        grinder: {
+          model: "Timemore C2",
+          setting: "11",
+        },
       },
       water: {
         amount: 60,
@@ -1303,7 +1437,14 @@ export const recipeData: Recipe[] = [
         {
           id: 1,
           name: "AeroPress",
-          url: "https://aeropress.com/",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/",
+        },
+        {
+          id: 2,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/maps",
         },
       ],
     },
@@ -1402,6 +1543,10 @@ export const recipeData: Recipe[] = [
       },
       grind: {
         level: "Medium",
+        grinder: {
+          model: "Ode Gen 2",
+          setting: "4",
+        },
       },
       water: {
         amount: 240,
@@ -1412,7 +1557,20 @@ export const recipeData: Recipe[] = [
         {
           id: 1,
           name: "AeroPress",
-          url: "https://aeropress.com/",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/mac/",
+        },
+        {
+          id: 2,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.google.com/",
+        },
+        {
+          id: 3,
+          name: "Brewista Artisan Gooseneck Kettle",
+          image: "/detail/imgs/brewista_artisan_kettle_sml.png",
+          url: "https://www.apple.com/watch/",
         },
       ],
     },
