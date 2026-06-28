@@ -70,8 +70,8 @@
   // 具名导入重命名
   import { RecipeCard as Card } from "./RecipeCard";
   ```
-
-
+* type 里面：类型规则，用分号，const 对象里面：真实数据，用逗号
+* 对象取值：知道属性名就用点 `.`，属性名来自变量就用中括号 `[]`。methodMap.standard（固定取 standard）methodMap[recipe.overview.brew.method].name（根据 method 的值动态取）
 
 ## 05、这次学到的 Tailwind 写法
 

@@ -3,7 +3,7 @@ export type RecipeOverview = {
   brew: {
     method: "standard" | "inverted";
     time: number;
-    filter: string;
+    filter: "paper" | "metal";
   };
 
   // 咖啡豆用量

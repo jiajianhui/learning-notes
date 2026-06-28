@@ -114,7 +114,7 @@ export const recipeData: Recipe[] = [
       brew: {
         method: "standard",
         time: 200,
-        filter: "Paper filter",
+        filter: "paper",
       },
       coffee: {
         amount: 11,
@@ -238,7 +238,7 @@ export const recipeData: Recipe[] = [
       brew: {
         method: "inverted",
         time: 150,
-        filter: "Paper filter",
+        filter: "metal",
       },
       coffee: {
         amount: 13,
@@ -384,7 +384,7 @@ export const recipeData: Recipe[] = [
       brew: {
         method: "inverted",
         time: 120,
-        filter: "Paper filter",
+        filter: "metal",
       },
       coffee: {
         amount: 18,
@@ -504,7 +504,7 @@ export const recipeData: Recipe[] = [
       brew: {
         method: "inverted",
         time: 105,
-        filter: "Two paper filters",
+        filter: "paper",
       },
       coffee: {
         amount: 20,
@@ -616,7 +616,7 @@ export const recipeData: Recipe[] = [
       brew: {
         method: "standard",
         time: 90,
-        filter: "Paper filter",
+        filter: "paper",
       },
       coffee: {
         amount: 14,
@@ -711,7 +711,7 @@ export const recipeData: Recipe[] = [
       brew: {
         method: "standard",
         time: 130,
-        filter: "Two paper filters",
+        filter: "paper",
       },
       coffee: {
         amount: 14,
@@ -811,7 +811,7 @@ export const recipeData: Recipe[] = [
       brew: {
         method: "inverted",
         time: 140,
-        filter: "Paper filter",
+        filter: "paper",
       },
       coffee: {
         amount: 18,
@@ -922,7 +922,7 @@ export const recipeData: Recipe[] = [
       brew: {
         method: "standard",
         time: 270,
-        filter: "Two paper filters",
+        filter: "paper",
       },
       coffee: {
         amount: 15,
@@ -1054,7 +1054,7 @@ export const recipeData: Recipe[] = [
       brew: {
         method: "standard",
         time: 150,
-        filter: "Paper filter",
+        filter: "paper",
       },
       coffee: {
         amount: 30,
@@ -1181,7 +1181,7 @@ export const recipeData: Recipe[] = [
       brew: {
         method: "standard",
         time: 70,
-        filter: "Two paper filters",
+        filter: "paper",
       },
       coffee: {
         amount: 17,
@@ -1284,7 +1284,7 @@ export const recipeData: Recipe[] = [
       brew: {
         method: "standard",
         time: 30,
-        filter: "Paper filter",
+        filter: "metal",
       },
       coffee: {
         amount: 20,
@@ -1393,7 +1393,7 @@ export const recipeData: Recipe[] = [
       brew: {
         method: "inverted",
         time: 120,
-        filter: "Two paper filters",
+        filter: "paper",
       },
       coffee: {
         amount: 24,

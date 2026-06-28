@@ -14,6 +14,55 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Tag } from "./_components/Tag";
 
+// 映射表
+// 过滤映射表
+const filterMap = {
+  paper: {
+    name: "Paper Filter",
+    icon: "/recipeIcon/icon_filter_paper.svg",
+  },
+  metal: {
+    name: "Metal Filter",
+    icon: "/recipeIcon/icon_filter_metal.svg",
+  },
+};
+
+// 冲煮方式映射表
+const methodMap = {
+  standard: {
+    name: "standard",
+    icon: "/recipeIcon/icon_aeropress_standard.svg",
+  },
+  inverted: {
+    name: "inverted",
+    icon: "/recipeIcon/icon_aeropress_inverted.svg",
+  },
+};
+
+// 时间计算函数
+function getBrewTime(time: number) {
+  const minutes = Math.floor(time / 60); // Math.floor —— 向下取整
+  const seconds = time % 60;
+
+  // padStart 是 String 的方法，用来在字符串前面补内容，第一个参数是目标长度，第二个参数是用来填充的内容。
+  const timeLabel = `${minutes}:${String(seconds).padStart(2, "0")}`;
+
+  let icon = ""
+
+  if (time < 120) {
+    icon = "/recipeIcon/icon_timer_fast.svg";
+  } else if (time <= 300) {
+    icon = "/recipeIcon/icon_timer_medium.svg";
+  } else {
+    icon = "/recipeIcon/icon_timer_slow.svg";
+  }
+
+  return {
+    timeLabel,
+    icon
+  }
+}
+
 export default async function RecipeDetail({ params }: Props) {
   // 1、拿到路由参数 slug
   const { slug } = await params;
@@ -165,21 +214,17 @@ export default async function RecipeDetail({ params }: Props) {
         </p>
         <div className="flex flex-wrap gap-2">
           <Tag
-            icon={
-              recipe.overview.brew.method === "inverted"
-                ? "/recipeIcon/icon_aeropress_inverted.svg"
-                : "/recipeIcon/icon_aeropress_standard.svg"
-            }
-            name={recipe.overview.brew.method}
+            icon={methodMap[recipe.overview.brew.method].icon}
+            name={methodMap[recipe.overview.brew.method].name}
           />
 
           <Tag
-            icon="/recipeIcon/icon_timer_fast.svg"
-            name={recipe.overview.brew.time}
+            icon={getBrewTime(recipe.overview.brew.time).icon}
+            name={getBrewTime(recipe.overview.brew.time).timeLabel}
           />
           <Tag
-            icon="/recipeIcon/icon_filter_paper.svg"
-            name={recipe.overview.brew.filter}
+            icon={filterMap[recipe.overview.brew.filter].icon}
+            name={filterMap[recipe.overview.brew.filter].name}
           />
         </div>
 
@@ -235,12 +280,12 @@ export default async function RecipeDetail({ params }: Props) {
           <p className=" font-display">Water:</p>
           <div className="flex flex-wrap gap-2">
             <Tag
-              icon="/detail/water.svg"
-              name={`${recipe.overview.water.amount}g`}
-            />
-            <Tag
               icon="/detail/temperature.svg"
               name={`${recipe.overview.water.temperature}°C`}
+            />
+            <Tag
+              icon="/detail/water.svg"
+              name={`${recipe.overview.water.amount}g`}
             />
           </div>
         </div>
