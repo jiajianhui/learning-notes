@@ -72,6 +72,10 @@
   ```
 * type 里面：类型规则，用分号，const 对象里面：真实数据，用逗号
 * 对象取值：知道属性名就用点 `.`，属性名来自变量就用中括号 `[]`。methodMap.standard（固定取 standard）methodMap[recipe.overview.brew.method].name（根据 method 的值动态取）
+  
+* 关于滚动吸顶：
+  * 随父级滚动的吸顶：使用 `sticky top-0 self-start`。元素只会在自己的父容器范围内吸顶；父容器内容越长，吸顶时间越久；滚到父容器底部时，sticky 元素会跟着父容器一起离开。
+  * 更像一直固定的侧栏吸顶：在上面的基础上再加 `h-screen overflow-y-auto`。侧栏高度固定为一屏，内容超出时在侧栏内部滚动，视觉上更像一直吸在右侧。
 
 ## 05、这次学到的 Tailwind 写法
 
@@ -109,6 +113,8 @@
       className="object-contain"
     />
   </div>
+
+* `self-start`：用于 flex 子元素，避免被父级默认拉伸，保持自身高度，并从顶部开始对齐。
   
 
 ## 06、能迁移到个人网站的 1 到 2 个点

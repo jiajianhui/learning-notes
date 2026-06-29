@@ -215,7 +215,7 @@ export default async function RecipeDetail({ params }: Props) {
       </div>
 
       {/* Recipe overview */}
-      <div className="w-95 shrink-0 border-l border-gray-200 pl-4 pr-12 flex flex-col gap-8">
+      <div className="sticky top-0 self-start w-95 shrink-0 border-l border-gray-200 pl-4 pr-12 pb-12 flex flex-col gap-8">
         <p className="font-display py-6 border-b border-gray-200">
           Recipe overview
         </p>

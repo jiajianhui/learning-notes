@@ -139,7 +139,7 @@ export function RecipeBrowser() {
         <div
           className="
             min-w-100 h-screen overflow-y-auto bg-card-bg 
-            sticky top-0  border-l border-gray-200
+            sticky top-0 border-l border-gray-200
             hidden lg:block
           "
         >
