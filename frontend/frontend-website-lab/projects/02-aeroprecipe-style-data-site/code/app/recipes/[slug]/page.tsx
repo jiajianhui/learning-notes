@@ -13,6 +13,7 @@ import { Status } from "./_components/Status";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Tag } from "./_components/Tag";
+import { Comments } from "./_components/Comments";
 
 // 映射表
 // 过滤映射表
@@ -204,6 +205,12 @@ export default async function RecipeDetail({ params }: Props) {
               </div>
             ))}
           </div>
+
+          {/* 分割线 */}
+          <div className="h-px w-full bg-gray-200 my-6" />
+
+          {/* 评论区 */}
+          <Comments />
         </div>
       </div>
 
