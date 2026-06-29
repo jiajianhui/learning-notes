@@ -47,7 +47,7 @@ function getBrewTime(time: number) {
   // padStart 是 String 的方法，用来在字符串前面补内容，第一个参数是目标长度，第二个参数是用来填充的内容。
   const timeLabel = `${minutes}:${String(seconds).padStart(2, "0")}`;
 
-  let icon = ""
+  let icon = "";
 
   if (time < 120) {
     icon = "/recipeIcon/icon_timer_fast.svg";
@@ -59,8 +59,8 @@ function getBrewTime(time: number) {
 
   return {
     timeLabel,
-    icon
-  }
+    icon,
+  };
 }
 
 export default async function RecipeDetail({ params }: Props) {
@@ -295,17 +295,19 @@ export default async function RecipeDetail({ params }: Props) {
           <p className=" font-display">Equipment:</p>
           <div className="flex flex-col gap-2">
             {recipe.overview.equipment.map((item, index) => (
-              <a href={item.url} key={index} target="_black">
+              <a href={item.url} key={index} target="_blank">
                 <div className="flex items-center gap-2 bg-option-bg rounded-sm px-5 py-3">
-                  <Image
-                    src={item.image}
-                    width={1}
-                    height={1}
-                    alt=""
-                    className="w-4 "
-                  />
+                  {/* 显示不同尺寸、比例的图片 */}
+                  <div className="relative size-10">
+                    <Image
+                      src={item.image}
+                      fill
+                      alt=""
+                      className="object-contain"
+                    />
+                  </div>
 
-                  <p className="font-sans w-full pl-2">{item.name}</p>
+                  <p className="font-sans text-sm w-full pl-2">{item.name}</p>
 
                   <Image
                     src="/detail/external-link.svg"

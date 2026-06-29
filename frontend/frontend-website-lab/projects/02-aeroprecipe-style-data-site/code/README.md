@@ -89,13 +89,27 @@
 
 * `w-px`：设置元素宽度为 `1px`。
 * 
-* `pointer-events-none` 不接收鼠标点击，点击事件会穿透到下面的 <select>。
+* `pointer-events-none` 不接收鼠标点击，点击事件会穿透到下面的 `select。`
 * `top-1/2` 元素顶部位于父元素高度的 50%，也就是先把图标顶部放到父元素垂直中线。
 * `-translate-y-1/2` 向上移动自身高度的 50%，让图标真正垂直居中。
 * `ring` 就是在元素外面加一圈不占布局空间的高亮描边，他的变化不会导致位置抖动。
+* 不同尺寸图片的统一显示：外层使用固定尺寸盒子包裹 `Image`，盒子设置 `relative size-10`，`Image` 使用 `fill` 和 `object-contain`。
+  * 外层盒子：决定图片的展示区域大小
+  * `relative`：给里面的 `Image fill` 提供定位参照
+  * `fill`：让图片铺满外层盒子的范围，底层类似 `position: absolute; inset: 0;`
+  * `inset: 0`：等价于 `top: 0; right: 0; bottom: 0; left: 0;`，表示上下左右都贴住父级
+  * `object-contain`：保持图片原比例，完整显示，不裁剪、不变形
 
-
-
+  ```tsx
+  <div className="relative size-10">
+    <Image
+      src={item.image}
+      fill
+      alt=""
+      className="object-contain"
+    />
+  </div>
+  
 
 ## 06、能迁移到个人网站的 1 到 2 个点
 - 
