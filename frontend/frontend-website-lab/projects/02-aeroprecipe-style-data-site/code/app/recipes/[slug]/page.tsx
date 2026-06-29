@@ -86,7 +86,7 @@ export default async function RecipeDetail({ params }: Props) {
     <div className="flex">
       <div className="px-12">
         {/* 标题、统计区域 */}
-        <div className=" sticky top-0 bg-white py-8 mb-8 border-b border-gray-200">
+        <div className=" sticky top-0 z-20 bg-white/70 backdrop-blur py-8 mb-8 border-b border-gray-200">
           {/* 标题 */}
           <div className="flex items-center justify-between">
             {/* 标题 */}

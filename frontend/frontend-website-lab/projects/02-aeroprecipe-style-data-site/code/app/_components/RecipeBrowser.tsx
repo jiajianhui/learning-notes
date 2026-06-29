@@ -40,7 +40,7 @@ export function RecipeBrowser() {
       <div className="flex border-t border-gray-200">
         <div>
           {/* 标题栏 */}
-          <div className="flex items-center text-sm sticky z-10 top-0 backdrop-blur-3xl font-sans px-12 py-6">
+          <div className="flex items-center text-sm sticky z-10 top-0 bg-white/70 backdrop-blur font-sans px-12 py-6">
             <p>AeroPress® recipes! Viewing: all recipes (360)</p>
 
             <div className="flex absolute right-12 items-center justify-baseline gap-2">
