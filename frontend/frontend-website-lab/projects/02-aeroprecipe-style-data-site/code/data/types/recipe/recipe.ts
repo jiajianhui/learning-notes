@@ -12,6 +12,7 @@
 */
 import type { ContentBlock } from "./content";
 import type { RecipeOverview } from "./recipeOverview";
+import type { RecipeType } from "./recipeType";
 
 export type Recipe = {
   id: number;
@@ -54,4 +55,6 @@ export type Recipe = {
   }[];
 
   overview: RecipeOverview;
+
+  tag: RecipeType;
 };
