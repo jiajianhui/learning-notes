@@ -64,7 +64,9 @@ type RecipeOverviewProps = {
 export function RecipeOverview({recipe, title}: RecipeOverviewProps) {
   return (
     <div className="flex flex-col gap-4 lg:gap-8">
-      <p className="font-display py-0 lg:py-6 border-b border-transparent lg:border-gray-200">{title}</p>
+      <p className="font-display py-0 lg:py-6 border-b border-transparent lg:border-gray-200">
+        {title}
+      </p>
       <div className="flex flex-wrap gap-2">
         <Tag
           icon={methodMap[recipe.overview.brew.method].icon}
@@ -108,7 +110,7 @@ export function RecipeOverview({recipe, title}: RecipeOverviewProps) {
             <div className="font-sans text-sm bg-option-bg w-full rounded-sm">
               <div className="flex flex-col gap-3 p-6 rounded-sm">
                 {`${recipe.overview.grind.grinder.setting} clicks on a Comandante ${recipe.overview.grind.grinder.model}`}
-                <div className="group flex items-center justify-center gap-2 py-0.5 border border-black rounded-sm bg-option-bg hover:bg-black text-black hover:text-white">
+                <button className="group flex items-center justify-center gap-2 py-0.5 border border-black rounded-sm bg-option-bg hover:bg-black text-black hover:text-white cursor-pointer">
                   <Image
                     src="/detail/change-grinder.svg"
                     width={1}
@@ -117,11 +119,17 @@ export function RecipeOverview({recipe, title}: RecipeOverviewProps) {
                     className="size-3 group-hover:invert"
                   />
                   <p>Change grinder</p>
-                </div>
+                </button>
               </div>
               <p className="p-6 border-t border-gray-300">
                 Powered by{" "}
-                <span className="font-display underline">Beean Coffee</span>
+                <a
+                  href="https://www.google.com"
+                  target="_blank"
+                  className="font-display underline"
+                >
+                  Beean Coffee
+                </a>
               </p>
             </div>
           )}

@@ -25,6 +25,7 @@ import { recipeData } from "@/data/recipeData";
 
 // 引入组件
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { Status } from "./_components/Status";
 import { RecipeOverview } from "./_components/RecipeOverview";
@@ -70,43 +71,56 @@ export default async function RecipeDetail({ params }: Props) {
 
           {/* 统计区域 */}
           <div className="flex flex-wrap gap-6 font-sans pt-4">
-            <Status
-              name={recipe.meta.source.name}
-              icon={recipe.meta.source.icon}
-            />
+            {/* 路由跳转 */}
+            <Link href="/">
+              <Status
+                name={recipe.meta.source.name}
+                icon={recipe.meta.source.icon}
+              />
+            </Link>
 
             <div className="flex items-center gap-1">
               <p>Creator:</p>
-              <Status name={recipe.meta.creator.name} />
+              {/* 外部链接 */}
+              <a href="https://www.jianhui.xyz" target="_blank">
+                <Status
+                  name={recipe.meta.creator.name}
+                  icon="/detail/creator-link.svg"
+                  iconPosition="right"
+                />
+              </a>
             </div>
 
             {recipe.isCold && (
-              <div className="flex items-center gap-1">
-                <Image
-                  src="/recipeIcon/icon_cold.svg"
-                  width={1}
-                  height={1}
-                  alt=""
-                  className="size-3"
-                />
-                <p>This is a cold recipe</p>
-              </div>
+              // JSX 给组件传参时，字符串可以直接写 参数="文本"，其他 JS 值都要写成参数={值}。
+              <Status
+                name="This is a cold recipe"
+                icon="/detail/cold.svg"
+                underline={false}
+              />
             )}
 
-            <Status
-              name={`${recipe.meta.saves} saves`}
-              icon="/detail/bookmark.svg"
-            />
+            {/* 操作按钮 */}
+            <button className="cursor-pointer">
+              <Status
+                name={`${recipe.meta.saves} saves`}
+                icon="/detail/bookmark.svg"
+              />
+            </button>
 
-            <Status
-              name={`${recipe.meta.comments} comments`}
-              icon="/detail/comments.svg"
-            />
-
-            <Status
-              name={`Private notes(${recipe.meta.privateNotes})`}
-              icon="/detail/private-notes.svg"
-            />
+            {/* 滚动到指定位置 */}
+            <a href="#comments">
+              <Status
+                name={`${recipe.meta.comments} comments`}
+                icon="/detail/comments.svg"
+              />
+            </a>
+            <a href="#comments">
+              <Status
+                name={`Private notes(${recipe.meta.privateNotes})`}
+                icon="/detail/private-notes.svg"
+              />
+            </a>
           </div>
         </div>
 
@@ -180,7 +194,9 @@ export default async function RecipeDetail({ params }: Props) {
           <div className="h-px w-full bg-gray-200 my-0 md:my-3 lg:my-6" />
 
           {/* 评论区 */}
-          <Comments />
+          <div id="comments">
+            <Comments />
+          </div>
         </div>
       </div>
 
