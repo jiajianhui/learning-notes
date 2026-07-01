@@ -1575,4 +1575,4996 @@ export const recipeData: Recipe[] = [
       ],
     },
   },
+  {
+    id: 12,
+    slug: "jonathan-gagne-aeropress-recipe",
+    title: "Jonathan Gagne AeroPress recipe",
+    intro: "A careful, high-extraction cup inspired by Jonathan Gagne style recipes.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "Jonathan Gagne"
+      },
+      likes: 412,
+      saves: 168,
+      comments: 31,
+      privateNotes: 3
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Jonathan Gagne AeroPress recipe is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 18g of coffee and 260g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around fine to medium-fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 18g of coffee ground fine to medium-fine."
+      },
+      {
+        id: 3,
+        text: "Pour 260g of water at 94C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 4:30."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 270,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 18,
+        unit: "g",
+        description: "Light roast with high clarity"
+      },
+      grind: {
+        level: "Fine to medium-fine",
+        grinder: {
+          model: "C40",
+          setting: "22"
+        }
+      },
+      water: {
+        amount: 260,
+        temperature: 94,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 2,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        },
+        {
+          id: 3,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.apple.com/mac/"
+        }
+      ]
+    }
+  },
+  {
+    id: 13,
+    slug: "low-effort-big-reward",
+    title: "Low effort big reward",
+    intro: "A forgiving daily recipe with very little technique required.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "AeroRecipe Community"
+      },
+      likes: 337,
+      saves: 146,
+      comments: 22,
+      privateNotes: 2
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Low effort big reward is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 15g of coffee and 230g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around medium if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 15g of coffee ground medium."
+      },
+      {
+        id: 3,
+        text: "Pour 230g of water at 92C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 2:30."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 150,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 15,
+        unit: "g",
+        description: "Medium roast"
+      },
+      grind: {
+        level: "Medium",
+        grinder: {
+          model: "Timemore C2",
+          setting: "14"
+        }
+      },
+      water: {
+        amount: 230,
+        temperature: 92,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/chrome"
+        },
+        {
+          id: 2,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/ipad/"
+        }
+      ]
+    }
+  },
+  {
+    id: 14,
+    slug: "2015-world-aeropress-championship",
+    title: "2015 World AeroPress Championship",
+    intro: "A competition-style recipe built around a strong brew and bypass water.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/cat_crown.svg",
+        name: "Championship"
+      },
+      creator: {
+        name: "WAC Archive"
+      },
+      likes: 505,
+      saves: 218,
+      comments: 44,
+      privateNotes: 5
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "2015 World AeroPress Championship is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 30g of coffee and 100g of water.",
+          "Brew with a paper filter in the inverted position.",
+          "Adjust grind around coarse if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 30g of coffee ground coarse."
+      },
+      {
+        id: 3,
+        text: "Pour 100g of water at 85C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 2:00."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 120,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 30,
+        unit: "g",
+        description: "Competition coffee"
+      },
+      grind: {
+        level: "Coarse",
+        grinder: {
+          model: "C40",
+          setting: "30"
+        }
+      },
+      water: {
+        amount: 100,
+        temperature: 85,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/maps"
+        },
+        {
+          id: 2,
+          name: "Porlex Mini Hand Grinder",
+          image: "/detail/imgs/porlex_mini_sml.png",
+          url: "https://www.apple.com/iphone/"
+        },
+        {
+          id: 3,
+          name: "Brewista Artisan Gooseneck Kettle",
+          image: "/detail/imgs/brewista_artisan_kettle_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 15,
+    slug: "long-aeropress-espresso-shot",
+    title: "Long AeroPress Espresso Shot",
+    intro: "A short, intense cup that works well as a milk drink base.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista"
+      },
+      creator: {
+        name: "Coffee Shop Lab"
+      },
+      likes: 244,
+      saves: 101,
+      comments: 16,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Long AeroPress Espresso Shot is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 20g of coffee and 80g of water.",
+          "Brew with a metal filter in the standard position.",
+          "Adjust grind around fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 20g of coffee ground fine."
+      },
+      {
+        id: 3,
+        text: "Pour 80g of water at 96C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 1:15."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 75,
+        filter: "metal"
+      },
+      coffee: {
+        amount: 20,
+        unit: "g",
+        description: "Espresso blend"
+      },
+      grind: {
+        level: "Fine",
+        grinder: {
+          model: "JX Pro",
+          setting: "2.5.0"
+        }
+      },
+      water: {
+        amount: 80,
+        temperature: 96,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/watch/"
+        },
+        {
+          id: 2,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.google.com/search"
+        },
+        {
+          id: 3,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 4,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 16,
+    slug: "evp-iced-coffee",
+    title: "EVP Iced Coffee",
+    intro: "A cold AeroPress recipe with a bright finish and quick dilution over ice.",
+    isCold: true,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista"
+      },
+      creator: {
+        name: "EVP Coffee"
+      },
+      likes: 286,
+      saves: 119,
+      comments: 21,
+      privateNotes: 2
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "EVP Iced Coffee is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 18g of coffee and 160g of water.",
+          "Brew with a paper filter in the inverted position.",
+          "Adjust grind around medium if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 18g of coffee ground medium."
+      },
+      {
+        id: 3,
+        text: "Pour 160g of water at 88C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 3:00."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 180,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 18,
+        unit: "g",
+        description: "Fruity washed coffee"
+      },
+      grind: {
+        level: "Medium",
+        grinder: {
+          model: "Ode Gen 2",
+          setting: "4"
+        }
+      },
+      water: {
+        amount: 160,
+        temperature: 88,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 2,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        },
+        {
+          id: 3,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.apple.com/mac/"
+        }
+      ]
+    }
+  },
+  {
+    id: 17,
+    slug: "rule-of-thirds",
+    title: "Rule of Thirds",
+    intro: "A balanced recipe using equal parts bloom, brew and bypass.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/cat_experimental.svg",
+        name: "Experimental"
+      },
+      creator: {
+        name: "AeroPress Lab"
+      },
+      likes: 231,
+      saves: 87,
+      comments: 12,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Rule of Thirds is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 16g of coffee and 240g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around medium-fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 16g of coffee ground medium-fine."
+      },
+      {
+        id: 3,
+        text: "Pour 240g of water at 92C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 3:30."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 210,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 16,
+        unit: "g",
+        description: "Sweet washed coffee"
+      },
+      grind: {
+        level: "Medium-fine",
+        grinder: {
+          model: "C40",
+          setting: "24"
+        }
+      },
+      water: {
+        amount: 240,
+        temperature: 92,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/chrome"
+        },
+        {
+          id: 2,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/ipad/"
+        }
+      ]
+    }
+  },
+  {
+    id: 18,
+    slug: "the-bright-morning-cup",
+    title: "The Bright Morning Cup",
+    intro: "A clean morning brew with a lively acidity and light body.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "Maya Lee"
+      },
+      likes: 194,
+      saves: 74,
+      comments: 10,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "The Bright Morning Cup is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 13g of coffee and 200g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around medium-fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 13g of coffee ground medium-fine."
+      },
+      {
+        id: 3,
+        text: "Pour 200g of water at 94C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 1:45."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 105,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 13,
+        unit: "g",
+        description: "Light Ethiopian coffee"
+      },
+      grind: {
+        level: "Medium-fine",
+        grinder: {
+          model: "Timemore C2",
+          setting: "13"
+        }
+      },
+      water: {
+        amount: 200,
+        temperature: 94,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/maps"
+        },
+        {
+          id: 2,
+          name: "Porlex Mini Hand Grinder",
+          image: "/detail/imgs/porlex_mini_sml.png",
+          url: "https://www.apple.com/iphone/"
+        },
+        {
+          id: 3,
+          name: "Brewista Artisan Gooseneck Kettle",
+          image: "/detail/imgs/brewista_artisan_kettle_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 19,
+    slug: "gentle-sweetness",
+    title: "Gentle Sweetness",
+    intro: "A slower press recipe for a soft, sweet cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista"
+      },
+      creator: {
+        name: "Nora Chen"
+      },
+      likes: 178,
+      saves: 68,
+      comments: 9,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Gentle Sweetness is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 17g of coffee and 250g of water.",
+          "Brew with a paper filter in the inverted position.",
+          "Adjust grind around medium if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 17g of coffee ground medium."
+      },
+      {
+        id: 3,
+        text: "Pour 250g of water at 90C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 4:00."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 240,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 17,
+        unit: "g",
+        description: "Honey processed coffee"
+      },
+      grind: {
+        level: "Medium",
+        grinder: {
+          model: "C40",
+          setting: "26"
+        }
+      },
+      water: {
+        amount: 250,
+        temperature: 90,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/watch/"
+        },
+        {
+          id: 2,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.google.com/search"
+        },
+        {
+          id: 3,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 4,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 20,
+    slug: "fast-and-clean-aeropress",
+    title: "Fast and clean AeroPress",
+    intro: "A quick standard method for a clean cup before work.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "Leo Park"
+      },
+      likes: 163,
+      saves: 59,
+      comments: 8,
+      privateNotes: 0
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Fast and clean AeroPress is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 12g of coffee and 180g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 12g of coffee ground fine."
+      },
+      {
+        id: 3,
+        text: "Pour 180g of water at 93C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 1:00."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 60,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 12,
+        unit: "g",
+        description: "Any fresh coffee"
+      },
+      grind: {
+        level: "Fine",
+        grinder: {
+          model: "Porlex Mini",
+          setting: "8"
+        }
+      },
+      water: {
+        amount: 180,
+        temperature: 93,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 2,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        },
+        {
+          id: 3,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.apple.com/mac/"
+        }
+      ]
+    }
+  },
+  {
+    id: 21,
+    slug: "big-body-breakfast-brew",
+    title: "Big body breakfast brew",
+    intro: "A fuller-bodied cup with a slightly higher dose.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista"
+      },
+      creator: {
+        name: "Rosa Kim"
+      },
+      likes: 205,
+      saves: 91,
+      comments: 15,
+      privateNotes: 2
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Big body breakfast brew is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 22g of coffee and 260g of water.",
+          "Brew with a metal filter in the inverted position.",
+          "Adjust grind around medium if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 22g of coffee ground medium."
+      },
+      {
+        id: 3,
+        text: "Pour 260g of water at 91C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 3:00."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 180,
+        filter: "metal"
+      },
+      coffee: {
+        amount: 22,
+        unit: "g",
+        description: "Medium-dark roast"
+      },
+      grind: {
+        level: "Medium",
+        grinder: {
+          model: "Ode Gen 2",
+          setting: "5"
+        }
+      },
+      water: {
+        amount: 260,
+        temperature: 91,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/chrome"
+        },
+        {
+          id: 2,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/ipad/"
+        }
+      ]
+    }
+  },
+  {
+    id: 22,
+    slug: "fruit-forward-inverted",
+    title: "Fruit-forward inverted",
+    intro: "An inverted recipe for fruit notes and a longer finish.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/cat_experimental.svg",
+        name: "Experimental"
+      },
+      creator: {
+        name: "Sam Ortega"
+      },
+      likes: 221,
+      saves: 83,
+      comments: 13,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Fruit-forward inverted is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 16g of coffee and 220g of water.",
+          "Brew with a paper filter in the inverted position.",
+          "Adjust grind around medium-coarse if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 16g of coffee ground medium-coarse."
+      },
+      {
+        id: 3,
+        text: "Pour 220g of water at 88C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 3:30."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 210,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 16,
+        unit: "g",
+        description: "Natural processed coffee"
+      },
+      grind: {
+        level: "Medium-coarse",
+        grinder: {
+          model: "C40",
+          setting: "28"
+        }
+      },
+      water: {
+        amount: 220,
+        temperature: 88,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/maps"
+        },
+        {
+          id: 2,
+          name: "Porlex Mini Hand Grinder",
+          image: "/detail/imgs/porlex_mini_sml.png",
+          url: "https://www.apple.com/iphone/"
+        },
+        {
+          id: 3,
+          name: "Brewista Artisan Gooseneck Kettle",
+          image: "/detail/imgs/brewista_artisan_kettle_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 23,
+    slug: "metal-filter-morning",
+    title: "Metal filter morning",
+    intro: "A metal-filter recipe with more oils and a heavier texture.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "Kenji Ito"
+      },
+      likes: 147,
+      saves: 52,
+      comments: 7,
+      privateNotes: 0
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Metal filter morning is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 15g of coffee and 210g of water.",
+          "Brew with a metal filter in the standard position.",
+          "Adjust grind around medium if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 15g of coffee ground medium."
+      },
+      {
+        id: 3,
+        text: "Pour 210g of water at 90C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 2:30."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 150,
+        filter: "metal"
+      },
+      coffee: {
+        amount: 15,
+        unit: "g",
+        description: "Chocolate-forward coffee"
+      },
+      grind: {
+        level: "Medium",
+        grinder: {
+          model: "Timemore C2",
+          setting: "15"
+        }
+      },
+      water: {
+        amount: 210,
+        temperature: 90,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/watch/"
+        },
+        {
+          id: 2,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.google.com/search"
+        },
+        {
+          id: 3,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 4,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 24,
+    slug: "aeropress-go-travel-cup",
+    title: "AeroPress Go travel cup",
+    intro: "A practical travel recipe with minimal gear.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "Travel Brewers"
+      },
+      likes: 132,
+      saves: 47,
+      comments: 6,
+      privateNotes: 0
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "AeroPress Go travel cup is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 14g of coffee and 200g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around medium if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 14g of coffee ground medium."
+      },
+      {
+        id: 3,
+        text: "Pour 200g of water at 92C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 1:30."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 90,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 14,
+        unit: "g",
+        description: "Medium roast"
+      },
+      grind: {
+        level: "Medium",
+        grinder: {
+          model: "Porlex Mini",
+          setting: "9"
+        }
+      },
+      water: {
+        amount: 200,
+        temperature: 92,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 2,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        },
+        {
+          id: 3,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.apple.com/mac/"
+        }
+      ]
+    }
+  },
+  {
+    id: 25,
+    slug: "sweet-bypass-cup",
+    title: "Sweet bypass cup",
+    intro: "A concentrated brew finished with bypass water for sweetness.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista"
+      },
+      creator: {
+        name: "Cafe Bench"
+      },
+      likes: 188,
+      saves: 71,
+      comments: 11,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Sweet bypass cup is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 20g of coffee and 120g of water.",
+          "Brew with a paper filter in the inverted position.",
+          "Adjust grind around medium-coarse if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 20g of coffee ground medium-coarse."
+      },
+      {
+        id: 3,
+        text: "Pour 120g of water at 86C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 3:10."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 190,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 20,
+        unit: "g",
+        description: "Sweet Colombian coffee"
+      },
+      grind: {
+        level: "Medium-coarse",
+        grinder: {
+          model: "C40",
+          setting: "29"
+        }
+      },
+      water: {
+        amount: 120,
+        temperature: 86,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/chrome"
+        },
+        {
+          id: 2,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/ipad/"
+        }
+      ]
+    }
+  },
+  {
+    id: 26,
+    slug: "dark-roast-comfort",
+    title: "Dark roast comfort",
+    intro: "A lower-temperature recipe for a round dark roast cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "Mina Patel"
+      },
+      likes: 154,
+      saves: 62,
+      comments: 9,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Dark roast comfort is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 16g of coffee and 220g of water.",
+          "Brew with a metal filter in the standard position.",
+          "Adjust grind around medium-coarse if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 16g of coffee ground medium-coarse."
+      },
+      {
+        id: 3,
+        text: "Pour 220g of water at 84C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 2:40."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 160,
+        filter: "metal"
+      },
+      coffee: {
+        amount: 16,
+        unit: "g",
+        description: "Dark roast"
+      },
+      grind: {
+        level: "Medium-coarse",
+        grinder: {
+          model: "Ode Gen 2",
+          setting: "6"
+        }
+      },
+      water: {
+        amount: 220,
+        temperature: 84,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/maps"
+        },
+        {
+          id: 2,
+          name: "Porlex Mini Hand Grinder",
+          image: "/detail/imgs/porlex_mini_sml.png",
+          url: "https://www.apple.com/iphone/"
+        },
+        {
+          id: 3,
+          name: "Brewista Artisan Gooseneck Kettle",
+          image: "/detail/imgs/brewista_artisan_kettle_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 27,
+    slug: "nordic-filter-style",
+    title: "Nordic filter style",
+    intro: "A light and transparent recipe inspired by Nordic filter coffee.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista"
+      },
+      creator: {
+        name: "Oslo Brew Bar"
+      },
+      likes: 216,
+      saves: 94,
+      comments: 14,
+      privateNotes: 2
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Nordic filter style is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 14g of coffee and 230g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 14g of coffee ground fine."
+      },
+      {
+        id: 3,
+        text: "Pour 230g of water at 96C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 2:00."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 120,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 14,
+        unit: "g",
+        description: "Light Nordic roast"
+      },
+      grind: {
+        level: "Fine",
+        grinder: {
+          model: "C40",
+          setting: "21"
+        }
+      },
+      water: {
+        amount: 230,
+        temperature: 96,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/watch/"
+        },
+        {
+          id: 2,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.google.com/search"
+        },
+        {
+          id: 3,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 4,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 28,
+    slug: "cafe-milk-base",
+    title: "Cafe milk base",
+    intro: "A strong AeroPress concentrate for milk drinks.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista"
+      },
+      creator: {
+        name: "Milk Bar Coffee"
+      },
+      likes: 175,
+      saves: 69,
+      comments: 10,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Cafe milk base is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 19g of coffee and 90g of water.",
+          "Brew with a metal filter in the inverted position.",
+          "Adjust grind around fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 19g of coffee ground fine."
+      },
+      {
+        id: 3,
+        text: "Pour 90g of water at 95C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 1:40."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 100,
+        filter: "metal"
+      },
+      coffee: {
+        amount: 19,
+        unit: "g",
+        description: "Espresso roast"
+      },
+      grind: {
+        level: "Fine",
+        grinder: {
+          model: "JX Pro",
+          setting: "2.3.0"
+        }
+      },
+      water: {
+        amount: 90,
+        temperature: 95,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 2,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        },
+        {
+          id: 3,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.apple.com/mac/"
+        }
+      ]
+    }
+  },
+  {
+    id: 29,
+    slug: "long-steep-clarity",
+    title: "Long steep clarity",
+    intro: "A long immersion recipe that still finishes clean.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/cat_experimental.svg",
+        name: "Experimental"
+      },
+      creator: {
+        name: "Quiet Cup Lab"
+      },
+      likes: 198,
+      saves: 76,
+      comments: 12,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Long steep clarity is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 15g of coffee and 240g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around medium if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 15g of coffee ground medium."
+      },
+      {
+        id: 3,
+        text: "Pour 240g of water at 91C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 5:30."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 330,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 15,
+        unit: "g",
+        description: "Washed high-grown coffee"
+      },
+      grind: {
+        level: "Medium",
+        grinder: {
+          model: "C40",
+          setting: "25"
+        }
+      },
+      water: {
+        amount: 240,
+        temperature: 91,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/chrome"
+        },
+        {
+          id: 2,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/ipad/"
+        }
+      ]
+    }
+  },
+  {
+    id: 30,
+    slug: "championship-bypass",
+    title: "Championship bypass",
+    intro: "A high-dose competition style brew with bypass control.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/cat_crown.svg",
+        name: "Championship"
+      },
+      creator: {
+        name: "AeroPress Champion"
+      },
+      likes: 342,
+      saves: 136,
+      comments: 25,
+      privateNotes: 3
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Championship bypass is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 28g of coffee and 140g of water.",
+          "Brew with a paper filter in the inverted position.",
+          "Adjust grind around coarse if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 28g of coffee ground coarse."
+      },
+      {
+        id: 3,
+        text: "Pour 140g of water at 82C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 2:15."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 135,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 28,
+        unit: "g",
+        description: "Competition roast"
+      },
+      grind: {
+        level: "Coarse",
+        grinder: {
+          model: "C40",
+          setting: "31"
+        }
+      },
+      water: {
+        amount: 140,
+        temperature: 82,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/maps"
+        },
+        {
+          id: 2,
+          name: "Porlex Mini Hand Grinder",
+          image: "/detail/imgs/porlex_mini_sml.png",
+          url: "https://www.apple.com/iphone/"
+        },
+        {
+          id: 3,
+          name: "Brewista Artisan Gooseneck Kettle",
+          image: "/detail/imgs/brewista_artisan_kettle_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 31,
+    slug: "iced-fruit-filter",
+    title: "Iced fruit filter",
+    intro: "A bright iced filter-style cup brewed hot over ice.",
+    isCold: true,
+    meta: {
+      source: {
+        icon: "/recipeIcon/cat_experimental.svg",
+        name: "Experimental"
+      },
+      creator: {
+        name: "Cold Cup Studio"
+      },
+      likes: 167,
+      saves: 64,
+      comments: 9,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Iced fruit filter is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 15g of coffee and 150g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around medium-fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 15g of coffee ground medium-fine."
+      },
+      {
+        id: 3,
+        text: "Pour 150g of water at 90C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 1:45."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 105,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 15,
+        unit: "g",
+        description: "Fruity light roast"
+      },
+      grind: {
+        level: "Medium-fine",
+        grinder: {
+          model: "Timemore C2",
+          setting: "13"
+        }
+      },
+      water: {
+        amount: 150,
+        temperature: 90,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/watch/"
+        },
+        {
+          id: 2,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.google.com/search"
+        },
+        {
+          id: 3,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 4,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 32,
+    slug: "tiny-dose-big-flavour",
+    title: "Tiny dose big flavour",
+    intro: "A lower-dose recipe that still tastes full and sweet.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "Ana Costa"
+      },
+      likes: 128,
+      saves: 46,
+      comments: 5,
+      privateNotes: 0
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Tiny dose big flavour is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 11g of coffee and 180g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 11g of coffee ground fine."
+      },
+      {
+        id: 3,
+        text: "Pour 180g of water at 94C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 2:50."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 170,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 11,
+        unit: "g",
+        description: "Sweet medium roast"
+      },
+      grind: {
+        level: "Fine",
+        grinder: {
+          model: "Porlex Mini",
+          setting: "7"
+        }
+      },
+      water: {
+        amount: 180,
+        temperature: 94,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 2,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        },
+        {
+          id: 3,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.apple.com/mac/"
+        }
+      ]
+    }
+  },
+  {
+    id: 33,
+    slug: "two-cup-office-brew",
+    title: "Two cup office brew",
+    intro: "A larger AeroPress brew designed to share.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "Office Brewers"
+      },
+      likes: 139,
+      saves: 51,
+      comments: 6,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Two cup office brew is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 24g of coffee and 320g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around medium-coarse if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 24g of coffee ground medium-coarse."
+      },
+      {
+        id: 3,
+        text: "Pour 320g of water at 92C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 5:00."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 300,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 24,
+        unit: "g",
+        description: "Daily blend"
+      },
+      grind: {
+        level: "Medium-coarse",
+        grinder: {
+          model: "Ode Gen 2",
+          setting: "7"
+        }
+      },
+      water: {
+        amount: 320,
+        temperature: 92,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/chrome"
+        },
+        {
+          id: 2,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/ipad/"
+        }
+      ]
+    }
+  },
+  {
+    id: 34,
+    slug: "slow-press-sweetness",
+    title: "Slow press sweetness",
+    intro: "A patient inverted recipe focused on sweetness.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista"
+      },
+      creator: {
+        name: "Damar Coffee"
+      },
+      likes: 159,
+      saves: 58,
+      comments: 8,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Slow press sweetness is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 18g of coffee and 260g of water.",
+          "Brew with a paper filter in the inverted position.",
+          "Adjust grind around medium if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 18g of coffee ground medium."
+      },
+      {
+        id: 3,
+        text: "Pour 260g of water at 89C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 6:30."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 390,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 18,
+        unit: "g",
+        description: "Honey or pulped natural coffee"
+      },
+      grind: {
+        level: "Medium",
+        grinder: {
+          model: "C40",
+          setting: "27"
+        }
+      },
+      water: {
+        amount: 260,
+        temperature: 89,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/maps"
+        },
+        {
+          id: 2,
+          name: "Porlex Mini Hand Grinder",
+          image: "/detail/imgs/porlex_mini_sml.png",
+          url: "https://www.apple.com/iphone/"
+        },
+        {
+          id: 3,
+          name: "Brewista Artisan Gooseneck Kettle",
+          image: "/detail/imgs/brewista_artisan_kettle_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 35,
+    slug: "experimental-low-temperature",
+    title: "Experimental low temperature",
+    intro: "A low-temperature recipe for delicate acidity and less bitterness.",
+    isCold: true,
+    meta: {
+      source: {
+        icon: "/recipeIcon/cat_experimental.svg",
+        name: "Experimental"
+      },
+      creator: {
+        name: "Brew Notes Club"
+      },
+      likes: 121,
+      saves: 43,
+      comments: 5,
+      privateNotes: 0
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Experimental low temperature is designed as a practical AeroPress recipe with a clear, repeatable method."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 17g of coffee and 220g of water.",
+          "Brew with a metal filter in the inverted position.",
+          "Adjust grind around medium-coarse if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 17g of coffee ground medium-coarse."
+      },
+      {
+        id: 3,
+        text: "Pour 220g of water at 78C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 4:00."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 240,
+        filter: "metal"
+      },
+      coffee: {
+        amount: 17,
+        unit: "g",
+        description: "Light roast"
+      },
+      grind: {
+        level: "Medium-coarse",
+        grinder: {
+          model: "Timemore C2",
+          setting: "16"
+        }
+      },
+      water: {
+        amount: 220,
+        temperature: 78,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/watch/"
+        },
+        {
+          id: 2,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.google.com/search"
+        },
+        {
+          id: 3,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 4,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 36,
+    slug: "jonathan-gagne-aeropress-recipe-sweet-cup",
+    title: "Jonathan Gagne AeroPress recipe - Sweet cup",
+    intro: "A careful, high-extraction cup inspired by Jonathan Gagne style recipes. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "Jonathan Gagne"
+      },
+      likes: 484,
+      saves: 216,
+      comments: 39,
+      privateNotes: 3
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Jonathan Gagne AeroPress recipe - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 19g of coffee and 270g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around fine to medium-fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 19g of coffee ground fine to medium-fine."
+      },
+      {
+        id: 3,
+        text: "Pour 270g of water at 93C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 4:50."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 290,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 19,
+        unit: "g",
+        description: "Light roast with high clarity"
+      },
+      grind: {
+        level: "Fine to medium-fine",
+        grinder: {
+          model: "C40",
+          setting: "22"
+        }
+      },
+      water: {
+        amount: 270,
+        temperature: 93,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 2,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        },
+        {
+          id: 3,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.apple.com/mac/"
+        }
+      ]
+    }
+  },
+  {
+    id: 37,
+    slug: "low-effort-big-reward-sweet-cup",
+    title: "Low effort big reward - Sweet cup",
+    intro: "A forgiving daily recipe with very little technique required. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "AeroRecipe Community"
+      },
+      likes: 409,
+      saves: 194,
+      comments: 30,
+      privateNotes: 2
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Low effort big reward - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 16g of coffee and 240g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around medium if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 16g of coffee ground medium."
+      },
+      {
+        id: 3,
+        text: "Pour 240g of water at 91C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 2:50."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 170,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 16,
+        unit: "g",
+        description: "Medium roast"
+      },
+      grind: {
+        level: "Medium",
+        grinder: {
+          model: "Timemore C2",
+          setting: "14"
+        }
+      },
+      water: {
+        amount: 240,
+        temperature: 91,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/chrome"
+        },
+        {
+          id: 2,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/ipad/"
+        }
+      ]
+    }
+  },
+  {
+    id: 38,
+    slug: "2015-world-aeropress-championship-sweet-cup",
+    title: "2015 World AeroPress Championship - Sweet cup",
+    intro: "A competition-style recipe built around a strong brew and bypass water. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/cat_crown.svg",
+        name: "Championship"
+      },
+      creator: {
+        name: "WAC Archive"
+      },
+      likes: 577,
+      saves: 266,
+      comments: 52,
+      privateNotes: 5
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "2015 World AeroPress Championship - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 31g of coffee and 110g of water.",
+          "Brew with a paper filter in the inverted position.",
+          "Adjust grind around coarse if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 31g of coffee ground coarse."
+      },
+      {
+        id: 3,
+        text: "Pour 110g of water at 84C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 2:20."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 140,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 31,
+        unit: "g",
+        description: "Competition coffee"
+      },
+      grind: {
+        level: "Coarse",
+        grinder: {
+          model: "C40",
+          setting: "30"
+        }
+      },
+      water: {
+        amount: 110,
+        temperature: 84,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/maps"
+        },
+        {
+          id: 2,
+          name: "Porlex Mini Hand Grinder",
+          image: "/detail/imgs/porlex_mini_sml.png",
+          url: "https://www.apple.com/iphone/"
+        },
+        {
+          id: 3,
+          name: "Brewista Artisan Gooseneck Kettle",
+          image: "/detail/imgs/brewista_artisan_kettle_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 39,
+    slug: "long-aeropress-espresso-shot-sweet-cup",
+    title: "Long AeroPress Espresso Shot - Sweet cup",
+    intro: "A short, intense cup that works well as a milk drink base. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista"
+      },
+      creator: {
+        name: "Coffee Shop Lab"
+      },
+      likes: 316,
+      saves: 149,
+      comments: 24,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Long AeroPress Espresso Shot - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 21g of coffee and 90g of water.",
+          "Brew with a metal filter in the standard position.",
+          "Adjust grind around fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 21g of coffee ground fine."
+      },
+      {
+        id: 3,
+        text: "Pour 90g of water at 95C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 1:35."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 95,
+        filter: "metal"
+      },
+      coffee: {
+        amount: 21,
+        unit: "g",
+        description: "Espresso blend"
+      },
+      grind: {
+        level: "Fine",
+        grinder: {
+          model: "JX Pro",
+          setting: "2.5.0"
+        }
+      },
+      water: {
+        amount: 90,
+        temperature: 95,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/watch/"
+        },
+        {
+          id: 2,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.google.com/search"
+        },
+        {
+          id: 3,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 4,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 40,
+    slug: "evp-iced-coffee-sweet-cup",
+    title: "EVP Iced Coffee - Sweet cup",
+    intro: "A cold AeroPress recipe with a bright finish and quick dilution over ice. A slightly sweeter variation for a rounded cup.",
+    isCold: true,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista"
+      },
+      creator: {
+        name: "EVP Coffee"
+      },
+      likes: 358,
+      saves: 167,
+      comments: 29,
+      privateNotes: 2
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "EVP Iced Coffee - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 19g of coffee and 170g of water.",
+          "Brew with a paper filter in the inverted position.",
+          "Adjust grind around medium if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 19g of coffee ground medium."
+      },
+      {
+        id: 3,
+        text: "Pour 170g of water at 87C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 3:20."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 200,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 19,
+        unit: "g",
+        description: "Fruity washed coffee"
+      },
+      grind: {
+        level: "Medium",
+        grinder: {
+          model: "Ode Gen 2",
+          setting: "4"
+        }
+      },
+      water: {
+        amount: 170,
+        temperature: 87,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 2,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        },
+        {
+          id: 3,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.apple.com/mac/"
+        }
+      ]
+    }
+  },
+  {
+    id: 41,
+    slug: "rule-of-thirds-sweet-cup",
+    title: "Rule of Thirds - Sweet cup",
+    intro: "A balanced recipe using equal parts bloom, brew and bypass. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/cat_experimental.svg",
+        name: "Experimental"
+      },
+      creator: {
+        name: "AeroPress Lab"
+      },
+      likes: 303,
+      saves: 135,
+      comments: 20,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Rule of Thirds - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 17g of coffee and 250g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around medium-fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 17g of coffee ground medium-fine."
+      },
+      {
+        id: 3,
+        text: "Pour 250g of water at 91C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 3:50."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 230,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 17,
+        unit: "g",
+        description: "Sweet washed coffee"
+      },
+      grind: {
+        level: "Medium-fine",
+        grinder: {
+          model: "C40",
+          setting: "24"
+        }
+      },
+      water: {
+        amount: 250,
+        temperature: 91,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/chrome"
+        },
+        {
+          id: 2,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/ipad/"
+        }
+      ]
+    }
+  },
+  {
+    id: 42,
+    slug: "the-bright-morning-cup-sweet-cup",
+    title: "The Bright Morning Cup - Sweet cup",
+    intro: "A clean morning brew with a lively acidity and light body. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "Maya Lee"
+      },
+      likes: 266,
+      saves: 122,
+      comments: 18,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "The Bright Morning Cup - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 14g of coffee and 210g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around medium-fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 14g of coffee ground medium-fine."
+      },
+      {
+        id: 3,
+        text: "Pour 210g of water at 93C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 2:05."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 125,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 14,
+        unit: "g",
+        description: "Light Ethiopian coffee"
+      },
+      grind: {
+        level: "Medium-fine",
+        grinder: {
+          model: "Timemore C2",
+          setting: "13"
+        }
+      },
+      water: {
+        amount: 210,
+        temperature: 93,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/maps"
+        },
+        {
+          id: 2,
+          name: "Porlex Mini Hand Grinder",
+          image: "/detail/imgs/porlex_mini_sml.png",
+          url: "https://www.apple.com/iphone/"
+        },
+        {
+          id: 3,
+          name: "Brewista Artisan Gooseneck Kettle",
+          image: "/detail/imgs/brewista_artisan_kettle_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 43,
+    slug: "gentle-sweetness-sweet-cup",
+    title: "Gentle Sweetness - Sweet cup",
+    intro: "A slower press recipe for a soft, sweet cup. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista"
+      },
+      creator: {
+        name: "Nora Chen"
+      },
+      likes: 250,
+      saves: 116,
+      comments: 17,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Gentle Sweetness - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 18g of coffee and 260g of water.",
+          "Brew with a paper filter in the inverted position.",
+          "Adjust grind around medium if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 18g of coffee ground medium."
+      },
+      {
+        id: 3,
+        text: "Pour 260g of water at 89C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 4:20."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 260,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 18,
+        unit: "g",
+        description: "Honey processed coffee"
+      },
+      grind: {
+        level: "Medium",
+        grinder: {
+          model: "C40",
+          setting: "26"
+        }
+      },
+      water: {
+        amount: 260,
+        temperature: 89,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/watch/"
+        },
+        {
+          id: 2,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.google.com/search"
+        },
+        {
+          id: 3,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 4,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 44,
+    slug: "fast-and-clean-aeropress-sweet-cup",
+    title: "Fast and clean AeroPress - Sweet cup",
+    intro: "A quick standard method for a clean cup before work. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "Leo Park"
+      },
+      likes: 235,
+      saves: 107,
+      comments: 16,
+      privateNotes: 0
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Fast and clean AeroPress - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 13g of coffee and 190g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 13g of coffee ground fine."
+      },
+      {
+        id: 3,
+        text: "Pour 190g of water at 92C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 1:20."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 80,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 13,
+        unit: "g",
+        description: "Any fresh coffee"
+      },
+      grind: {
+        level: "Fine",
+        grinder: {
+          model: "Porlex Mini",
+          setting: "8"
+        }
+      },
+      water: {
+        amount: 190,
+        temperature: 92,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 2,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        },
+        {
+          id: 3,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.apple.com/mac/"
+        }
+      ]
+    }
+  },
+  {
+    id: 45,
+    slug: "big-body-breakfast-brew-sweet-cup",
+    title: "Big body breakfast brew - Sweet cup",
+    intro: "A fuller-bodied cup with a slightly higher dose. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista"
+      },
+      creator: {
+        name: "Rosa Kim"
+      },
+      likes: 277,
+      saves: 139,
+      comments: 23,
+      privateNotes: 2
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Big body breakfast brew - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 23g of coffee and 270g of water.",
+          "Brew with a metal filter in the inverted position.",
+          "Adjust grind around medium if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 23g of coffee ground medium."
+      },
+      {
+        id: 3,
+        text: "Pour 270g of water at 90C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 3:20."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 200,
+        filter: "metal"
+      },
+      coffee: {
+        amount: 23,
+        unit: "g",
+        description: "Medium-dark roast"
+      },
+      grind: {
+        level: "Medium",
+        grinder: {
+          model: "Ode Gen 2",
+          setting: "5"
+        }
+      },
+      water: {
+        amount: 270,
+        temperature: 90,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/chrome"
+        },
+        {
+          id: 2,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/ipad/"
+        }
+      ]
+    }
+  },
+  {
+    id: 46,
+    slug: "fruit-forward-inverted-sweet-cup",
+    title: "Fruit-forward inverted - Sweet cup",
+    intro: "An inverted recipe for fruit notes and a longer finish. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/cat_experimental.svg",
+        name: "Experimental"
+      },
+      creator: {
+        name: "Sam Ortega"
+      },
+      likes: 293,
+      saves: 131,
+      comments: 21,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Fruit-forward inverted - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 17g of coffee and 230g of water.",
+          "Brew with a paper filter in the inverted position.",
+          "Adjust grind around medium-coarse if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 17g of coffee ground medium-coarse."
+      },
+      {
+        id: 3,
+        text: "Pour 230g of water at 87C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 3:50."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 230,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 17,
+        unit: "g",
+        description: "Natural processed coffee"
+      },
+      grind: {
+        level: "Medium-coarse",
+        grinder: {
+          model: "C40",
+          setting: "28"
+        }
+      },
+      water: {
+        amount: 230,
+        temperature: 87,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/maps"
+        },
+        {
+          id: 2,
+          name: "Porlex Mini Hand Grinder",
+          image: "/detail/imgs/porlex_mini_sml.png",
+          url: "https://www.apple.com/iphone/"
+        },
+        {
+          id: 3,
+          name: "Brewista Artisan Gooseneck Kettle",
+          image: "/detail/imgs/brewista_artisan_kettle_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 47,
+    slug: "metal-filter-morning-sweet-cup",
+    title: "Metal filter morning - Sweet cup",
+    intro: "A metal-filter recipe with more oils and a heavier texture. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "Kenji Ito"
+      },
+      likes: 219,
+      saves: 100,
+      comments: 15,
+      privateNotes: 0
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Metal filter morning - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 16g of coffee and 220g of water.",
+          "Brew with a metal filter in the standard position.",
+          "Adjust grind around medium if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 16g of coffee ground medium."
+      },
+      {
+        id: 3,
+        text: "Pour 220g of water at 89C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 2:50."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 170,
+        filter: "metal"
+      },
+      coffee: {
+        amount: 16,
+        unit: "g",
+        description: "Chocolate-forward coffee"
+      },
+      grind: {
+        level: "Medium",
+        grinder: {
+          model: "Timemore C2",
+          setting: "15"
+        }
+      },
+      water: {
+        amount: 220,
+        temperature: 89,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/watch/"
+        },
+        {
+          id: 2,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.google.com/search"
+        },
+        {
+          id: 3,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 4,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 48,
+    slug: "aeropress-go-travel-cup-sweet-cup",
+    title: "AeroPress Go travel cup - Sweet cup",
+    intro: "A practical travel recipe with minimal gear. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "Travel Brewers"
+      },
+      likes: 204,
+      saves: 95,
+      comments: 14,
+      privateNotes: 0
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "AeroPress Go travel cup - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 15g of coffee and 210g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around medium if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 15g of coffee ground medium."
+      },
+      {
+        id: 3,
+        text: "Pour 210g of water at 91C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 1:50."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 110,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 15,
+        unit: "g",
+        description: "Medium roast"
+      },
+      grind: {
+        level: "Medium",
+        grinder: {
+          model: "Porlex Mini",
+          setting: "9"
+        }
+      },
+      water: {
+        amount: 210,
+        temperature: 91,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 2,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        },
+        {
+          id: 3,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.apple.com/mac/"
+        }
+      ]
+    }
+  },
+  {
+    id: 49,
+    slug: "sweet-bypass-cup-sweet-cup",
+    title: "Sweet bypass cup - Sweet cup",
+    intro: "A concentrated brew finished with bypass water for sweetness. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista"
+      },
+      creator: {
+        name: "Cafe Bench"
+      },
+      likes: 260,
+      saves: 119,
+      comments: 19,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Sweet bypass cup - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 21g of coffee and 130g of water.",
+          "Brew with a paper filter in the inverted position.",
+          "Adjust grind around medium-coarse if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 21g of coffee ground medium-coarse."
+      },
+      {
+        id: 3,
+        text: "Pour 130g of water at 85C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 3:30."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 210,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 21,
+        unit: "g",
+        description: "Sweet Colombian coffee"
+      },
+      grind: {
+        level: "Medium-coarse",
+        grinder: {
+          model: "C40",
+          setting: "29"
+        }
+      },
+      water: {
+        amount: 130,
+        temperature: 85,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/chrome"
+        },
+        {
+          id: 2,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/ipad/"
+        }
+      ]
+    }
+  },
+  {
+    id: 50,
+    slug: "dark-roast-comfort-sweet-cup",
+    title: "Dark roast comfort - Sweet cup",
+    intro: "A lower-temperature recipe for a round dark roast cup. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "Mina Patel"
+      },
+      likes: 226,
+      saves: 110,
+      comments: 17,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Dark roast comfort - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 17g of coffee and 230g of water.",
+          "Brew with a metal filter in the standard position.",
+          "Adjust grind around medium-coarse if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 17g of coffee ground medium-coarse."
+      },
+      {
+        id: 3,
+        text: "Pour 230g of water at 83C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 3:00."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 180,
+        filter: "metal"
+      },
+      coffee: {
+        amount: 17,
+        unit: "g",
+        description: "Dark roast"
+      },
+      grind: {
+        level: "Medium-coarse",
+        grinder: {
+          model: "Ode Gen 2",
+          setting: "6"
+        }
+      },
+      water: {
+        amount: 230,
+        temperature: 83,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/maps"
+        },
+        {
+          id: 2,
+          name: "Porlex Mini Hand Grinder",
+          image: "/detail/imgs/porlex_mini_sml.png",
+          url: "https://www.apple.com/iphone/"
+        },
+        {
+          id: 3,
+          name: "Brewista Artisan Gooseneck Kettle",
+          image: "/detail/imgs/brewista_artisan_kettle_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 51,
+    slug: "nordic-filter-style-sweet-cup",
+    title: "Nordic filter style - Sweet cup",
+    intro: "A light and transparent recipe inspired by Nordic filter coffee. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista"
+      },
+      creator: {
+        name: "Oslo Brew Bar"
+      },
+      likes: 288,
+      saves: 142,
+      comments: 22,
+      privateNotes: 2
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Nordic filter style - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 15g of coffee and 240g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 15g of coffee ground fine."
+      },
+      {
+        id: 3,
+        text: "Pour 240g of water at 95C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 2:20."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 140,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 15,
+        unit: "g",
+        description: "Light Nordic roast"
+      },
+      grind: {
+        level: "Fine",
+        grinder: {
+          model: "C40",
+          setting: "21"
+        }
+      },
+      water: {
+        amount: 240,
+        temperature: 95,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/watch/"
+        },
+        {
+          id: 2,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.google.com/search"
+        },
+        {
+          id: 3,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 4,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 52,
+    slug: "cafe-milk-base-sweet-cup",
+    title: "Cafe milk base - Sweet cup",
+    intro: "A strong AeroPress concentrate for milk drinks. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista"
+      },
+      creator: {
+        name: "Milk Bar Coffee"
+      },
+      likes: 247,
+      saves: 117,
+      comments: 18,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Cafe milk base - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 20g of coffee and 100g of water.",
+          "Brew with a metal filter in the inverted position.",
+          "Adjust grind around fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 20g of coffee ground fine."
+      },
+      {
+        id: 3,
+        text: "Pour 100g of water at 94C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 2:00."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 120,
+        filter: "metal"
+      },
+      coffee: {
+        amount: 20,
+        unit: "g",
+        description: "Espresso roast"
+      },
+      grind: {
+        level: "Fine",
+        grinder: {
+          model: "JX Pro",
+          setting: "2.3.0"
+        }
+      },
+      water: {
+        amount: 100,
+        temperature: 94,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 2,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        },
+        {
+          id: 3,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.apple.com/mac/"
+        }
+      ]
+    }
+  },
+  {
+    id: 53,
+    slug: "long-steep-clarity-sweet-cup",
+    title: "Long steep clarity - Sweet cup",
+    intro: "A long immersion recipe that still finishes clean. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/cat_experimental.svg",
+        name: "Experimental"
+      },
+      creator: {
+        name: "Quiet Cup Lab"
+      },
+      likes: 270,
+      saves: 124,
+      comments: 20,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Long steep clarity - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 16g of coffee and 250g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around medium if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 16g of coffee ground medium."
+      },
+      {
+        id: 3,
+        text: "Pour 250g of water at 90C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 5:50."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 350,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 16,
+        unit: "g",
+        description: "Washed high-grown coffee"
+      },
+      grind: {
+        level: "Medium",
+        grinder: {
+          model: "C40",
+          setting: "25"
+        }
+      },
+      water: {
+        amount: 250,
+        temperature: 90,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/chrome"
+        },
+        {
+          id: 2,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/ipad/"
+        }
+      ]
+    }
+  },
+  {
+    id: 54,
+    slug: "championship-bypass-sweet-cup",
+    title: "Championship bypass - Sweet cup",
+    intro: "A high-dose competition style brew with bypass control. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/cat_crown.svg",
+        name: "Championship"
+      },
+      creator: {
+        name: "AeroPress Champion"
+      },
+      likes: 414,
+      saves: 184,
+      comments: 33,
+      privateNotes: 3
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Championship bypass - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 29g of coffee and 150g of water.",
+          "Brew with a paper filter in the inverted position.",
+          "Adjust grind around coarse if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 29g of coffee ground coarse."
+      },
+      {
+        id: 3,
+        text: "Pour 150g of water at 81C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 2:35."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 155,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 29,
+        unit: "g",
+        description: "Competition roast"
+      },
+      grind: {
+        level: "Coarse",
+        grinder: {
+          model: "C40",
+          setting: "31"
+        }
+      },
+      water: {
+        amount: 150,
+        temperature: 81,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/maps"
+        },
+        {
+          id: 2,
+          name: "Porlex Mini Hand Grinder",
+          image: "/detail/imgs/porlex_mini_sml.png",
+          url: "https://www.apple.com/iphone/"
+        },
+        {
+          id: 3,
+          name: "Brewista Artisan Gooseneck Kettle",
+          image: "/detail/imgs/brewista_artisan_kettle_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 55,
+    slug: "iced-fruit-filter-sweet-cup",
+    title: "Iced fruit filter - Sweet cup",
+    intro: "A bright iced filter-style cup brewed hot over ice. A slightly sweeter variation for a rounded cup.",
+    isCold: true,
+    meta: {
+      source: {
+        icon: "/recipeIcon/cat_experimental.svg",
+        name: "Experimental"
+      },
+      creator: {
+        name: "Cold Cup Studio"
+      },
+      likes: 239,
+      saves: 112,
+      comments: 17,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Iced fruit filter - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 16g of coffee and 160g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around medium-fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 16g of coffee ground medium-fine."
+      },
+      {
+        id: 3,
+        text: "Pour 160g of water at 89C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 2:05."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 125,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 16,
+        unit: "g",
+        description: "Fruity light roast"
+      },
+      grind: {
+        level: "Medium-fine",
+        grinder: {
+          model: "Timemore C2",
+          setting: "13"
+        }
+      },
+      water: {
+        amount: 160,
+        temperature: 89,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/watch/"
+        },
+        {
+          id: 2,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.google.com/search"
+        },
+        {
+          id: 3,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 4,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 56,
+    slug: "tiny-dose-big-flavour-sweet-cup",
+    title: "Tiny dose big flavour - Sweet cup",
+    intro: "A lower-dose recipe that still tastes full and sweet. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "Ana Costa"
+      },
+      likes: 200,
+      saves: 94,
+      comments: 13,
+      privateNotes: 0
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Tiny dose big flavour - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 12g of coffee and 190g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around fine if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 12g of coffee ground fine."
+      },
+      {
+        id: 3,
+        text: "Pour 190g of water at 93C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 3:10."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 190,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 12,
+        unit: "g",
+        description: "Sweet medium roast"
+      },
+      grind: {
+        level: "Fine",
+        grinder: {
+          model: "Porlex Mini",
+          setting: "7"
+        }
+      },
+      water: {
+        amount: 190,
+        temperature: 93,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 2,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        },
+        {
+          id: 3,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.apple.com/mac/"
+        }
+      ]
+    }
+  },
+  {
+    id: 57,
+    slug: "two-cup-office-brew-sweet-cup",
+    title: "Two cup office brew - Sweet cup",
+    intro: "A larger AeroPress brew designed to share. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/icon_enthusiast.svg",
+        name: "From an Enthusiast"
+      },
+      creator: {
+        name: "Office Brewers"
+      },
+      likes: 211,
+      saves: 99,
+      comments: 14,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Two cup office brew - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 25g of coffee and 330g of water.",
+          "Brew with a paper filter in the standard position.",
+          "Adjust grind around medium-coarse if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the standard position."
+      },
+      {
+        id: 2,
+        text: "Add 25g of coffee ground medium-coarse."
+      },
+      {
+        id: 3,
+        text: "Pour 330g of water at 91C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 5:20."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "standard",
+        time: 320,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 25,
+        unit: "g",
+        description: "Daily blend"
+      },
+      grind: {
+        level: "Medium-coarse",
+        grinder: {
+          model: "Ode Gen 2",
+          setting: "7"
+        }
+      },
+      water: {
+        amount: 330,
+        temperature: 91,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/chrome"
+        },
+        {
+          id: 2,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/ipad/"
+        }
+      ]
+    }
+  },
+  {
+    id: 58,
+    slug: "slow-press-sweetness-sweet-cup",
+    title: "Slow press sweetness - Sweet cup",
+    intro: "A patient inverted recipe focused on sweetness. A slightly sweeter variation for a rounded cup.",
+    isCold: false,
+    meta: {
+      source: {
+        icon: "/recipeIcon/noun_tamper.svg",
+        name: "From a Barista"
+      },
+      creator: {
+        name: "Damar Coffee"
+      },
+      likes: 231,
+      saves: 106,
+      comments: 16,
+      privateNotes: 1
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Slow press sweetness - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 19g of coffee and 270g of water.",
+          "Brew with a paper filter in the inverted position.",
+          "Adjust grind around medium if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 19g of coffee ground medium."
+      },
+      {
+        id: 3,
+        text: "Pour 270g of water at 88C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 6:50."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 410,
+        filter: "paper"
+      },
+      coffee: {
+        amount: 19,
+        unit: "g",
+        description: "Honey or pulped natural coffee"
+      },
+      grind: {
+        level: "Medium",
+        grinder: {
+          model: "C40",
+          setting: "27"
+        }
+      },
+      water: {
+        amount: 270,
+        temperature: 88,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.google.com/maps"
+        },
+        {
+          id: 2,
+          name: "Porlex Mini Hand Grinder",
+          image: "/detail/imgs/porlex_mini_sml.png",
+          url: "https://www.apple.com/iphone/"
+        },
+        {
+          id: 3,
+          name: "Brewista Artisan Gooseneck Kettle",
+          image: "/detail/imgs/brewista_artisan_kettle_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
+  {
+    id: 59,
+    slug: "experimental-low-temperature-sweet-cup",
+    title: "Experimental low temperature - Sweet cup",
+    intro: "A low-temperature recipe for delicate acidity and less bitterness. A slightly sweeter variation for a rounded cup.",
+    isCold: true,
+    meta: {
+      source: {
+        icon: "/recipeIcon/cat_experimental.svg",
+        name: "Experimental"
+      },
+      creator: {
+        name: "Brew Notes Club"
+      },
+      likes: 193,
+      saves: 91,
+      comments: 13,
+      privateNotes: 0
+    },
+    content: [
+      {
+        type: "paragraph",
+        text: "Experimental low temperature - Sweet cup keeps the same direction as the base recipe, but nudges the brew toward more sweetness."
+      },
+      {
+        type: "heading",
+        text: "Brew notes"
+      },
+      {
+        type: "list",
+        items: [
+          "Use 18g of coffee and 230g of water.",
+          "Brew with a metal filter in the inverted position.",
+          "Adjust grind around medium-coarse if the cup tastes unbalanced."
+        ]
+      }
+    ],
+    steps: [
+      {
+        id: 1,
+        text: "Prepare the AeroPress in the inverted position."
+      },
+      {
+        id: 2,
+        text: "Add 18g of coffee ground medium-coarse."
+      },
+      {
+        id: 3,
+        text: "Pour 230g of water at 78C."
+      },
+      {
+        id: 4,
+        text: "Steep until the timer reaches 4:20."
+      },
+      {
+        id: 5,
+        text: "Press gently and serve immediately."
+      }
+    ],
+    overview: {
+      brew: {
+        method: "inverted",
+        time: 260,
+        filter: "metal"
+      },
+      coffee: {
+        amount: 18,
+        unit: "g",
+        description: "Light roast"
+      },
+      grind: {
+        level: "Medium-coarse",
+        grinder: {
+          model: "Timemore C2",
+          setting: "16"
+        }
+      },
+      water: {
+        amount: 230,
+        temperature: 78,
+        unit: "g"
+      },
+      equipment: [
+        {
+          id: 1,
+          name: "AeroPress",
+          image: "/detail/imgs/aeropress_sml.png",
+          url: "https://www.apple.com/watch/"
+        },
+        {
+          id: 2,
+          name: "Hario V60 Drip Scale",
+          image: "/detail/imgs/hario_scale_grinder_sml.png",
+          url: "https://www.google.com/search"
+        },
+        {
+          id: 3,
+          name: "Hario Buono Gooseneck Kettle",
+          image: "/detail/imgs/hario_gooseneck_sml.png",
+          url: "https://www.apple.com/"
+        },
+        {
+          id: 4,
+          name: "Comandante C40 Grinder",
+          image: "/detail/imgs/comandante_c40_sml.png",
+          url: "https://www.google.com/"
+        }
+      ]
+    }
+  },
 ];
