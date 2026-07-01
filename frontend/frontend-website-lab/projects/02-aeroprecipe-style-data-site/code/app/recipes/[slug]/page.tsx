@@ -1,3 +1,16 @@
+// 动态标签页标题
+import type { Metadata } from "next";
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const recipe = recipeData.find((item) => item.slug === slug);
+
+  return {
+    title: recipe?.title
+      ? `${recipe.title} an AeroPrecipe by ${recipe.meta.creator.name}`
+      : "Recipe",
+  };
+}
+
 // 不同地址都会使用同一个 page.tsx，只是 id 不同
 // 页面组件接收到的不是一个 id 字符串，而是一个包含 params 的 props 对象
 
@@ -16,8 +29,6 @@ import Image from "next/image";
 import { Status } from "./_components/Status";
 import { RecipeOverview } from "./_components/RecipeOverview";
 import { Comments } from "./_components/Comments";
-
-
 
 export default async function RecipeDetail({ params }: Props) {
   // 1、拿到路由参数 slug
