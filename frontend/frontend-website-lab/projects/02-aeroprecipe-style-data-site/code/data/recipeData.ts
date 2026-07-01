@@ -7,7 +7,7 @@ export const recipeData: Recipe[] = [
     title: "James Hoffmann's Ultimate AeroPress Recipe",
     intro: "James Hoffmann's Ultimate AeroPress Recipe",
     isCold: false,
-    tag: "sweet",
+    tags: [],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -163,7 +163,7 @@ export const recipeData: Recipe[] = [
     intro:
       "Quick & simple. Guaranteed happiness with this clean, balanced and sweet cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -301,7 +301,7 @@ export const recipeData: Recipe[] = [
     intro:
       "James Hoffmann's AeroPress recipe for making a good milk based coffee at home.",
     isCold: false,
-    tag: "alcohol",
+    tags: [],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -463,7 +463,7 @@ export const recipeData: Recipe[] = [
     intro:
       "2018 Portugal Aeropress Champion shares a recipe to hero the acidy fruitiness of the coffee.",
     isCold: false,
-    tag: "aeropress-go",
+    tags: ["fruit-filter"],
     meta: {
       source: {
         icon: "/recipeIcon/cat_crown.svg",
@@ -591,7 +591,7 @@ export const recipeData: Recipe[] = [
     intro:
       "A simple AeroPress recipe for a filter like coffee, as used in Tim Wendelboe cafe in Oslo, Norway.",
     isCold: false,
-    tag: "alcohol",
+    tags: [],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -720,7 +720,7 @@ export const recipeData: Recipe[] = [
     title: "Smooooothy!",
     intro: "Learn how to brew a sweet and balanced cup of coffee.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -828,7 +828,7 @@ export const recipeData: Recipe[] = [
     intro:
       "Dark chocolate, sandalwood and umami seaweed. Full bodied and gives a good kick!",
     isCold: true,
-    tag: "alcohol",
+    tags: ["alcohol"],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -952,7 +952,7 @@ export const recipeData: Recipe[] = [
     intro:
       "The crew at The Coffee Compass offer us a simple, versatile and tasty AeroPress recipe.",
     isCold: false,
-    tag: "aeropress-xl",
+    tags: [],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -1083,7 +1083,7 @@ export const recipeData: Recipe[] = [
     intro:
       "AeroPress for 2! This recipe produces one large cup of coffee, or enough to share with a friend :)",
     isCold: false,
-    tag: "aeropress-xl",
+    tags: ["aeropress-xl"],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -1227,7 +1227,7 @@ export const recipeData: Recipe[] = [
     intro:
       "For a V60 style brew with your AeroPress (the light roast version).",
     isCold: false,
-    tag: "fruit-filter",
+    tags: ["fruit-filter"],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -1356,7 +1356,7 @@ export const recipeData: Recipe[] = [
     intro:
       "A great recipe to use as a base for brewing 'espresso' type coffee on the Aeropress",
     isCold: false,
-    tag: "sweet",
+    tags: [],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -1466,7 +1466,7 @@ export const recipeData: Recipe[] = [
     title: "For the sweetest cup",
     intro: "Slow press for the sweetness. Bypass for the bright acidity.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -1593,7 +1593,7 @@ export const recipeData: Recipe[] = [
     title: "Jonathan Gagne AeroPress recipe",
     intro: "A careful, high-extraction cup inspired by Jonathan Gagne style recipes.",
     isCold: false,
-    tag: "aeropress-xl",
+    tags: [],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -1698,7 +1698,7 @@ export const recipeData: Recipe[] = [
     title: "Low effort big reward",
     intro: "A forgiving daily recipe with very little technique required.",
     isCold: false,
-    tag: "aeropress-go",
+    tags: [],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -1797,7 +1797,7 @@ export const recipeData: Recipe[] = [
     title: "2015 World AeroPress Championship",
     intro: "A competition-style recipe built around a strong brew and bypass water.",
     isCold: false,
-    tag: "alcohol",
+    tags: ["aeropress-xl"],
     meta: {
       source: {
         icon: "/recipeIcon/cat_crown.svg",
@@ -1902,7 +1902,7 @@ export const recipeData: Recipe[] = [
     title: "Long AeroPress Espresso Shot",
     intro: "A short, intense cup that works well as a milk drink base.",
     isCold: false,
-    tag: "sweet",
+    tags: [],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -2013,7 +2013,7 @@ export const recipeData: Recipe[] = [
     title: "EVP Iced Coffee",
     intro: "A cold AeroPress recipe with a bright finish and quick dilution over ice.",
     isCold: true,
-    tag: "alcohol",
+    tags: ["alcohol"],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -2118,7 +2118,7 @@ export const recipeData: Recipe[] = [
     title: "Rule of Thirds",
     intro: "A balanced recipe using equal parts bloom, brew and bypass.",
     isCold: false,
-    tag: "sweet",
+    tags: [],
     meta: {
       source: {
         icon: "/recipeIcon/cat_experimental.svg",
@@ -2217,7 +2217,7 @@ export const recipeData: Recipe[] = [
     title: "The Bright Morning Cup",
     intro: "A clean morning brew with a lively acidity and light body.",
     isCold: false,
-    tag: "aeropress-go",
+    tags: ["fruit-filter"],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -2322,7 +2322,7 @@ export const recipeData: Recipe[] = [
     title: "Gentle Sweetness",
     intro: "A slower press recipe for a soft, sweet cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -2433,7 +2433,7 @@ export const recipeData: Recipe[] = [
     title: "Fast and clean AeroPress",
     intro: "A quick standard method for a clean cup before work.",
     isCold: false,
-    tag: "sweet",
+    tags: [],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -2538,7 +2538,7 @@ export const recipeData: Recipe[] = [
     title: "Big body breakfast brew",
     intro: "A fuller-bodied cup with a slightly higher dose.",
     isCold: false,
-    tag: "fruit-filter",
+    tags: ["aeropress-xl"],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -2637,7 +2637,7 @@ export const recipeData: Recipe[] = [
     title: "Fruit-forward inverted",
     intro: "An inverted recipe for fruit notes and a longer finish.",
     isCold: false,
-    tag: "fruit-filter",
+    tags: ["fruit-filter"],
     meta: {
       source: {
         icon: "/recipeIcon/cat_experimental.svg",
@@ -2742,7 +2742,7 @@ export const recipeData: Recipe[] = [
     title: "Metal filter morning",
     intro: "A metal-filter recipe with more oils and a heavier texture.",
     isCold: false,
-    tag: "aeropress-go",
+    tags: [],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -2853,7 +2853,7 @@ export const recipeData: Recipe[] = [
     title: "AeroPress Go travel cup",
     intro: "A practical travel recipe with minimal gear.",
     isCold: false,
-    tag: "aeropress-go",
+    tags: ["aeropress-go"],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -2958,7 +2958,7 @@ export const recipeData: Recipe[] = [
     title: "Sweet bypass cup",
     intro: "A concentrated brew finished with bypass water for sweetness.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -3057,7 +3057,7 @@ export const recipeData: Recipe[] = [
     title: "Dark roast comfort",
     intro: "A lower-temperature recipe for a round dark roast cup.",
     isCold: false,
-    tag: "fruit-filter",
+    tags: [],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -3162,7 +3162,7 @@ export const recipeData: Recipe[] = [
     title: "Nordic filter style",
     intro: "A light and transparent recipe inspired by Nordic filter coffee.",
     isCold: false,
-    tag: "aeropress-xl",
+    tags: ["fruit-filter"],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -3273,7 +3273,7 @@ export const recipeData: Recipe[] = [
     title: "Cafe milk base",
     intro: "A strong AeroPress concentrate for milk drinks.",
     isCold: false,
-    tag: "aeropress-go",
+    tags: [],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -3378,7 +3378,7 @@ export const recipeData: Recipe[] = [
     title: "Long steep clarity",
     intro: "A long immersion recipe that still finishes clean.",
     isCold: false,
-    tag: "alcohol",
+    tags: [],
     meta: {
       source: {
         icon: "/recipeIcon/cat_experimental.svg",
@@ -3477,7 +3477,7 @@ export const recipeData: Recipe[] = [
     title: "Championship bypass",
     intro: "A high-dose competition style brew with bypass control.",
     isCold: false,
-    tag: "sweet",
+    tags: ["aeropress-xl"],
     meta: {
       source: {
         icon: "/recipeIcon/cat_crown.svg",
@@ -3582,7 +3582,7 @@ export const recipeData: Recipe[] = [
     title: "Iced fruit filter",
     intro: "A bright iced filter-style cup brewed hot over ice.",
     isCold: true,
-    tag: "fruit-filter",
+    tags: ["fruit-filter", "alcohol"],
     meta: {
       source: {
         icon: "/recipeIcon/cat_experimental.svg",
@@ -3693,7 +3693,7 @@ export const recipeData: Recipe[] = [
     title: "Tiny dose big flavour",
     intro: "A lower-dose recipe that still tastes full and sweet.",
     isCold: false,
-    tag: "sweet",
+    tags: [],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -3798,7 +3798,7 @@ export const recipeData: Recipe[] = [
     title: "Two cup office brew",
     intro: "A larger AeroPress brew designed to share.",
     isCold: false,
-    tag: "aeropress-xl",
+    tags: ["aeropress-xl"],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -3897,7 +3897,7 @@ export const recipeData: Recipe[] = [
     title: "Slow press sweetness",
     intro: "A patient inverted recipe focused on sweetness.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -4002,7 +4002,7 @@ export const recipeData: Recipe[] = [
     title: "Experimental low temperature",
     intro: "A low-temperature recipe for delicate acidity and less bitterness.",
     isCold: true,
-    tag: "alcohol",
+    tags: ["alcohol"],
     meta: {
       source: {
         icon: "/recipeIcon/cat_experimental.svg",
@@ -4113,7 +4113,7 @@ export const recipeData: Recipe[] = [
     title: "Jonathan Gagne AeroPress recipe - Sweet cup",
     intro: "A careful, high-extraction cup inspired by Jonathan Gagne style recipes. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -4218,7 +4218,7 @@ export const recipeData: Recipe[] = [
     title: "Low effort big reward - Sweet cup",
     intro: "A forgiving daily recipe with very little technique required. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -4317,7 +4317,7 @@ export const recipeData: Recipe[] = [
     title: "2015 World AeroPress Championship - Sweet cup",
     intro: "A competition-style recipe built around a strong brew and bypass water. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["aeropress-xl", "sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/cat_crown.svg",
@@ -4422,7 +4422,7 @@ export const recipeData: Recipe[] = [
     title: "Long AeroPress Espresso Shot - Sweet cup",
     intro: "A short, intense cup that works well as a milk drink base. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -4533,7 +4533,7 @@ export const recipeData: Recipe[] = [
     title: "EVP Iced Coffee - Sweet cup",
     intro: "A cold AeroPress recipe with a bright finish and quick dilution over ice. A slightly sweeter variation for a rounded cup.",
     isCold: true,
-    tag: "alcohol",
+    tags: ["alcohol", "sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -4638,7 +4638,7 @@ export const recipeData: Recipe[] = [
     title: "Rule of Thirds - Sweet cup",
     intro: "A balanced recipe using equal parts bloom, brew and bypass. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/cat_experimental.svg",
@@ -4737,7 +4737,7 @@ export const recipeData: Recipe[] = [
     title: "The Bright Morning Cup - Sweet cup",
     intro: "A clean morning brew with a lively acidity and light body. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["fruit-filter", "sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -4842,7 +4842,7 @@ export const recipeData: Recipe[] = [
     title: "Gentle Sweetness - Sweet cup",
     intro: "A slower press recipe for a soft, sweet cup. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -4953,7 +4953,7 @@ export const recipeData: Recipe[] = [
     title: "Fast and clean AeroPress - Sweet cup",
     intro: "A quick standard method for a clean cup before work. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -5058,7 +5058,7 @@ export const recipeData: Recipe[] = [
     title: "Big body breakfast brew - Sweet cup",
     intro: "A fuller-bodied cup with a slightly higher dose. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["aeropress-xl", "sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -5157,7 +5157,7 @@ export const recipeData: Recipe[] = [
     title: "Fruit-forward inverted - Sweet cup",
     intro: "An inverted recipe for fruit notes and a longer finish. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "fruit-filter",
+    tags: ["fruit-filter", "sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/cat_experimental.svg",
@@ -5262,7 +5262,7 @@ export const recipeData: Recipe[] = [
     title: "Metal filter morning - Sweet cup",
     intro: "A metal-filter recipe with more oils and a heavier texture. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -5373,7 +5373,7 @@ export const recipeData: Recipe[] = [
     title: "AeroPress Go travel cup - Sweet cup",
     intro: "A practical travel recipe with minimal gear. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "aeropress-go",
+    tags: ["aeropress-go", "sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -5478,7 +5478,7 @@ export const recipeData: Recipe[] = [
     title: "Sweet bypass cup - Sweet cup",
     intro: "A concentrated brew finished with bypass water for sweetness. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -5577,7 +5577,7 @@ export const recipeData: Recipe[] = [
     title: "Dark roast comfort - Sweet cup",
     intro: "A lower-temperature recipe for a round dark roast cup. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -5682,7 +5682,7 @@ export const recipeData: Recipe[] = [
     title: "Nordic filter style - Sweet cup",
     intro: "A light and transparent recipe inspired by Nordic filter coffee. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["fruit-filter", "sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -5793,7 +5793,7 @@ export const recipeData: Recipe[] = [
     title: "Cafe milk base - Sweet cup",
     intro: "A strong AeroPress concentrate for milk drinks. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -5898,7 +5898,7 @@ export const recipeData: Recipe[] = [
     title: "Long steep clarity - Sweet cup",
     intro: "A long immersion recipe that still finishes clean. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/cat_experimental.svg",
@@ -5997,7 +5997,7 @@ export const recipeData: Recipe[] = [
     title: "Championship bypass - Sweet cup",
     intro: "A high-dose competition style brew with bypass control. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["aeropress-xl", "sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/cat_crown.svg",
@@ -6102,7 +6102,7 @@ export const recipeData: Recipe[] = [
     title: "Iced fruit filter - Sweet cup",
     intro: "A bright iced filter-style cup brewed hot over ice. A slightly sweeter variation for a rounded cup.",
     isCold: true,
-    tag: "fruit-filter",
+    tags: ["fruit-filter", "alcohol", "sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/cat_experimental.svg",
@@ -6213,7 +6213,7 @@ export const recipeData: Recipe[] = [
     title: "Tiny dose big flavour - Sweet cup",
     intro: "A lower-dose recipe that still tastes full and sweet. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -6318,7 +6318,7 @@ export const recipeData: Recipe[] = [
     title: "Two cup office brew - Sweet cup",
     intro: "A larger AeroPress brew designed to share. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "aeropress-xl",
+    tags: ["aeropress-xl", "sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/icon_enthusiast.svg",
@@ -6417,7 +6417,7 @@ export const recipeData: Recipe[] = [
     title: "Slow press sweetness - Sweet cup",
     intro: "A patient inverted recipe focused on sweetness. A slightly sweeter variation for a rounded cup.",
     isCold: false,
-    tag: "sweet",
+    tags: ["sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/noun_tamper.svg",
@@ -6522,7 +6522,7 @@ export const recipeData: Recipe[] = [
     title: "Experimental low temperature - Sweet cup",
     intro: "A low-temperature recipe for delicate acidity and less bitterness. A slightly sweeter variation for a rounded cup.",
     isCold: true,
-    tag: "alcohol",
+    tags: ["alcohol", "sweet"],
     meta: {
       source: {
         icon: "/recipeIcon/cat_experimental.svg",

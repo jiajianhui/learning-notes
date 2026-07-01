@@ -56,5 +56,5 @@ export type Recipe = {
 
   overview: RecipeOverview;
 
-  tag: RecipeType;
+  tags: RecipeType[];
 };
