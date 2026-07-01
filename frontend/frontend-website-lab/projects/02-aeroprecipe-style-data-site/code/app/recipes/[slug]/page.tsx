@@ -6,7 +6,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: recipe?.title
-      ? `${recipe.title} an AeroPrecipe by ${recipe.meta.creator.name}`
+      ? `${recipe.title} | AeroPrecipe by ${recipe.meta.creator.name}`
       : "Recipe",
   };
 }
