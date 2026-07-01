@@ -25,7 +25,7 @@ export function Comments() {
         />
 
       </div>
-      <p className="font-sans flex justify-center items-center bg-option-bg py-12 rounded-sm">
+      <p className="font-sans flex justify-center items-center bg-option-bg py-12 px-6 text-center rounded-sm">
         {currentTab === "comments"
           ? "Login or create an account to join the conversation."
           : "Login or create an account to add private notes to this recipe."}
