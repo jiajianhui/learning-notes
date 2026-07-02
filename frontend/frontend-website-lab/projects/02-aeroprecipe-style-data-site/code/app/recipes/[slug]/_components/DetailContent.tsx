@@ -10,7 +10,7 @@ type DetailContentProps = {
 
 export function DetailContent({ recipe }: DetailContentProps) {
     return (
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6">
         {/* 内容段落 */}
         <div className="flex flex-col gap-4 pr-0 lg:pr-20 xl:pr-40 2xl:pr-70">
           {recipe.content.map((item, index) => {
@@ -26,7 +26,7 @@ export function DetailContent({ recipe }: DetailContentProps) {
               // 标题
               case "heading":
                 return (
-                  <h3 key={index} className="font-display">
+                  <h3 key={index} className="font-display pt-6">
                     {item.text}
                   </h3>
                 );
