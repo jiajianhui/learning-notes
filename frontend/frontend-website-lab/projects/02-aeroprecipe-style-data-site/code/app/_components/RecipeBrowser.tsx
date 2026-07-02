@@ -16,7 +16,6 @@ import { filterGroups } from "@/data/filterGroups";
 
 // 引入组件
 import { AppPromoBanner } from "./AppPromoBanner";
-
 import { Fragment } from "react/jsx-runtime";
 
 // select 数据
@@ -32,8 +31,50 @@ const sortOptions = [
 
 import { useState } from "react";
 
+import { Recipe } from "@/data/types/recipe/recipe";
+
+/*
+函数放在组件外的原因：
+  sortRecipes 不依赖 RecipeBrowser 内部的 state。
+  它只根据传入的 recipes 和 sortValue 返回排序后的数组。
+  放在组件外面，可以避免组件每次重新渲染时都重新创建这个函数。
+  这样也能把数据处理逻辑和 UI 渲染逻辑稍微分开，读起来更清楚。
+*/
+function sortRecipes(recipes: Recipe[], sortValue: string) {
+  const result = [...recipes];
+
+  switch (sortValue) {
+    case "votes-desc":
+      return result.sort((a, b) => b.meta.likes - a.meta.likes); // likes 从大到小——降序
+
+    case "votes-asc":
+      return result.sort((a, b) => a.meta.likes - b.meta.likes);
+
+    case "newest":
+      return result.sort((a, b) => b.id - a.id); // id 从大到小——降序
+
+    case "oldest":
+      return result.sort((a, b) => a.id - b.id);
+
+    case "name-asc":
+      return result.sort((a, b) => a.title.localeCompare(b.title)); // 按 title 从 A 到 Z 排
+
+    case "name-desc":
+      return result.sort((a, b) => b.title.localeCompare(a.title)); // 按 title 从 Z 到 A 排
+
+    case "shuffle":
+      return result.sort(() => Math.random() - 0.5); // 简易随机排序
+
+    default:
+      return result;
+  }
+}
+
 export function RecipeBrowser() {
   const [currentSelect, setSelect] = useState(sortOptions[0].value);
+
+  // state 的属性只要一变化，整个组件就会重新渲染一遍，就会得到新的 result
+  const result = sortRecipes(recipeData, currentSelect);
 
   return (
     <div>
@@ -83,10 +124,10 @@ export function RecipeBrowser() {
 
           {/* 网格卡片 */}
           <div className="px-12 pb-20 grid gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-            {recipeData.map((item, index) => (
+            {result.map((item, index) => (
               // Fragment 是 React 提供的空标签，用来包住多个并列元素，不会额外生成真实 DOM，类似<> </>(短语法不能写 key)
               // key 只是 React 识别这一轮 map 渲染结果的内部标识，不会出现在真实 DOM 上
-              <Fragment key={index}>
+              <Fragment key={item.id}>
                 <Link href={`/recipes/${item.slug}`}>
                   <div className="font-sans pt-2 border-t border-gray-200 hover:border-gray-600 cursor-pointer">
                     {/* source、status */}
