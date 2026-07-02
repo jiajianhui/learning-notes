@@ -10,10 +10,6 @@
 }
 
 
-/* 滚动到指定位置时更丝滑 */
-html {
-  scroll-behavior: smooth;
-}
 
 @theme inline {
   --color-background: var(--background);

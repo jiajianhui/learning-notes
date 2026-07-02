@@ -31,9 +31,6 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      // `data-scroll-behavior="smooth"`：告诉 Next.js 当前页面启用了全局平滑滚动
-      // 让它在路由跳转时正确处理滚动行为并消除警告。
-      data-scroll-behavior="smooth"
       
       // 只是把字体变量注册到了 html 上，但你没有真正使用字体。
       // 移除了antialiased，它会让字体边缘更平滑，但视觉上也会变细、变轻

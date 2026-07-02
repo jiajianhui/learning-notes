@@ -163,6 +163,7 @@ export function RecipeOverview({recipe, title}: RecipeOverviewProps) {
                   <Image
                     src={item.image}
                     fill
+                    sizes="40px"
                     alt=""
                     className="object-contain"
                   />
