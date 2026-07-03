@@ -64,8 +64,16 @@ export function DetailContent({ recipe }: DetailContentProps) {
                 return (
                   <div
                     key={index}
-                    className="w-full h-100 pr-40 bg-option-bg"
-                  />
+                    className="w-full aspect-video" // aspect-video：保持 16:9 视频比例
+                  >
+                    <iframe
+                      src={item.url}
+                      title={item.title ?? "Recipe video"}
+                      allowFullScreen
+                      loading="lazy"
+                      className="w-full h-full"
+                    ></iframe>
+                  </div>
                 );
 
               default:

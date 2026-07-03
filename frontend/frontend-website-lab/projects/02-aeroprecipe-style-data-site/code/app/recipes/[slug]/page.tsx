@@ -49,11 +49,9 @@ export default async function RecipeDetail({ params }: Props) {
 
   return (
     <div className="flex">
-      <div className="px-12 border-r border-gray-200">
-
+      <div className="px-4 lg:px-12 border-r border-gray-200">
         <DetailHeader recipe={recipe} />
         <DetailContent recipe={recipe} />
-        
       </div>
 
       {/* 电脑端下的 Recipe overview */}

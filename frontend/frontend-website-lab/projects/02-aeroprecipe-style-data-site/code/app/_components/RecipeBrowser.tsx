@@ -79,12 +79,12 @@ export function RecipeBrowser() {
   return (
     <div>
       <div className="flex border-t border-gray-200">
-        <div>
+        <div className="flex flex-col">
           {/* 标题栏 */}
-          <div className="flex items-center text-sm sticky z-10 top-0 bg-white/70 backdrop-blur font-sans px-12 py-6">
+          <div className="flex items-center justify-between text-sm sticky z-10 top-0 bg-white/70 backdrop-blur font-sans px-4 lg:px-12 py-6">
             <p>AeroPress® recipes! Viewing: all recipes (360)</p>
 
-            <div className="flex absolute right-12 items-center justify-baseline gap-2">
+            <div className="hidden md:flex relative items-center gap-2">
               <p className="font-display">Sort by:</p>
 
               {/* 下拉框 */}
@@ -123,7 +123,7 @@ export function RecipeBrowser() {
           </div>
 
           {/* 网格卡片 */}
-          <div className="px-12 pb-20 grid gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+          <div className="px-4 lg:px-12 pb-20 grid gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
             {result.map((item, index) => (
               // Fragment 是 React 提供的空标签，用来包住多个并列元素，不会额外生成真实 DOM，类似<> </>(短语法不能写 key)
               // key 只是 React 识别这一轮 map 渲染结果的内部标识，不会出现在真实 DOM 上

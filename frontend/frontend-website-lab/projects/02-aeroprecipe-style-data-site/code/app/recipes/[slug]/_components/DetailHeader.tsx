@@ -13,7 +13,7 @@ type DetailHeaderProps = {
 
 export function DetailHeader({ recipe }: DetailHeaderProps) {
   return (
-    <div className=" sticky top-0 z-20 bg-white/70 backdrop-blur py-8 mb-8 border-b border-gray-200">
+    <div className=" lg:sticky lg:top-0 lg:z-20 bg-white/70 backdrop-blur py-8 mb-8 border-b border-gray-200">
       <div className="flex flex-wrap gap-2 items-center justify-between">
         {/* 标题 */}
         <h2 className="font-display text-2xl">{recipe.title}</h2>
