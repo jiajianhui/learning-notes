@@ -39,15 +39,15 @@
   
 * Next.js 动态路由：使用 `[参数名]` 作为目录名，例如 `[id]`、`[slug]`。中括号里的名称可以自定义，但目录名使用 `[slug]` 时，详情页中就必须通过 `params.slug` 读取动态参数。
 
-* 动态详情页：多个不同内容的详情页可以共用同一个页面文件，通过 URL 中的动态参数查找并展示对应的数据。
+  * 动态详情页：多个不同内容的详情页可以共用同一个页面文件，通过 URL 中的动态参数查找并展示对应的数据。
 
-* `slug`：行业中常用的命名，表示适合放进 URL 的可读字符串。通常由标题转换而来，规则包括：转为小写、空格替换为 `-`、去掉引号和括号等特殊符号。`title` 用于页面展示，`slug` 用于路由跳转，`id` 用于唯一标识数据。
+  * `slug`：行业中常用的命名，表示适合放进 URL 的可读字符串。通常由标题转换而来，规则包括：转为小写、空格替换为 `-`、去掉引号和括号等特殊符号。`title` 用于页面展示，`slug` 用于路由跳转，`id` 用于唯一标识数据。
 
-  ```text
-  James Hoffmann's Ultimate AeroPress Recipe
-  ↓
-  james-hoffmanns-ultimate-aeropress-recipe
-  ```
+    ```text
+    James Hoffmann's Ultimate AeroPress Recipe
+    ↓
+    james-hoffmanns-ultimate-aeropress-recipe
+    ```
 
 * 普通函数的参数可以是任何类型；React 函数组件则按照 React 的设计，只接收一个统一的 `props` 对象，传入组件的所有属性都会被收集到这个对象中。
   
@@ -74,8 +74,10 @@
 * 对象取值：知道属性名就用点 `.`，属性名来自变量就用中括号 `[]`。methodMap.standard（固定取 standard）methodMap[recipe.overview.brew.method].name（根据 method 的值动态取）
   
 * 关于滚动吸顶：
-  * 随父级滚动的吸顶：使用 `sticky top-0 self-start`。元素只会在自己的父容器范围内吸顶；父容器内容越长，吸顶时间越久；滚到父容器底部时，sticky 元素会跟着父容器一起离开。
-  * 更像一直固定的侧栏吸顶：在上面的基础上再加 `h-screen overflow-y-auto`。侧栏高度固定为一屏，内容超出时在侧栏内部滚动，视觉上更像一直吸在右侧。
+  * 普通 sticky：`sticky top-0 self-start`。元素先正常参与布局，滚到 `top-0` 后吸住；吸顶范围受父容器边界限制。当父容器底边滚到 sticky 元素底部附近时，sticky 元素会被父容器带着离开视口。
+  * 侧栏 sticky：`sticky top-0 h-screen overflow-y-auto`。元素从一开始就是一屏高，滚到 `top-0` 后顶部贴住视口；因为高度刚好等于屏幕，所以视觉上像固定侧栏。内容超出一屏时，会在侧栏内部滚动。本质还是 sticky，不是 fixed。
+
+* `iframe` 嵌入视频：外层用 `aspect-video w-full` 决定视频区域比例和宽度，里面的 `iframe` 用 `w-full h-full` 填满外层盒子。`title` 用来给 iframe 提供可访问名称，`loading="lazy"` 可以延迟加载视频。
 
 
 ## 05、这次学到的 Tailwind 写法
@@ -93,12 +95,14 @@
 * 动态设置背景图片、尺寸和位置：通过 `style` 根据当前 `card` 数据写入背景图片和 CSS 变量，再由 Tailwind 在不同响应式断点读取对应变量并应用样式。
 
 * `w-px`：设置元素宽度为 `1px`。
-* 
-* `pointer-events-none` 不接收鼠标点击，点击事件会穿透到下面的 `select。`
+
+* `pointer-events-none` 不接收鼠标点击，点击事件会穿透到下面的 `select`。
+
 * `top-1/2` 元素顶部位于父元素高度的 50%，也就是先把图标顶部放到父元素垂直中线。
 * `-translate-y-1/2` 向上移动自身高度的 50%，让图标真正垂直居中。
-* `ring` 就是在元素外面加一圈不占布局空间的高亮描边，他的变化不会导致位置抖动。
-  
+
+* `ring` 就是在元素外面加一圈不占布局空间的高亮描边，它的变化不会导致位置抖动。
+
 
 * 不同尺寸图片的统一显示：外层使用固定尺寸盒子包裹 `Image`，盒子设置 `relative size-10`，`Image` 使用 `fill`、`sizes="40px"` 和 `object-contain`。
   * 外层盒子：决定图片在页面上的展示区域大小
@@ -113,16 +117,24 @@
     <Image
       src={item.image}
       fill
+      sizes="40px"
       alt=""
       className="object-contain"
     />
   </div>
+  ```
 
 * `self-start`：用于 flex 子元素，避免被父级默认拉伸，保持自身高度，并从顶部开始对齐。
   
 
-## 06、能迁移到个人网站的 1 到 2 个点
-- 
+## 06、能迁移到个人网站的点
+- 网格布局
+- 响应式设计
+- 手绘元素的视觉风格、配色处理
+- 动态路由
+- 动态标签页标题
+- 背景模糊处理
+- 滚动卡片的效果
 
 ## 07、开发问题记录
 无
