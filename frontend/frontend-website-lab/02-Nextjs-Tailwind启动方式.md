@@ -5,7 +5,7 @@
 这轮项目默认使用：
 
 ```text
-Next.js + React + TailwindCSS
+Next.js + React + TypeScript + TailwindCSS
 ```
 
 原因很简单：
@@ -20,6 +20,7 @@ Next.js + React + TailwindCSS
 ```text
 Next.js 负责应用结构
 -> React 负责组件
+-> TypeScript 负责数据和 props 更清楚
 -> TailwindCSS 负责快速写样式
 -> 本地数据先负责内容
 ```
@@ -147,6 +148,30 @@ export const posts = [
 - 卡片组件
 - 空状态
 - 响应式布局
+
+前几个练习项目先这样就够。
+
+到个人网站项目时，可以再把文章详情和项目复盘升级成 MDX：
+
+```text
+列表和卡片
+-> 继续用 TypeScript 数组保存标题、摘要、标签、封面
+
+文章正文和项目复盘
+-> 用 content/articles/*.mdx 或 content/projects/*.mdx 保存
+```
+
+这样分工更清楚：
+
+```text
+数组负责列表结构
+MDX 负责长正文
+Typography 插件负责阅读排版
+```
+
+MDX 方案放在：
+
+- [05A-MDX和Typography轻CMS方案.md](./05A-MDX和Typography轻CMS方案.md)
 
 ---
 

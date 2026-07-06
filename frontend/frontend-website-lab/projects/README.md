@@ -28,12 +28,28 @@
 
 每个目录先放项目 brief。真正开始写代码时，可以直接在对应目录里初始化 Next.js 项目。
 
+建议节奏：
+
+```text
+01 / 02 / 03
+-> 先用本地数组练页面和内容结构
+
+03 做完后
+-> 回看顶层 05 / 05A / 06，理解内容管理路线
+
+04
+-> 继续练视觉叙事和作者气质
+
+05
+-> 做自己的个人网站，并把文章详情升级成 MDX + Typography
+```
+
 ## 技术关系
 
 默认技术栈：
 
 ```text
-Next.js + React + TailwindCSS
+Next.js + React + TypeScript + TailwindCSS
 ```
 
 默认命令：
@@ -47,6 +63,17 @@ npx create-next-app@latest .
 ## 小结
 
 做前四个练习时先按 brief 完成首页，不要一开始就做大而全；个人网站项目再扩展到多页面。
+
+MDX 和 CMS 路线不用提前塞进每个练习项目。
+
+它们真正开始发挥作用的位置是：
+
+```text
+05-personal-lux-style-site
+-> articles / projects 详情页
+-> 长正文阅读排版
+-> 项目复盘沉淀
+```
 
 这一阶段先追求：
 

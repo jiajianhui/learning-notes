@@ -57,6 +57,7 @@ README 只做入口和导航，不重复展开完整路线。
 | [03-设计拆解方法.md](./03-设计拆解方法.md) | 把感觉、页面结构、视觉变量翻译成代码 |
 | [04-项目复盘模板.md](./04-项目复盘模板.md) | 每做完一个练习，留下可迁移到个人网站的东西 |
 | [05-未来内容管理和后端路线.md](./05-未来内容管理和后端路线.md) | 先静态内容，未来再接 Node.js / Express / PostgreSQL |
+| [05A-MDX和Typography轻CMS方案.md](./05A-MDX和Typography轻CMS方案.md) | 在后端数据库之前，用 MDX 和 Typography 做个人网站的文件型轻 CMS |
 | [06-好用工具和CMS提效路线.md](./06-好用工具和CMS提效路线.md) | 区分 VitePress、CMS、Payload、Directus、Ghost 这些工具 |
 
 ---
@@ -71,8 +72,11 @@ README 只做入口和导航，不重复展开完整路线。
 先读 00 / 01 / 01A / 02 / 03
 -> 做 01-funes-style-minimal-site
 -> 按 04 写复盘，记录能迁移到个人网站的点
--> 继续做 02 / 03 / 04 三个练习项目
--> 最后做 05-personal-lux-style-site
+-> 做 02-aeroprecipe-style-data-site
+-> 做 03-lux-style-editorial-site
+-> 回看 05 / 05A / 06，理解内容管理路线
+-> 做 04-makingsoftware-style-visual-site
+-> 最后做 05-personal-lux-style-site，并正式接入 MDX 文章详情
 ```
 
 每个项目目录里保持这几类东西：
@@ -96,9 +100,12 @@ docs/screenshots/
 做到 Lux 项目后，再回看：
 
 - [05-未来内容管理和后端路线.md](./05-未来内容管理和后端路线.md)
+- [05A-MDX和Typography轻CMS方案.md](./05A-MDX和Typography轻CMS方案.md)
 - [06-好用工具和CMS提效路线.md](./06-好用工具和CMS提效路线.md)
 
-这时再理解 Ghost、Payload、Directus，会比一开始就看工具更清楚。
+这时再理解 MDX、Typography、Ghost、Payload、Directus，会比一开始就看工具更清楚。
+
+做到个人网站项目时，再真正把 MDX 用起来。前面的练习项目仍然以本地数组和页面完成度为主。
 
 ---
 
@@ -121,6 +128,15 @@ docs/screenshots/
 ```text
 本地数组 / JSON / Markdown
 -> 先把页面结构、视觉和交互做出来
+```
+
+个人网站内容过渡阶段：
+
+```text
+MDX
++ Tailwind Typography 插件
+-> 先做文章详情、项目复盘和统一阅读排版
+-> 形成文件型轻 CMS
 ```
 
 工具阶段：
@@ -148,6 +164,7 @@ Node.js + Express + PostgreSQL
 
 工具细节看：
 
+- [05A-MDX和Typography轻CMS方案.md](./05A-MDX和Typography轻CMS方案.md)
 - [06-好用工具和CMS提效路线.md](./06-好用工具和CMS提效路线.md)
 
 ---

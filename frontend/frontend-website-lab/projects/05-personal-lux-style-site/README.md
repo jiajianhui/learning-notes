@@ -120,19 +120,45 @@ data/projects.ts
 data/profile.ts
 ```
 
-或者：
+文章详情和项目复盘可以用 MDX：
 
 ```text
 content/articles/*.mdx
 content/projects/*.mdx
 ```
 
-当前更推荐先用 TypeScript 数据文件，因为它最直接，适合先把页面做稳。
+更推荐的第一版分工是：
+
+```text
+data/articles.ts
+-> 保存列表需要的 title、excerpt、date、tags、coverImage、featured
+
+content/articles/*.mdx
+-> 保存文章正文
+
+data/projects.ts
+-> 保存项目列表卡片信息
+
+content/projects/*.mdx
+-> 保存项目复盘正文
+```
+
+这样既不会一开始就进入后端，也不会把长文章全部写死在 `page.tsx` 里。
+
+文章详情页的排版用 Typography 插件统一处理：
+
+```text
+MDX 正文
+-> ArticleBody
+-> prose / prose-neutral / max-w-none
+```
 
 内容管理后面再升级，不要一开始就选 CMS：
 
 ```text
-本地 TypeScript / MDX 内容
+本地 TypeScript metadata
+-> MDX 正文
+-> Typography 阅读排版
 -> 页面结构和视觉气质稳定
 -> 再选择 Payload CMS 或自建 Express API
 -> 最后再接 PostgreSQL
@@ -141,6 +167,10 @@ content/projects/*.mdx
 如果目标是先用成熟后台提高效率，重点看 Payload。
 
 如果目标是练后端能力，再自己写 Node.js + Express + PostgreSQL。
+
+MDX 这一段可以回看：
+
+- [../../05A-MDX和Typography轻CMS方案.md](../../05A-MDX和Typography轻CMS方案.md)
 
 ---
 
@@ -203,6 +233,7 @@ type Profile = {
 - `HeroSection`
 - `FeaturedArticleCard`
 - `ArticleList`
+- `ArticleBody`
 - `ProjectCard`
 - `TagFilter`
 - `AboutPreview`
@@ -225,10 +256,11 @@ type Profile = {
 4. 做精选文章卡片
 5. 做项目入口卡片
 6. 做 articles 列表页
-7. 做 article detail 页
-8. 做 about 页
-9. 做移动端适配
-10. 最后调字体、图片比例、hover 和整体气质
+7. 接入 MDX 和 ArticleBody
+8. 做 article detail 页
+9. 做 about 页
+10. 做移动端适配
+11. 最后调字体、图片比例、hover 和整体气质
 ```
 
 不要一开始就做后台、数据库或登录。
