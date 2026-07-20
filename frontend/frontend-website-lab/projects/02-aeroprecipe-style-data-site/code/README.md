@@ -72,6 +72,7 @@
   ```
 * type 里面：类型规则，用分号，const 对象里面：真实数据，用逗号
 * 对象取值：知道属性名就用点 `.`，属性名来自变量就用中括号 `[]`。methodMap.standard（固定取 standard）methodMap[recipe.overview.brew.method].name（根据 method 的值动态取）
+* 数组排序：`sort()` 会直接修改原数组，所以先用 `[...recipes]` 复制一份再排序。数字可以用 `(a, b) => a - b` 升序、`(a, b) => b - a` 降序；字符串可以用 `localeCompare()` 排序。
   
 * 关于滚动吸顶：
   * 普通 sticky：`sticky top-0 self-start`。元素先正常参与布局，滚到 `top-0` 后吸住；吸顶范围受父容器边界限制。当父容器底边滚到 sticky 元素底部附近时，sticky 元素会被父容器带着离开视口。
@@ -90,9 +91,24 @@
 
 * Flex 子元素未设置固定宽度时，默认 `flex-basis: auto`（会参考 `width`；未设置 `width` 时，其默认值为 `auto`，因此根据内容计算初始宽度）。同时默认 `flex-shrink: 1`（空间不足时允许压缩），所以元素仍可能被挤窄；设置 `shrink-0`（禁止压缩）可以保持其初始宽度。
 
-* 在 `style` 中定义的 CSS 变量会声明在当前元素上，并且默认可以被它的后代元素继承和使用。
+* React 数据如何变成响应式样式：主线是 `React 数据 -> inline style -> CSS 变量 -> Tailwind 响应式样式`。
+  * 用 inline style 定义 CSS 变量：从当前 `card` 中读取图片数据，再通过 `style` 设置背景图片、尺寸和位置。
+  * CSS 变量：`--image-size`、`--image-position` 等变量会声明在当前元素上，并且默认也可以被它的后代元素继承和使用。
+  * 类型断言：`React.CSSProperties` 描述标准的 React 样式属性，`Record<string, string>` 允许对象中继续使用自定义 CSS 变量。
+  * Tailwind 读取变量：移动端使用 `bg-size-(--mobile-image-size)` 和 `bg-position-(--mobile-image-position)`，进入 `md` 断点后，改为读取 `--image-size` 和 `--image-position`。
+  * 这样组件结构不用改变，只需要让数据分别提供移动端和桌面端的图片尺寸与位置。
 
-* 动态设置背景图片、尺寸和位置：通过 `style` 根据当前 `card` 数据写入背景图片和 CSS 变量，再由 Tailwind 在不同响应式断点读取对应变量并应用样式。
+  ```tsx
+  style={
+    {
+      backgroundImage: `url(${card.image})`,
+      "--image-size": card.imageSize,
+      "--image-position": card.imagePosition,
+      "--mobile-image-size": card.mobileImageSize,
+      "--mobile-image-position": card.mobileImagePosition,
+    } as React.CSSProperties & Record<string, string>
+  }
+  ```
 
 * `w-px`：设置元素宽度为 `1px`。
 
