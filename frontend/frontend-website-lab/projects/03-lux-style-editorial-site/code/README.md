@@ -92,3 +92,51 @@ npm run dev
 ```
 
 VS Code 推荐安装 `MDX` 和 `Tailwind CSS IntelliSense` 扩展。
+
+## 09、让 MDX 像 TSX 一样好写：开启 JSX 标签补全
+
+默认情况下，VS Code 不一定会把 `.mdx` 文件当成 JSX 处理。配置完成后，可以获得接近编写 `.tsx` 文件的标签补全体验：
+
+```text
+输入 h1
+→ 出现 Emmet 补全建议 <h1></h1>
+→ 按 Enter 接受补全
+```
+
+#### 1、安装 MDX 语言扩展
+
+在 VS Code 扩展市场安装：
+
+```text
+MDX
+扩展 ID：unifiedjs.vscode-mdx
+```
+
+安装后，打开 `.mdx` 文件时，VS Code 右下角的语言模式应该显示为 `MDX`。
+
+#### 2、配置 `settings.json`
+
+打开 VS Code 的 `settings.json`，把 `mdx` 合并到已有的 `emmet.includeLanguages` 中，不要重复声明同名配置。
+
+```json
+{
+  "emmet.includeLanguages": {
+    "wxml": "html",
+    "mdx": "javascriptreact"
+  },
+  "emmet.showExpandedAbbreviation": "always",
+  "emmet.showAbbreviationSuggestions": true,
+  "emmet.showSuggestionsAsSnippets": true,
+
+  "[mdx]": {
+    "editor.defaultFormatter": "unifiedjs.vscode-mdx",
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": true
+    },
+    "editor.snippetSuggestions": "top",
+    "editor.acceptSuggestionOnEnter": "on"
+  }
+}
+```
