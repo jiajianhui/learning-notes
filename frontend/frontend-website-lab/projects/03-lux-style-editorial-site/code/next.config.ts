@@ -1,7 +1,13 @@
 import type { NextConfig } from "next";
+import createMDX from "@next/mdx" 
+
+// pageExtensions 允许 .mdx 成为页面。
+// withMDX 负责把 MDX 编译成 React 组件。
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
 };
 
-export default nextConfig;
+const withMDX = createMDX({})
+
+export default withMDX(nextConfig);

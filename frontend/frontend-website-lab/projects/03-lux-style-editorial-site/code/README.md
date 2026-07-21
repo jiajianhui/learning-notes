@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 项目复盘
 
-## Getting Started
+## 01、参考网站
+- URL：https://www.lux.camera/
 
-First, run the development server:
+- 给人感觉：
+
+
+## 02、设计观察
+
+- 
+## 03、最终做出来的页面
+- 
+
+
+## 04、开发过程中的收获
+
+* 
+
+## 05、这次学到的 Tailwind 写法
+
+* 
+## 06、能迁移到个人网站的点
+- 
+
+## 07、开发问题记录
+无
+
+## 08、MDX 使用流程
+
+MDX 可以在 Markdown 中直接使用 JSX，接入步骤如下。
+
+#### 1、安装依赖
+
+```bash
+npm install @next/mdx @mdx-js/loader @mdx-js/react @types/mdx
+```
+
+#### 2、配置 `next.config.ts`
+
+这一步让 Next.js 能够编译 `.mdx` 文件，并把它识别为页面。
+
+```ts
+import createMDX from "@next/mdx";
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  // 保留默认页面类型，同时增加 .mdx
+  pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
+};
+
+// 使用默认规则创建 MDX 配置
+const withMDX = createMDX({});
+
+// 把 MDX 能力合并到 Next.js 配置中
+export default withMDX(nextConfig);
+```
+
+#### 3、创建 `mdx-components.tsx`
+
+这是 App Router 使用 MDX 的必需入口，也可以在这里统一替换标题、段落等元素的样式。
+
+```tsx
+import type { MDXComponents } from "mdx/types";
+
+const components: MDXComponents = {
+  // 可以在这里配置 h1、p、a 等全局 MDX 组件
+};
+
+export function useMDXComponents(): MDXComponents {
+  // Next.js 会调用这个函数获取组件配置
+  return components;
+}
+```
+
+#### 4、创建 `app/mdx-demo/page.mdx`
+
+```mdx
+# 我的第一个 MDX 页面
+
+这是 **Markdown** 内容。
+
+<div className="rounded-xl bg-black p-6 text-white">
+  这是写在 MDX 中的 JSX
+</div>
+```
+
+#### 5、启动并访问页面
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+VS Code 推荐安装 `MDX` 和 `Tailwind CSS IntelliSense` 扩展。
