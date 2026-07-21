@@ -1,39 +1,30 @@
 # 05A. MDX 和 Typography：先做一个文件型轻 CMS
 
-## 问题背景
+## 这篇笔记解决什么问题
 
-个人网站最后一定会遇到内容管理问题：
+个人网站做完列表页以后，很快会遇到几个问题：
 
 ```text
-文章要写在哪里？
-项目复盘要怎么保存？
-内容详情页要怎么排版？
-以后接数据库前，能不能先有一个像 CMS 的写作体验？
+文章正文写在哪里？
+项目复盘怎么长期保存？
+每篇文章的标题、段落和代码块都要自己写样式吗？
+还没学习数据库，能不能先把内容和页面分开？
 ```
 
-如果一上来就进入后端、数据库和管理后台，学习重心会被拉走。
-
-但如果一直把文章内容写死在 JSX 里，个人网站又很难长期更新。
-
-所以在正式学习后端和数据库之前，可以加一个过渡阶段：
+这篇笔记给出的过渡方案是：
 
 ```text
-MDX
-+ Tailwind Typography 插件
-+ 本地 content 目录
+本地 MDX 文件
++ Tailwind Typography
++ Next.js 页面路由
 -> 文件型轻 CMS
 ```
 
-它不是完整 CMS，但非常适合个人网站第一版。
+它不是真正的 CMS，没有后台、登录和数据库。
 
-主线先记这一条：
+它解决的是更适合当前阶段的问题：
 
-```text
-本地数组适合做列表
-MDX 适合写文章详情
-Typography 插件适合统一文章排版
-后端和数据库以后再负责真正的动态管理
-```
+> 先把文章内容从页面 JSX 中拆出来，同时保留插入 React 组件的能力。
 
 官方参考：
 
@@ -42,13 +33,37 @@ Typography 插件适合统一文章排版
 
 ---
 
-## 核心解释
+## 先记住完整主线
 
-### 1. MDX 是什么：Markdown 里可以写组件
+```text
+content/articles/first-post.mdx
+-> @next/mdx 把内容编译成 React 组件
+-> mdx-components.tsx 决定特殊元素怎么渲染
+-> app/articles/first-post/page.tsx 组成文章页面
+-> ArticleBody 的 prose 提供统一阅读排版
+-> 浏览器显示最终文章
+```
 
-Markdown 适合写文章。
+这条链路里，每个部分只负责一件事。
 
-比如：
+| 部分 | 负责什么 |
+|---|---|
+| `content/*.mdx` | 写文章正文 |
+| `@next/mdx` | 把 MDX 编译成 React 组件 |
+| `mdx-components.tsx` | 定义 MDX 元素和 React 组件的全局映射 |
+| `components/mdx/` | 存放实际的文章排版组件和特殊内容组件 |
+| `ArticleBody` | 用 `prose` 包住整篇文章，提供统一排版 |
+| `app/` | 决定文章对应哪个 URL，并组成最终页面 |
+
+后面如果看乱了，就回来对照这张表。
+
+---
+
+## 1. MDX：让 Markdown 里也能使用 React 组件
+
+### 1.1 Markdown 适合写正文
+
+普通 Markdown 可以写：
 
 ```md
 # 我的第一篇文章
@@ -59,54 +74,59 @@ Markdown 适合写文章。
 - 另一个观点
 ```
 
+它比把正文写成一大段 JSX 更适合长期维护。
+
+### 1.2 MDX 比 Markdown 多了什么
+
 MDX 可以先理解成：
 
 ```text
 Markdown
-+ JSX / React 组件
++ JSX
++ JavaScript 表达式
++ React 组件
 ```
 
-也就是说，你可以在文章里写普通文本，也可以插入自己写的组件。
-
-比如：
+例如：
 
 ```mdx
 # 我的项目复盘
 
-这次项目主要练习了文章卡片和筛选。
+这是普通的 **Markdown**。
+
+<div className="rounded-xl bg-black p-6 text-white">
+  这是直接写在 MDX 里的 JSX。
+</div>
+
+1 + 2 = {1 + 2}
+```
+
+还可以插入自己写的组件：
+
+```mdx
+import { Callout } from "@/components/mdx/callout";
+
+# 我的项目复盘
 
 <Callout>
   这个设计可以迁移到个人网站的文章列表。
 </Callout>
 ```
 
-这对个人网站很有用。
+因此 MDX 很适合这些内容：
 
-因为你的内容不只是纯文章，还可能包括：
-
-- 项目截图
+- 文章和项目复盘
+- 项目截图及说明
 - 设计观察卡片
-- 产品更新记录
 - 代码片段
-- 复盘提示块
-- 作品展示组件
-
-这些内容如果都写在后台富文本里，反而不一定灵活。
-
-MDX 的优势是：
-
-```text
-文章仍然像 Markdown 一样好写
-需要特殊展示时，又可以插入 React 组件
-```
+- 重点提示块
+- 产品更新记录
 
 ---
 
-### 2. Typography 插件是什么：给文章 HTML 一套默认排版
+## 2. Typography：一次处理整篇文章的基础排版
 
-Markdown 或 MDX 最后会变成 HTML。
-
-比如：
+### 2.1 MDX 最后仍然会变成 HTML
 
 ```text
 # 标题       -> h1
@@ -116,21 +136,48 @@ Markdown 或 MDX 最后会变成 HTML。
 > 引用       -> blockquote
 ```
 
-问题是，这些 HTML 标签默认样式很普通。
+Tailwind 的基础样式会重置浏览器默认排版。
 
-如果每篇文章都手动给 `h1`、`p`、`ul`、`blockquote` 加 Tailwind 类，会很累，也很乱。
+所以 MDX 已经成功渲染时，标题也可能看起来和正文差不多，列表符号也可能消失。这不是 MDX 出错，而是还没有提供文章排版样式。
 
-Tailwind Typography 插件解决的是这件事：
+### 2.2 `prose` 做了什么
 
-```text
-给一整块文章内容加一个 prose 类
--> 里面的标题、段落、列表、引用、代码块自动有一套阅读排版
-```
-
-大概像这样：
+Tailwind Typography 提供 `prose` 类：
 
 ```tsx
-export function ArticleBody({ children }: { children: React.ReactNode }) {
+<article className="prose prose-neutral max-w-none">
+  {children}
+</article>
+```
+
+只要文章内容在这个容器里，插件就会统一处理内部的：
+
+- `h1`、`h2`、`h3`
+- `p`
+- `ul`、`ol`、`li`
+- `blockquote`
+- `a`
+- `img`
+- `code`、`pre`
+
+第一版先使用 Typography 的默认排版，不需要马上为每个元素手写 Tailwind 类。
+
+---
+
+## 3. 最容易混淆的两个文件
+
+### 3.1 `ArticleBody`：整篇文章的排版外壳
+
+可以把它理解成“文章专用的 Layout”：
+
+```tsx
+import type { ReactNode } from "react";
+
+type ArticleBodyProps = {
+  children: ReactNode;
+};
+
+export function ArticleBody({ children }: ArticleBodyProps) {
   return (
     <article className="prose prose-neutral max-w-none">
       {children}
@@ -139,229 +186,75 @@ export function ArticleBody({ children }: { children: React.ReactNode }) {
 }
 ```
 
-以后 MDX 内容只要包在这个容器里，文章页就有统一的阅读样式。
+它的职责是：
 
-如果有深色背景，可以用：
+- 用 `prose` 给整篇文章提供基础排版
+- 集中调整链接、图片、代码块和暗色模式
+- 让所有文章共用一套阅读样式
+- 把文章样式限制在正文区域，不影响导航和普通页面
 
-```tsx
-<article className="prose prose-neutral dark:prose-invert max-w-none">
-  {children}
-</article>
+`ArticleBody` 不是 Next.js 的固定名称，也不是路由约定文件。
+
+它只是普通 React 组件，可以叫：
+
+```text
+ArticleBody
+ArticleContent
+MdxContent
+Prose
 ```
 
-如果图片、链接、代码需要更贴近个人网站气质，可以逐步加：
+这篇笔记统一使用 `ArticleBody`，因为它能直接表达“文章正文容器”。
 
-```tsx
-<article className="prose prose-neutral max-w-none prose-a:text-black prose-img:rounded-lg">
-  {children}
-</article>
+### 3.2 `mdx-components.tsx`：MDX 的全局组件字典
+
+MDX 会把这些内容：
+
+```mdx
+# 标题
+
+[查看文章](/articles)
+
+<Callout>重要提示</Callout>
 ```
 
-先不用急着自定义太多。
-
-第一版只要让文章可读、统一、不破版。
-
----
-
-### 3. 为什么它像轻 CMS：内容从页面代码里分离出来了
-
-普通写法可能是这样：
+转换成类似这样的 React 元素：
 
 ```tsx
-export default function Page() {
-  return (
-    <main>
-      <h1>项目复盘</h1>
-      <p>这里写正文。</p>
-    </main>
-  );
+<h1>标题</h1>
+<a href="/articles">查看文章</a>
+<Callout>重要提示</Callout>
+```
+
+`mdx-components.tsx` 决定这些名称最终使用哪个 React 组件：
+
+```tsx
+import type { MDXComponents } from "mdx/types";
+import { Callout } from "@/components/mdx/callout";
+
+const components = {
+  Callout,
+} satisfies MDXComponents;
+
+export function useMDXComponents(): MDXComponents {
+  return components;
 }
 ```
 
-这种写法的问题是：
+它常用来：
 
-```text
-页面结构
-文章内容
-样式细节
-全部混在一个 TSX 文件里
-```
+- 把普通链接换成自定义链接组件
+- 把图片换成基于 `next/image` 的组件
+- 给标题增加锚点
+- 注册 `Callout` 等全局 MDX 组件
 
-内容一多，就很难维护。
+在 App Router 中：
 
-用 MDX 之后，可以变成：
+- `mdx-components.tsx` 文件名是 Next.js 约定，不能随意改名
+- `useMDXComponents` 导出名称也是固定的
+- 文件放在项目根目录；如果项目使用 `src/`，则放在 `src/` 根部
 
-```text
-content/articles/my-first-post.mdx
--> 只负责文章内容
-
-app/articles/[slug]/page.tsx
--> 负责读取文章、渲染页面
-
-components/article-body.tsx
--> 负责文章排版
-```
-
-这已经有一点 CMS 的味道：
-
-| CMS 能力 | MDX 轻方案怎么模拟 |
-|---|---|
-| 写文章 | 在 `content/articles/*.mdx` 写 |
-| 标题和描述 | 用 metadata 或 frontmatter 记录 |
-| 文章详情页 | 用动态路由渲染 |
-| 文章列表 | 读取本地文章索引 |
-| 统一排版 | 用 Typography 的 `prose` |
-| 特殊内容块 | 用 MDX 组件 |
-
-它还没有后台、登录、数据库和在线编辑。
-
-但对个人网站第一版来说，这已经足够接近真实内容流。
-
----
-
-## 技术关系
-
-### 1. 它应该放在学习路线的哪里
-
-建议放在 `frontend-website-lab`，不要放进 `frontend-system-learning` 主线。
-
-原因是：
-
-```text
-frontend-system-learning
--> 讲前端技术地图：HTML、CSS、JS、React、Vue、Vite、Next 这些层级关系
-
-frontend-website-lab
--> 讲个人网站项目怎么做：视觉、内容、文章、项目、CMS 路线
-```
-
-MDX 和 Typography 不是前端基础层，也不是必须人人先学的通用概念。
-
-它更像个人网站项目里的一个内容组织方案。
-
-所以更适合放在这里：
-
-```text
-05. 内容怎么管理：现在先静态，未来再接后端
-05A. MDX 和 Typography：先做一个文件型轻 CMS
-06. 好用工具和 CMS：先借工具看清楚，再决定自己写什么
-后面再单开：后端 / 数据库 / 自建 CMS
-```
-
-这条顺序比较顺：
-
-```text
-先用本地数组做列表
--> 用 MDX 写文章详情
--> 用 Typography 统一阅读排版
--> 看 Ghost / Payload / Directus 这些成熟 CMS
--> 后端阶段再自己做 API、数据库和后台
-```
-
----
-
-### 2. 推荐目录结构
-
-在个人网站项目里可以先这样组织：
-
-```text
-app/
-  articles/
-    page.tsx
-    [slug]/
-      page.tsx
-  projects/
-    page.tsx
-    [slug]/
-      page.tsx
-
-components/
-  article-body.tsx
-  callout.tsx
-  project-screenshot.tsx
-
-content/
-  articles/
-    first-post.mdx
-    design-notes.mdx
-  projects/
-    personal-site.mdx
-
-lib/
-  content.ts
-
-mdx-components.tsx
-```
-
-每个目录的职责：
-
-| 目录 | 负责什么 |
-|---|---|
-| `content/` | 真正的文章和项目正文 |
-| `app/` | 页面路由、列表页、详情页 |
-| `components/` | 文章排版组件和 MDX 可插入组件 |
-| `lib/content.ts` | 读取文章列表、slug、metadata |
-| `mdx-components.tsx` | Next App Router 识别 MDX 全局组件的约定文件，放在项目根目录或 `src/` 下 |
-
-不要把所有内容都塞在 `app/` 里。
-
-更好的习惯是：
-
-```text
-内容放 content
-页面放 app
-样式和复用块放 components
-读取逻辑放 lib
-MDX 全局映射放根目录的 mdx-components.tsx
-```
-
-这样以后换成数据库时，页面结构不会大改。
-
-你主要是把：
-
-```text
-读取本地 MDX
-```
-
-替换成：
-
-```text
-请求 API / 查询数据库
-```
-
----
-
-### 3. 最小实现思路
-
-当前项目是 Next.js + Tailwind 4，可以先按这个方向理解。
-
-安装 MDX 相关包：
-
-```bash
-pnpm add @next/mdx @mdx-js/loader @mdx-js/react @types/mdx
-```
-
-安装 Typography 插件：
-
-```bash
-pnpm add -D @tailwindcss/typography
-```
-
-Next 配置大概是：
-
-```js
-import createMDX from "@next/mdx";
-
-const nextConfig = {
-  pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
-};
-
-const withMDX = createMDX({});
-
-export default withMDX(nextConfig);
-```
-
-App Router 下还需要一个 `mdx-components.tsx` 文件，用来告诉 Next 全局 MDX 组件怎么映射：
+刚接入 MDX 时，它可以是空映射：
 
 ```tsx
 import type { MDXComponents } from "mdx/types";
@@ -373,90 +266,314 @@ export function useMDXComponents(): MDXComponents {
 }
 ```
 
-Tailwind 4 里可以在全局 CSS 里接入插件：
+空映射表示继续使用默认的 `h1`、`p`、`a` 等元素，不代表 MDX 没有配置成功。
+
+### 3.3 两者怎么分工
+
+```text
+普通标题、段落、列表的基础样式
+-> ArticleBody + Typography prose
+
+链接、图片等元素需要改变渲染行为
+-> mdx-components.tsx
+
+Callout、ProjectImage 等特殊内容块
+-> components/mdx/ 中的 React 组件
+```
+
+当然也可以在 `mdx-components.tsx` 里为每个 `h1`、`p`、`ul` 手写样式，但文章元素很多。第一版用 `prose` 更省事，等视觉方向稳定后再做精细映射。
+
+---
+
+## 4. 目录怎么组织，才不会把组件混在一起
+
+推荐使用下面的结构：
+
+```text
+app/
+  articles/
+    page.tsx
+    [slug]/
+      page.tsx
+  projects/
+    [slug]/
+      page.tsx
+
+components/
+  ui/
+    button.tsx
+    tag.tsx
+  layout/
+    header.tsx
+    footer.tsx
+  mdx/
+    article-body.tsx
+    callout.tsx
+    mdx-image.tsx
+    code-note.tsx
+  articles/
+    article-card.tsx
+    article-list.tsx
+
+content/
+  articles/
+    first-post.mdx
+    design-notes.mdx
+  projects/
+    personal-site.mdx
+
+lib/
+  content/
+    articles.ts
+    projects.ts
+
+mdx-components.tsx
+```
+
+### 4.1 `components/` 继续按职责拆分
+
+| 目录 | 放什么 |
+|---|---|
+| `components/ui/` | Button、Tag、Badge 等通用基础组件 |
+| `components/layout/` | Header、Footer 等网站结构组件 |
+| `components/mdx/` | ArticleBody、Callout、MdxImage 等内容渲染组件 |
+| `components/articles/` | ArticleCard、ArticleList 等文章业务组件 |
+
+一个简单判断方法：
+
+```text
+负责整篇正文排版或只在 MDX 中使用
+-> components/mdx/
+
+负责文章列表、筛选、卡片
+-> components/articles/
+
+和文章业务无关，其他页面也能使用
+-> components/ui/
+```
+
+### 4.2 `content/` 只存内容，不会自动产生路由
+
+```text
+content/articles/first-post.mdx
+```
+
+只是一个内容文件。Next.js 不会因为它存在就自动生成 `/articles/first-post`。
+
+仍然需要 `app/` 下的页面导入它：
+
+```tsx
+import FirstPost from "@/content/articles/first-post.mdx";
+import { ArticleBody } from "@/components/mdx/article-body";
+
+export default function Page() {
+  return (
+    <main className="mx-auto max-w-3xl px-6 py-16">
+      <ArticleBody>
+        <FirstPost />
+      </ArticleBody>
+    </main>
+  );
+}
+```
+
+这里的职责非常清楚：
+
+```text
+FirstPost
+-> 文章内容
+
+ArticleBody
+-> 文章排版
+
+Page
+-> 页面结构和 URL
+```
+
+### 4.3 哪些名称固定，哪些只是习惯
+
+| 名称 | 是否固定 |
+|---|---:|
+| `app/` 和 `page.tsx` | 是，Next.js 路由约定 |
+| `mdx-components.tsx` | 是，Next.js MDX 约定 |
+| `useMDXComponents` | 是，必须使用这个导出名称 |
+| `ArticleBody` | 否，普通组件名称 |
+| `components/` | 否，但社区通常这样组织组件 |
+| `content/` | 否，只是清晰的内容目录习惯 |
+
+---
+
+## 5. 按阶段接入，不要一次完成整个 CMS
+
+### 阶段一：先证明 MDX 能运行
+
+#### 5.1 安装依赖
+
+当前项目使用 npm：
+
+```bash
+npm install @next/mdx @mdx-js/loader @mdx-js/react @types/mdx
+```
+
+#### 5.2 配置 `next.config.ts`
+
+```ts
+import createMDX from "@next/mdx";
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
+};
+
+const withMDX = createMDX({});
+
+export default withMDX(nextConfig);
+```
+
+这里分成两层：
+
+```text
+pageExtensions
+-> 允许 .mdx 成为页面文件
+
+withMDX
+-> 让 Next.js 编译 MDX 内容
+```
+
+#### 5.3 创建根目录 `mdx-components.tsx`
+
+先使用空映射即可：
+
+```tsx
+import type { MDXComponents } from "mdx/types";
+
+const components: MDXComponents = {};
+
+export function useMDXComponents(): MDXComponents {
+  return components;
+}
+```
+
+#### 5.4 创建最小页面
+
+```text
+app/mdx-demo/page.mdx
+```
+
+```mdx
+export const metadata = {
+  title: "MDX Demo",
+};
+
+# 我的第一个 MDX 页面
+
+这是普通的 **Markdown** 内容。
+
+<div className="mt-6 rounded-xl bg-black p-6 text-white">
+  这是写在 MDX 中的 JSX。
+</div>
+
+1 + 2 = {1 + 2}
+```
+
+重新启动开发服务器，访问 `/mdx-demo`。
+
+看到标题、黑色卡片和数字 `3`，就说明这一阶段完成。标题暂时没有文章样式也没关系。
+
+### 阶段二：让文章拥有统一排版
+
+#### 5.5 安装 Typography
+
+```bash
+npm install -D @tailwindcss/typography
+```
+
+#### 5.6 在 Tailwind 4 中注册插件
+
+在 `app/globals.css` 中：
 
 ```css
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 ```
 
-如果以后遇到 Tailwind 3，Typography 通常会在 `tailwind.config.*` 的 `plugins` 里注册。
-
-这里不用急着背配置。
-
-现在先知道：
+#### 5.7 创建 `ArticleBody`
 
 ```text
-@next/mdx
--> 让 Next 能处理 .mdx 文件
-
-mdx-components.tsx
--> 定义 MDX 里的全局组件映射
-
-@tailwindcss/typography
--> 提供 prose 文章排版类
+components/mdx/article-body.tsx
 ```
 
----
+```tsx
+import type { ReactNode } from "react";
 
-### 4. 内容 metadata 怎么处理
-
-文章列表通常需要这些信息：
-
-```text
-title
-description
-date
-tags
-cover
-featured
-```
-
-有两种常见做法。
-
-第一种：在 MDX 里导出 metadata。
-
-```mdx
-export const metadata = {
-  title: "我的第一篇文章",
-  description: "记录个人网站第一版的内容结构。",
-  date: "2026-07-06",
-  tags: ["personal-site", "mdx"],
+type ArticleBodyProps = {
+  children: ReactNode;
 };
 
-# 我的第一篇文章
-
-这里是正文。
+export function ArticleBody({ children }: ArticleBodyProps) {
+  return (
+    <article className="prose prose-neutral max-w-none">
+      {children}
+    </article>
+  );
+}
 ```
 
-第二种：使用 frontmatter。
+#### 5.8 给当前 MDX 路由加排版外壳
 
-```md
----
-title: 我的第一篇文章
-description: 记录个人网站第一版的内容结构。
-date: 2026-07-06
-tags:
-  - personal-site
-  - mdx
----
-
-# 我的第一篇文章
-```
-
-要注意：`@next/mdx` 默认不直接处理 frontmatter。
-
-如果想用 frontmatter，需要额外接 `gray-matter`、`remark-frontmatter` 或类似方案。
-
-对你现在的学习阶段，我建议先用最简单的方式：
+当前示例直接使用 `app/mdx-demo/page.mdx` 作为页面，可以创建：
 
 ```text
-文章正文用 MDX
-列表数据先用一个本地 articles.ts 管
-等个人网站文章数量多了，再抽读取逻辑
+app/mdx-demo/layout.tsx
 ```
 
-比如：
+```tsx
+import type { ReactNode } from "react";
+import { ArticleBody } from "@/components/mdx/article-body";
+
+type MdxDemoLayoutProps = {
+  children: ReactNode;
+};
+
+export default function MdxDemoLayout({ children }: MdxDemoLayoutProps) {
+  return (
+    <main className="mx-auto max-w-3xl px-6 py-16">
+      <ArticleBody>{children}</ArticleBody>
+    </main>
+  );
+}
+```
+
+再次访问 `/mdx-demo`。标题、段落和列表出现清晰层级，就说明 Typography 已接通。
+
+### 阶段三：把内容从路由目录中分离出来
+
+前两个阶段只是在验证技术。
+
+要形成轻 CMS，再把内容移到：
+
+```text
+content/articles/first-post.mdx
+```
+
+然后由页面导入并渲染：
+
+```text
+content/articles/first-post.mdx
+-> app/articles/first-post/page.tsx
+-> ArticleBody
+-> 浏览器
+```
+
+先写死一个 `first-post` 路由即可，不要马上做文件扫描和动态导入。
+
+这一阶段的重点只有一个：
+
+> 文章内容属于 `content/`，URL 和页面布局属于 `app/`。
+
+### 阶段四：文章变多后，再做列表和动态路由
+
+文章只有一两篇时，先用本地数组维护列表信息：
 
 ```ts
 export const articles = [
@@ -470,168 +587,240 @@ export const articles = [
 ];
 ```
 
-这比一开始就折腾文件扫描、frontmatter 解析更稳。
-
----
-
-### 5. MDX 里适合放哪些组件
-
-不要一开始把 MDX 玩得太复杂。
-
-个人网站第一版只需要准备少量组件：
-
-| 组件 | 用途 |
-|---|---|
-| `Callout` | 放重点提示、复盘结论 |
-| `ProjectImage` | 展示项目截图和说明 |
-| `CompareBlock` | 对比参考站和自己的实现 |
-| `LinkCard` | 链接到产品、文章或项目 |
-| `CodeNote` | 解释一段代码为什么这样写 |
-
-文章里可以这样用：
-
-```mdx
-import { Callout } from "@/components/callout";
-
-# 个人网站内容结构复盘
-
-这次我先把文章内容从页面代码里拆出来。
-
-<Callout>
-  MDX 适合做个人网站第一版，因为它让内容独立出来，但还不需要后台。
-</Callout>
-```
-
-学习重点不是组件数量，而是边界清楚：
-
-```text
-文章表达
--> 写在 MDX
-
-统一排版
--> 交给 ArticleBody 和 prose
-
-特殊视觉块
--> 做成少量可复用组件
-```
-
----
-
-## 学习建议
-
-### 1. 先做一条完整内容链路
-
-不要第一天就追求完整 CMS。
-
-先做这一条链路：
-
-```text
-content/articles/first-post.mdx
--> app/articles/[slug]/page.tsx
--> ArticleBody
--> prose 排版
--> 页面能正常阅读
-```
-
-然后再做文章列表：
+再逐步实现：
 
 ```text
 articles.ts
 -> app/articles/page.tsx
 -> ArticleCard
--> 点击进入详情页
+-> 点击进入 app/articles/[slug]/page.tsx
 ```
 
-只要这条链路跑通，你就已经拥有个人网站第一版的内容系统。
+不要在刚接触 MDX 时同时加入：
+
+- 自动扫描文件
+- frontmatter 解析
+- 动态 import
+- 搜索和分页
+- 数据库
+
+这些都可以在基本内容链路稳定后再学习。
 
 ---
 
-### 2. 不要把 MDX 当后台
+## 6. metadata 先用哪一种方式
 
-MDX 很适合个人写作和项目复盘，但它不是后台。
+文章列表通常需要：
 
-它做不到这些事：
+```text
+title
+description
+date
+tags
+cover
+featured
+```
 
-- 登录后在线编辑
-- 多用户协作
-- 权限管理
+MDX 可以导出普通 JavaScript 对象：
+
+```mdx
+export const metadata = {
+  title: "我的第一篇文章",
+  description: "记录个人网站第一版的内容结构。",
+  date: "2026-07-06",
+  tags: ["personal-site", "mdx"],
+};
+
+# 我的第一篇文章
+```
+
+还可以使用 frontmatter：
+
+```md
+---
+title: 我的第一篇文章
+date: 2026-07-06
+---
+```
+
+但 `@next/mdx` 默认不会直接处理 frontmatter，需要额外加入 `gray-matter`、`remark-frontmatter` 等工具。
+
+当前阶段建议：
+
+```text
+正文
+-> MDX
+
+文章列表需要的 title、date、slug
+-> 先放 articles.ts
+
+文章数量变多
+-> 再统一读取 metadata 或 frontmatter
+```
+
+这样更容易看清每一层到底解决什么问题。
+
+---
+
+## 7. MDX 组件先做少量真正有用的
+
+个人网站第一版不需要很多特殊组件。
+
+| 组件 | 用途 |
+|---|---|
+| `Callout` | 重点提示、复盘结论 |
+| `ProjectImage` | 项目截图和说明 |
+| `CompareBlock` | 对比参考站与自己的实现 |
+| `LinkCard` | 链接到产品、文章或项目 |
+| `CodeNote` | 解释一段代码为什么这样写 |
+
+学习重点不是组件数量，而是职责边界：
+
+```text
+文章表达
+-> content/*.mdx
+
+普通文章排版
+-> ArticleBody + prose
+
+特殊视觉块
+-> components/mdx/
+
+全局元素映射
+-> mdx-components.tsx
+```
+
+如果某个特殊组件只在一篇文章中使用，可以直接在 MDX 中 `import`。
+
+如果很多文章都要使用，再考虑放进 `mdx-components.tsx` 做全局映射。
+
+---
+
+## 8. 常见误区
+
+### 8.1 `mdx-components.tsx` 是空的，是否等于没配置
+
+不是。
+
+空对象代表使用默认 HTML 元素。这个文件在 App Router 中仍然是必需入口。
+
+### 8.2 安装 Typography 后，文章为什么还是没有样式
+
+只安装插件还不够，还要：
+
+```text
+在 globals.css 注册插件
++ 给文章外层添加 prose
+```
+
+### 8.3 `ArticleBody` 和 `layout.tsx` 是一回事吗
+
+不是。
+
+```text
+layout.tsx
+-> Next.js 路由布局
+
+ArticleBody
+-> 普通 React 组件，只负责文章正文排版
+```
+
+可以在 `layout.tsx` 或 `page.tsx` 中使用 `ArticleBody`。
+
+### 8.4 把 MDX 放进 `content/` 后，会自动生成页面吗
+
+不会。
+
+`content/` 只负责保存内容，仍然需要 `app/` 页面导入、选择并渲染它。
+
+### 8.5 MDX 里能直接写点击事件吗
+
+App Router 中的 MDX 默认按 Server Component 处理。
+
+需要交互时，把交互逻辑写进带有 `"use client"` 的 React 组件，再将这个组件导入 MDX。
+
+### 8.6 MDX 是不是后台 CMS
+
+不是。它没有：
+
+- 登录和权限
+- 在线编辑
+- 多人协作
 - 数据库存储
 - 图片上传管理
 - 发布审核流程
 
-这些留给后端、数据库和真正的 CMS。
-
-现在 MDX 的价值是：
-
-```text
-让你在不学后端的情况下，
-提前体验“内容和页面分离”的网站结构。
-```
+它的价值是让你在学习后端之前，先体验“内容和页面分离”。
 
 ---
 
-### 3. 练习项目里怎么安排
+## 9. 学习顺序和完成标准
 
-建议在 `projects/05-personal-lux-style-site/` 里正式使用 MDX。
-
-前四个临摹项目仍然可以保持简单：
+按下面四步学习：
 
 ```text
-Funes
--> 本地数组、列表密度
+第一步：MDX 能显示
+-> 理解 Markdown、JSX、表达式
 
-AeroPrecipe
--> 本地数据、筛选、卡片
+第二步：Typography 能排版
+-> 理解 prose 和 ArticleBody
 
-Lux
--> 文章卡片、图片节奏、内容站气质
+第三步：内容移到 content/
+-> 理解内容和路由分离
 
-Making Software
--> 叙事段落、视觉表达
+第四步：增加列表和 [slug]
+-> 形成文件型轻 CMS
 ```
 
-到个人网站项目时，再把内容系统接进来：
+这一章学完后，应该能独立说清楚：
 
-```text
-个人网站
--> articles 列表
--> projects 列表
--> MDX 详情页
--> Typography 阅读排版
-```
-
-这样不会让前面的练习过重，也能让最后的个人网站更接近长期可维护版本。
+- 为什么正文更适合放在 MDX，而不是大段 JSX 中
+- `@next/mdx` 负责什么
+- `mdx-components.tsx` 和 `ArticleBody` 有什么区别
+- `components/`、`content/`、`app/` 分别放什么
+- 为什么安装 Typography 后还需要 `prose`
+- 为什么 `content/` 中的文件不会自动成为路由
+- 文件型轻 CMS 与真正 CMS 的边界
 
 ---
 
 ## 小结
 
-MDX 和 Typography 插件应该作为个人网站前端阶段的一章单独讲。
-
-它的位置在：
+先记住这组分工：
 
 ```text
-本地数据之后
+MDX
+-> 写内容
+
+@next/mdx
+-> 编译内容
+
+mdx-components.tsx
+-> 映射元素和特殊组件
+
+ArticleBody + prose
+-> 统一文章排版
+
+components/mdx/
+-> 保存实际的 MDX 相关 React 组件
+
+content/
+-> 保存文章正文
+
+app/
+-> 负责 URL 和页面结构
+```
+
+文件型轻 CMS 的核心不是安装了多少包，而是建立这条边界：
+
+> 内容写在 MDX，页面负责组合，组件负责展示，排版集中管理。
+
+它适合放在：
+
+```text
+本地数组之后
 成熟 CMS 之前
 后端和数据库之前
 ```
 
-它解决的是：
-
-```text
-我还没有后端，
-但我已经想认真管理文章和项目内容。
-```
-
-这一章学完后，你应该能看懂这条路线：
-
-```text
-本地数组
--> MDX 文件
--> Typography 统一排版
--> 成熟 CMS 观察
--> Node.js + Express + PostgreSQL
--> 自建小型内容系统
-```
-
-这就是个人网站从静态页面走向长期内容系统的中间桥梁。
+等内容数量和编辑需求真正增长，再从本地 MDX 迁移到 API、数据库或成熟 CMS。
