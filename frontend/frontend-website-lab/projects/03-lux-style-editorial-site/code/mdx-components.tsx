@@ -29,8 +29,39 @@ const components: MDXComponents = {
       {children}
     </a>
   ),
+
+  // 注册自定义组件
+  ArticleFigure,
 } satisfies MDXComponents;
 
 export function useMDXComponents(): MDXComponents {
     return components
+}
+
+type ArticleFigureProps = {
+  images: string[];
+  caption?: string
+};
+
+// 自定义组件
+function ArticleFigure({ images, caption }: ArticleFigureProps) {
+
+    const isSingle = images.length === 1
+
+    return (
+      <div className={`${isSingle ? "w-1/2" : "w-4xl"} mx-auto mb-10`}>
+        
+        {/* 图片 */}
+        <div className={`${isSingle ? "" : " grid grid-cols-2 gap-4"}`}>
+          {images.map((src, index) => (
+            <img key={index} className="mb-4 w-full" src={src} alt="" />
+          ))}
+        </div>
+
+        {/* 文字 */}
+        {caption && (
+          <p className="px-10 text-center text-sm text-gray-500">{caption}</p>
+        )}
+      </div>
+    );
 }

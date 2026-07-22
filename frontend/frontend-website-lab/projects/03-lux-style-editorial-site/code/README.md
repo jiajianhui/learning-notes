@@ -140,3 +140,16 @@ MDX
   }
 }
 ```
+
+## 10、MDX 编辑要点：内容写 Markdown，样式交给组件
+
+- **内容与布局**：标题、段落、链接优先写 Markdown；Hero、Grid、图库等 Markdown 无法表达的布局再写 JSX。
+- **段落识别**：普通换行仍属于同一个 `p`；中间空一整行才会生成两个 `p`。段落内部的换行交给浏览器处理。
+- **组件映射**：Markdown 标题、段落、链接和图片会分别映射到 `h1`、`p`、`a`、`img`，公共样式统一写在 `mdx-components.tsx`，并会影响所有 MDX 文件。
+- **映射边界**：Markdown 转换出的元素会使用 `mdx-components.tsx` 映射；直接写 `<p>`、`<span>` 等小写 JSX 时使用原生 HTML 元素，不经过映射；写 `<Caption>` 等大写 JSX 时才会查找同名自定义组件。
+- **自定义组件注册**：`Caption` 本质上是普通 React 组件；将它注册到 `components` 后，MDX 中可以直接写 `<Caption>...</Caption>`，不需要再次 `import`，组件名和大小写必须一致。
+- **注册名简写**：`components` 中的 `Caption,` 是 `Caption: Caption` 的对象属性简写；左边代表 MDX 使用的名称，右边代表实际的 React 组件，也可以写成 `ImageCaption: Caption` 并在 MDX 中使用 `<ImageCaption>`。
+- **链接传参**：自定义 `a` 时必须保留 `{...props}`，否则会丢失 `href`，链接无法跳转。
+- **链接语法**：使用 `[文字](https://example.com/)`，地址只包一层括号，也不要把链接地址留空。
+- **MDX 分区**：文件顶部的 `import/export` 与下面的 Markdown 正文之间空一行，避免解析错误。
+- **编辑器限制**：Emmet 只能提供标签快速展开，MDX 的组件自动导入、Props 和 TypeScript 提示仍不如 TSX；复杂组件更适合在 `.tsx` 中开发。
