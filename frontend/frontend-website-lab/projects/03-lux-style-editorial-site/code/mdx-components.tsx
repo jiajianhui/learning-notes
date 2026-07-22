@@ -32,6 +32,7 @@ const components: MDXComponents = {
 
   // 注册自定义组件
   ArticleFigure,
+  ArticleGallery,
 } satisfies MDXComponents;
 
 export function useMDXComponents(): MDXComponents {
@@ -39,22 +40,30 @@ export function useMDXComponents(): MDXComponents {
 }
 
 type ArticleFigureProps = {
-  images: string[];
-  caption?: string
+  images: [string] | [string, string] | [string, string, string];
+  caption?: string;
 };
 
 // 自定义组件
+
+// 单图、两图、三图展示组件
 function ArticleFigure({ images, caption }: ArticleFigureProps) {
 
-    const isSingle = images.length === 1
+    const imageCount = images.length
+    
+    const widthClass = imageCount === 1 ? "w-1/2" : "w-4xl";
+    const gridClass = {
+      1: "grid-cols-1",
+      2: "grid-cols-2",
+      3: "grid-cols-3",
+    }[imageCount];
 
     return (
-      <div className={`${isSingle ? "w-1/2" : "w-4xl"} mx-auto mb-10`}>
-        
+      <div className={`${widthClass} mx-auto mb-10`}>
         {/* 图片 */}
-        <div className={`${isSingle ? "" : " grid grid-cols-2 gap-4"}`}>
+        <div className={`grid ${gridClass} gap-2.5 mb-4`}>
           {images.map((src, index) => (
-            <img key={index} className="mb-4 w-full" src={src} alt="" />
+            <img key={index} className="w-full" src={src} alt="" />
           ))}
         </div>
 
@@ -63,5 +72,33 @@ function ArticleFigure({ images, caption }: ArticleFigureProps) {
           <p className="px-10 text-center text-sm text-gray-500">{caption}</p>
         )}
       </div>
+    );
+}
+
+
+type ArticleGalleryProps = {
+    images: string[];
+    cols: 2 | 3;
+    caption?: string;
+};
+// 多图，2列或3列
+function ArticleGallery({ images, cols, caption }: ArticleGalleryProps) {
+
+    const colsClass = cols === 2 ? "grid-cols-2" : "grid-cols-3";
+    
+    return (
+        <div className="w-4xl mx-auto mb-10">
+            {/* 图片 */}
+            <div className={`grid ${colsClass} gap-2.5 mb-4`}>
+                {images.map((src, index) => (
+                <img key={index} className="w-full" src={src} alt="" />
+                ))}
+            </div>
+
+            {/* 文字 */}
+            {caption && (
+                <p className="px-10 text-center text-sm text-gray-500">{caption}</p>
+            )}
+        </div>
     );
 }
