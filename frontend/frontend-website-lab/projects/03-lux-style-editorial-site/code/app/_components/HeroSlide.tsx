@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
-type HeroSlideProps = {
+
+// 其他文件需要
+export type HeroSlideProps = {
   image: string;
   title: string;
   subtitle?: string;

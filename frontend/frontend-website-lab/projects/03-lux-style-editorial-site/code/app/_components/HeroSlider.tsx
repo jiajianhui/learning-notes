@@ -14,6 +14,9 @@ import { useRef } from "react";
 // 组件
 import { HeroSlide } from "./HeroSlide";
 
+// 数据
+import { sliderItems } from "../_data/slider";
+
 export function HeroSlider() {
   // 箭头
   const pre = useRef<HTMLButtonElement>(null);
@@ -71,22 +74,16 @@ export function HeroSlider() {
         keyboard={{ enabled: true }}
         className="w-screen h-screen relative"
       >
-        <SwiperSlide>
-          <HeroSlide
-            image="/hero-slides/02-iphone-17e.jpg"
-            title="iPhone 17e: An Almost Perfect Entry"
-            url="https://www.google.com"
-          />
-        </SwiperSlide>
-
-        <SwiperSlide>
-          <HeroSlide
-            image="/hero-slides/05-iphone-16-pro-review.png"
-            title="The iPhone 16 Pro Camera Review: Control"
-            subtitle="For the first “Desert Titanium” iPhone, we took over 1000 photos and videos in the desert. Take a deep dive into what’s new — and why it’s close to the last of its kind."
-            url="https://www.google.com"
-          />
-        </SwiperSlide>
+        {sliderItems.map((item, index) => (
+          <SwiperSlide key={index}>
+            <HeroSlide
+              image={item.image}
+              title={item.title}
+              subtitle={item.subtitle}
+              url={item.url}
+            />
+          </SwiperSlide>
+        ))}
       </Swiper>
     </section>
   );
