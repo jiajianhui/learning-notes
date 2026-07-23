@@ -19,7 +19,9 @@
 
 ## 05、这次学到的 Tailwind 写法
 
-* 
+- 当 `loop={false}` 并到达第一张或最后一张时，Swiper 会自动给无法继续切换的按钮添加 `swiper-button-disabled` 类。
+- `[&.swiper-button-disabled]:opacity-[0.35]` 是 Tailwind 任意变体：`&` 代表当前元素，表示按钮有这个类时将透明度设为 `0.35`。
+
 ## 06、能迁移到个人网站的点
 - 
 
