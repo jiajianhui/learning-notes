@@ -17,12 +17,13 @@ export function HeroSlide({ image, title, subtitle, url }: HeroSlideProps) {
       <Image className="object-cover" src={image} fill alt="" />
 
       {/* 标题 */}
-      <div className="flex flex-col gap-4 items-start justify-center h-full relative px-40 text-white">
+      <div
+        data-swiper-parallax="-600"
+        className="flex flex-col gap-4 items-start justify-center h-full relative px-40 text-white"
+      >
         <h2 className="max-w-4xl text-7xl font-black">{title}</h2>
 
-        {subtitle && (
-          <p className="max-w-lg text-xl">{subtitle}</p>
-        )}
+        {subtitle && <p className="max-w-lg text-xl">{subtitle}</p>}
         <Link
           className="text-xl underline underline-offset-4 decoration-1"
           href={url}

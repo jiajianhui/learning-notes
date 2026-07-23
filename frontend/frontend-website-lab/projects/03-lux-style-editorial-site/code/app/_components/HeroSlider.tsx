@@ -1,15 +1,16 @@
 "use client";
 
 import Image from "next/image";
+import { useRef } from "react";
 
 // swiper 组件
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Navigation, Keyboard } from "swiper/modules";
+import { A11y, Autoplay, Navigation, Keyboard, Parallax } from "swiper/modules";
 
 // swiper 样式
 import "swiper/css";
 import "swiper/css/navigation";
-import { useRef } from "react";
+import "swiper/css/parallax";
 
 // 组件
 import { HeroSlide } from "./HeroSlide";
@@ -59,7 +60,7 @@ export function HeroSlider() {
       <Swiper
         slidesPerView={1}
         loop={false}
-        modules={[Autoplay, Navigation, Keyboard]}
+        modules={[A11y, Autoplay, Navigation, Keyboard, Parallax]}
         autoplay={{ delay: 3000 }}
         navigation={{}}
         // 用 ref 把自己写的按钮交给 Swiper 控制
@@ -72,6 +73,8 @@ export function HeroSlider() {
           }
         }}
         keyboard={{ enabled: true }}
+        speed={800}
+        parallax
         className="w-screen h-screen relative"
       >
         {sliderItems.map((item, index) => (
