@@ -23,7 +23,7 @@
 
 ```text
 先用本地数据把页面做好
--> 用 MDX + Typography 做个人网站轻内容系统
+-> 用 MDX 做个人网站轻内容系统
 -> 再试成熟 CMS，看别人怎么组织内容
 -> 后端阶段再自己实现一个小版本
 ```
@@ -100,15 +100,15 @@ Markdown
 
 ---
 
-### 3. MDX + Typography 是过渡方案：像 CMS，但不是 CMS
+### 3. MDX 是过渡方案：像 CMS，但不是 CMS
 
-MDX + Typography 值得单独放一章，但它和 Ghost、Payload、Directus 不是同一类东西。
+MDX 值得单独放一章，但它和 Ghost、Payload、Directus 不是同一类东西。
 
 可以这样分：
 
 | 方案 | 本质 | 适合当前做什么 |
 |---|---|---|
-| MDX + Typography | 本地文件内容 + 文章排版 | 做个人网站文章、项目复盘、内容详情页 |
+| MDX | 本地文件内容 | 做个人网站文章、项目复盘、内容详情页 |
 | Ghost / Payload / Directus | 成熟 CMS 或 Headless CMS | 学后台、内容模型、API、发布流程 |
 | 自建 Node.js + Express + PostgreSQL | 自己实现内容系统 | 后端阶段练接口、数据库和管理后台 |
 
@@ -123,7 +123,7 @@ MDX + Typography 值得单独放一章，但它和 Ghost、Payload、Directus �
 
 详细看：
 
-- [05A-MDX和Typography轻CMS方案.md](./05A-MDX和Typography轻CMS方案.md)
+- [05A-MDX轻CMS方案.md](./05A-MDX轻CMS方案.md)
 
 ---
 
@@ -279,7 +279,7 @@ Ghost、Payload、Directus 都是成熟产品。
 
 ```text
 先继续做前端页面
--> 个人网站项目里先接 MDX + Typography
+-> 个人网站项目里先接 MDX
 -> Lux 项目后试一次 Ghost
 -> 个人网站第一版稳定后看 Payload
 -> 学 PostgreSQL 后看 Directus
@@ -290,7 +290,7 @@ Ghost、Payload、Directus 都是成熟产品。
 
 | 阶段 | 看什么 | 目的 |
 |---|---|---|
-| 个人网站项目 | MDX + Typography | 在没有后端前，先把文章和项目内容结构跑通 |
+| 个人网站项目 | MDX | 在没有后端前，先把文章和项目内容结构跑通 |
 | Lux 项目后 | Ghost | 先理解内容发布系统 |
 | 个人网站第一版后 | Payload | 看 Next.js 怎么接 CMS |
 | 学 PostgreSQL 后 | Directus | 看数据库怎么变成后台和 API |

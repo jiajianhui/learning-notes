@@ -145,12 +145,12 @@ content/projects/*.mdx
 
 这样既不会一开始就进入后端，也不会把长文章全部写死在 `page.tsx` 里。
 
-文章详情页的排版用 Typography 插件统一处理：
+文章详情页的元素渲染和样式统一放在 `mdx-components.tsx`：
 
 ```text
 MDX 正文
--> ArticleBody
--> prose / prose-neutral / max-w-none
+-> mdx-components.tsx
+-> 文章详情页
 ```
 
 内容管理后面再升级，不要一开始就选 CMS：
@@ -158,7 +158,7 @@ MDX 正文
 ```text
 本地 TypeScript metadata
 -> MDX 正文
--> Typography 阅读排版
+-> 统一正文元素样式
 -> 页面结构和视觉气质稳定
 -> 再选择 Payload CMS 或自建 Express API
 -> 最后再接 PostgreSQL
@@ -170,7 +170,7 @@ MDX 正文
 
 MDX 这一段可以回看：
 
-- [../../05A-MDX和Typography轻CMS方案.md](../../05A-MDX和Typography轻CMS方案.md)
+- [../../05A-MDX轻CMS方案.md](../../05A-MDX轻CMS方案.md)
 
 ---
 

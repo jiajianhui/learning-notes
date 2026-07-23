@@ -166,12 +166,12 @@ export const posts = [
 ```text
 数组负责列表结构
 MDX 负责长正文
-Typography 插件负责阅读排版
+mdx-components.tsx 负责统一正文元素的渲染和样式
 ```
 
 MDX 方案放在：
 
-- [05A-MDX和Typography轻CMS方案.md](./05A-MDX和Typography轻CMS方案.md)
+- [05A-MDX轻CMS方案.md](./05A-MDX轻CMS方案.md)
 
 ---
 
