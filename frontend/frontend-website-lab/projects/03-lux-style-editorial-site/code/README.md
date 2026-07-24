@@ -15,7 +15,32 @@
 
 ## 04、开发过程中的收获
 
-* 
+### 鼠标滚动动画
+
+`bottom-2` 等于 `bottom: 8px`。它会固定绝对定位元素的底边，所以动画把 `height` 从 `8px` 变成 `0` 时，底边不动，顶部向下收缩。
+
+```text
+设置 top    → 顶部不动，底部向上收缩
+设置 bottom → 底部不动，顶部向下收缩
+```
+
+```css
+@keyframes scroll-wheel {
+  0%   { height: 8px; transform: translateY(-100%); }
+  25%  { height: 8px; transform: translateY(0); }
+  50%  { height: 0; transform: translateY(0); }
+  100% { height: 0; transform: translateY(0); }
+}
+```
+
+动画节奏：线条进入 → 顶部向下收缩 → 保持消失，等待下一轮。
+
+### `relative` 和 `absolute`
+
+- `relative`：元素仍占据原来的空间，可以相对原位置偏移，也能作为子元素的定位参照。
+- `absolute`：元素不占原来的位置；父元素有 `relative` 时，`top`、`right`、`bottom`、`left` 都以父元素为准。
+
+当前组件中，鼠标外框使用 `relative`，内部滚轮使用 `absolute`，所以滚轮的位置以鼠标外框为参照。
 
 ## 05、这次学到的 Tailwind 写法
 

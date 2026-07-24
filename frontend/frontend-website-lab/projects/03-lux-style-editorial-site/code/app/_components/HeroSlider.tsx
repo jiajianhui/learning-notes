@@ -14,6 +14,7 @@ import "swiper/css/parallax";
 
 // 组件
 import { HeroSlide } from "./HeroSlide";
+import { HeroScrollIndicator } from "./HeroScrollIndicator";
 
 // 数据
 import { sliderItems } from "../_data/slider";
@@ -26,7 +27,7 @@ export function HeroSlider() {
   return (
     <section className="w-screen h-screen relative">
       {/* 箭头 */}
-      <div className="absolute right-0 z-10 flex flex-col gap-4 h-screen justify-center pr-40">
+      <div className="absolute right-0 z-10 flex flex-col gap-4 h-screen justify-center items-center pr-40">
         <button
           ref={next}
           className="[&.swiper-button-disabled]:opacity-40 cursor-pointer"
@@ -54,6 +55,8 @@ export function HeroSlider() {
             height={1}
           />
         </button>
+
+        <HeroScrollIndicator />
       </div>
 
       {/* 轮播 */}
