@@ -1,6 +1,10 @@
 import { HeroSlider } from "./_components/HeroSlider";
+import { PostGrid } from "./_components/PostGrid";
 export default function Home() {
   return (
-    <HeroSlider />
+    <div>
+      <HeroSlider />
+      <PostGrid />
+    </div>
   );
 }
