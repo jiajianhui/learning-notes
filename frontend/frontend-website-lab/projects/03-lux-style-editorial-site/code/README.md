@@ -42,6 +42,15 @@
 
 当前组件中，鼠标外框使用 `relative`，内部滚轮使用 `absolute`，所以滚轮的位置以鼠标外框为参照。
 
+### PostGrid 设计思路
+
+1. **布局设计**：外层使用 Flex 换行，每张卡片通过 `flex-basis` 设置初始宽度比例，再用 `:nth-of-type(17n + N)` 让这组不规则布局每 17 张重复一次。`flex-grow: 1` 表示一行没有排满时，这一行的卡片会继续变宽，把剩下的空白占满。
+2. **Link 充满格子**：Link 默认是 `inline`，需要转为 `block`，才能通过宽高撑满整个格子，同时让整张卡片都可以点击。
+3. **图片充满但不变形**：可以把 Image 理解为“图片元素的盒子”和“盒子里的实际图片内容”。`fill` 底层类似 `position: absolute; inset: 0`，控制图片元素的盒子铺满 Link；`object-cover` 控制实际图片内容保持原始比例铺满盒子。当图片与盒子的宽高比不同时，超出盒子的部分不会显示。
+4. **Hover 放大动画**：`hover:scale-110` 设置悬停后的放大效果，`transition-transform` 让变化产生动画，`duration-500` 和 `ease-out` 分别控制时长和节奏。给 Link 添加 `group`、图片使用 `group-hover:scale-110` 后，鼠标移到 Link 内的文字上也能触发图片动画，不需要禁用文字的鼠标事件。
+5. **底部渐变遮罩**：`bg-linear-to-t from-black/80 from-0% to-transparent to-50%` 表示从底部的半透明黑色向上渐变，到容器中间变为完全透明，顶部区域保持透明。
+6. **圆角边缘出现杂色**：`rounded` 配合 `overflow-hidden` 裁切时会产生半透明的抗锯齿像素，并混入 Link 的背景色。
+
 ## 05、这次学到的 Tailwind 写法
 
 - 当 `loop={false}` 并到达第一张或最后一张时，Swiper 会自动给无法继续切换的按钮添加 `swiper-button-disabled` 类。
