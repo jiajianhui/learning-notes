@@ -42,6 +42,10 @@
 - `relative`：元素仍占据原来的空间，相对自己的原位置偏移，也能作为绝对定位子元素的参照。
 - `absolute`：元素脱离布局；父元素设置了定位时，相对父元素确定位置。它不参与 Flex 排版，在没有设置 `top`、`right`、`bottom`、`left` 时，默认位置仍会受父级 Flex 对齐方式影响。
 
+### HeroScrollIndicator 点击滚动
+
+点击按钮后，通过 `document.querySelector(".postGrid")` 找到目标元素，再调用 `scrollIntoView({ behavior: "smooth" })` 平滑滚动到该位置。`?.` 表示只有找到元素时才执行。
+
 ### PostGrid 设计思路
 
 1. **布局设计**：外层使用 Flex 换行，每张卡片通过 `flex-basis` 设置初始宽度比例，再用 `:nth-of-type(17n + N)` 让这组不规则布局每 17 张重复一次。`flex-grow: 1` 表示一行没有排满时，这一行的卡片会继续变宽，把剩下的空白占满。
