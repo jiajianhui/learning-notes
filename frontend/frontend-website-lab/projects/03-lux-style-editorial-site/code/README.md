@@ -50,10 +50,17 @@
 
 1. **布局设计**：外层使用 Flex 换行，每张卡片通过 `flex-basis` 设置初始宽度比例，再用 `:nth-of-type(17n + N)` 让这组不规则布局每 17 张重复一次。`flex-grow: 1` 表示一行没有排满时，这一行的卡片会继续变宽，把剩下的空白占满。
 2. **Link 充满格子**：Link 默认是 `inline`，需要转为 `block`，才能通过宽高撑满整个格子，同时让整张卡片都可以点击。
-3. **图片充满但不变形**：可以把 Image 理解为“图片元素的盒子”和“盒子里的实际图片内容”。`fill` 底层类似 `position: absolute; inset: 0`，控制图片元素的盒子铺满 Link；`object-cover` 控制实际图片内容保持原始比例铺满盒子。当图片与盒子的宽高比不同时，超出盒子的部分不会显示。
+3. **图片充满但不变形**：PostGrid 使用普通 `<img>`，通过 `size-full` 让图片盒子铺满 Link，再用 `object-cover` 让实际图片保持原始比例并裁切多余部分。当图片与盒子的宽高比不同时，超出盒子的部分不会显示。
 4. **Hover 放大动画**：`hover:scale-110` 设置悬停后的放大效果，`transition-transform` 让变化产生动画，`duration-500` 和 `ease-out` 分别控制时长和节奏。给 Link 添加 `group`、图片使用 `group-hover:scale-110` 后，鼠标移到 Link 内的文字上也能触发图片动画，不需要禁用文字的鼠标事件。
 5. **底部渐变遮罩**：`bg-linear-to-t from-black/80 from-0% to-transparent to-50%` 表示从底部的半透明黑色向上渐变，到容器中间变为完全透明，顶部区域保持透明。
 6. **圆角边缘出现杂色**：`rounded` 配合 `overflow-hidden` 裁切时会产生半透明的抗锯齿像素，并混入 Link 的背景色。
+
+### PostGrid 用 `<img>`，HeroSlide 用 `<Image>`
+
+`<Image fill>` 没写 `sizes` 时，Next.js 默认按 `100vw` 选择图片。如果图片实际宽度小于视口宽度的 60%，开发环境会提示缺少 `sizes` 的性能警告；这是警告，不是运行错误。
+
+- **PostGrid 使用 `<img>`**：卡片宽度不规则，使用 `<Image>` 还要维护复杂的 `sizes`。普通 `<img>` 配合 `size-full object-cover` 更简单；`loading="lazy"` 让图片接近可视区域时才加载，减少首屏请求和流量；`decoding="async"` 让浏览器异步解码图片，尽量避免阻塞其他内容显示。
+- **HeroSlide 使用 `<Image>`**：它是全屏首图。没有写 `sizes` 时，Next.js 默认按 `100vw` 处理，刚好符合实际宽度，所以不会警告。
 
 ## 05、这次学到的 Tailwind 写法
 

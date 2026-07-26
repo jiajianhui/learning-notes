@@ -1,6 +1,5 @@
 import "./postGrid.css";
 import { posts } from "../_data/posts";
-import Image from "next/image";
 import Link from "next/link";
 export function PostGrid() {
   return (
@@ -23,11 +22,12 @@ export function PostGrid() {
 
             {/* 图片 */}
             {post.image && (
-              // fill —— 底层类似 position: absolute; inset: 0
-              <Image
-                className="object-cover group-hover:scale-105 transition-transform duration-300 ease-in-out"
+              // lazy：接近可视区域时再加载；async：异步解码，尽量避免阻塞其他内容显示
+              <img
+                className="size-full object-cover group-hover:scale-105 transition-transform duration-300 ease-in-out"
                 src={post.image}
-                fill
+                loading="lazy"
+                decoding="async"
                 alt=""
               />
             )}
