@@ -60,6 +60,10 @@
 - 当 `loop={false}` 并到达第一张或最后一张时，Swiper 会自动给无法继续切换的按钮添加 `swiper-button-disabled` 类。
 - `[&.swiper-button-disabled]:opacity-[0.35]` 是 Tailwind 任意变体：`&` 代表当前元素，表示按钮有这个类时将透明度设为 `0.35`。
 
+### `flex-1` 和 `grow`
+
+`flex-1` 会同时设置放大、缩小和基础宽度，适合让元素重新分配父容器的剩余空间。`grow` 只设置 `flex-grow: 1`，会保留元素原本的宽度，有多余空间时再变宽。
+
 ## 06、能迁移到个人网站的点
 - 
 
