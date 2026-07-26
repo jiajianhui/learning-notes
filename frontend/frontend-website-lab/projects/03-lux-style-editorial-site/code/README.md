@@ -35,12 +35,12 @@
 
 动画节奏：线条进入 → 顶部向下收缩 → 保持消失，等待下一轮。
 
-### `relative` 和 `absolute`
+### HeroScrollIndicator 的对齐方式
 
-- `relative`：元素仍占据原来的空间，可以相对原位置偏移，也能作为子元素的定位参照。
-- `absolute`：元素不占原来的位置；父元素有 `relative` 时，`top`、`right`、`bottom`、`left` 都以父元素为准。
+`HeroScrollIndicator` 的父元素使用 `flex flex-col`，主轴是上下方向，由 `justify-center` 控制；交叉轴是左右方向，由 `items-center` 控制。组件设置 `absolute bottom-10` 后，上下位置由 `bottom-10` 决定，不再受 `justify-center` 影响；由于没有设置 `left`、`right`，左右位置仍受 `items-center` 影响，因此能与箭头保持横向居中。
 
-当前组件中，鼠标外框使用 `relative`，内部滚轮使用 `absolute`，所以滚轮的位置以鼠标外框为参照。
+- `relative`：元素仍占据原来的空间，相对自己的原位置偏移，也能作为绝对定位子元素的参照。
+- `absolute`：元素脱离布局；父元素设置了定位时，相对父元素确定位置。它不参与 Flex 排版，在没有设置 `top`、`right`、`bottom`、`left` 时，默认位置仍会受父级 Flex 对齐方式影响。
 
 ### PostGrid 设计思路
 

@@ -2,8 +2,7 @@ import "./scrollWheel.css"
 
 export function HeroScrollIndicator() {
   return (
-    // relative的位置是相对于自己原本在正常文档流中的位置偏移
-    <div className="relative -bottom-60 flex flex-col items-center gap-2">
+    <div className=" absolute bottom-10 flex flex-col items-center gap-2">
       {/* 细线 */}
       <div className="w-px h-10 bg-white/40" />
 

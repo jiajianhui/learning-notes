@@ -26,8 +26,8 @@ export function HeroSlider() {
 
   return (
     <section className="w-screen h-screen relative">
-      {/* 箭头 */}
-      <div className="absolute right-0 z-10 flex flex-col gap-4 h-screen justify-center items-center pr-40">
+      {/* 箭头、鼠标指示 */}
+      <div className="absolute right-0 z-10 flex flex-col gap-4 h-screen justify-center items-center mr-40">
         <button
           ref={next}
           className="[&.swiper-button-disabled]:opacity-40 cursor-pointer"
