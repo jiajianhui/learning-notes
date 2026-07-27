@@ -1,7 +1,40 @@
+"use client";
+
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+
 export function SiteHeader() {
+  // Hook 必须放在函数组件内部，并且位于组件顶层：
+  const [hidden, setHidden] = useState(false);
+
+  // 记录上一次滚动的位置
+  const preScroll = useRef(window.scrollY);
+
+  useEffect(() => {
+    const isHidden = () => {
+      if (window.scrollY <= 100) {
+        setHidden(false);
+      } else if (window.scrollY > preScroll.current) {
+        setHidden(true);
+      } else if (window.scrollY < preScroll.current) {
+        setHidden(false);
+      }
+
+      // 滚动结束后记录本次位置
+      preScroll.current = window.scrollY;
+    };
+
+    window.addEventListener("scroll", isHidden);
+
+    return () => {
+      window.removeEventListener("scroll", isHidden);
+    };
+  }, []);
+
   return (
-    <div className="fixed top-0 z-30 w-screen py-6 px-40">
+    <div
+      className={`fixed top-0 z-30 w-screen py-6 px-40 transition-all duration-500 ${hidden ? "-translate-y-20 opacity-0" : "translate-y-0 opacity-100"}`}
+    >
       <div className="flex justify-between items-center px-7 h-16 rounded-2xl bg-white/50 backdrop-blur-xl">
         <button className="flex items-center gap-2.5 text-sm">
           <Image

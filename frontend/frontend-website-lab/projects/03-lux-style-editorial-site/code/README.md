@@ -46,6 +46,40 @@
 
 点击按钮后，通过 `document.querySelector(".postGrid")` 找到目标元素，再调用 `scrollIntoView({ behavior: "smooth" })` 平滑滚动到该位置。`?.` 表示只有找到元素时才执行。
 
+### Header：向下滚动隐藏，向上滚动出现
+
+这个交互同时判断滚动位置和滚动方向：
+
+```text
+页面顶部 100px 以内       → Header 始终显示
+超过 100px 并向下滚动     → Header 隐藏
+超过 100px 并向上滚动     → Header 立即出现
+```
+
+`window.scrollY` 是当前滚动位置，`preScroll.current` 保存上一次滚动位置。比较两个数字就能判断滚动方向：
+
+```tsx
+const isHidden = () => {
+  if (window.scrollY <= 100) {
+    setHidden(false);
+  } else if (window.scrollY > preScroll.current) {
+    setHidden(true);
+  } else if (window.scrollY < preScroll.current) {
+    setHidden(false);
+  }
+
+  preScroll.current = window.scrollY;
+};
+```
+
+页面顶部时，`window.scrollY` 和 `preScroll.current` 都是 `0`。滚动后，作为实时数据的 `window.scrollY` 会先变化，而作为储存数据的 `preScroll.current` 仍是滚动前的位置，所以比较两者就能判断方向；判断后再用当前的 `window.scrollY` 更新 `preScroll.current`。
+
+### `useRef` 和 `useState`：一个保存值，一个更新页面
+
+`useRef(0)` 返回的是 `{ current: 0 }` 这样的 Ref 对象，因此读取和修改里面的值都要使用 `.current`。
+
+`useRef` 适合保存不需要显示在页面上的数据，修改时不会触发重新渲染；`useState` 适合保存会影响页面显示的数据，修改后会触发重新渲染。
+
 ### PostGrid 设计思路
 
 1. **布局设计**：外层使用 Flex 换行，每张卡片通过 `flex-basis` 设置初始宽度比例，再用 `:nth-of-type(17n + N)` 让这组不规则布局每 17 张重复一次。`flex-grow: 1` 表示一行没有排满时，这一行的卡片会继续变宽，把剩下的空白占满。
