@@ -8,11 +8,11 @@ export function SiteHeader() {
   const [hidden, setHidden] = useState(false);
 
   // 记录上一次滚动的位置
-  const preScroll = useRef(window.scrollY);
+  const preScroll = useRef(0);
 
   useEffect(() => {
     const isHidden = () => {
-      if (window.scrollY <= 100) {
+      if (window.scrollY <= 200) {
         setHidden(false);
       } else if (window.scrollY > preScroll.current) {
         setHidden(true);
@@ -33,7 +33,7 @@ export function SiteHeader() {
 
   return (
     <div
-      className={`fixed top-0 z-30 w-screen py-6 px-40 transition-all duration-500 ${hidden ? "-translate-y-20 opacity-0" : "translate-y-0 opacity-100"}`}
+      className={`fixed top-0 z-30 w-screen py-6 px-40 transition-all duration-500 ease-in-out ${hidden ? "-translate-y-30" : "translate-y-0"}`}
     >
       <div className="flex justify-between items-center px-7 h-16 rounded-2xl bg-white/50 backdrop-blur-xl">
         <button className="flex items-center gap-2.5 text-sm">
