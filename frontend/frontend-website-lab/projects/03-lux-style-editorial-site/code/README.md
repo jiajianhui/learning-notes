@@ -57,7 +57,9 @@
 
 ### PostGrid 用 `<img>`，HeroSlide 用 `<Image>`
 
-`<Image fill>` 没写 `sizes` 时，Next.js 默认按 `100vw` 选择图片。如果图片实际宽度小于视口宽度的 60%，开发环境会提示缺少 `sizes` 的性能警告；这是警告，不是运行错误。
+`Image` 使用 `fill` 时，如果没有设置 `sizes`，Next.js 会默认按 `100vw` 选择图片。如果图片实际宽度小于视口宽度的 60%，开发环境会提示缺少 `sizes` 的性能警告；这是警告，不是运行错误。
+
+`Image` 使用 `width` 和 `height` 时，这两个属性会提供图片宽高比，也会影响 Next.js 生成的图片分辨率。CSS 决定图片实际显示多大；如果设置的宽高过小，Next.js 生成的候选图片分辨率可能不足，最终显示就会发虚。
 
 - **PostGrid 使用 `<img>`**：卡片宽度不规则，使用 `<Image>` 还要维护复杂的 `sizes`。普通 `<img>` 配合 `size-full object-cover` 更简单；`loading="lazy"` 让图片接近可视区域时才加载，减少首屏请求和流量；`decoding="async"` 让浏览器异步解码图片，尽量避免阻塞其他内容显示。
 - **HeroSlide 使用 `<Image>`**：它是全屏首图。没有写 `sizes` 时，Next.js 默认按 `100vw` 处理，刚好符合实际宽度，所以不会警告。
