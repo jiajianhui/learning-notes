@@ -13,7 +13,7 @@ export function PostGrid() {
             className={`group block relative overflow-hidden w-full h-full rounded-[40px] ${post.image ? "" : "bg-amber-200"}`}
           >
             {/* 标题 */}
-            <h4 className="text-3xl font-bold text-white absolute left-0 bottom-0 p-14 z-20">
+            <h4 className="text-xl xl:text-3xl font-bold text-white absolute left-0 bottom-0 p-8 xl:p-14 z-20">
               {post.title}
             </h4>
 

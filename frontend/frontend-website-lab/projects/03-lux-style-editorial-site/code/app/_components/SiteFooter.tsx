@@ -5,13 +5,13 @@ import Link from "next/link";
 
 export function SiteFooter() {
   return (
-    <div className="flex flex-col bg-zinc-900 px-40 py-20 ">
+    <div className="flex flex-col bg-zinc-900 px-6 xl:px-40 py-4 xl:py-20 ">
       <div className="flex justify-between items-center">
-        <p className="text-white text-4xl font-bold basis-50">
+        <p className="text-white text-xl xl:text-4xl font-bold basis-30 xl:basis-50">
           Lux — iPhone camera apps, camera reviews and more
         </p>
 
-        <div className="flex justify-between px-40 flex-1 text-white">
+        <div className="hidden xl:flex justify-between px-6 xl:px-40 flex-1 text-white">
           <button>Home</button>
           <button>Support</button>
         </div>
@@ -21,12 +21,17 @@ export function SiteFooter() {
         </button>
       </div>
 
-      <div className="flex flex-col">
-        <h4 className="text-white text-xl font-bold w-full border-b border-white/20 pt-18 pb-5">
+      <div className="flex xl:hidden justify-between flex-1 text-white pt-8">
+        <button>Home</button>
+        <button>Support</button>
+      </div>
+
+      <div className="flex flex-col pt-18">
+        <h4 className="text-white text-xl font-bold w-full border-b border-white/20 pb-5">
           Our apps
         </h4>
 
-        <div className="flex justify-center items-start gap-10 py-20">
+        <div className="flex flex-wrap justify-center items-start gap-10 py-10 xl:py-20">
           {apps.map((app, index) => (
             <Link
               href={app.url}
