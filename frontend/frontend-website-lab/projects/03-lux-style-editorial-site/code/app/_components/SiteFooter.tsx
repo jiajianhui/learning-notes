@@ -5,13 +5,13 @@ import Link from "next/link";
 
 export function SiteFooter() {
   return (
-    <div className="flex flex-col bg-zinc-900 px-6 xl:px-40 py-4 xl:py-20 ">
+    <div className="flex flex-col bg-zinc-900 px-6 md:px-20 lg:px-40 py-4 xl:py-20 ">
       <div className="flex justify-between items-center">
         <p className="text-white text-xl xl:text-4xl font-bold basis-30 xl:basis-50">
           Lux — iPhone camera apps, camera reviews and more
         </p>
 
-        <div className="hidden xl:flex justify-between px-6 xl:px-40 flex-1 text-white">
+        <div className="hidden lg:flex justify-between px-6 xl:px-40 flex-1 text-white">
           <button>Home</button>
           <button>Support</button>
         </div>
@@ -21,7 +21,7 @@ export function SiteFooter() {
         </button>
       </div>
 
-      <div className="flex xl:hidden justify-between flex-1 text-white pt-8">
+      <div className="flex lg:hidden justify-between flex-1 text-white pt-8">
         <button>Home</button>
         <button>Support</button>
       </div>

@@ -30,8 +30,8 @@ export function HeroSlider() {
   return (
     <section className="w-screen h-screen relative">
       {/* 箭头、鼠标指示 */}
-      <div className="absolute right-0 z-10 h-screen w-[50px] flex justify-center items-center mr-6 xl:mr-40">
-        <div className="hidden xl:flex flex-col gap-4">
+      <div className="absolute right-0 z-10 h-screen w-[50px] flex justify-center items-center mr-6 md:mr-20 lg:mr-40">
+        <div className="hidden md:flex flex-col gap-4">
           <button
             ref={next}
             className="[&.swiper-button-disabled]:opacity-40 cursor-pointer"
@@ -65,7 +65,7 @@ export function HeroSlider() {
       </div>
 
       {/* 指示条 */}
-      <div className="absolute left-0 bottom-10 z-10 flex xl:hidden gap-2 px-6">
+      <div className="absolute left-0 bottom-10 z-10 flex md:hidden gap-2 px-6">
         {sliderItems.map((_, index) => (
           <div
             key={index}

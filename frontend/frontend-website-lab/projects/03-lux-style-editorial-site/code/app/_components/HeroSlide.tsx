@@ -22,13 +22,15 @@ export function HeroSlide({ image, title, subtitle, url }: HeroSlideProps) {
       {/* 标题 */}
       <div
         data-swiper-parallax="-600"
-        className="flex flex-col gap-4 items-start justify-center h-full relative z-20 px-6 xl:px-40 text-white"
+        className="flex flex-col gap-4 items-start justify-center h-full relative z-20 px-6 md:px-20 lg:px-40 text-white"
       >
-        <h2 className="max-w-4xl text-4xl xl:text-7xl font-black">{title}</h2>
+        <h2 className="max-w-3xl xl:max-w-4xl text-4xl md:text-5xl lg:text-7xl font-black">
+          {title}
+        </h2>
 
-        {subtitle && <p className="max-w-lg xl:text-xl">{subtitle}</p>}
+        {subtitle && <p className="max-w-lg md:text-xl">{subtitle}</p>}
         <Link
-          className="text-xl underline underline-offset-4 decoration-1"
+          className="md:text-xl underline underline-offset-4 decoration-1"
           href={url}
           target="_blank"
         >

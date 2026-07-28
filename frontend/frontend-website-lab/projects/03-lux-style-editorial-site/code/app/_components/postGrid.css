@@ -14,9 +14,20 @@
     flex-basis: 100%;
 }
 
+/* sm */
+@media (min-width: 640px) {
+    .postGridItem {
+        height: 400px;
+    }
 
-/* 大屏布局 */
-@media (min-width: 1280px) {
+    .postGridItem {
+        flex-basis: 50%;
+    }
+
+}
+
+/* lg */
+@media (min-width: 1024px) {
     .postGridItem {
         height: 600px;
     }
