@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 // swiper 组件
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -24,39 +24,54 @@ export function HeroSlider() {
   const pre = useRef<HTMLButtonElement>(null);
   const next = useRef<HTMLButtonElement>(null);
 
+  // 指示条
+  const [activeIndex, setActiveIndex] = useState(0);
+
   return (
     <section className="w-screen h-screen relative">
       {/* 箭头、鼠标指示 */}
-      <div className="absolute right-0 z-10 flex flex-col gap-4 h-screen justify-center items-center mr-6 xl:mr-40">
-        <button
-          ref={next}
-          className="[&.swiper-button-disabled]:opacity-40 cursor-pointer"
-          aria-label="下一张"
-        >
-          <Image
-            className="size-12"
-            src="/icons/next.svg"
-            alt=""
-            width={1}
-            height={1}
-          />
-        </button>
+      <div className="absolute right-0 z-10 h-screen w-[50px] flex justify-center items-center mr-6 xl:mr-40">
+        <div className="hidden xl:flex flex-col gap-4">
+          <button
+            ref={next}
+            className="[&.swiper-button-disabled]:opacity-40 cursor-pointer"
+            aria-label="下一张"
+          >
+            <Image
+              className="size-12"
+              src="/icons/next.svg"
+              alt=""
+              width={1}
+              height={1}
+            />
+          </button>
 
-        <button
-          ref={pre}
-          className="[&.swiper-button-disabled]:opacity-40 cursor-pointer"
-          aria-label="上一张"
-        >
-          <Image
-            className="size-12"
-            src="/icons/pre.svg"
-            alt=""
-            width={1}
-            height={1}
-          />
-        </button>
+          <button
+            ref={pre}
+            className="[&.swiper-button-disabled]:opacity-40 cursor-pointer"
+            aria-label="上一张"
+          >
+            <Image
+              className="size-12"
+              src="/icons/pre.svg"
+              alt=""
+              width={1}
+              height={1}
+            />
+          </button>
+        </div>
 
         <HeroScrollIndicator />
+      </div>
+
+      {/* 指示条 */}
+      <div className="absolute left-0 bottom-10 z-10 flex xl:hidden gap-2 px-6">
+        {sliderItems.map((_, index) => (
+          <div
+            key={index}
+            className={`w-5 h-0.5 bg-white ${activeIndex === index ? "" : "opacity-45"}`}
+          />
+        ))}
       </div>
 
       {/* 轮播 */}
@@ -79,6 +94,10 @@ export function HeroSlider() {
         speed={800}
         parallax
         className="w-screen h-screen relative"
+        // 切换回调
+        onSlideChange={(swiper) => {
+          setActiveIndex(swiper.activeIndex);
+        }}
       >
         {sliderItems.map((item, index) => (
           <SwiperSlide key={index}>
