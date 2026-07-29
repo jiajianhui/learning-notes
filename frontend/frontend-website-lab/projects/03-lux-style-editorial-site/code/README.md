@@ -74,6 +74,14 @@ const isHidden = () => {
 
 页面顶部时，`window.scrollY` 和 `preScroll.current` 都是 `0`。滚动后，作为实时数据的 `window.scrollY` 会先变化，而作为储存数据的 `preScroll.current` 仍是滚动前的位置，所以比较两者就能判断方向；判断后再用当前的 `window.scrollY` 更新 `preScroll.current`。
 
+### 定位布局的三个基本信息
+
+- **定位方式**：`relative`、`absolute`、`fixed` 等，决定元素采用什么定位规则、相对谁定位。
+- **尺寸**：`width`、`height`、`w-screen`、`h-screen` 等，决定元素本身有多大。
+- **位置**：`top`、`right`、`bottom`、`left`、`inset` 等，决定元素放在哪里。
+
+三者在布局中缺一不可：定位方式决定参照，尺寸决定大小，位置决定落点。比如 `fixed w-screen h-screen` 只有定位方式和尺寸，没有指定位置；全屏遮罩使用 `fixed inset-0`，才能明确从视窗四边的 `0` 位置铺满。
+
 ### `useRef` 和 `useState`：一个保存值，一个更新页面
 
 `useRef(0)` 返回的是 `{ current: 0 }` 这样的 Ref 对象，因此读取和修改里面的值都要使用 `.current`。
