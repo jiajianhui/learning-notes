@@ -90,17 +90,17 @@ export function SiteHeader() {
 
       {/* 抽屉组件 */}
       <div
-        className={`fixed left-0 top-0 bottom-0 flex flex-col w-2xl h-screen z-50 bg-white transition-transform duration-300 ease-in ${showMenu ? "" : "-translate-x-full"}`}
+        className={`fixed left-0 top-0 bottom-0 flex flex-col w-screen lg:w-2xl h-screen z-50 bg-white transition-transform duration-300 ease-in ${showMenu ? "" : "-translate-x-full"}`}
       >
         {/* 顶部 */}
         <div
-          className={`flex justify-between items-center p-16 transition-all duration-600 delay-200 ${showMenu ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
+          className={`flex justify-between items-center p-8 lg:p-16 transition-all duration-600 delay-200 ${showMenu ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
         >
           <Image
             src="/header/lux-logo.png"
             width={1359}
             height={407}
-            className="w-auto h-7"
+            className="w-auto h-5 lg:h-7"
             alt="logo"
           />
           <button
@@ -111,15 +111,15 @@ export function SiteHeader() {
               src="/header/close.svg"
               width={18}
               height={18}
-              className="size-4.5"
+              className="size-6 lg:size-4.5"
               alt="close"
             />
-            <p className="text-sm">CLOSE</p>
+            <p className="text-sm hidden lg:block">CLOSE</p>
           </button>
         </div>
 
         {/* 中间滚动区域 */}
-        <div className="flex flex-col gap-24 p-16 flex-1 overflow-scroll">
+        <div className="flex flex-col gap-24 p-8 lg:p-16 flex-1 overflow-scroll">
           <div
             className={`flex flex-col items-start gap-2 text-2xl font-bold transition-all duration-600 delay-300 ${showMenu ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
           >
@@ -162,7 +162,7 @@ export function SiteHeader() {
 
         {/* 底部 */}
         <div
-          className={`flex justify-between items-center p-16 bg-white transition-all duration-600 delay-500 ${showMenu ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
+          className={`flex flex-col-reverse lg:flex-row gap-6 justify-between items-center p-16 bg-white transition-all duration-600 delay-500 ${showMenu ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
         >
           <p className="text-sm opacity-50">Copyright 2026</p>
           <div className="flex gap-6">
@@ -183,6 +183,7 @@ export function SiteHeader() {
 
       {/* 遮罩 */}
       <div
+        onClick={() => setShowMenu(false)}
         className={`fixed inset-0 z-40 w-screen h-screen bg-black/60 transition-opacity ${showMenu ? "opacity-100" : "opacity-0 pointer-events-none"}`}
       />
     </>
