@@ -93,7 +93,9 @@ export function SiteHeader() {
         className={`fixed left-0 top-0 bottom-0 flex flex-col w-2xl h-screen z-50 bg-white transition-transform duration-300 ease-in ${showMenu ? "" : "-translate-x-full"}`}
       >
         {/* 顶部 */}
-        <div className="flex justify-between items-center p-16">
+        <div
+          className={`flex justify-between items-center p-16 transition-all duration-600 delay-200 ${showMenu ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
+        >
           <Image
             src="/header/lux-logo.png"
             width={1359}
@@ -118,12 +120,16 @@ export function SiteHeader() {
 
         {/* 中间滚动区域 */}
         <div className="flex flex-col gap-24 p-16 flex-1 overflow-scroll">
-          <div className="flex flex-col items-start gap-2 text-2xl font-bold">
+          <div
+            className={`flex flex-col items-start gap-2 text-2xl font-bold transition-all duration-600 delay-300 ${showMenu ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
+          >
             <button>Home</button>
             <button>Support</button>
           </div>
 
-          <div>
+          <div
+            className={`transition-all duration-600 delay-400 ${showMenu ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
+          >
             <h5 className="text-xl font-bold pb-4">Our apps:</h5>
 
             <div className="flex flex-col items-start gap-6">
@@ -155,7 +161,9 @@ export function SiteHeader() {
         </div>
 
         {/* 底部 */}
-        <div className="flex justify-between items-center p-16 bg-white">
+        <div
+          className={`flex justify-between items-center p-16 bg-white transition-all duration-600 delay-500 ${showMenu ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
+        >
           <p className="text-sm opacity-50">Copyright 2026</p>
           <div className="flex gap-6">
             {sociallinks.map((item, index) => (
