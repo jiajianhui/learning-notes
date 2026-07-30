@@ -1,7 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+
+import { apps } from "../_data/apps";
+import { sociallinks } from "../_data/sociallinks";
 
 export function SiteHeader() {
   // Hook 必须放在函数组件内部，并且位于组件顶层：
@@ -52,7 +56,7 @@ export function SiteHeader() {
         <div className="flex justify-between items-center px-5 xl:px-7 h-14 xl:h-16 rounded-2xl bg-white/50 backdrop-blur-xl">
           <button
             onClick={() => setShowMenu(true)}
-            className="flex items-center gap-2.5 text-sm"
+            className="flex items-center gap-2.5 text-sm cursor-pointer"
           >
             <Image
               src="/header/menu.svg"
@@ -66,8 +70,8 @@ export function SiteHeader() {
 
           <Image
             src="/header/lux-logo.png"
-            width={320}
-            height={320}
+            width={1359}
+            height={407}
             className="w-auto h-5 xl:h-7.5"
             alt="logo"
           />
@@ -86,14 +90,92 @@ export function SiteHeader() {
 
       {/* 抽屉组件 */}
       <div
-        className={`fixed left-0 top-0 bottom-0 w-2xl h-screen z-50 bg-white transition-transform duration-300 ease-in ${showMenu ? "" : "-translate-x-full"}`}
+        className={`fixed left-0 top-0 bottom-0 flex flex-col w-2xl h-screen z-50 bg-white transition-transform duration-300 ease-in ${showMenu ? "" : "-translate-x-full"}`}
       >
-        <button onClick={() => setShowMenu(false)}>close</button>
+        {/* 顶部 */}
+        <div className="flex justify-between items-center p-16">
+          <Image
+            src="/header/lux-logo.png"
+            width={1359}
+            height={407}
+            className="w-auto h-7"
+            alt="logo"
+          />
+          <button
+            className="flex justify-center items-center gap-1 cursor-pointer"
+            onClick={() => setShowMenu(false)}
+          >
+            <Image
+              src="/header/close.svg"
+              width={18}
+              height={18}
+              className="size-4.5"
+              alt="close"
+            />
+            <p className="text-sm">CLOSE</p>
+          </button>
+        </div>
+
+        {/* 中间滚动区域 */}
+        <div className="flex flex-col gap-24 p-16 flex-1 overflow-scroll">
+          <div className="flex flex-col items-start gap-2 text-2xl font-bold">
+            <button>Home</button>
+            <button>Support</button>
+          </div>
+
+          <div>
+            <h5 className="text-xl font-bold pb-4">Our apps:</h5>
+
+            <div className="flex flex-col items-start gap-6">
+              {apps.map((app, index) => (
+                <Link
+                  href={app.url}
+                  target="_blank"
+                  key={index}
+                  className="flex gap-4 items-center"
+                >
+                  <Image
+                    src={app.icon}
+                    alt=""
+                    width={64}
+                    height={64}
+                    className="size-16 rounded-2xl"
+                  />
+
+                  <div className="flex flex-col">
+                    <h6 className="text-xl font-bold">{app.name}</h6>
+                    <p className="opacity-50 text-center text-sm leading-tight">
+                      {app.description}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 底部 */}
+        <div className="flex justify-between items-center p-16 bg-white">
+          <p className="text-sm opacity-50">Copyright 2026</p>
+          <div className="flex gap-6">
+            {sociallinks.map((item, index) => (
+              <Link key={index} target="_blank" href={item.url}>
+                <Image
+                  src={item.icon}
+                  width={18}
+                  height={18}
+                  alt={item.name}
+                  className="size-4.5 opacity-100 hover:opacity-50"
+                />
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* 遮罩 */}
       <div
-        className={`fixed inset-0 z-40 w-screen h-screen bg-black/50 transition-opacity ${showMenu ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        className={`fixed inset-0 z-40 w-screen h-screen bg-black/60 transition-opacity ${showMenu ? "opacity-100" : "opacity-0 pointer-events-none"}`}
       />
     </>
   );
