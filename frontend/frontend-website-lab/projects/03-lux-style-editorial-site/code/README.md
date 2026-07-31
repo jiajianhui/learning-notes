@@ -35,6 +35,36 @@
 
 动画节奏：线条进入 → 顶部向下收缩 → 保持消失，等待下一轮。
 
+### Hover 时缩短消失的下划线
+
+核心原理：使用 `::after` 伪元素模拟下划线，而不是直接在文字上添加下划线；`transform: scaleX()` 改变它的长度，`transform-origin` 控制变化方向。
+
+Tailwind 也能实现，但写法不够清晰明了，所以这里直接使用 CSS。
+
+### `@keyframes` 的两种写法
+
+`from` 等于 `0%`，`to` 等于 `100%`，下面两种写法效果相同：
+
+```css
+@keyframes enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes enter {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+```
+
+`animation` 简写顺序：动画名称、持续时间、速度曲线、延迟时间、结束状态。
+
+```css
+animation: postsAnimation 0.3s ease-out 0.5s forwards;
+```
+
+`forwards`：动画播放完成后，保持最后一帧的样式。
+
 ### HeroScrollIndicator 的对齐方式
 
 `HeroScrollIndicator` 的父元素使用 `flex flex-col`，主轴是上下方向，由 `justify-center` 控制；交叉轴是左右方向，由 `items-center` 控制。组件设置 `absolute bottom-10` 后，上下位置由 `bottom-10` 决定，不再受 `justify-center` 影响；由于没有设置 `left`、`right`，左右位置仍受 `items-center` 影响，因此能与箭头保持横向居中。

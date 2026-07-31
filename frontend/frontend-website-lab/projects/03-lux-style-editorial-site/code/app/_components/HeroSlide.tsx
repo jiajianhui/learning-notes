@@ -30,7 +30,7 @@ export function HeroSlide({ image, title, subtitle, url }: HeroSlideProps) {
 
         {subtitle && <p className="max-w-lg md:text-xl">{subtitle}</p>}
         <Link
-          className="md:text-xl underline underline-offset-4 decoration-1"
+          className="readMore md:text-xl"
           href={url}
           target="_blank"
         >
