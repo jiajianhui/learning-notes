@@ -104,6 +104,10 @@ const isHidden = () => {
 
 页面顶部时，`window.scrollY` 和 `preScroll.current` 都是 `0`。滚动后，作为实时数据的 `window.scrollY` 会先变化，而作为储存数据的 `preScroll.current` 仍是滚动前的位置，所以比较两者就能判断方向；判断后再用当前的 `window.scrollY` 更新 `preScroll.current`。
 
+### Header 透明度动画与背景模糊
+
+父元素的 `opacity` 动画会创建独立的合成层，导致子元素的 `backdrop-blur` 无法正确获取页面背景。把透明度动画和 `backdrop-blur` 放在同一个元素上即可。
+
 ### 定位布局的三个基本信息
 
 - **定位方式**：`relative`、`absolute`、`fixed` 等，决定元素采用什么定位规则、相对谁定位。
