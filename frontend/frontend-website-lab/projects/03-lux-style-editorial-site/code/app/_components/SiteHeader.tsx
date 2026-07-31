@@ -53,7 +53,7 @@ export function SiteHeader() {
       <div
         className={`fixed top-0 z-30 w-screen py-6 px-6 md:px-20 lg:px-40 transition-transform duration-500 ease-in-out ${hidden ? "-translate-y-30" : "translate-y-0"}`}
       >
-        <div className="flex justify-between items-center px-5 xl:px-7 h-14 xl:h-16 rounded-2xl bg-white/50 backdrop-blur-xl">
+        <div className="flex justify-between items-center px-5 xl:px-7 h-14 xl:h-16 rounded-2xl bg-white/50 backdrop-blur-xl shadow-sm">
           <button
             onClick={() => setShowMenu(true)}
             className="flex items-center gap-2.5 text-sm cursor-pointer"
@@ -68,13 +68,16 @@ export function SiteHeader() {
             <p className="hidden md:block">MENU</p>
           </button>
 
-          <Image
-            src="/header/lux-logo.png"
-            width={1359}
-            height={407}
-            className="w-auto h-5 xl:h-7.5"
-            alt="logo"
-          />
+          <Link href="/">
+            <Image
+              src="/header/lux-logo.png"
+              width={1359}
+              height={407}
+              className="w-auto h-5 xl:h-7.5"
+              alt="logo"
+            />
+          </Link>
+
           <button className="flex items-center gap-2.5 text-sm">
             <Image
               src="/header/search.svg"
@@ -123,8 +126,12 @@ export function SiteHeader() {
           <div
             className={`flex flex-col items-start gap-2 text-2xl font-bold transition-all duration-600 delay-300 ${showMenu ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
           >
-            <button>Home</button>
-            <button>Support</button>
+            <Link onClick={() => setShowMenu(false)} href="/">
+              Home
+            </Link>
+            <Link onClick={() => setShowMenu(false)} href="/">
+              Support
+            </Link>
           </div>
 
           <div

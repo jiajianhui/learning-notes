@@ -23,7 +23,7 @@ export const sliderItems: HeroSlideProps[] = [
     title: "iPhone 17 Pro Camera Review: Rule of Three",
     subtitle:
       "iPhone 17 Pro is here, a big upgrade and makeover of the iPhone and its cameras. Is it really as big of a deal as they say?",
-    url: "https://www.lux.camera/iphone-17-pro-camera-review-rule-of-three/",
+    url: "/posts/iphone-17-pro-review",
   },
   {
     image: "/hero-slides/05-iphone-16-pro-review.png",
