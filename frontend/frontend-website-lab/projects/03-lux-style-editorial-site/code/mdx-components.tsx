@@ -5,16 +5,16 @@ import type { MDXComponents } from "mdx/types";
 
 const components: MDXComponents = {
   h2: ({ children }) => (
-    <div className="flex justify-center">
-      <h2 className="font-sans font-bold text-4xl leading-relaxed mb-4 w-1/2">
+    <div className="w-full lg:w-1/2 mx-auto px-6 lg:px-0">
+      <h2 className="font-sans font-bold text-3xl lg:text-4xl leading-relaxed mb-1 lg:mb-4">
         {children}
       </h2>
     </div>
   ),
 
   p: ({ children }) => (
-    <div className="flex justify-center">
-      <p className="font-serif text-2xl leading-relaxed mb-12 w-1/2">
+    <div className="w-full lg:w-1/2 mx-auto px-6 lg:px-0">
+      <p className="font-serif text-xl lg:text-2xl leading-relaxed mb-8 lg:mb-12">
         {children}
       </p>
     </div>
@@ -46,12 +46,12 @@ type ArticleFigureProps = {
 
 // 自定义组件
 
-// 单图、两图、三图展示组件
+// 单图、两图、三图展示组件（带描述）
 function ArticleFigure({ images, caption }: ArticleFigureProps) {
 
     const imageCount = images.length
     
-    const widthClass = imageCount === 1 ? "w-1/2" : "w-4xl";
+    const widthClass = imageCount === 1 ? "w-full lg:w-1/2" : "w-full lg:w-4xl";
     const gridClass = {
       1: "grid-cols-1",
       2: "grid-cols-2",
@@ -59,9 +59,9 @@ function ArticleFigure({ images, caption }: ArticleFigureProps) {
     }[imageCount];
 
     return (
-      <div className={`${widthClass} mx-auto mb-10`}>
+      <div className={`${widthClass} px-6 lg:px-0 mx-auto mb-6 lg:mb-10`}>
         {/* 图片 */}
-        <div className={`grid ${gridClass} gap-2.5 mb-4`}>
+        <div className={`grid ${gridClass} gap-1.5 lg:gap-2.5 mb-2 lg:mb-4`}>
           {images.map((src, index) => (
             <img key={index} className="w-full" src={src} alt="" />
           ))}
@@ -69,7 +69,7 @@ function ArticleFigure({ images, caption }: ArticleFigureProps) {
 
         {/* 文字 */}
         {caption && (
-          <p className="px-10 text-center text-sm text-gray-500">{caption}</p>
+          <p className="px-5 lg:px-10 text-center text-sm text-gray-500">{caption}</p>
         )}
       </div>
     );
@@ -87,18 +87,18 @@ function ArticleGallery({ images, cols, caption }: ArticleGalleryProps) {
     const colsClass = cols === 2 ? "grid-cols-2" : "grid-cols-3";
     
     return (
-        <div className="w-4xl mx-auto mb-10">
-            {/* 图片 */}
-            <div className={`grid ${colsClass} gap-2.5 mb-4`}>
-                {images.map((src, index) => (
-                <img key={index} className="w-full" src={src} alt="" />
-                ))}
-            </div>
-
-            {/* 文字 */}
-            {caption && (
-                <p className="px-10 text-center text-sm text-gray-500">{caption}</p>
-            )}
+      <div className="w-full lg:w-4xl px-6 lg:px-0 mx-auto mb-10">
+        {/* 图片 */}
+        <div className={`grid ${colsClass} gap-1.5 lg:gap-2.5 mb-4`}>
+          {images.map((src, index) => (
+            <img key={index} className="w-full" src={src} alt="" />
+          ))}
         </div>
+
+        {/* 文字 */}
+        {caption && (
+          <p className="px-10 text-center text-sm text-gray-500">{caption}</p>
+        )}
+      </div>
     );
 }
