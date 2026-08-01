@@ -191,7 +191,7 @@ export function SiteHeader() {
       {/* 遮罩 */}
       <div
         onClick={() => setShowMenu(false)}
-        className={`fixed inset-0 z-40 w-screen h-screen bg-black/60 transition-opacity ${showMenu ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        className={`fixed inset-0 z-40 bg-black/60 ${showMenu ? "" : "hidden"}`}
       />
     </>
   );
