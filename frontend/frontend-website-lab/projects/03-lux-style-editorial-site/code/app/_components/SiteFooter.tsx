@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export function SiteFooter() {
   return (
-    <div className="flex flex-col bg-zinc-900 px-6 md:px-20 lg:px-40 py-4 xl:py-20 ">
+    <footer className="flex flex-col bg-zinc-900 px-6 md:px-20 lg:px-40 py-4 xl:py-20 ">
       <div className="flex justify-between items-center">
         <p className="text-white text-xl xl:text-4xl font-bold basis-30 xl:basis-50">
           Lux — iPhone camera apps, camera reviews and more
@@ -56,6 +56,6 @@ export function SiteFooter() {
 
         <p className="text-white/40 text-center">Copyright 2026</p>
       </div>
-    </div>
+    </footer>
   );
 }

@@ -50,10 +50,13 @@ export function SiteHeader() {
   return (
     <>
       {/* header */}
-      <div
+      <header
         className={`fixed top-0 z-30 w-screen py-6 px-6 md:px-20 lg:px-40 transition-transform duration-500 ease-in-out ${hidden ? "-translate-y-30" : "translate-y-0"}`}
       >
-        <div className="siteHeader flex justify-between items-center px-5 xl:px-7 h-14 xl:h-16 rounded-2xl bg-white/50 backdrop-blur-xl shadow-sm">
+        <nav
+          aria-label="Primary navigation"
+          className="siteHeader flex justify-between items-center px-5 xl:px-7 h-14 xl:h-16 rounded-2xl bg-white/50 backdrop-blur-xl shadow-sm"
+        >
           <button
             onClick={() => setShowMenu(true)}
             className="flex items-center gap-2.5 text-sm cursor-pointer"
@@ -88,8 +91,8 @@ export function SiteHeader() {
             />
             <p className="hidden md:block">SEARCH</p>
           </button>
-        </div>
-      </div>
+        </nav>
+      </header>
 
       {/* 抽屉组件 */}
       <div

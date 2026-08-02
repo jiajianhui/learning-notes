@@ -3,14 +3,20 @@
 ## 01、参考网站
 - URL：https://www.lux.camera/
 
-- 给人感觉：
+- 给人感觉：图片精美、秩序、交互细腻
 
 
 ## 02、设计观察
+- 图片素材精心准备，高级、优雅
+- 排版看似无规则，实则后面是一个有规律的布局
+- 微交互引导操作
+- Header 根据滚动方向动态隐藏和出现
+- 详情页使用 serif 字体，凸显人文气息，图文排版松散、优雅
 
-- 
 ## 03、最终做出来的页面
-- 
+- 首页完成度：ok
+- 移动端完成度：ok
+- 桌面端完成度：ok
 
 
 ## 04、开发过程中的收获
@@ -81,16 +87,16 @@ animation: postsAnimation 0.3s ease-out 0.5s forwards;
 这个交互同时判断滚动位置和滚动方向：
 
 ```text
-页面顶部 100px 以内       → Header 始终显示
-超过 100px 并向下滚动     → Header 隐藏
-超过 100px 并向上滚动     → Header 立即出现
+页面顶部 200px 以内       → Header 始终显示
+超过 200px 并向下滚动     → Header 隐藏
+超过 200px 并向上滚动     → Header 立即出现
 ```
 
 `window.scrollY` 是当前滚动位置，`preScroll.current` 保存上一次滚动位置。比较两个数字就能判断滚动方向：
 
 ```tsx
 const isHidden = () => {
-  if (window.scrollY <= 100) {
+  if (window.scrollY <= 200) {
     setHidden(false);
   } else if (window.scrollY > preScroll.current) {
     setHidden(true);
@@ -127,8 +133,8 @@ const isHidden = () => {
 1. **布局设计**：外层使用 Flex 换行，每张卡片通过 `flex-basis` 设置初始宽度比例，再用 `:nth-of-type(17n + N)` 让这组不规则布局每 17 张重复一次。`flex-grow: 1` 表示一行没有排满时，这一行的卡片会继续变宽，把剩下的空白占满。
 2. **Link 充满格子**：Link 默认是 `inline`，需要转为 `block`，才能通过宽高撑满整个格子，同时让整张卡片都可以点击。
 3. **图片充满但不变形**：PostGrid 使用普通 `<img>`，通过 `size-full` 让图片盒子铺满 Link，再用 `object-cover` 让实际图片保持原始比例并裁切多余部分。当图片与盒子的宽高比不同时，超出盒子的部分不会显示。
-4. **Hover 放大动画**：`hover:scale-110` 设置悬停后的放大效果，`transition-transform` 让变化产生动画，`duration-500` 和 `ease-out` 分别控制时长和节奏。给 Link 添加 `group`、图片使用 `group-hover:scale-110` 后，鼠标移到 Link 内的文字上也能触发图片动画，不需要禁用文字的鼠标事件。
-5. **底部渐变遮罩**：`bg-linear-to-t from-black/80 from-0% to-transparent to-50%` 表示从底部的半透明黑色向上渐变，到容器中间变为完全透明，顶部区域保持透明。
+4. **Hover 放大动画**：图片使用 `group-hover:scale-105` 设置悬停后的轻微放大效果，`transition-transform` 让变化产生动画，`duration-300` 和 `ease-in-out` 分别控制时长和节奏。给 Link 添加 `group` 后，鼠标移到 Link 内任意区域都能触发图片动画。
+5. **底部渐变遮罩**：`bg-linear-to-t from-black/50 to-black/0 to-30%` 表示从底部的半透明黑色向上渐变，在容器高度约 30% 的位置变为透明。
 6. **圆角边缘出现杂色**：`rounded` 配合 `overflow-hidden` 裁切时会产生半透明的抗锯齿像素，并混入 Link 的背景色。
 
 ### PostGrid 用 `<img>`，HeroSlide 用 `<Image>`
@@ -154,10 +160,13 @@ const isHidden = () => {
 `flex-col-reverse` 会让 Flex 子元素纵向排列，并反转它们的显示顺序：DOM 中先写的元素显示在下方，后写的元素显示在上方。
 
 ## 06、能迁移到个人网站的点
-- 
+- 首页网格布局以及响应式变化
+- header 部分的动态显示
+- MDX 管理文章、文章的版式设计
+- 微交互设计
 
 ## 07、开发问题记录
-无
+- 设置 `allowedDevOrigins: ["192.168.1.*"]`，支持局域网设备访问开发环境的 Next.js 资源，方便手机真机预览。
 
 ## 08、MDX 使用流程
 

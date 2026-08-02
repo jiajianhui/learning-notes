@@ -3,9 +3,12 @@ import { posts } from "../_data/posts";
 import Link from "next/link";
 export function PostGrid() {
   return (
-    <div className="postGrid">
+    <section className="postGrid">
+
+      <h2 className="sr-only">Latest articles</h2>
+
       {posts.map((post, index) => (
-        <div key={index} className="postGridItem">
+        <article key={index} className="postGridItem">
           <Link
             href={post.url}
             target="_blank"
@@ -13,9 +16,9 @@ export function PostGrid() {
             className={`group block relative overflow-hidden w-full h-full rounded-[40px] ${post.image ? "" : "bg-amber-200"}`}
           >
             {/* 标题 */}
-            <h4 className="text-xl xl:text-3xl font-bold text-white absolute left-0 bottom-0 p-8 xl:p-14 z-20">
+            <h3 className="text-xl xl:text-3xl font-bold text-white absolute left-0 bottom-0 p-8 xl:p-14 z-20">
               {post.title}
-            </h4>
+            </h3>
 
             {/* 遮罩 */}
             <div className="absolute inset-0 bg-linear-to-t from-black/50 to-black/0 to-30% z-10" />
@@ -32,8 +35,8 @@ export function PostGrid() {
               />
             )}
           </Link>
-        </div>
+        </article>
       ))}
-    </div>
+    </section>
   );
 }
