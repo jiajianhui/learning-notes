@@ -1,0 +1,645 @@
+# 19. Mini CMS：把整套后端知识做成一个产品
+
+## 问题背景
+
+前面的章节负责建立后端技术地图。这一章负责把它们连成一个真正可以操作的项目：
+
+```text
+用 Node.js + Express + PostgreSQL 写内容 API
+-> 用 Next.js + Ant Design 做管理后台
+-> 完成一个可以管理文章的 Mini CMS
+```
+
+这不是新的知识章节，而是整套文档最后的项目实操路线。
+
+建议节奏：
+
+```text
+先读 00～13，建立主线
+-> 打开第 19 章开始 Mini CMS
+-> 实操中遇到部署、读代码和排错问题，再回看 14～18
+```
+
+---
+
+## 代码放在哪里
+
+学习文档和产品代码分开管理：
+
+```text
+learning-notes Git 仓库
+└── backend/backend-system-learning/
+    └── 保存后端系统文档和当前实操路线
+
+mini-cms Git 仓库
+├── server/
+└── admin-web/
+    └── 保存真正运行、测试和部署的产品代码
+```
+
+一句话：
+
+```text
+learning-notes 负责学什么和为什么
+mini-cms 负责代码怎样一步步实现
+```
+
+等真正进入阶段 1 时，再创建 `mini-cms` 仓库。现在阅读文档时不需要提前生成代码。
+
+---
+
+## 一个仓库为什么可以有两个工程
+
+### 1. Git 仓库看 `.git`
+
+一个目录是否属于某个 Git 仓库，关键看它由哪个 `.git` 管理。
+
+Mini CMS 推荐结构：
+
+```text
+mini-cms/
+├── .git/                    整个 Mini CMS 只有这一份 Git 历史
+├── .gitignore
+├── README.md
+├── server/
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── src/
+└── admin-web/
+    ├── package.json
+    ├── next.config.ts
+    └── app/
+```
+
+不要在 `server/` 和 `admin-web/` 里面分别再运行 `git init`。
+
+这样它们就是：
+
+```text
+一个 Git 仓库
++
+两个独立工程
+```
+
+### 2. 工程看 `package.json` 和启动方式
+
+`server` 和 `admin-web` 各有自己的：
+
+- `package.json`
+- 依赖
+- 环境变量
+- 启动命令
+- 构建方式
+
+开发时分别启动：
+
+```bash
+cd server
+npm run dev
+```
+
+```bash
+cd admin-web
+npm run dev
+```
+
+它们是两个工程，但修改可以放在同一个 commit 中。
+
+例如完成“新建文章”时，一个 commit 可以同时包含：
+
+```text
+server
+-> 新增 POST /api/articles
+
+admin-web
+-> 新增文章表单和提交逻辑
+```
+
+因为它们属于同一个 Mini CMS 功能，一起维护反而更清楚。
+
+### 3. 为什么不拆成两个 Git 仓库
+
+如果拆成：
+
+```text
+mini-cms-server
+mini-cms-admin-web
+```
+
+那么每次接口和页面一起变化时，需要维护两个 commit、两个仓库链接和两套版本记录。
+
+Mini CMS 规模不大，前后端又属于同一个产品，所以第一版没有必要拆开。
+
+---
+
+## Markdown 链接和 Git submodule 是什么
+
+### 1. Markdown 链接只是普通跳转
+
+等 `mini-cms` 仓库创建后，可以在当前文档里加一条：
+
+```md
+[Mini CMS 代码仓库](https://github.com/你的用户名/mini-cms)
+```
+
+它的作用和网页链接一样：点击后打开另一个仓库。
+
+它不会：
+
+- 把 Mini CMS 代码下载到 `learning-notes`。
+- 让两个仓库共享 commit。
+- 让一个仓库变成另一个仓库的一部分。
+
+### 2. Git submodule 是把另一个仓库挂进当前目录
+
+submodule 会让当前仓库记录“另一个仓库的某个 commit”，使用者 clone 后还需要额外初始化和更新。
+
+它适合某些依赖独立仓库的工程，但会增加：
+
+- clone 步骤
+- commit 指针维护
+- 分支和更新理解成本
+
+你的场景不需要这些能力。
+
+所以只使用普通 Markdown 链接：
+
+```text
+learning-notes
+-> 用链接指向 mini-cms
+
+mini-cms
+-> README 也可以用链接指回学习文档
+```
+
+不使用 submodule，也不把 `mini-cms` 目录嵌套在 `learning-notes` 里面。
+
+---
+
+## 默认技术路线
+
+```text
+后端：Node.js + Express + TypeScript
+数据库：PostgreSQL + SQL + pg
+管理后台：Next.js + TypeScript + Ant Design
+接口检查：Apifox
+自动化测试：Vitest + Supertest
+```
+
+开发端口：
+
+```text
+admin-web：http://localhost:3000
+server：http://localhost:3001
+PostgreSQL：通常是 localhost:5432
+```
+
+数据流：
+
+```text
+Next.js 管理后台
+-> HTTP 请求 Express API
+-> Express 校验身份、参数和业务规则
+-> pg 执行 SQL
+-> PostgreSQL 保存或查询数据
+-> Express 返回状态码和 JSON
+-> 管理后台更新页面状态
+```
+
+第一轮不让 Next.js 直接访问 PostgreSQL，也不把主要接口改写成 Next.js Route Handler。
+
+这不是因为 Next.js 不能写后端，而是 Mini CMS 第一轮要专门学习独立 Express 的边界。两条架构的具体使用场景看：
+
+- [10A-Next.js 也能写后端：具体什么时候用](./10A-Nextjs也能写后端-具体什么时候用.md)
+
+---
+
+## 为什么选择 PostgreSQL
+
+你以前简单使用过 MySQL，但现在基本需要重新学习。从当前成本看，重新学 MySQL 和第一次学 PostgreSQL 差别不大。
+
+Mini CMS 正好会练到：
+
+- 表和字段
+- 唯一约束
+- 外键
+- 多对多关系
+- JOIN
+- 筛选和分页
+- 事务
+
+第一轮使用：
+
+```text
+PostgreSQL + 原生 SQL + pg
+```
+
+先看清楚 SQL 和数据库真正做了什么。Mini CMS 主体完成后，再判断是否学习 Prisma 或 Drizzle。
+
+---
+
+## 第一版产品范围
+
+### 1. 管理员登录
+
+- 登录
+- 退出
+- 获取当前管理员
+- 未登录不能修改内容
+
+第一版只有一个管理员，不做公开注册和复杂角色系统。
+
+### 2. 文章管理
+
+- 查看文章列表和详情
+- 新建、编辑和删除文章
+- 保存草稿
+- 发布和撤回
+- 按标题、状态和标签筛选
+- 分页
+
+正文先使用普通多行文本或 Markdown，不做富文本编辑器。
+
+### 3. 标签管理
+
+- 新建、编辑和删除标签
+- 给文章添加多个标签
+- 按标签筛选文章
+
+### 4. 管理页面状态
+
+- loading
+- empty
+- error
+- success
+- 删除确认
+- 表单校验失败
+- 登录失效
+
+后台视觉只要求结构清楚、操作顺手，不再做新的视觉临摹。
+
+---
+
+## 第一版不做什么
+
+- 不做公开注册。
+- 不做多角色权限矩阵。
+- 不做评论、点赞和收藏。
+- 不做富文本编辑器。
+- 不做图片上传和云存储。
+- 不做全文搜索引擎。
+- 不做 Redis、消息队列和微服务。
+- 不做 GraphQL、WebSocket 和多租户。
+- 不为了架构形式机械拆很多层。
+- 第一轮不直接替换现有个人网站的数据来源。
+
+先把一个小系统做完整，再根据真实需求扩展。
+
+---
+
+## 数据怎么保存
+
+第一版使用四张核心表：
+
+| 表 | 保存什么 |
+|---|---|
+| `admins` | 管理员邮箱和密码哈希 |
+| `articles` | 标题、slug、摘要、正文、封面、状态和时间 |
+| `tags` | 标签名称和 slug |
+| `article_tags` | 文章和标签的多对多关系 |
+
+文章至少包含：
+
+```text
+id
+title
+slug
+summary
+content
+cover_url
+status
+published_at
+created_at
+updated_at
+```
+
+第一版封面只保存图片 URL，不做文件上传。
+
+---
+
+## API 范围
+
+```text
+GET    /api/health
+
+POST   /api/auth/login
+POST   /api/auth/logout
+GET    /api/auth/me
+
+GET    /api/articles
+GET    /api/articles/:id
+POST   /api/articles
+PATCH  /api/articles/:id
+DELETE /api/articles/:id
+
+GET    /api/tags
+POST   /api/tags
+PATCH  /api/tags/:id
+DELETE /api/tags/:id
+```
+
+发布和撤回第一版先作为文章状态更新处理。等基本 CRUD 稳定后，再判断是否拆成单独业务接口。
+
+---
+
+## 管理后台页面
+
+```text
+/login
+/admin/articles
+/admin/articles/new
+/admin/articles/[id]/edit
+/admin/tags
+```
+
+主要使用这些 Ant Design 组件：
+
+- `Layout`、`Menu`
+- `Table`
+- `Form`、`Input`、`Select`
+- `Button`
+- `Modal`
+- `Alert`、`message`
+- `Pagination`
+
+---
+
+## 实操阶段
+
+这一章是 Mini CMS 项目任务和进度的唯一来源。开始写代码后，按下面七个阶段推进。
+
+### 阶段 1：让 Express 接到第一个请求
+
+开始前回看：
+
+- [01-后端大图景](./01-后端大图景-页面背后的系统.md)
+- [02-Node.js](./02-Nodejs-让JavaScript运行在服务器.md)
+- [03-HTTP](./03-HTTP-一次请求到底带了什么.md)
+- [04-Express](./04-Express-路由和中间件怎样接住请求.md)
+
+完成：
+
+- 创建独立的 `mini-cms` Git 仓库。
+- 创建 `server` 工程和 TypeScript 开发环境。
+- 跑通 `GET /api/health`。
+- 用内存数组完成 `GET /api/articles`。
+- 用 Apifox 查看正常响应和不存在路径。
+
+完成标准：
+
+- 能独立启动服务器。
+- 能解释 `request`、`response`、route 和 middleware 的关系。
+- 修改路径或响应字段时知道改哪里。
+
+### 阶段 2：把内存数据换成 PostgreSQL
+
+开始前回看：
+
+- [05-异步和错误](./05-异步流程和错误处理.md)
+- [06-API 设计和校验](./06-API设计和参数校验.md)
+- [07-关系型数据库和 SQL](./07-关系型数据库和SQL.md)
+- [08-PostgreSQL 和 pg](./08-PostgreSQL和pg-让Express读写数据库.md)
+
+完成：
+
+- 安装并启动 PostgreSQL。
+- 创建 Mini CMS database 和 `articles` 表。
+- 配置 `DATABASE_URL` 和 `.env.example`。
+- 使用一个 `pg` 连接池。
+- 把文章列表改成数据库查询。
+- 所有用户输入使用参数化查询。
+
+完成标准：
+
+- 重启服务器后数据仍然存在。
+- 能在数据库和 API 中看到同一条数据。
+- 能区分服务器没启动、数据库没连接和 SQL 写错。
+
+### 阶段 3：完成文章 CRUD 和管理页面
+
+开始前回看：
+
+- [09-后端项目结构](./09-后端项目怎么拆文件.md)
+- [10-Next.js 管理后台](./10-Nextjs管理后台怎样接Express.md)
+
+后端完成：
+
+- `GET /api/articles`
+- `GET /api/articles/:id`
+- `POST /api/articles`
+- `PATCH /api/articles/:id`
+- `DELETE /api/articles/:id`
+- 请求参数校验
+- 统一错误结构
+- 404、409、422 和 500 等状态码
+- 错误处理中间件
+- 只允许开发管理后台来源的 CORS 配置
+
+前端完成：
+
+- 创建 `admin-web` Next.js 工程。
+- 文章列表页。
+- 新建和编辑文章页。
+- 删除确认。
+- loading、empty、error 和 success 状态。
+
+完成标准：
+
+```text
+在 Next.js 后台新建文章
+-> Express 校验请求
+-> PostgreSQL 保存
+-> 返回列表后看到新文章
+-> 编辑和删除也能走通
+```
+
+同一接口既能在 Apifox 中验证，也能在管理后台中使用。
+
+### 阶段 4：增加标签、状态和事务
+
+开始前回看：
+
+- [11-数据关系和事务](./11-数据关系和事务.md)
+
+完成：
+
+- 创建 `tags` 和 `article_tags` 表。
+- 建立文章和标签的多对多关系。
+- 更新文章和标签关系时使用事务。
+- 增加草稿、发布和撤回状态。
+- 增加标题、状态和标签筛选。
+- 增加分页、创建时间和更新时间。
+
+业务规则：
+
+- slug 不能重复。
+- 草稿可以没有发布时间。
+- 发布时写入发布时间。
+- 删除标签不能误删文章。
+- 不存在的文章返回 404。
+- 筛选和分页由后端执行。
+
+完成标准：
+
+- 能解释文章、标签和关联表为什么这样设计。
+- 关联更新失败时事务会回滚。
+- 违反约束时返回可理解的业务错误。
+
+### 阶段 5：增加真正的管理员登录
+
+开始前回看：
+
+- [12-登录、Cookie 和安全](./12-登录Cookie和基本安全.md)
+
+完成：
+
+- 创建 `admins` 表。
+- 密码只保存哈希。
+- 完成登录、退出和当前用户接口。
+- 使用 HttpOnly Cookie。
+- 增加认证中间件。
+- 配置 CORS 和 Cookie credentials。
+- 未登录不能修改文章和标签。
+- 增加 Next.js 登录页和登录状态。
+
+完成标准：
+
+- 数据库中没有明文密码。
+- 未登录请求受保护接口时返回 401。
+- 登录后刷新页面仍能识别管理员。
+- 退出后不能继续操作内容。
+
+### 阶段 6：补自动化测试和项目说明
+
+开始前回看：
+
+- [13-后端测试](./13-后端测试怎么分层.md)
+
+完成：
+
+- 配置 Vitest 和 Supertest。
+- 使用独立测试数据库或隔离测试数据。
+- 检查环境变量。
+- 增加基础请求和错误日志。
+- 写清楚 Mini CMS README。
+- 记录项目复盘。
+
+优先测试：
+
+- 创建文章成功。
+- 缺少必填字段时失败。
+- slug 重复时失败。
+- 查询不存在文章时返回 404。
+- 未登录时不能修改文章。
+- 登录后可以发布文章。
+
+完成标准：
+
+- 不打开浏览器也能验证核心 API。
+- 修改接口破坏旧行为时，测试会提醒。
+- 新环境按照 README 可以启动项目。
+
+### 阶段 7：把内容提供给个人网站，可选
+
+开始前回看：
+
+- [14-运行和部署](./14-从开发环境到线上运行.md)
+
+可以继续：
+
+- 提供只返回已发布文章的公开 API。
+- 让个人网站读取文章列表和详情。
+- 渲染 Markdown 正文。
+- 接入封面图片地址。
+- 增加基础缓存和部署。
+
+这是 Mini CMS 主体完成后的迁移阶段，不是第一轮必做项。
+
+---
+
+## 每个功能按同一套流程做
+
+```text
+1. 写清楚用户要完成什么
+2. 设计请求和响应
+3. 设计或调整数据表
+4. 用 Express 实现接口
+5. 用 Apifox 检查正常和错误情况
+6. 接到 Next.js 管理后台
+7. 进入阶段 6 后补核心自动化测试
+8. 写下自己真正理解的请求链路
+```
+
+可以使用 AI 搭骨架、解释报错和帮助重构，但每完成一个阶段都要能回答：
+
+```text
+请求从哪个文件进入？
+数据在哪里校验？
+执行了什么 SQL？
+错误为什么返回这个状态码？
+前端拿到结果后怎样更新？
+```
+
+忘记函数名或配置写法时可以查文档或问 AI，不要求脱离工具手写全部代码。
+
+---
+
+## 怎样判断项目完成
+
+必须走通：
+
+```text
+管理员登录
+-> 新建一篇草稿
+-> 设置标签
+-> 编辑正文
+-> 发布文章
+-> 在列表中筛选到它
+-> 撤回或删除
+```
+
+同时满足：
+
+- 所有正式内容来自 PostgreSQL，不依赖内存数组。
+- 参数错误、未登录、资源不存在都有明确响应。
+- 管理后台有完整的 loading、empty、error 和 success 状态。
+- 核心接口既能用 Apifox 检查，也有自动化测试。
+- Mini CMS README 写清安装、环境变量、建表和启动方式。
+- 能解释一次请求从 Next.js 到 PostgreSQL 再返回的完整过程。
+
+每个阶段结束只检查四件事：
+
+```text
+能运行
+能操作
+能解释
+能验证
+```
+
+---
+
+## 小结
+
+最终会有两个普通 Git 仓库：
+
+```text
+learning-notes
+-> 保存系统学习文档和这份项目路线
+
+mini-cms
+-> 保存 server 和 admin-web 两个工程的全部代码
+```
+
+`server` 和 `admin-web` 是两个独立工程，但共同属于一个 Mini CMS 产品，所以使用同一个 `mini-cms` Git 仓库。
+
+两个仓库之间只放普通 Markdown 链接，不需要 Git submodule。
