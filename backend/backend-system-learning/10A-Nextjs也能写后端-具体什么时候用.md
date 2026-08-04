@@ -125,6 +125,8 @@ export async function POST(request: Request) {
 }
 ```
 
+这里的 `Request` 和 `Response` 是 Web 标准对象，不是 Express 增强过的 `req` 和 `res`。职责相同，都是接收和返回 HTTP 数据，但读取 body、设置状态码的具体 API 不同。
+
 这和 Express route 的职责很接近：
 
 ```text
@@ -380,12 +382,12 @@ Mini CMS 完成后，可以做一个很小的对比练习：
 
 ## 常见误区
 
-- Next.js 能运行服务端代码，不代表每个项目都应该取消独立后端。
+- Next.js 能运行服务端代码，不代表每个项目都应该取消独立后端；还要看 API 是否服务多个客户端、是否需要独立部署。
 - Route Handler 的作用接近 API route，但写法不是 Express 的 `req`、`res`。
 - Server Action 不等于安全的内部函数，仍要校验身份、权限和输入。
-- Server Component 在服务器读取数据时，不必再请求同一个项目的 Route Handler。
+- Server Component 已经运行在服务器，可以直接调用数据函数；再请求同一项目的 Route Handler 只是多走一次 HTTP。
 - 只有服务器代码可以读取数据库密码；不要放进 `NEXT_PUBLIC_` 环境变量。
-- 不要为了同时使用两个流行框架，默认把 Express 套进 Next.js。
+- 默认把 Express 套进 Next.js 会重复两套路由和服务器机制；需要独立 Express 时，把它作为单独服务运行。
 
 ---
 

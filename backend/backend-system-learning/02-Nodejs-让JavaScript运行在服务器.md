@@ -89,6 +89,8 @@ const server = createServer((request, response) => {
 server.listen(3001);
 ```
 
+这里的 `request` 和 `response` 是 Node.js 提供的原生 HTTP 对象。Express 建立在这套能力之上，在路由 handler 中提供更方便的请求和响应对象，例如 `request.params`、`request.body` 和 `response.json()`；第 04 章会具体展开。
+
 Express 会把路由匹配、JSON 处理和中间件组织得更方便，所以正式练习使用 Express。
 
 ---

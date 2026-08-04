@@ -87,6 +87,15 @@ export async function getArticles() {
 }
 ```
 
+这里的 `response` 是浏览器 `fetch()` 收到的 Response 对象，代表 Express 已经返回给前端的 HTTP 响应；它不是后端 handler 中用于发送结果的 Express `res`。
+
+```text
+Express res.json(...)
+-> HTTP 响应
+-> fetch 得到 response
+-> response.json() 读取 JSON body
+```
+
 前端需要同时处理：
 
 ```text
@@ -146,13 +155,13 @@ Ant Design Form 提交
 
 ## 常见误区
 
-- `admin-web` 被误叫成 Node 后端。
-- Next.js 直接使用数据库密码查询 PostgreSQL。
-- 所有文件都加 `"use client"`，没有明确客户端边界。
-- Cookie 请求忘记 `credentials: "include"`。
-- 后端允许了 CORS，但没有允许 credentials，或来源配置错误。
-- 只处理成功状态，不处理 401、404、409 和 422。
-- 前端自己对当前数组分页和筛选，后端始终返回全部数据。
+- `admin-web` 虽然叫管理后台，仍然是用户操作的前端界面；本项目真正的后端是 Express。
+- `admin-web` 不应绕过 Express 并携带数据库密码查询 PostgreSQL；它只通过 HTTP API 获取数据。
+- 所有文件都加 `"use client"` 会扩大客户端代码范围；只在需要状态、事件和浏览器 API 的组件边界添加。
+- 跨来源请求如果没有 `credentials: "include"`，浏览器不会按需要携带登录 Cookie，接口会继续返回 401。
+- 前端要求携带 Cookie 时，Express 的 CORS 也必须允许准确来源和 credentials，否则浏览器会拦截响应。
+- 只写成功后的页面更新，会让登录失效、数据冲突和参数错误都变成模糊的“请求失败”；分别处理常见状态。
+- 前端对当前数组切片，只能分页已经下载的数据；真正分页和筛选应由后端查询数据库。
 
 ---
 
