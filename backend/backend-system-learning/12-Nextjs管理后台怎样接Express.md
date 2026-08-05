@@ -1,8 +1,8 @@
-# 10. 前后端联调：Next.js 管理后台怎样接 Express
+# 12. 前后端联调：Next.js 管理后台怎样接 Express
 
 ## 问题背景
 
-Mini CMS 包含两个独立工程：
+一个使用独立 API 的文章管理系统可以包含两个工程：
 
 ```text
 server
@@ -16,11 +16,11 @@ admin-web
 
 本章固定使用独立 Express API。如果想理解“Next.js 自己承担后端”具体有什么意义，接着看：
 
-- [10A-Next.js 也能写后端：具体什么时候用](./10A-Nextjs也能写后端-具体什么时候用.md)
+- [12A-Next.js 也能写后端：具体什么时候用](./12A-Nextjs也能写后端-具体什么时候用.md)
 
 ---
 
-## 核心解释
+## 两个工程怎样通过 HTTP 配合
 
 ### 1. 项目边界
 
@@ -63,7 +63,7 @@ import { Table } from "antd";
 
 Next.js App Router 的 page 和 layout 默认是 Server Components；需要状态、事件或浏览器 API 的边界使用 Client Components。
 
-第一轮可以先用客户端请求把流程看清楚，不急着加入 BFF 或 Server Actions。
+第一轮先用客户端请求把管理后台和 Express 接通。
 
 ---
 
@@ -121,7 +121,7 @@ HTTP 错误状态
 /admin/tags
 ```
 
-本章先完成文章列表、新建和编辑页面，关闭单表 CRUD 的产品闭环。`/admin/tags` 等读完第 11 章、后端建立文章标签关系后再实现。
+页面实现时先完成文章列表、新建和编辑，关闭单表 CRUD 的产品闭环；再接入标签等关联数据，避免同时调试过多链路。
 
 Ant Design 主要负责：
 
@@ -153,27 +153,22 @@ Ant Design Form 提交
 
 ---
 
-## 常见误区
-
-- `admin-web` 虽然叫管理后台，仍然是用户操作的前端界面；本项目真正的后端是 Express。
-- `admin-web` 不应绕过 Express 并携带数据库密码查询 PostgreSQL；它只通过 HTTP API 获取数据。
-- 所有文件都加 `"use client"` 会扩大客户端代码范围；只在需要状态、事件和浏览器 API 的组件边界添加。
-- 跨来源请求如果没有 `credentials: "include"`，浏览器不会按需要携带登录 Cookie，接口会继续返回 401。
-- 前端要求携带 Cookie 时，Express 的 CORS 也必须允许准确来源和 credentials，否则浏览器会拦截响应。
-- 只写成功后的页面更新，会让登录失效、数据冲突和参数错误都变成模糊的“请求失败”；分别处理常见状态。
-- 前端对当前数组切片，只能分页已经下载的数据；真正分页和筛选应由后端查询数据库。
-
----
-
 ## 小结
 
 ```text
-Next.js 管理用户操作和页面状态
-Express 管接口、业务和权限
-PostgreSQL 管长期数据
-HTTP 是两个工程之间的边界
+Next.js 管理后台
+-> 收集用户输入，显示 loading、error 和 success 等页面状态
+
+HTTP 请求
+-> 把页面上的操作和数据发给 Express
+
+Express
+-> 检查身份和输入，执行业务逻辑，再读写数据库
+
+状态码和 JSON
+-> 返回给 Next.js，由页面更新显示结果
 ```
 
-接通这一层后，Mini CMS 才从“接口集合”变成可以实际使用的小产品。
+接通这一层后，文章 API 才从“接口集合”变成可以实际操作的小产品。
 
-下一章 10A 会用具体产品场景对比：什么时候可以直接使用 Next.js 的服务端能力，什么时候保留独立 Express 更清楚。
+下一章 12A 会用具体产品场景对比：什么时候可以直接使用 Next.js 的服务端能力，什么时候保留独立 Express 更清楚。

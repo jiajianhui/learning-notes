@@ -17,7 +17,7 @@
 - `github/GitHub核心功能速查.md`
 - `frontend/前端常见术语关系速查.md`
 - `backend/backend-system-learning/README.md`
-- `backend/backend-system-learning/19-Mini-CMS项目实操路线.md`
+- `backend/backend-system-learning/20-Mini-CMS项目实操路线.md`
 - `tools/终端、Shell、CLI、Node.js关系速查.md`
 - `tools/CODEX_使用指南.md`
 

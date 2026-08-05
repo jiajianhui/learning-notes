@@ -1,4 +1,4 @@
-# 10A. Next.js 也能写后端：具体什么时候用
+# 12A. Next.js 也能写后端：具体什么时候用
 
 ## 问题背景
 
@@ -321,9 +321,9 @@ Next.js 管理前端 + 独立 Express API + PostgreSQL
 
 ---
 
-## Mini CMS 为什么仍然选择 Express
+## 为什么这套学习仍然使用独立 Express
 
-Mini CMS 的第一轮目标包含：
+这套后端学习的第一轮目标包含：
 
 - 看清 HTTP API 边界。
 - 学习 Express route 和 middleware。
@@ -340,9 +340,9 @@ Next.js 管理后台
 -> PostgreSQL
 ```
 
-这不代表它是实现 Mini CMS 的唯一方式，而是它更符合当前学习目标。
+这不代表独立 Express 是文章系统的唯一实现方式，而是它更符合当前学习目标。
 
-Mini CMS 完成后，可以做一个很小的对比练习：
+完成第一个独立后端项目后，可以做一个很小的对比练习：
 
 ```text
 把 GET /api/articles
@@ -380,17 +380,6 @@ Mini CMS 完成后，可以做一个很小的对比练习：
 
 ---
 
-## 常见误区
-
-- Next.js 能运行服务端代码，不代表每个项目都应该取消独立后端；还要看 API 是否服务多个客户端、是否需要独立部署。
-- Route Handler 的作用接近 API route，但写法不是 Express 的 `req`、`res`。
-- Server Action 不等于安全的内部函数，仍要校验身份、权限和输入。
-- Server Component 已经运行在服务器，可以直接调用数据函数；再请求同一项目的 Route Handler 只是多走一次 HTTP。
-- 只有服务器代码可以读取数据库密码；不要放进 `NEXT_PUBLIC_` 环境变量。
-- 默认把 Express 套进 Next.js 会重复两套路由和服务器机制；需要独立 Express 时，把它作为单独服务运行。
-
----
-
 ## 小结
 
 ```text
@@ -401,13 +390,13 @@ Server Action
 -> 当前 Next.js 页面修改数据
 
 Route Handler
--> 提供公开 HTTP endpoint、webhook 或 BFF
+-> 接收 HTTP 请求，并返回 JSON、文本或文件等响应
 
 独立 Express
--> 提供边界更明确、可独立运行的后端服务
+-> 单独运行和部署，可以同时给多个客户端提供 API
 ```
 
-Next.js 后端最有意义的场景，是前台、后台和数据逻辑都紧密属于同一个 Web 产品；Express 更适合独立 API、多客户端和专门学习后端边界。
+页面和数据功能都只服务同一个 Next.js 网站时，可以直接使用 Next.js 的服务端能力。API 需要给多个客户端使用、单独部署，或者希望完整练习后端请求流程时，使用独立 Express 更清楚。
 
 ## 官方参考
 

@@ -14,7 +14,7 @@ Node.js 不是新的编程语言，也不是 Express。
 
 ---
 
-## 核心解释
+## Node.js 项目先认识哪些基础
 
 ### 1. 浏览器和 Node.js 都能运行 JavaScript，但能力不同
 
@@ -95,7 +95,7 @@ Express 会把路由匹配、JSON 处理和中间件组织得更方便，所以�
 
 ---
 
-## Mini CMS 中用在哪里
+## Node.js 在后端项目中做什么
 
 ```text
 Node.js
@@ -108,30 +108,23 @@ Node.js
 
 ---
 
-## 常见误区
-
-### Node.js 不是 npm
-
-Node.js 负责运行 JavaScript，npm 负责安装包和执行 scripts。
-
-### Node.js 不是 Express
-
-不用 Express 也能写服务器，只是需要自己处理更多底层细节。
-
-### TypeScript 不能直接被所有生产环境当作 JavaScript 运行
-
-开发工具可以帮你直接运行 `.ts`，正式构建时仍要明确编译和启动流程。
-
----
-
 ## 小结
 
 ```text
-JavaScript 是语言
-Node.js 是服务器运行环境
-npm 是包和脚本工具
-Express 是 Web 框架
-TypeScript 是给 JavaScript 增加类型检查的语言层
+Node.js
+-> 让 JavaScript 可以在服务器上运行
+
+package.json
+-> 记录项目使用的依赖和可执行脚本
+
+npm
+-> 安装依赖，并运行 package.json 中的脚本
+
+模块
+-> 把代码拆到不同文件，再通过 import 使用
+
+环境变量
+-> 保存端口、数据库地址等会随环境变化的配置
 ```
 
-分清这几个名字，后端项目的第一层就清楚了。
+有了这些基础，才能启动项目并让服务器接收请求。
