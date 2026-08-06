@@ -5,7 +5,7 @@
 前面的章节负责建立后端技术地图。这一章负责把它们连成一个真正可以操作的项目：
 
 ```text
-用 Node.js + Express + PostgreSQL 写内容 API
+用 Node.js + Express + Prisma 7 + PostgreSQL 写内容 API
 -> 用 Next.js + Ant Design 做管理后台
 -> 完成一个可以管理文章的 Mini CMS
 ```
@@ -15,8 +15,12 @@
 建议节奏：
 
 ```text
-先读 00～14，包括 12A，建立主线
--> 打开第 20 章开始 Mini CMS
+先读 00～09
+-> 打开第 20 章，直接开始 Mini CMS
+-> 阶段 3 再读第 11～12 章
+-> 阶段 4 增加标签时再读第 10 章
+-> 阶段 5～6 再读第 13～14 章
+-> 12A 始终是选读
 -> 实操中遇到部署、读代码和排错问题，再回看 15～19
 ```
 
@@ -24,20 +28,22 @@
 
 ## 代码放在哪里
 
-学习文档和产品代码分开管理：
+学习文档和产品代码分开：
 
 ```text
-learning-notes Git 仓库
+learning-notes/
 └── backend/backend-system-learning/
-    └── 保存后端系统文档和当前实操路线
+    └── 保存学习文档和实操路线
 
-mini-cms Git 仓库
+mini-cms/
+├── .git/        整个项目共用一份 Git 历史
 ├── server/
+│   └── package.json
 └── admin-web/
-    └── 保存真正运行、测试和部署的产品代码
+    └── package.json
 ```
 
-一句话：
+`server` 和 `admin-web` 各自有依赖和启动命令，但同属一个 Mini CMS，所以放在同一个 Git 仓库里。不要在两个子目录里再次运行 `git init`。
 
 ```text
 learning-notes 负责学什么和为什么
@@ -48,139 +54,12 @@ mini-cms 负责代码怎样一步步实现
 
 ---
 
-## 一个仓库为什么可以有两个工程
-
-### 1. Git 仓库看 `.git`
-
-一个目录是否属于某个 Git 仓库，关键看它由哪个 `.git` 管理。
-
-Mini CMS 推荐结构：
-
-```text
-mini-cms/
-├── .git/                    整个 Mini CMS 只有这一份 Git 历史
-├── .gitignore
-├── README.md
-├── server/
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── src/
-└── admin-web/
-    ├── package.json
-    ├── next.config.ts
-    └── app/
-```
-
-不要在 `server/` 和 `admin-web/` 里面分别再运行 `git init`。
-
-这样它们就是：
-
-```text
-一个 Git 仓库
-+
-两个独立工程
-```
-
-### 2. 工程看 `package.json` 和启动方式
-
-`server` 和 `admin-web` 各有自己的：
-
-- `package.json`
-- 依赖
-- 环境变量
-- 启动命令
-- 构建方式
-
-开发时分别启动：
-
-```bash
-cd server
-npm run dev
-```
-
-```bash
-cd admin-web
-npm run dev
-```
-
-它们是两个工程，但修改可以放在同一个 commit 中。
-
-例如完成“新建文章”时，一个 commit 可以同时包含：
-
-```text
-server
--> 新增 POST /api/articles
-
-admin-web
--> 新增文章表单和提交逻辑
-```
-
-因为它们属于同一个 Mini CMS 功能，一起维护反而更清楚。
-
-### 3. 为什么不拆成两个 Git 仓库
-
-如果拆成：
-
-```text
-mini-cms-server
-mini-cms-admin-web
-```
-
-那么每次接口和页面一起变化时，需要维护两个 commit、两个仓库链接和两套版本记录。
-
-Mini CMS 规模不大，前后端又属于同一个产品，所以第一版没有必要拆开。
-
----
-
-## Markdown 链接和 Git submodule 是什么
-
-### 1. Markdown 链接只是普通跳转
-
-等 `mini-cms` 仓库创建后，可以在当前文档里加一条：
-
-```md
-[Mini CMS 代码仓库](https://github.com/你的用户名/mini-cms)
-```
-
-它的作用和网页链接一样：点击后打开另一个仓库。
-
-它不会：
-
-- 把 Mini CMS 代码下载到 `learning-notes`。
-- 让两个仓库共享 commit。
-- 让一个仓库变成另一个仓库的一部分。
-
-### 2. Git submodule 是把另一个仓库挂进当前目录
-
-submodule 会让当前仓库记录“另一个仓库的某个 commit”，使用者 clone 后还需要额外初始化和更新。
-
-它适合某些依赖独立仓库的工程，但会增加：
-
-- clone 步骤
-- commit 指针维护
-- 分支和更新理解成本
-
-你的场景不需要这些能力。
-
-所以只使用普通 Markdown 链接：
-
-```text
-learning-notes
--> 用链接指向 mini-cms
-
-mini-cms
--> README 也可以用链接指回学习文档
-```
-
-不使用 submodule，也不把 `mini-cms` 目录嵌套在 `learning-notes` 里面。
-
----
-
 ## 默认技术路线
 
 ```text
-后端：Node.js + Express + TypeScript
-数据库：PostgreSQL + SQL + pg
+后端：Node.js 22.x + Express + TypeScript
+本地数据库：Docker + PostgreSQL
+数据库访问：Prisma 7 + @prisma/adapter-pg + pg
 管理后台：Next.js + TypeScript + Ant Design
 接口检查：Apifox
 自动化测试：Vitest + Supertest
@@ -199,18 +78,15 @@ PostgreSQL：通常是 localhost:5432
 ```text
 Next.js 管理后台
 -> HTTP 请求 Express API
--> Express 校验身份、参数和业务规则
--> pg 执行 SQL
+-> Express 校验当前阶段需要的参数和业务规则
+-> Prisma Client 执行类型安全查询
+-> @prisma/adapter-pg 通过 pg 连接 PostgreSQL
 -> PostgreSQL 保存或查询数据
 -> Express 返回状态码和 JSON
 -> 管理后台更新页面状态
 ```
 
-第一轮不让 Next.js 直接访问 PostgreSQL，也不把主要接口改写成 Next.js Route Handler。
-
-这不是因为 Next.js 不能写后端，而是 Mini CMS 第一轮要专门学习独立 Express 的边界。两条架构的具体使用场景看：
-
-- [12A-Next.js 也能写后端：具体什么时候用](./12A-Nextjs也能写后端-具体什么时候用.md)
+Mini CMS 第一轮固定使用独立 Express API，按前面的主线练习完整请求过程。
 
 ---
 
@@ -231,16 +107,37 @@ Mini CMS 正好会练到：
 第一轮使用：
 
 ```text
-PostgreSQL + 原生 SQL + pg
+Docker + PostgreSQL + Prisma 7 + pg adapter
 ```
 
-先看清楚 SQL 和数据库真正做了什么。
+第 07～08 章先建立表结构和 CRUD 的最小 SQL 基础。进入项目后，使用 Prisma Schema 定义模型、Prisma Migrate 生成迁移，再用 Prisma Client 完成 CRUD；`@prisma/adapter-pg` 和 `pg` 留在底层负责连接。
+
+这和以前使用 SwiftData 的模型式持久化更接近：先定义 Article 模型，再通过模型 API 创建、查询、修改和删除。SQL 基础帮助你理解 Prisma 背后的表、约束和迁移，但项目开发不必重复手写所有底层查询。
 
 ---
 
-## 第一版产品范围
+## 最终产品范围：按阶段增加，不要同时做
 
-### 1. 管理员登录
+### 1. 第一轮先关闭文章 CRUD
+
+- 查看文章列表和详情。
+- 新建、编辑和删除文章。
+- 保存草稿或修改文章状态。
+- 先用一张 `articles` 表。
+- 先完成 loading、empty、error、success 和删除确认。
+
+做到这里，单表 CRUD 主线就已经闭环。标签、登录和分页都不能阻止你先完成这一轮。
+
+### 2. 第二轮再增加标签和查询能力
+
+- 新建、编辑和删除标签。
+- 给文章添加多个标签。
+- 按标题、状态和标签筛选。
+- 增加分页、发布和撤回规则。
+
+这一步才需要 `tags`、`article_tags`、`JOIN` 和事务。
+
+### 3. 再增加管理员登录
 
 - 登录
 - 退出
@@ -249,24 +146,9 @@ PostgreSQL + 原生 SQL + pg
 
 第一版只有一个管理员，不做公开注册和复杂角色系统。
 
-### 2. 文章管理
-
-- 查看文章列表和详情
-- 新建、编辑和删除文章
-- 保存草稿
-- 发布和撤回
-- 按标题、状态和标签筛选
-- 分页
-
 正文先使用普通多行文本或 Markdown，不做富文本编辑器。
 
-### 3. 标签管理
-
-- 新建、编辑和删除标签
-- 给文章添加多个标签
-- 按标签筛选文章
-
-### 4. 管理页面状态
+### 4. 各阶段都要处理页面状态
 
 - loading
 - empty
@@ -295,18 +177,20 @@ PostgreSQL + 原生 SQL + pg
 
 ---
 
-## 数据怎么保存
+## 数据表也按阶段增加
 
-第一版使用四张核心表：
+```text
+阶段 2～3
+-> 只有 articles
 
-| 表 | 保存什么 |
-|---|---|
-| `admins` | 管理员邮箱和密码哈希 |
-| `articles` | 标题、slug、摘要、正文、封面、状态和时间 |
-| `tags` | 标签名称和 slug |
-| `article_tags` | 文章和标签的多对多关系 |
+阶段 4
+-> 增加 tags 和 article_tags
 
-文章至少包含：
+阶段 5
+-> 增加 admins
+```
+
+第一轮的文章先包含：
 
 ```text
 id
@@ -314,14 +198,12 @@ title
 slug
 summary
 content
-cover_url
 status
-published_at
 created_at
 updated_at
 ```
 
-第一版封面只保存图片 URL，不做文件上传。
+`published_at`、`cover_url` 和标签可以在后续阶段再增加。封面只保存图片 URL，不做文件上传。
 
 ---
 
@@ -330,20 +212,22 @@ updated_at
 ```text
 GET    /api/health
 
-POST   /api/auth/login
-POST   /api/auth/logout
-GET    /api/auth/me
-
 GET    /api/articles
 GET    /api/articles/:id
 POST   /api/articles
 PATCH  /api/articles/:id
 DELETE /api/articles/:id
 
+阶段 4 增加：
 GET    /api/tags
 POST   /api/tags
 PATCH  /api/tags/:id
 DELETE /api/tags/:id
+
+阶段 5 增加：
+POST   /api/auth/login
+POST   /api/auth/logout
+GET    /api/auth/me
 ```
 
 发布和撤回第一版先作为文章状态更新处理。等基本 CRUD 稳定后，再判断是否拆成单独业务接口。
@@ -389,6 +273,7 @@ DELETE /api/tags/:id
 
 - 创建独立的 `mini-cms` Git 仓库。
 - 创建 `server` 工程和 TypeScript 开发环境。
+- 使用 Node.js 22.x，并把工程配置为 ESM；Prisma 7 最低要求 Node.js 20.19.0。
 - 跑通 `GET /api/health`。
 - 用内存数组完成 `GET /api/articles`。
 - 用 Apifox 查看正常响应和不存在路径。
@@ -405,7 +290,7 @@ DELETE /api/tags/:id
 - 能解释 `request`、`response`、route 和 middleware 的关系。
 - 修改路径或响应字段时知道改哪里。
 
-### 阶段 2：把内存数据换成 PostgreSQL
+### 阶段 2：用 Docker 和 Prisma 7 接入 PostgreSQL
 
 开始前回看：
 
@@ -413,28 +298,33 @@ DELETE /api/tags/:id
 - [06-API 设计和校验](./06-API设计和参数校验.md)
 - [07-表结构和约束](./07-关系型数据库-表结构和约束.md)
 - [08-SQL CRUD](./08-SQL-用CRUD查询和修改数据.md)
-- [10-PostgreSQL 和 pg](./10-PostgreSQL和pg-让Express读写数据库.md)
+- [09-Docker、PostgreSQL 和 Prisma 7](./09-Docker和Prisma7-让Express完成CRUD.md)
 
 完成：
 
-- 安装并启动 PostgreSQL。
-- 创建 Mini CMS database 和 `articles` 表。
+- 安装 Docker Desktop，并用 `compose.yaml` 启动 PostgreSQL。
 - 配置 `DATABASE_URL` 和 `.env.example`。
-- 使用一个 `pg` 连接池。
-- 把文章列表改成数据库查询。
-- 所有用户输入使用参数化查询。
+- 安装 `@prisma/client@7`、`prisma@7`、PostgreSQL driver adapter 和 `pg`。
+- 用 `schema.prisma` 定义 `Article` 模型。
+- 使用 Prisma Migrate 生成并执行第一份迁移。
+- 打开迁移 SQL，对照表、列和约束。
+- 显式执行 `prisma generate`。
+- 创建并复用一份 `PrismaClient`。
+- 把文章列表改成 `prisma.article.findMany()`。
 
 实现时检查：
 
-- 整个 server 复用同一个 Pool。
-- 查询结果从 `result.rows` 读取。
-- 建表 SQL 保存成可重复执行的 migration。
+- `docker compose ps` 能看到 PostgreSQL 正常运行。
+- 整个 server 复用同一个 `PrismaClient`。
+- 修改模型后按 `migrate -> 检查 SQL -> generate` 执行。
+- 查询单条数据时处理 `findUnique()` 返回的 `null`。
+- Prisma Studio 只用于开发查看数据，不代替管理后台。
 
 完成标准：
 
 - 重启服务器后数据仍然存在。
 - 能在数据库和 API 中看到同一条数据。
-- 能区分服务器没启动、数据库没连接和 SQL 写错。
+- 能区分服务器没启动、Docker 数据库没运行、迁移没执行、Client 没重新生成和查询写错。
 
 ### 阶段 3：完成文章 CRUD 和管理页面
 
@@ -466,7 +356,10 @@ DELETE /api/tags/:id
 
 实现时检查：
 
-- `UPDATE` 和 `DELETE` 都有明确 `WHERE` 条件。
+- Prisma 的 `update` 和 `delete` 都有明确 `where` 条件。
+- 使用 Prisma Client 的 `data` 和 `where` 传入数据，不拼接用户输入。
+- 模型使用 `@updatedAt` 管理更新时间。
+- 把 Prisma 的 `P2002` 和 `P2025` 分别转换成 409 和 404。
 - 前端检查 `response.ok`，不只处理成功数据。
 - 前后端字段名、状态码和错误结构与 API 约定一致。
 
@@ -486,16 +379,16 @@ DELETE /api/tags/:id
 
 开始前回看：
 
-- [09-数据关系、JOIN 和事务](./09-数据关系JOIN和事务.md)
+- [10-数据关系、JOIN 和事务](./10-数据关系JOIN和事务.md)
 
 完成：
 
 - 创建 `tags` 和 `article_tags` 表。
 - 建立文章和标签的多对多关系。
 - 更新文章和标签关系时使用事务。
-- 增加草稿、发布和撤回状态。
+- 完善草稿、发布和撤回规则。
 - 增加标题、状态和标签筛选。
-- 增加分页、创建时间和更新时间。
+- 增加 `published_at`，并支持分页和按创建时间排序。
 
 业务规则：
 
@@ -508,8 +401,9 @@ DELETE /api/tags/:id
 
 实现时检查：
 
-- 一组必须一起成功的 SQL 使用同一个 client。
-- 事务无论成功还是失败都会释放 client。
+- 能用 nested write 清楚表达的关联创建，优先使用 nested write。
+- 自定义的多步修改放进同一个 `prisma.$transaction()`。
+- 事务回调里的 Prisma 操作全部使用 `tx`。
 - 外键的删除规则与产品行为一致。
 
 完成标准：
@@ -561,6 +455,7 @@ DELETE /api/tags/:id
 - 检查环境变量。
 - 增加基础请求和错误日志。
 - 写清楚 Mini CMS README。
+- 写清楚 Docker、Prisma Migrate、Prisma Client 生成、server 和 admin-web 的启动顺序。
 - 记录项目复盘。
 
 优先测试：
@@ -596,7 +491,7 @@ DELETE /api/tags/:id
 - 让个人网站读取文章列表和详情。
 - 渲染 Markdown 正文。
 - 接入封面图片地址。
-- 增加基础缓存和部署。
+- 完成部署。
 
 这是 Mini CMS 主体完成后的迁移阶段，不是第一轮必做项。
 
@@ -607,7 +502,7 @@ DELETE /api/tags/:id
 ```text
 1. 写清楚用户要完成什么
 2. 设计请求和响应
-3. 设计或调整数据表
+3. 调整 Prisma Schema，生成并检查迁移，再生成 Prisma Client
 4. 用 Express 实现接口
 5. 用 Apifox 检查正常和错误情况
 6. 接到 Next.js 管理后台
@@ -620,7 +515,7 @@ DELETE /api/tags/:id
 ```text
 请求从哪个文件进入？
 数据在哪里校验？
-执行了什么 SQL？
+repository 调用了什么 Prisma Client 方法，它对应什么 CRUD 操作？
 错误为什么返回这个状态码？
 前端拿到结果后怎样更新？
 ```

@@ -4,7 +4,7 @@
 
 前端和后端不是直接调用彼此的函数，而是通过 HTTP 交换请求和响应。
 
-后端路由、状态码、JSON、Cookie 和 CORS 都建立在 HTTP 之上。
+后端路由、状态码和 JSON 都建立在 HTTP 之上。
 
 ---
 
@@ -23,7 +23,6 @@ method + URL + headers + body
 ```http
 POST /api/articles HTTP/1.1
 Content-Type: application/json
-Cookie: session=...
 
 {
   "title": "我的第一篇文章"
@@ -35,7 +34,6 @@ Cookie: session=...
 | `POST` | 想创建资源 |
 | `/api/articles` | 请求文章集合 |
 | `Content-Type` | body 是 JSON |
-| `Cookie` | 携带登录凭证 |
 | body | 新文章数据 |
 
 ### 2. 响应包含什么
@@ -65,7 +63,7 @@ Content-Type: application/json
 | 方法 | 常见用途 | 文章接口示例 |
 |---|---|---|
 | `GET` | 读取 | 获取文章列表 |
-| `POST` | 创建或触发动作 | 新建文章、登录 |
+| `POST` | 创建数据 | 新建文章 |
 | `PATCH` | 部分更新 | 修改文章标题或状态 |
 | `DELETE` | 删除 | 删除文章 |
 
@@ -104,7 +102,7 @@ GET /api/articles?status=draft&page=2
 
 ### 请求头
 
-适合内容类型、认证信息和缓存信息，不适合放完整文章正文。
+适合放内容类型等附加说明，不适合放完整文章正文。
 
 ---
 
@@ -116,8 +114,6 @@ GET /api/articles?status=draft&page=2
 | `201` | 创建成功 |
 | `204` | 成功，但没有响应正文 |
 | `400` | 请求格式或参数有问题 |
-| `401` | 没有登录或凭证无效 |
-| `403` | 已识别身份，但没有权限 |
 | `404` | 资源不存在 |
 | `409` | 与现有数据冲突，例如 slug 重复 |
 | `422` | 数据格式能读，但业务校验不通过 |
@@ -157,7 +153,7 @@ DELETE /api/articles/42
 -> 说明要操作哪类数据或哪一条数据
 
 headers
--> 携带内容类型、登录凭证等附加信息
+-> 携带内容类型等附加说明
 
 body
 -> 携带创建或修改时提交的具体数据

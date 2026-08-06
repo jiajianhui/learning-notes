@@ -14,7 +14,7 @@ admin-web
 
 它们不共享运行时状态，只通过 HTTP API 交互。
 
-本章固定使用独立 Express API。如果想理解“Next.js 自己承担后端”具体有什么意义，接着看：
+本章固定使用独立 Express API。先完成前后端联调；学完主线后，如果想比较另一种项目结构，再把下面这章当作选读：
 
 - [12A-Next.js 也能写后端：具体什么时候用](./12A-Nextjs也能写后端-具体什么时候用.md)
 
@@ -41,6 +41,20 @@ admin-web：http://localhost:3000
 server：http://localhost:3001
 ```
 
+一个网址的协议、主机和端口合起来叫做来源（origin）。这里两个地址的端口不同，因此浏览器把它们看作两个来源。
+
+浏览器不会默认允许页面读取另一个来源的响应。安装 `cors` 包后，Express 可以通过这个中间件明确允许管理后台的来源：
+
+```ts
+import cors from "cors";
+
+app.use(cors({
+  origin: "http://localhost:3000",
+}));
+```
+
+CORS 是浏览器的跨来源访问规则。当前只需要允许这个管理后台地址；登录后怎样跨来源携带 Cookie，第 13 章再处理。
+
 ### 2. 管理后台使用 API 地址
 
 `admin-web/.env.local`：
@@ -51,7 +65,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
 
 它会进入浏览器代码，所以只能放公开 API 地址，不能放数据库密码和服务器密钥。
 
-### 3. 交互组件运行在客户端
+### 3. 需要交互的文件使用 `"use client"`
 
 Ant Design 表格、表单、弹窗和点击事件需要客户端交互：
 
@@ -61,9 +75,7 @@ Ant Design 表格、表单、弹窗和点击事件需要客户端交互：
 import { Table } from "antd";
 ```
 
-Next.js App Router 的 page 和 layout 默认是 Server Components；需要状态、事件或浏览器 API 的边界使用 Client Components。
-
-第一轮先用客户端请求把管理后台和 Express 接通。
+当前只要记住：使用点击事件、表单状态或浏览器 API 的文件，需要在顶部写 `"use client"`。第一轮先用这种方式把管理后台和 Express 接通。
 
 ---
 
@@ -73,9 +85,7 @@ Next.js App Router 的 page 和 layout 默认是 Server Components；需要状�
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export async function getArticles() {
-  const response = await fetch(`${API_URL}/api/articles`, {
-    credentials: "include",
-  });
+  const response = await fetch(`${API_URL}/api/articles`);
 
   const body = await response.json();
 
@@ -104,7 +114,6 @@ HTTP 错误状态
 成功 JSON
 加载状态
 空状态
-登录失效
 ```
 
 不能只写一个成功后的 `setData()`。
@@ -114,23 +123,20 @@ HTTP 错误状态
 ## 管理后台页面
 
 ```text
-/login
 /admin/articles
 /admin/articles/new
 /admin/articles/[id]/edit
-/admin/tags
 ```
 
-页面实现时先完成文章列表、新建和编辑，关闭单表 CRUD 的产品闭环；再接入标签等关联数据，避免同时调试过多链路。
+页面实现时先完成文章列表、新建、编辑和删除，关闭单表 CRUD 的产品闭环。分页和标签等功能放到后续阶段。
 
 Ant Design 主要负责：
 
 - `Table` 展示列表。
 - `Form` 收集和校验输入。
-- `Select` 选择状态和标签。
+- `Select` 选择文章状态。
 - `Modal` 确认删除。
 - `Alert`、`message` 展示反馈。
-- `Pagination` 控制分页参数。
 
 后台页面不需要重新做视觉临摹，重点是状态和流程完整。
 
@@ -141,10 +147,9 @@ Ant Design 主要负责：
 ```text
 Ant Design Form 提交
 -> fetch POST /api/articles
--> 浏览器携带 Cookie
--> Express CORS 和认证中间件
+-> Express 路由接收请求
 -> 参数校验
--> PostgreSQL INSERT
+-> Prisma Client 写入 PostgreSQL
 -> 返回 201
 -> 前端提示成功并跳转列表
 ```
@@ -163,7 +168,7 @@ HTTP 请求
 -> 把页面上的操作和数据发给 Express
 
 Express
--> 检查身份和输入，执行业务逻辑，再读写数据库
+-> 检查输入，执行业务逻辑，再读写数据库
 
 状态码和 JSON
 -> 返回给 Next.js，由页面更新显示结果
@@ -171,4 +176,4 @@ Express
 
 接通这一层后，文章 API 才从“接口集合”变成可以实际操作的小产品。
 
-下一章 12A 会用具体产品场景对比：什么时候可以直接使用 Next.js 的服务端能力，什么时候保留独立 Express 更清楚。
+下一章进入登录和安全。12A 是架构对比选读，建议完成第一轮主线后再看。

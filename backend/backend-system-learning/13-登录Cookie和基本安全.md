@@ -51,7 +51,15 @@ Set-Cookie: session=...; HttpOnly; SameSite=Lax
 
 以后浏览器在符合规则的请求中自动携带 Cookie。
 
-`HttpOnly` 可以阻止浏览器 JavaScript 直接读取凭证，降低凭证被脚本窃取的风险。
+Cookie 后面的属性用于限制它怎样被使用：
+
+| 属性 | 当前先理解成 |
+|---|---|
+| `HttpOnly` | 浏览器 JavaScript 不能直接读取这条 Cookie |
+| `SameSite` | 限制跨站请求何时可以自动携带 Cookie |
+| `Secure` | 只通过 HTTPS 发送 Cookie |
+
+这些限制可以降低登录凭证被误用或窃取的风险。
 
 ### 4. 认证中间件保护接口
 
@@ -62,6 +70,8 @@ Set-Cookie: session=...; HttpOnly; SameSite=Lax
 -> 成功则继续
 -> 失败返回 401
 ```
+
+401 表示这次请求没有有效的登录凭证。
 
 不是只隐藏前端按钮，而是后端必须拦截未授权请求。
 
@@ -78,12 +88,11 @@ GET  /api/auth/me
 公开接口：
 
 - 健康检查。
-- 以后提供给个人网站的已发布文章读取接口。
+- 读取已发布文章的公开接口。
 
 受保护接口：
 
 - 创建、修改、删除文章。
-- 创建、修改、删除标签。
 - 管理后台使用的草稿内容。
 
 第一轮不做公开注册、多角色和找回密码。
@@ -99,9 +108,18 @@ Next.js：http://localhost:3000
 Express：http://localhost:3001
 ```
 
-它们端口不同，属于不同 origin。
+来源（origin）由协议、主机和端口共同决定。这里端口不同，所以属于不同来源。
 
-后端 CORS 需要明确允许管理后台地址，并允许凭证；前端请求也要携带凭证：
+第 12 章已经让 Express 允许管理后台的来源。现在登录要使用 Cookie，还需要让后端 CORS 允许凭证：
+
+```ts
+app.use(cors({
+  origin: "http://localhost:3000",
+  credentials: true,
+}));
+```
+
+前端请求也要声明携带凭证：
 
 ```ts
 fetch(`${API_URL}/api/auth/me`, {
@@ -110,6 +128,8 @@ fetch(`${API_URL}/api/auth/me`, {
 ```
 
 CORS 不是认证。它主要限制浏览器中的跨来源请求，不能代替后端身份验证。
+
+浏览器会自动携带 Cookie，也带来一种风险：恶意网站可能诱导已登录用户发出修改数据的请求。这类攻击叫 CSRF。`SameSite` 可以降低风险，正式上线时还需要根据部署方式增加相应的服务器防护。
 
 ---
 
@@ -123,7 +143,7 @@ CORS 不是认证。它主要限制浏览器中的跨来源请求，不能代替
 - 不向客户端返回堆栈和数据库内部错误。
 - CORS 只允许明确来源，不随意开放全部来源和凭证。
 - Cookie 根据环境设置 `HttpOnly`、`SameSite` 和 `Secure`。
-- Cookie 认证上线前考虑 CSRF 防护。
+- Cookie 认证上线前补齐 CSRF 防护。
 - 后端始终重新校验输入和权限。
 
 ---

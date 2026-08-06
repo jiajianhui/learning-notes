@@ -56,7 +56,7 @@ export function createArticle() {}
 import { createArticle } from "./article.js";
 ```
 
-一个真实服务器不会把路由、SQL、认证和配置全部写在一个文件里。模块是后面拆项目结构的基础。
+一个真实服务器不会把所有功能和配置都写在一个文件里。模块是后面拆项目结构的基础。
 
 ### 4. 环境变量保存环境相关配置
 
@@ -64,7 +64,7 @@ import { createArticle } from "./article.js";
 
 ```text
 PORT=3001
-DATABASE_URL=postgresql://...
+DATABASE_URL=数据库连接地址
 ```
 
 代码通过 `process.env` 读取。
@@ -89,9 +89,9 @@ const server = createServer((request, response) => {
 server.listen(3001);
 ```
 
-这里的 `request` 和 `response` 是 Node.js 提供的原生 HTTP 对象。Express 建立在这套能力之上，在路由 handler 中提供更方便的请求和响应对象，例如 `request.params`、`request.body` 和 `response.json()`；第 04 章会具体展开。
+这里的 `request` 和 `response` 是 Node.js 提供的原生 HTTP 对象。Express 建立在这套能力之上，可以更方便地接收请求和返回响应；第 04 章会具体展开。
 
-Express 会把路由匹配、JSON 处理和中间件组织得更方便，所以正式练习使用 Express。
+正式练习使用 Express，不需要继续手写这些底层处理。
 
 ---
 
@@ -102,7 +102,7 @@ Node.js
 -> 运行 server 工程
 -> 加载环境变量
 -> 启动 Express
--> 加载 pg
+-> 执行异步后端代码
 -> 执行测试和构建命令
 ```
 

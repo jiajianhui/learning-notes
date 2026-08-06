@@ -29,7 +29,6 @@
 -> Node.js 运行 Express 服务器
 -> Express 匹配路由和中间件
 -> 后端校验输入并执行业务规则
--> pg 把参数化 SQL 发给 PostgreSQL
 -> PostgreSQL 查询或修改数据
 -> Express 返回状态码和 JSON
 -> 前端根据结果更新页面
@@ -54,11 +53,14 @@ Express / route / middleware / request / response
 接口可靠性
 异步 / 错误处理 / API contract / 参数校验
 
-关系型数据库
-表结构 / 数据类型 / 约束 / SQL CRUD / JOIN / 事务 / 索引
+关系型数据库第一轮
+表结构 / 数据类型 / 约束 / SQL CRUD
 
 数据库接入
-PostgreSQL / pg / Pool / 参数化查询 / migration
+Docker / PostgreSQL / Prisma 7 / pg adapter / migration
+
+多表扩展
+外键 / 中间表 / JOIN / 事务
 
 项目组织
 route / controller / service / repository / config
@@ -111,44 +113,53 @@ Promise 和真正查询结果
 TypeScript 类型和运行时校验
 ```
 
-### 第三阶段：连续学习数据库 CRUD
+### 第三阶段：先跑通单表 CRUD
 
 ```text
 07 表结构、数据类型和约束
-08 SQL CRUD、筛选、排序、分页和索引
-09 数据关系、JOIN 和事务
-10 PostgreSQL、pg、连接池和迁移
+08 SQL CRUD（第一遍只读第 1～5 节）
+09 Docker、PostgreSQL、Prisma 7 和单表 CRUD
 ```
 
-这四章是一条连续主线：
+这是 PostgreSQL 入门的优先主线：
 
 ```text
-先决定数据怎样存
--> 再用 SQL 增删改查
--> 再处理多张表和多步修改
--> 最后让 Node.js 真正执行 SQL
+先设计一张 articles 表
+-> 用 SQL 完成 INSERT / SELECT / UPDATE / DELETE
+-> 用 Docker 启动 PostgreSQL
+-> 用 Prisma Schema 定义模型并生成 Prisma Client
+-> 用 Prisma Client 完成项目 CRUD
+-> 尽快跑通文章 CRUD
 ```
 
-这一阶段先掌握个人 Web 项目常用的数据库操作。
+第 08 章负责建立最小 SQL 基础；进入项目后由 Prisma 统一管理模型、类型安全客户端和迁移，`@prisma/adapter-pg` 通过 `pg` 连接 PostgreSQL。这样既能看懂数据库做了什么，也不用把大量时间花在重复手写查询字符串上。
 
-### 第四阶段：把接口组成可使用的产品
+第一轮只要求单表 CRUD。多表关系不是 PostgreSQL 的入门前提，不要因为还不会 `JOIN` 和事务而停下项目。
+
+读完第 09 章就可以打开第 20 章开始实操，不需要先读完后面所有章节。
+
+### 第四阶段：项目做到哪里，文档看到哪里
 
 ```text
-11 后端项目怎样拆文件
-12 Next.js 管理后台怎样接 Express
-12A Next.js 自己写后端的使用场景
-13 登录、Cookie 和基本安全
-14 后端测试怎样分层
+阶段 1：先启动 Express
+阶段 2：接入 Docker、Prisma 7 和 PostgreSQL
+阶段 3：阅读 11 项目结构、12 前后端联调
+阶段 4：阅读 10 多表关系、JOIN 和事务
+阶段 5：阅读 13 登录、Cookie 和安全
+阶段 6：阅读 14 后端测试
 ```
 
-读完后应该能把一条文章请求追踪成：
+`12A` 是 Next.js 架构对比选读，完成 Mini CMS 第一轮 CRUD 后再看，不影响任何实操阶段。
+
+这样每次只补当前功能需要的知识。项目逐步完成后，应该能把一条文章请求追踪成：
 
 ```text
 页面操作
 -> HTTP API
 -> route / controller / service / repository
+-> Prisma Client
 -> PostgreSQL
--> 登录和错误处理
+-> 当前阶段的业务和错误处理
 -> 页面反馈
 -> 自动化测试
 ```
@@ -206,7 +217,8 @@ TypeScript 类型和运行时校验
 
 ```text
 后端：Node.js + Express + TypeScript
-数据库：PostgreSQL + SQL + pg
+本地数据库：Docker + PostgreSQL
+数据库访问：Prisma 7 + @prisma/adapter-pg + pg
 管理页面：Next.js + TypeScript + Ant Design
 接口检查：Apifox
 自动化测试：Vitest + Supertest
@@ -218,14 +230,13 @@ TypeScript 类型和运行时校验
 
 这套文档的目标不是让你成为数据库管理员或运维工程师，而是建立个人 Web 项目所需的完整后端基础。
 
-应该掌握：
+当前第一轮先掌握：
 
-- 能设计几张有明确关系的表。
-- 能写常见 CRUD、筛选、排序和分页 SQL。
-- 能理解约束、JOIN、事务和索引解决什么问题。
-- 能让 Express 安全地读写 PostgreSQL。
-- 能完成登录、错误处理和自动化测试。
-- 能把系统在开发环境和简单线上环境运行起来。
+- 能设计一张字段和约束清楚的文章表。
+- 能读懂常见的单表 CRUD SQL，并知道 Prisma Client 方法对应什么操作。
+- 能用 Docker 启动 PostgreSQL，并用 Prisma Migrate 和 Prisma Client 管理数据。
+
+单表 CRUD 跑通后，再按第 20 章逐步增加项目结构、管理页面、标签、登录、测试和部署。增加文章标签时，才要求掌握中间表、`JOIN` 和事务。
 
 ---
 
@@ -237,11 +248,10 @@ TypeScript 类型和运行时校验
 运行环境
 -> HTTP 和 Express
 -> 异步、错误和 API
--> 数据库结构和 CRUD
--> 项目组织和前后端联调
--> 登录和测试
+-> 最小 SQL 基础、Docker、PostgreSQL 和 Prisma CRUD
+-> 打开第 20 章开始实操
+-> 按阶段学习项目组织、多表、登录和测试
 -> 部署、阅读和排错
--> 最终项目实践
 ```
 
 先按这个顺序理解一次完整请求，再在 Mini CMS 中把每一步实际做出来。
@@ -251,6 +261,8 @@ TypeScript 类型和运行时校验
 - [Node.js 文档](https://nodejs.org/docs/latest/api/)
 - [Express 文档](https://expressjs.com/)
 - [PostgreSQL 官方教程](https://www.postgresql.org/docs/current/tutorial.html)
+- [Docker PostgreSQL 官方镜像](https://hub.docker.com/_/postgres)
+- [Prisma ORM 文档](https://www.prisma.io/docs/orm)
 - [node-postgres 文档](https://node-postgres.com/)
 - [Next.js App Router 文档](https://nextjs.org/docs/app)
 - [Ant Design 文档](https://ant.design/docs/react/introduce)

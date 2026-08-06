@@ -15,7 +15,9 @@ CRUD 是四类最常见的数据操作：
 
 个人 Web 项目的数据库工作，大部分都建立在这四类语句上。
 
-第 07 章的 `CREATE TABLE` 修改的是表结构；这一章的 CRUD 主要修改和查询表中的数据行。
+这一章只练习 SQL 本身，所以示例直接写入固定值。下一章进入项目后改用 Prisma Client 完成相同操作，并理解 ORM 怎样把模型操作转换成数据库查询。
+
+第一遍只读第 1～5 节，先掌握 CRUD。排序分页、统计和索引放在后半章，项目需要时再看。
 
 ---
 
@@ -23,7 +25,7 @@ CRUD 是四类最常见的数据操作：
 
 ```sql
 INSERT INTO articles (title, slug, content, status)
-VALUES ($1, $2, $3, $4)
+VALUES ('我的第一篇文章', 'my-first-article', '正文', 'draft')
 RETURNING id, title, slug, content, status;
 ```
 
@@ -35,8 +37,6 @@ RETURNING id, title, slug, content, status;
 -> 按相同顺序提供值
 -> 返回刚创建的数据
 ```
-
-`$1` 到 `$4` 是参数位置。第 10 章会让 `pg` 把真实值和 SQL 分开传给 PostgreSQL。
 
 `RETURNING` 是 PostgreSQL 的常用能力，可以直接拿到数据库生成的 id 和最终保存结果。
 
@@ -56,9 +56,11 @@ FROM articles;
 ```sql
 SELECT id, title, slug, status, created_at
 FROM articles
-WHERE status = $1
+WHERE status = 'published'
 ORDER BY created_at DESC;
 ```
+
+`DESC` 表示从大到小排序。时间越晚，值越大，所以最新文章会排在前面。
 
 SQL 可以按下面顺序理解：
 
@@ -87,7 +89,7 @@ ORDER BY
 ```sql
 SELECT id, title, slug, content, status
 FROM articles
-WHERE id = $1;
+WHERE id = 42;
 ```
 
 组合多个条件：
@@ -95,11 +97,11 @@ WHERE id = $1;
 ```sql
 SELECT id, title, status
 FROM articles
-WHERE status = $1
-  AND title ILIKE '%' || $2 || '%';
+WHERE status = 'published'
+  AND title ILIKE '%camera%';
 ```
 
-`%` 表示任意长度的文本，所以参数传入 `camera` 时，可以匹配标题中包含 `camera` 的文章。
+`%` 表示任意长度的文本，所以 `'%camera%'` 可以匹配标题中包含 `camera` 的文章。
 
 常用条件先掌握：
 
@@ -121,18 +123,20 @@ WHERE status = $1
 
 ```sql
 UPDATE articles
-SET title = $1,
-    status = $2,
+SET title = '修改后的标题',
+    status = 'published',
     updated_at = NOW()
-WHERE id = $3
+WHERE id = 42
 RETURNING id, title, slug, content, status, updated_at;
 ```
 
 `SET` 指定修改哪些列，`WHERE` 指定修改哪几行。
 
-没有 `WHERE` 时，所有行都可能被修改。执行更新前先确认条件，是数据库操作中最重要的习惯之一。
+`NOW()` 会得到执行这条 SQL 时的当前时间。把它写入 `updated_at`，表示这篇文章刚在此时被更新。
 
-如果 `RETURNING` 没有返回行，通常说明目标 id 不存在，需要由后端转换成 404。
+没有 `WHERE` 时，所有行都可能被修改。执行前要检查 SQL 里的 `WHERE` 是否准确。
+
+这里不需要先用 `SELECT` 查询文章。`UPDATE` 成功匹配到 id 时，`RETURNING` 会返回修改后的数据；没有返回行时，说明没有文章匹配这个 id，后端可以返回 404。
 
 ---
 
@@ -140,17 +144,21 @@ RETURNING id, title, slug, content, status, updated_at;
 
 ```sql
 DELETE FROM articles
-WHERE id = $1
+WHERE id = 42
 RETURNING id;
 ```
 
 同样不能随意省略 `WHERE`。没有条件的 `DELETE FROM articles` 会删除表里的所有行。
 
-返回被删除的 id，可以帮助后端判断目标是否原本存在。删除成功且不需要返回正文时，HTTP 接口通常返回 204。
+这里也不需要先用 `SELECT` 查询文章。`DELETE` 匹配到 id 时，会删除该行并返回 id；没有返回行时，说明没有文章匹配这个 id，后端可以返回 404。删除成功且不需要返回正文时，HTTP 接口返回 204。
 
 ---
 
-## 6. 排序和分页
+## 完成 CRUD 后再看的查询能力
+
+到这里已经学完最小 CRUD，可以直接进入第 09 章。下面不是第一次连接 PostgreSQL 的前置知识。
+
+### 6. 排序和分页
 
 分页查询：
 
@@ -158,8 +166,8 @@ RETURNING id;
 SELECT id, title, slug, status, created_at
 FROM articles
 ORDER BY created_at DESC
-LIMIT $1
-OFFSET $2;
+LIMIT 20
+OFFSET 40;
 ```
 
 ```text
@@ -187,12 +195,12 @@ offset = (page - 1) * pageSize
 ```sql
 SELECT COUNT(*)
 FROM articles
-WHERE status = $1;
+WHERE status = 'published';
 ```
 
 ---
 
-## 7. 聚合：把多行计算成一个结果
+### 7. 聚合：把多行计算成一个结果
 
 最常用的是计数：
 
@@ -204,6 +212,8 @@ GROUP BY status;
 
 它会得到每种状态分别有多少篇文章。
 
+`AS article_count` 给计数结果起一个列名，读取结果时就能使用 `article_count`。
+
 ```text
 COUNT
 -> 统计行数
@@ -214,28 +224,7 @@ GROUP BY
 
 ---
 
-## 8. 参数化查询：SQL 和用户输入分开
-
-不要这样拼接输入：
-
-```ts
-const sql = `SELECT * FROM articles WHERE id = ${articleId}`;
-```
-
-应该把 SQL 和参数分别传递：
-
-```ts
-await pool.query(
-  "SELECT id, title FROM articles WHERE id = $1",
-  [articleId],
-);
-```
-
-数据库把 `$1` 当作数据，而不是 SQL 结构的一部分。这是防止 SQL 注入的基本做法。`pool.query()` 的来源和返回结果会在第 10 章展开。
-
----
-
-## 9. 索引：让常用查询更快
+### 8. 索引：让常用查询更快
 
 没有索引时，数据库可能需要逐行查找。索引类似书后的目录，可以更快定位符合条件的数据。
 
@@ -252,7 +241,7 @@ ON articles (status, created_at DESC);
 - `INSERT`、`UPDATE`、`DELETE` 时也要维护索引。
 - 很少查询的字段通常不需要提前建立索引。
 
-第一轮先理解索引解决什么问题。
+项目出现明确的查询性能问题后，再根据真实查询考虑索引。
 
 ---
 
@@ -270,18 +259,8 @@ WHERE
 
 UPDATE / DELETE
 -> 修改或删除 WHERE 选中的行
-
-ORDER BY / LIMIT / OFFSET
--> 设定排序方式和每页返回的数据
-
-COUNT / GROUP BY
--> 统计总数，或分组后分别统计
-
-参数化查询
--> SQL 只写结构，用户输入通过参数另外传入
-
-索引
--> 帮助数据库更快找到经常查询的数据
 ```
 
-下一章进入多张表，学习关系、JOIN 和事务。
+第一遍先掌握上面四类操作。排序分页、统计和索引不影响继续连接 PostgreSQL。
+
+下一章用 Docker 启动 PostgreSQL，再用 Prisma 7 跑通同一套单表 CRUD。

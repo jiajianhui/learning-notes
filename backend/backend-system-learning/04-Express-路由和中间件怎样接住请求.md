@@ -85,14 +85,18 @@ next()
 
 ```ts
 app.use(express.json());
-app.use("/api/articles", articleRouter);
-app.use(notFoundHandler);
-app.use(errorHandler);
+
+app.use((request, _response, next) => {
+  console.log(request.method, request.path);
+  next();
+});
+
+app.get("/api/health", (_request, response) => {
+  response.json({ status: "ok" });
+});
 ```
 
-请求按注册顺序向下经过中间件。
-
-404 和错误处理中间件通常放在路由之后。
+请求按注册顺序向下执行。这里先解析 JSON、再记录请求，最后才尝试匹配健康检查路由。
 
 ---
 
@@ -169,7 +173,7 @@ app.get("/api/articles/:id", (req, res) => {
 | 路径参数 | `/api/articles/42` | `req.params.id` |
 | 查询参数 | `?status=draft&page=2` | `req.query.status`、`req.query.page` |
 | JSON 请求体 | `{ "title": "新文章" }` | `req.body.title` |
-| 请求头 | `Authorization: ...` | `req.headers.authorization` |
+| 请求头 | `Content-Type: application/json` | `req.headers["content-type"]` |
 
 例如：
 
@@ -248,7 +252,7 @@ route
 -> 根据请求方法和路径，找到对应的处理函数
 
 middleware
--> 按注册顺序处理日志、解析 JSON、认证等公共步骤
+-> 按注册顺序处理日志、解析 JSON 等公共步骤
 
 req
 -> 读取路径参数、查询参数、请求体和请求头
