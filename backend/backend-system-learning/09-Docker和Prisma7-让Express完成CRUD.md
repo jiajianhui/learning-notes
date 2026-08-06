@@ -1,10 +1,10 @@
-# 09. Docker 和 Prisma 7：让 Express 完成单表 CRUD
+# 09. Docker、Postico 2 和 Prisma 7：让 Express 完成单表 CRUD
 
 ## 问题背景
 
-第 07 章已经知道表、列、数据类型和约束，第 08 章也亲手读写过最小 SQL。
+第 07 章介绍了表、列、数据类型和约束，第 08 章介绍了最小 SQL 语句的结构。前两章不要求已经连接数据库或亲手执行 SQL。
 
-从这一章开始，不要求每个 CRUD 都手写 SQL。但在安装工具之前，先逐个认识代码模型、数据库开发工具和底层连接工具分别负责什么。
+这一章会先让 PostgreSQL 真正运行起来，亲手执行一轮 SQL，再用 Prisma 完成项目中的 CRUD。业务代码不需要把每个 CRUD 都改成手写 SQL。
 
 ---
 
@@ -12,7 +12,7 @@
 
 ### 1.1 SQL 和 PostgreSQL
 
-前两章已经用过它们：
+前两章已经介绍过它们：
 
 ```text
 SQL
@@ -406,7 +406,109 @@ Prisma Studio 用于在开发阶段查看和编辑数据库数据，不能代替
 
 ---
 
-## 8. 创建一份 Prisma Client
+## 8. 用 Postico 2 查看数据库并亲手执行 SQL
+
+迁移执行后，`articles` 表已经真正存在于 PostgreSQL 中。现在先不写 Prisma Client 代码，而是使用数据库工具亲手执行第 08 章的 SQL。
+
+Postico 2 是 macOS 上的 PostgreSQL 桌面客户端。它不是数据库，也不是 ORM；它负责连接 PostgreSQL、查看表和数据，以及编写和执行 SQL。
+
+从 [Postico 2 官方页面](https://eggerapps.at/postico2/) 下载，或使用 Homebrew 安装：
+
+```bash
+brew install --cask postico
+```
+
+### 8.1 连接 Docker 中的 PostgreSQL
+
+在 Postico 2 中新建连接，填入与 `compose.yaml` 相同的信息：
+
+| 连接项 | 值 |
+|---|---|
+| Host | `localhost` |
+| Port | `5432` |
+| Database | `backend_learning` |
+| Username | `backend_learning` |
+| Password | `backend_learning_password` |
+
+点击 `Connect`。如果提示无法连接，先用 `docker compose ps` 确认 PostgreSQL 容器正常运行。
+
+### 8.2 找到 Prisma Migrate 建立的表
+
+连接成功后，在左侧边栏找到 `articles` 表并打开。如果没看到，按 `⌘R` 重新加载，再确认第 7 节的迁移命令已经执行成功。
+
+```text
+backend_learning
+-> articles
+```
+
+打开 `articles` 后，先切换查看表内容和表结构，把其中的列、约束和数据与 `schema.prisma` 和 `migration.sql` 对照起来。
+
+### 8.3 亲手执行一轮 CRUD SQL
+
+在 Postico 2 中切换到 SQL Query View，也可以使用快捷键 `⇧⌘T`。按照下面顺序，每次把光标放在一条语句中，按 `⌘↩︎` 执行当前语句，观察下方结果：
+
+```sql
+INSERT INTO articles (title, slug, content, status)
+VALUES ('SQL 练习文章', 'sql-practice', '用 Postico 2 亲手执行 SQL', 'draft')
+RETURNING id, title, slug, status, created_at, updated_at;
+
+SELECT id, title, slug, status, created_at, updated_at
+FROM articles
+WHERE slug = 'sql-practice';
+
+UPDATE articles
+SET title = 'SQL 练习文章（已修改）',
+    updated_at = NOW()
+WHERE slug = 'sql-practice'
+RETURNING id, title, slug, status, updated_at;
+
+DELETE FROM articles
+WHERE slug = 'sql-practice';
+
+SELECT id, title, slug
+FROM articles
+WHERE slug = 'sql-practice';
+```
+
+这五步分别能看到：
+
+```text
+INSERT
+-> 文章被创建，PostgreSQL 生成 id 和时间
+
+SELECT
+-> 能查到刚创建的文章
+
+UPDATE
+-> 标题和 updated_at 发生变化
+
+DELETE
+-> 练习数据被删除
+
+最后一次 SELECT
+-> 返回空结果
+```
+
+不要一次运行整段后只看最后结果。这一轮的目标就是亲眼看到每条 SQL 怎样改变数据库。
+
+### 8.4 分清 Postico 2、Prisma Studio 和 Prisma Client
+
+```text
+Postico 2
+-> 查看表结构和数据，亲手编写并执行 SQL
+
+Prisma Studio
+-> 用可视化界面查看和编辑数据
+
+Prisma Client
+-> 让项目代码通过模型 API 读写数据库
+```
+
+完成这轮手写 SQL 后，再继续下面的 Prisma Client 代码。
+
+---
+
+## 9. 创建一份 Prisma Client
 
 创建 `src/db/client.ts`：
 
@@ -438,7 +540,7 @@ PrismaPg
 
 ---
 
-## 9. 用 Prisma Client 完成查询和创建
+## 10. 用 Prisma Client 完成查询和创建
 
 ### 查询文章列表
 
@@ -512,7 +614,7 @@ export async function createArticle(input: {
 
 ---
 
-## 10. 用同一种方式完成修改和删除
+## 11. 用同一种方式完成修改和删除
 
 ### 修改文章
 
@@ -552,7 +654,7 @@ export async function deleteArticle(articleId: number) {
 
 ---
 
-## 11. 把 Prisma 错误转换成 API 错误
+## 12. 把 Prisma 错误转换成 API 错误
 
 Prisma 会给常见数据库错误分配固定代码。单表 CRUD 先识别下面两个：
 
@@ -570,7 +672,7 @@ P2025
 
 ---
 
-## 12. 参数化查询现在由 Prisma 完成
+## 13. 参数化查询现在由 Prisma 完成
 
 参数化查询表示“SQL 结构”和“用户提供的值”分开传递。这样用户输入只会被当成数据，不会被当成 SQL 语法执行。
 
@@ -623,6 +725,9 @@ schema.prisma
 Prisma Migrate
 -> 生成并执行数据库迁移
 
+Postico 2
+-> 查看本地数据库，并亲手执行 SQL
+
 prisma generate
 -> 生成类型安全的 Prisma Client
 
@@ -638,6 +743,9 @@ Prisma Studio
 ## 官方参考
 
 - [Docker PostgreSQL 官方镜像](https://hub.docker.com/_/postgres)
+- [Postico 2](https://eggerapps.at/postico2/)
+- [Postico 2 SQL Query View](https://eggerapps.at/postico2/documentation/sql-query-view.html)
+- [Postico 2 连接地址](https://eggerapps.at/postico2/documentation/postico-url-scheme.html)
 - [Prisma 7 升级说明和运行要求](https://www.prisma.io/docs/guides/upgrade-prisma-orm/v7)
 - [Prisma 7 初始化命令](https://docs.prisma.io/docs/cli/init)
 - [Prisma Client generator](https://docs.prisma.io/docs/orm/prisma-schema/overview/generators)

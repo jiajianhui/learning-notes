@@ -121,21 +121,22 @@ TypeScript 类型和运行时校验
 ```text
 07 表结构、数据类型和约束
 08 SQL CRUD（第一遍只读第 1～5 节）
-09 Docker、PostgreSQL、Prisma 7 和单表 CRUD
+09 Docker、PostgreSQL、Postico 2、Prisma 7 和单表 CRUD
 ```
 
 这是 PostgreSQL 入门的优先主线：
 
 ```text
 先设计一张 articles 表
--> 用 SQL 完成 INSERT / SELECT / UPDATE / DELETE
+-> 读懂 INSERT / SELECT / UPDATE / DELETE 的最小 SQL
 -> 用 Docker 启动 PostgreSQL
--> 在第 09 章先认识 Prisma 怎样定义模型、记录表结构变化并访问数据库
--> 再用 Prisma 完成项目 CRUD
+-> 用 Prisma Schema 和 Migrate 建立 articles 表
+-> 用 Postico 2 查看表，亲手执行一轮 CRUD SQL
+-> 再用 Prisma Client 完成项目 CRUD
 -> 尽快跑通文章 CRUD
 ```
 
-第 08 章负责建立最小 SQL 基础。第 09 章先解释模型 API 为什么能变成 SQL、Node.js 怎样把 SQL 发给数据库，再介绍 Prisma 并完成 CRUD。这样既能看懂数据库做了什么，也不用把大量时间花在重复手写查询字符串上。
+第 08 章负责读懂最小 SQL。第 09 章先启动 PostgreSQL 并建表，再用 Postico 2 亲手执行一轮 SQL，然后才使用 Prisma Client 完成项目 CRUD。这样既不会跳过 SQL 练习，也不用在业务代码里重复手写查询字符串。
 
 第一轮只要求单表 CRUD。多表关系不是 PostgreSQL 的入门前提，不要因为还不会 `JOIN`（把多张表中有关的数据组合起来查询）和事务（让多步修改一起成功或失败）而停下项目。
 
@@ -265,6 +266,7 @@ TypeScript 类型和运行时校验
 - [Express 文档](https://expressjs.com/)
 - [PostgreSQL 官方教程](https://www.postgresql.org/docs/current/tutorial.html)
 - [Docker PostgreSQL 官方镜像](https://hub.docker.com/_/postgres)
+- [Postico 2](https://eggerapps.at/postico2/)
 - [Prisma 文档](https://www.prisma.io/docs/orm)
 - [node-postgres 文档](https://node-postgres.com/)
 - [Next.js App Router 文档](https://nextjs.org/docs/app)

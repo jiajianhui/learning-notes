@@ -110,7 +110,7 @@ Express：http://localhost:3001
 
 来源（origin）由协议、主机和端口共同决定。这里端口不同，所以属于不同来源。
 
-第 12 章已经让 Express 允许管理后台的来源。现在登录要使用 Cookie，还需要让后端 CORS 允许凭证：
+如果已按第 12 章配置 Express 允许管理后台的来源，登录改用 Cookie 后，还需要让后端 CORS 允许凭证：
 
 ```ts
 app.use(cors({
