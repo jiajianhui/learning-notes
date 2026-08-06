@@ -31,7 +31,7 @@ Content-Type: application/json
 
 | 部分 | 这里表示什么 |
 |---|---|
-| `POST` | 想创建资源 |
+| `POST` | 想创建文章 |
 | `/api/articles` | 请求文章集合 |
 | `Content-Type` | body 是 JSON |
 | body | 新文章数据 |
@@ -114,6 +114,7 @@ GET /api/articles?status=draft&page=2
 | `201` | 创建成功 |
 | `204` | 成功，但没有响应正文 |
 | `400` | 请求格式或参数有问题 |
+| `401` | 没有提供有效登录凭证 |
 | `404` | 资源不存在 |
 | `409` | 与现有数据冲突，例如 slug 重复 |
 | `422` | 数据格式能读，但业务校验不通过 |

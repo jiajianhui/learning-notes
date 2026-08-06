@@ -1,6 +1,8 @@
-# 10. 多表关系、JOIN 和事务：增加文章标签时再学
+# 10. 多表关系和事务：增加文章标签时再学
 
-> 第二轮内容：先完成第 09 章的单表 CRUD。等 Mini CMS 开始增加标签时，再学习这一章。
+> 第二轮内容：先完成第 09 章的单表 CRUD。等需要给文章增加标签时，再学习这一章。
+
+`JOIN` 是 SQL 中把多张表里有关的数据组合起来查询的操作。事务是把多步数据库修改当成一个整体：全部成功才保留，失败就撤销；这种撤销也叫“回滚”。
 
 ## 问题背景
 
@@ -11,7 +13,9 @@
 一个标签也可以属于多篇文章
 ```
 
-这种“两边都可以对应多条数据”的情况叫多对多。它需要中间表、关联查询和事务，难度高于单表 CRUD，所以不放在第一轮入口中。
+这种“两边都可以对应多条数据”的情况叫多对多。它需要中间表和关联查询，有些修改还需要事务。
+
+事务的难度高于单表 CRUD，所以不放在第一轮入口中。
 
 这一章继续使用第 09 章已经接入的 Prisma 7，不切回手写 `pg` 查询。
 
@@ -21,7 +25,7 @@
 
 如果直接把多个标签塞进文章表的一个文本字段，数据库很难保证标签真实存在，也很难按标签可靠筛选文章。
 
-Mini CMS 使用三张表：
+文章与标签通常使用三张表：
 
 ```text
 articles
@@ -43,11 +47,23 @@ article_tags
 
 表示文章 42 同时使用标签 3 和标签 7。
 
+这里会用到两个新的约束概念：
+
+```text
+外键
+-> article_id 必须引用 articles 表里真实存在的 id
+
+联合主键
+-> article_id 和 tag_id 两列合在一起唯一识别一条关系
+```
+
 ---
 
 ## 2. 用显式 Prisma 模型保留中间表
 
-Prisma 支持省略中间模型的隐式多对多，但这套学习路线使用显式 `ArticleTag`，让外键和联合主键仍然看得见。
+Prisma 可以替你隐藏中间模型，这叫“隐式多对多”；也可以让代码明确写出 `ArticleTag`，这叫“显式多对多”。这套学习路线使用显式模型，让外键和联合主键仍然看得见。
+
+下面模型中的 `@relation` 表达外键关系，`@@id` 表达联合主键；`onDelete: Cascade` 表示删除文章或标签时，同时清理中间表中引用它的关系。第 4 节再具体说明删除结果。
 
 在 `prisma/schema.prisma` 中增加关系字段和两个模型：
 
@@ -110,7 +126,7 @@ npm run db:generate
 
 ---
 
-## 3. `JOIN` 是概念，项目代码使用关系查询
+## 3. `JOIN` 是概念，Prisma 使用关系查询
 
 如果手写 SQL，查询文章 42 的标签大致是：
 
@@ -130,7 +146,7 @@ WHERE article_tags.article_id = 42;
 -> 只保留目标文章的关系
 ```
 
-项目代码通过 Prisma 关系字段表达同一需求：
+使用 Prisma 关系字段可以表达同一需求。`include` 表示查询文章时，把指定的关联数据也放进返回结果：
 
 ```ts
 export async function findArticleWithTags(articleId: number) {
@@ -157,7 +173,7 @@ article
     └── tag
 ```
 
-Prisma 负责把关系查询转换成数据库操作。不要假设每个 `include` 都固定生成某一种 JOIN；`JOIN` 是需要理解的数据库概念，Prisma relation query 是项目中使用的 API。
+Prisma 会把关系查询转换成 SQL，再交给 PostgreSQL 执行。不要假设每个 `include` 都固定生成某一种 JOIN；`JOIN` 是 SQL 概念，关系查询是 Prisma 提供的代码 API。
 
 ---
 
@@ -183,9 +199,9 @@ onDelete: Cascade
 
 ---
 
-## 5. 关联创建优先使用 nested write
+## 5. 让一次关联写入整体成功或失败
 
-创建文章时同时连接已有标签：
+Prisma 把“在一次调用中，同时写入主体和关联数据”叫作 nested write（嵌套写入）。例如创建文章时连接已有标签：
 
 ```ts
 export async function createArticleWithTags(
@@ -221,8 +237,6 @@ export async function createArticleWithTags(
 }
 ```
 
-这种在一次 Prisma 操作中创建或连接相关数据的写法叫 nested write。
-
 ```text
 全部关联成功
 -> 创建文章和关系
@@ -235,7 +249,9 @@ export async function createArticleWithTags(
 
 ---
 
-## 6. 多步自定义逻辑再使用 `$transaction`
+## 6. 多步自定义逻辑再使用事务函数
+
+Prisma 提供的事务函数叫 `$transaction`。传给它的函数会收到参数 `tx`，即这次事务专用的 Prisma Client；事务中的所有数据库操作都要通过它执行。
 
 例如更新文章，并把旧标签关系整体替换为新关系：
 
@@ -280,20 +296,20 @@ export async function updateArticleWithTags(
 理解重点只有两个：
 
 ```text
-事务回调里的查询都使用 tx
+传给 $transaction 的函数里，查询都使用 tx
 -> 它们属于同一个事务
 
-回调抛出错误
+这个函数抛出错误
 -> Prisma 回滚，不保留前面已经执行的修改
 ```
 
-事务回调中不要执行网络请求或其他耗时操作，尽量让事务保持短小。
+传给 `$transaction` 的函数中不要执行网络请求或其他耗时操作，尽量让事务保持短小。
 
 ---
 
 ## 当前阶段学到什么程度
 
-Mini CMS 增加标签时掌握下面五件事即可：
+练习文章标签时掌握下面五件事即可：
 
 ```text
 使用显式 ArticleTag 模型保留中间表
@@ -303,7 +319,7 @@ Mini CMS 增加标签时掌握下面五件事即可：
 使用 nested write 或 $transaction 保护多步修改
 ```
 
-暂时不扩展隐式多对多、复杂嵌套关系和事务隔离级别。
+暂时不继续扩展自动隐藏中间模型、复杂嵌套关系等内容。
 
 ---
 
@@ -323,7 +339,7 @@ include / select
 -> Prisma 查询关联模型
 
 nested write
--> 在一次 Prisma 操作中原子地修改相关数据
+-> 在一次 Prisma 调用中让关联修改整体成功或失败
 
 $transaction
 -> 让自定义的多步操作全部成功，或全部撤销

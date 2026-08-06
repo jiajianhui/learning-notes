@@ -149,7 +149,8 @@ Ant Design Form 提交
 -> fetch POST /api/articles
 -> Express 路由接收请求
 -> 参数校验
--> Prisma Client 写入 PostgreSQL
+-> Prisma Client 生成 INSERT SQL
+-> PostgreSQL 执行 SQL 并写入数据
 -> 返回 201
 -> 前端提示成功并跳转列表
 ```

@@ -2,9 +2,11 @@
 
 ## 问题背景
 
+SQL 全称是 Structured Query Language，中文叫结构化查询语言。它是关系型数据库用来创建结构、查询数据和修改数据的语言。
+
 表结构决定数据能不能保存，SQL 决定具体要读取或修改哪些数据。
 
-CRUD 是四类最常见的数据操作：
+本章练习 CRUD 对应的四类 SQL 操作：
 
 | 操作 | 含义 | SQL |
 |---|---|---|
@@ -13,15 +15,15 @@ CRUD 是四类最常见的数据操作：
 | Update | 更新 | `UPDATE` |
 | Delete | 删除 | `DELETE` |
 
-个人 Web 项目的数据库工作，大部分都建立在这四类语句上。
-
-这一章只练习 SQL 本身，所以示例直接写入固定值。下一章进入项目后改用 Prisma Client 完成相同操作，并理解 ORM 怎样把模型操作转换成数据库查询。
+这一章只练习 SQL 本身，所以示例直接写入固定值。下一章会先解释为什么业务代码可以不直接手写每条 SQL，再介绍 Prisma 怎样通过模型方法完成相同操作。
 
 第一遍只读第 1～5 节，先掌握 CRUD。排序分页、统计和索引放在后半章，项目需要时再看。
 
 ---
 
 ## 1. `INSERT`：增加一行
+
+`INSERT INTO` 表示向哪张表增加数据，`VALUES` 提供每一列的值，`RETURNING` 让 PostgreSQL 返回刚保存的数据：
 
 ```sql
 INSERT INTO articles (title, slug, content, status)
@@ -38,11 +40,11 @@ RETURNING id, title, slug, content, status;
 -> 返回刚创建的数据
 ```
 
-`RETURNING` 是 PostgreSQL 的常用能力，可以直接拿到数据库生成的 id 和最终保存结果。
-
 ---
 
 ## 2. `SELECT`：读取数据
+
+先认识查询中的四部分：`SELECT` 选择返回哪些列，`FROM` 指定从哪张表读取，`WHERE` 筛选符合条件的行，`ORDER BY` 决定排序。`DESC` 表示从大到小排列。
 
 查询全部文章的部分字段：
 
@@ -60,7 +62,7 @@ WHERE status = 'published'
 ORDER BY created_at DESC;
 ```
 
-`DESC` 表示从大到小排序。时间越晚，值越大，所以最新文章会排在前面。
+时间越晚，值越大，所以按创建时间从大到小排列时，最新文章会排在前面。
 
 SQL 可以按下面顺序理解：
 
@@ -84,6 +86,18 @@ ORDER BY
 
 ## 3. `WHERE`：只操作符合条件的行
 
+组合条件时会使用下面这些写法：
+
+| 写法 | 含义 |
+|---|---|
+| `=` | 等于 |
+| `<>` | 不等于 |
+| `> / >= / < / <=` | 大小比较 |
+| `IN (...)` | 属于一组值 |
+| `IS NULL` | 没有值 |
+| `LIKE / ILIKE` | 文本匹配，`ILIKE` 不区分大小写 |
+| `AND / OR` | 组合条件 |
+
 按 id 查询一篇文章：
 
 ```sql
@@ -103,23 +117,13 @@ WHERE status = 'published'
 
 `%` 表示任意长度的文本，所以 `'%camera%'` 可以匹配标题中包含 `camera` 的文章。
 
-常用条件先掌握：
-
-| 写法 | 含义 |
-|---|---|
-| `=` | 等于 |
-| `<>` | 不等于 |
-| `> / >= / < / <=` | 大小比较 |
-| `IN (...)` | 属于一组值 |
-| `IS NULL` | 没有值 |
-| `LIKE / ILIKE` | 文本匹配，`ILIKE` 不区分大小写 |
-| `AND / OR` | 组合条件 |
-
 判断 `NULL` 要使用 `IS NULL`，不能写 `= NULL`。
 
 ---
 
 ## 4. `UPDATE`：修改已有数据
+
+`SET` 指定修改哪些列，`WHERE` 指定只修改哪些行，`NOW()` 得到 PostgreSQL 执行 SQL 时的当前时间：
 
 ```sql
 UPDATE articles
@@ -130,27 +134,26 @@ WHERE id = 42
 RETURNING id, title, slug, content, status, updated_at;
 ```
 
-`SET` 指定修改哪些列，`WHERE` 指定修改哪几行。
-
 `NOW()` 会得到执行这条 SQL 时的当前时间。把它写入 `updated_at`，表示这篇文章刚在此时被更新。
 
 没有 `WHERE` 时，所有行都可能被修改。执行前要检查 SQL 里的 `WHERE` 是否准确。
 
-这里不需要先用 `SELECT` 查询文章。`UPDATE` 成功匹配到 id 时，`RETURNING` 会返回修改后的数据；没有返回行时，说明没有文章匹配这个 id，后端可以返回 404。
+`RETURNING` 会直接返回数据库修改后的文章数据。
 
 ---
 
 ## 5. `DELETE`：删除数据
 
+`DELETE FROM` 表示从哪张表删除数据，`WHERE` 限定只删除符合条件的行：
+
 ```sql
 DELETE FROM articles
-WHERE id = 42
-RETURNING id;
+WHERE id = 42;
 ```
 
 同样不能随意省略 `WHERE`。没有条件的 `DELETE FROM articles` 会删除表里的所有行。
 
-这里也不需要先用 `SELECT` 查询文章。`DELETE` 匹配到 id 时，会删除该行并返回 id；没有返回行时，说明没有文章匹配这个 id，后端可以返回 404。删除成功且不需要返回正文时，HTTP 接口返回 204。
+删除成功且不需要返回正文时，HTTP 接口可以返回 204。
 
 ---
 
@@ -160,7 +163,7 @@ RETURNING id;
 
 ### 6. 排序和分页
 
-分页查询：
+`LIMIT` 表示本页最多返回多少行，`OFFSET` 表示跳过前面多少行。分页查询示例：
 
 ```sql
 SELECT id, title, slug, status, created_at
@@ -168,14 +171,6 @@ FROM articles
 ORDER BY created_at DESC
 LIMIT 20
 OFFSET 40;
-```
-
-```text
-LIMIT
--> 本页最多返回多少行
-
-OFFSET
--> 跳过前面多少行
 ```
 
 页码分页的计算方式：
@@ -190,7 +185,7 @@ offset = (page - 1) * pageSize
 (3 - 1) * 20 = 40
 ```
 
-除了当前页数据，页面通常还需要总数：
+除了当前页数据，页面通常还需要总数。`COUNT(*)` 表示统计符合条件的行数：
 
 ```sql
 SELECT COUNT(*)
@@ -202,7 +197,7 @@ WHERE status = 'published';
 
 ### 7. 聚合：把多行计算成一个结果
 
-最常用的是计数：
+“聚合”表示把多行数据计算成一个结果。`GROUP BY` 先按某些列分组，再让 `COUNT(*)` 分别统计每组有多少行。`AS` 用来给计算结果起列名：
 
 ```sql
 SELECT status, COUNT(*) AS article_count
@@ -212,15 +207,7 @@ GROUP BY status;
 
 它会得到每种状态分别有多少篇文章。
 
-`AS article_count` 给计数结果起一个列名，读取结果时就能使用 `article_count`。
-
-```text
-COUNT
--> 统计行数
-
-GROUP BY
--> 先按某些列分组，再分别计算
-```
+这里的 `AS article_count` 把计数结果命名为 `article_count`，代码读取结果时就能使用这个名称。
 
 ---
 
