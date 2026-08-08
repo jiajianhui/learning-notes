@@ -1,4 +1,4 @@
-# 09. Docker、Postico 2 和 Prisma 7：让 Express 完成单表 CRUD
+# 09. Docker、Postico 2 和 Prisma 7：让 Express 读写 PostgreSQL
 
 ## 问题背景
 
@@ -46,16 +46,16 @@ ORM 没有替代 PostgreSQL，也没有让 SQL 消失。它只是让业务代码
 
 ### 1.3 Prisma：这一章选择的 ORM 工具
 
-Prisma 不是数据库，也不是 SQL。它是一套用于 TypeScript 数据库开发的 ORM 工具：
+Prisma 不是数据库，也不是 SQL。它是一套用于 Node.js 后端数据库开发的 ORM 工具；本章的 Express 工程使用 TypeScript：
 
 | 组成 | 负责什么 |
 |---|---|
 | Prisma Schema | 定义模型、字段、约束和关系 |
 | Prisma Client | 提供模型 API，并把调用转换成 SQL |
-| Prisma Migrate | 根据模型变化生成和执行表结构修改 SQL |
+| Prisma Migrate | 负责数据库结构迁移：根据模型变化生成并执行修改表结构的 SQL |
 | Prisma Studio | 在开发阶段查看和编辑数据 |
 
-这里的“迁移”不是搬运文章数据，而是把建表、加列、增加约束等结构变化保存成有顺序的 SQL 文件，再应用到数据库。
+数据库结构迁移（migration）是指把当前项目连接的 PostgreSQL 数据库从旧表结构更新到新表结构。Prisma Migrate 会根据 `schema.prisma` 的变化生成 SQL，例如第一次为 `Article` 模型创建 `articles` 表，或者模型增加字段后为 `articles` 表增加一列。变化记录保存在 `prisma/migrations/` 中。
 
 这一章使用 Prisma 7，所以业务代码主要调用 `prisma.article.findMany()`、`create()`、`update()` 和 `delete()`，而不是直接拼接 SQL 字符串。
 
@@ -133,7 +133,7 @@ docker --version
 docker compose version
 ```
 
-然后在后端练习工程的根目录创建 `compose.yaml`：
+然后在本章独立练习工程 `backend/code-demos/09-prisma-crud/` 的根目录创建 `compose.yaml`。这个 demo 只用于练习第 09 章，不是 Mini CMS：
 
 ```yaml
 services:
@@ -186,52 +186,63 @@ docker compose up -d
 
 ---
 
-## 4. 配置数据库地址
+## 4. 创建 Express + TypeScript 练习工程
 
-在 `server/.env` 中保存：
-
-```text
-DATABASE_URL=postgresql://backend_learning:backend_learning_password@localhost:5432/backend_learning
-```
-
-这段地址可以拆成：
-
-```text
-backend_learning
--> 用户名
-
-backend_learning_password
--> 密码
-
-localhost:5432
--> 数据库地址和端口
-
-最后一个 backend_learning
--> 数据库名称
-```
-
-真实 `.env` 不提交到 Git。项目提交 `.env.example`，只说明需要哪些变量，不放线上真实密码。
-
----
-
-## 5. 安装并初始化 Prisma 7
-
-先确认运行环境：
+先确认电脑当前使用的 Node.js 版本：
 
 ```bash
 node --version
+```
+
+本项目使用 Node.js 22.x，并保持在 22.12.0 或更高版本，以满足后面 Prisma 7 的运行要求。
+
+从 `learning-notes` 根目录创建 `server` 工程：
+
+```bash
+cd backend/code-demos/09-prisma-crud
+mkdir server
+cd server
+
+npm init -y
+npm install express
+npm install -D typescript tsx @types/node @types/express
+
+npx tsc --init
+mkdir src
+```
+
+两条安装命令分工不同：
+
+- `npm install express` 安装服务器运行时真正使用的 Express，记录到 `dependencies`。
+- `npm install -D ...` 安装只在开发和类型检查时使用的工具，记录到 `devDependencies`。
+
+| 开发依赖 | 作用 |
+|---|---|
+| `typescript` | 提供 TypeScript 编译器和类型检查能力 |
+| `tsx`（npm 包） | 直接运行 `.ts` 文件，并在代码变化后重新启动服务器 |
+| `@types/node` | 提供 Node.js API 的类型说明 |
+| `@types/express` | 提供 Express API 的类型说明 |
+
+这里的 `tsx` 是 npm 包和命令，不是前端常见的 `.tsx` 文件扩展名。当前 Express 后端不写 JSX，所以源文件使用 `.ts`。
+
+TypeScript 安装在当前 `server` 项目的 `node_modules/` 中。可以用下面的命令查看项目内版本，不需要全局安装 TypeScript：
+
+```bash
 npx tsc --version
 ```
 
-Prisma 7 至少需要 Node.js 20.19.0 和 TypeScript 5.4.0。这套项目直接使用 Node.js 22.x，并保持 ESM 配置：
+在 `package.json` 中启用 ESM，并加入开发命令：
 
 ```json
 {
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/app.ts"
+  }
 }
 ```
 
-`tsconfig.json` 至少保持下面这些相关选项：
+把 `tsconfig.json` 中与本项目相关的选项调整为：
 
 ```json
 {
@@ -245,26 +256,65 @@ Prisma 7 至少需要 Node.js 20.19.0 和 TypeScript 5.4.0。这套项目直接�
 }
 ```
 
-如果第 02～04 章的 Express 工程已经采用这套 ESM 配置，不要重复创建工程，只继续安装依赖。
+| 选项 | 当前作用 |
+|---|---|
+| `module: "ESNext"` | 使用 `import` 和 `export` |
+| `moduleResolution: "bundler"` | 按 `tsx` 的方式查找导入的文件和 npm 包 |
+| `target: "ES2023"` | 以 Node.js 22 能运行的现代 JavaScript 为目标 |
+| `strict: true` | 开启严格类型检查 |
+| `esModuleInterop: true` | 方便导入使用 CommonJS 的 npm 包 |
 
-在 `server` 工程安装：
+`tsconfig.json` 只配置当前 TypeScript 工程，不负责配置 Prisma 或 PostgreSQL。
+
+创建 `src/app.ts`，先确认 Express 可以收到请求：
+
+```ts
+import express from "express";
+
+const app = express();
+
+app.use(express.json());
+
+app.get("/api/health", (_request, response) => {
+  response.json({ ok: true });
+});
+
+app.listen(3000, () => {
+  console.log("Server is running at http://localhost:3000");
+});
+```
+
+启动并访问 `http://localhost:3000/api/health`：
+
+```bash
+npm run dev
+```
+
+看到 `{"ok":true}`，说明这个 demo 已经是一个可以运行的 Express 项目。这里没有使用 `express-generator`，但使用的框架仍然是 Express。
+
+---
+
+## 5. 安装并初始化 Prisma 7
+
+TypeScript 不是使用 Prisma 的必需项，JavaScript 项目也可以使用 Prisma。本项目选择 TypeScript；Prisma 7 要求 TypeScript 为 5.4.0 或更高版本。第 4 节的 `npm install -D typescript` 已经把 TypeScript 安装在当前 `server` 项目中。
+
+保持终端位于 `server/`，安装 Prisma、PostgreSQL adapter 和驱动：
 
 ```bash
 npm install @prisma/client@7 @prisma/adapter-pg@7 pg dotenv
 npm install -D prisma@7 @types/pg
 ```
 
-这些包的职责不同：
-
 | 包 | 当前作用 |
 |---|---|
-| `prisma` | 提供初始化、生成、迁移和 Studio 命令 |
+| `prisma` | 提供初始化、迁移、生成和 Studio 命令 |
 | `@prisma/client` | Prisma Client 的运行依赖 |
-| `@prisma/adapter-pg` | Prisma 7 使用的 PostgreSQL 驱动适配器 |
-| `pg` | adapter 底层使用的 PostgreSQL 驱动 |
+| `@prisma/adapter-pg` | 把 Prisma Client 接到 PostgreSQL 驱动 |
+| `pg` | 与 PostgreSQL 建立连接并传递查询 |
+| `@types/pg` | 提供 `pg` 的 TypeScript 类型说明 |
 | `dotenv` | 读取 `.env` |
 
-初始化：
+执行初始化：
 
 ```bash
 npx prisma init \
@@ -272,27 +322,91 @@ npx prisma init \
   --output ../src/generated/prisma
 ```
 
-主要会得到：
+这三行属于同一条命令，行尾的 `\` 表示下一行仍是当前命令的一部分：
+
+| 命令部分 | 作用 |
+|---|---|
+| `npx prisma` | 运行当前项目安装的 Prisma CLI，不需要全局安装 |
+| `init` | 创建 Prisma 的基础配置文件 |
+| `--datasource-provider postgresql` | 指定目标数据库为 PostgreSQL |
+| `--output ../src/generated/prisma` | 指定以后生成 Prisma Client 的位置 |
+
+执行后主要得到：
 
 ```text
 server/
-├── prisma/
-│   └── schema.prisma
+├── .env
 ├── prisma.config.ts
-└── .env
+└── prisma/
+    └── schema.prisma
 ```
 
-这里连接的是 Docker 中已经运行的 PostgreSQL，不需要执行 `prisma init --db`，也不需要创建 Prisma 托管数据库。
+`--output` 会把 `../src/generated/prisma` 写入 `schema.prisma`。这个相对路径从 `server/prisma/` 出发：`..` 先回到 `server/`，再进入 `src/generated/prisma/`。
+
+此时只是完成初始化，Client 代码还没有生成。第 8 节执行 `generate` 后，`src/generated/prisma/` 才会真正出现。
+
+这里使用的是 Docker 中已经运行的 PostgreSQL，因此不执行会创建 Prisma 托管数据库的 `prisma init --db`。
 
 ---
 
-## 6. 用 Prisma Schema 定义 `articles` 表
+## 6. 配置本地 PostgreSQL 连接
 
-第 07 章的 `CREATE TABLE` 只用于理解表结构。实际使用 Prisma 时，以 `prisma/schema.prisma` 和迁移文件为准，不要先手动建一次表，再让 Prisma 重复创建。
+第 5 节生成了 `server/.env`。现在把其中的 `DATABASE_URL` 修改为第 3 节 Docker PostgreSQL 的连接信息：
+
+```text
+DATABASE_URL=postgresql://backend_learning:backend_learning_password@localhost:5432/backend_learning
+```
+
+这个地址的基本结构是 `postgresql://用户名:密码@主机:端口/数据库名`。对照本章的值可以拆成：
+
+| 部分 | 含义 |
+|---|---|
+| `backend_learning` | PostgreSQL 用户名 |
+| `backend_learning_password` | 密码 |
+| `localhost` | Express 通过当前电脑访问 Docker 暴露的端口 |
+| `5432` | PostgreSQL 对外端口 |
+| 最后的 `backend_learning` | 要连接的数据库名称 |
+
+这些值必须与 `compose.yaml` 中的 `POSTGRES_USER`、`POSTGRES_PASSWORD`、`POSTGRES_DB` 和端口保持一致：
+
+```text
+Prisma
+-> 读取 DATABASE_URL
+-> 连接 localhost:5432
+-> 进入 Docker 中的 backend_learning 数据库
+```
+
+这里填 `localhost`，是因为 Express 目前直接运行在 macOS 上，它通过 `compose.yaml` 暴露的 `5432` 端口访问容器。修改 `.env` 只是告诉 Prisma 去哪里连接，不会自动启动数据库。执行迁移前，可以先确认：
+
+```bash
+docker compose ps
+```
+
+如果 `postgres` 没有处于运行状态，回到第 3 节执行 `docker compose up -d`。
+
+真实 `.env` 不提交到 Git。项目可以提交 `.env.example`，只说明需要 `DATABASE_URL`，不要放生产环境的真实密码。
+
+---
+
+## 7. Prisma Schema：同时驱动数据库结构和程序 API
+
+`prisma/schema.prisma` 是 Prisma 的中心设计文件。它本身既不是数据库，也不是 Prisma Client；它负责描述“有哪些数据模型、字段和规则”，再作为两个命令的输入：
+
+```text
+schema.prisma
+├── migrate
+│   └── 生成迁移 SQL，并把 PostgreSQL 表结构更新成 Schema 描述的样子
+└── generate
+    └── 生成供程序使用的 TypeScript/JavaScript 类型和 Prisma Client API
+```
+
+修改 Schema 后，数据库和程序代码不会自动变化。需要分别执行 `migrate` 和 `generate`，让数据库结构与代码层 API 都跟上新的 Schema。
+
+### 7.1 先定义 Article 模型
+
+第 07 章的 `CREATE TABLE` 用来理解数据库表结构。进入 Prisma 项目后，以 `prisma/schema.prisma` 作为模型定义来源，不要先手动创建一次 `articles` 表，再让 Prisma 重复创建。
 
 修改 `prisma/schema.prisma`：
-
-下面代码先分成四块读：`generator` 决定怎样生成 Prisma Client，`datasource` 指定使用 PostgreSQL，`enum` 声明固定选项，`model Article` 定义文章模型。
 
 ```prisma
 generator client {
@@ -325,9 +439,33 @@ model Article {
 }
 ```
 
-`enum ArticleStatus` 只允许 `draft` 和 `published`，对应第 07 章对文章状态的限制。
+### 7.2 四个代码块分别负责什么
 
-这不是另学一套数据库概念，而是把第 07 章的表结构写成 Prisma 模型：
+`generator client` 定义怎样生成 Prisma Client：
+
+```prisma
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+```
+
+- `generator` 表示这是一段代码生成配置。
+- `client` 是这个配置块的名称，不是已经创建好的 `PrismaClient` 对象。
+- `provider = "prisma-client"` 表示使用 Prisma Client 生成器。
+- `output` 指定生成的 TypeScript/JavaScript 代码保存在哪里。
+
+`datasource db` 指定 Schema 面向哪种数据库：
+
+```prisma
+datasource db {
+  provider = "postgresql"
+}
+```
+
+`db` 是数据源配置块的名称，`provider = "postgresql"` 表示目标数据库是 PostgreSQL。具体连接地址不写在这里，而是由 `prisma.config.ts` 从 `DATABASE_URL` 读取。
+
+`enum ArticleStatus` 定义文章状态只能是 `draft` 或 `published`；`model Article` 定义文章模型、字段、类型和约束。它们仍然对应第 07 章学过的数据库概念：
 
 | Prisma 写法 | 表达的数据库规则 |
 |---|---|
@@ -338,15 +476,100 @@ model Article {
 | `String?` | 可以是 `NULL` |
 | `@unique` | 值不能重复 |
 | `@default(draft)` | 没有提供状态时使用草稿 |
-| `@map` / `@@map` | 代码使用驼峰命名，数据库保留下划线命名 |
+| `@map` / `@@map` | 让 Prisma 代码名称和数据库名称分别保持各自的命名习惯 |
+
+`@map` 和 `@@map` 都是名称映射，但作用范围不同：
+
+- `@map` 写在字段后面，负责一个字段和数据库列之间的名称对应。例如 `createdAt @map("created_at")` 表示代码使用 `createdAt`，数据库列使用 `created_at`。
+- `@@map` 写在 `model` 或 `enum` 内部，负责整个模型、表或枚举的名称对应。例如 `@@map("articles")` 表示代码模型叫 `Article`，数据库表叫 `articles`。
+
+一个 `@` 作用于当前字段，两个 `@@` 作用于当前整个代码块。它们只建立名称对应关系，不是在两个地方复制或搬运数据。
 
 `@updatedAt` 表示通过 Prisma Client 修改文章时，Prisma 自动更新这个时间。它是 Prisma 的行为，不是 PostgreSQL 触发器。
 
+### 7.3 `migrate`：让数据库结构跟着 Schema 变化
+
+`migrate` 读取 Schema 中的模型变化，生成对应的迁移 SQL，再把 SQL 应用到 PostgreSQL。例如：
+
+```text
+model Article
+-> 创建 articles 表
+
+id Int @id @default(autoincrement())
+-> 创建自动增长的主键列 id
+
+slug String @unique
+-> 创建 slug 列和唯一约束
+```
+
+生成的 SQL 会保存在 `prisma/migrations/`，数据库执行这些 SQL 后，真实的表、列和约束才会发生变化。因此，`migrate` 的目标是数据库结构：
+
+```text
+Schema 描述的模型
+-> migration.sql
+-> PostgreSQL 中真实的表结构
+```
+
+它不是搬运文章数据，而是让数据库结构从旧版本更新到 Schema 描述的新版本。
+
+### 7.4 `generate`：根据 Schema 给程序生成 Prisma Client
+
+`generate` 读取同一份 Schema，在 `output` 指定的位置生成一套供程序使用的 TypeScript/JavaScript 代码，其中包括：
+
+- `PrismaClient` 类。
+- `Article` 对应的类型。
+- 创建、查询、修改和删除 Article 的数据库操作 API。
+- 每个方法需要什么参数、会返回什么结果的类型信息。
+
+因为 Schema 中定义了 `model Article`，生成的 `PrismaClient` 实例才会出现下面这些 API：
+
+```ts
+prisma.article.findMany();
+prisma.article.findUnique();
+prisma.article.create();
+prisma.article.update();
+prisma.article.delete();
+```
+
+如果修改了 `model Article` 却没有重新执行 `generate`，程序仍在使用旧的 Client 代码，编辑器的类型提示和可调用 API 也不会更新。因此，`generate` 的目标是程序代码，不会创建数据库表，也不会写入文章数据：
+
+```text
+Schema 描述的模型
+-> prisma generate
+-> 生成类型 + 数据库操作 API
+-> 程序可以调用 prisma.article.*
+```
+
+### 7.5 Prisma Client 在运行时怎样工作
+
+生成 Prisma Client 只是准备好了代码。服务器真正运行后，业务代码调用这些 API，Prisma 再把操作转换成对应的数据库查询：
+
+```text
+业务代码调用 prisma.article.findMany()
+-> 生成的 Prisma Client 识别 Article 模型和查询参数
+-> Prisma 转换成 PostgreSQL 查询
+-> @prisma/adapter-pg 交给 pg
+-> PostgreSQL 执行查询并返回数据
+-> Prisma Client 按生成的类型把结果交回业务代码
+```
+
+所以三个概念要分开：
+
+| 概念 | 负责什么 |
+|---|---|
+| Prisma Schema | 描述模型、字段和数据库规则 |
+| Prisma Migrate | 根据 Schema 生成 SQL，让真实数据库结构跟上 Schema |
+| Prisma Client | 根据 Schema 生成程序可调用的类型和数据库操作 API，并在运行时执行查询 |
+
 ---
 
-## 7. 生成迁移和 Prisma Client
+## 8. 执行迁移并生成 Prisma Client
 
-`prisma.config.ts` 使用 Prisma 7 的配置方式读取数据库地址：
+第 7 节已经解释了 `migrate` 和 `generate` 的工作原理。这一节只负责配置命令并亲手执行一次。
+
+### 8.1 确认 Prisma CLI 配置
+
+第 5 节执行 `prisma init` 时已经生成了 `prisma.config.ts`。确认内容如下：
 
 ```ts
 import "dotenv/config";
@@ -363,11 +586,22 @@ export default defineConfig({
 });
 ```
 
-在 `package.json` 增加：
+这个文件告诉 Prisma CLI 三件事：
+
+- 从 `prisma/schema.prisma` 读取模型。
+- 把迁移文件保存在 `prisma/migrations/`。
+- 从 `.env` 的 `DATABASE_URL` 读取 PostgreSQL 地址。
+
+运行 Prisma 命令时会自动加载这个文件，业务代码不需要手动导入它。
+
+### 8.2 在 package.json 中增加快捷命令
+
+在现有的 `scripts` 中追加三个命令，不要删除第 4 节已经添加的 `dev`：
 
 ```json
 {
   "scripts": {
+    "dev": "tsx watch src/app.ts",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio"
@@ -375,38 +609,56 @@ export default defineConfig({
 }
 ```
 
-第一次建立表：
+左边的 `db:migrate`、`db:generate` 和 `db:studio` 是我们自己取的快捷命令名称；右边才是实际执行的 Prisma 命令。它们只是方便记忆，没有改变 Prisma 的行为。
+
+### 8.3 执行第一次 `migrate` 和 `generate`
+
+保持终端位于 `server/`，依次运行：
 
 ```bash
 npm run db:migrate -- --name init_articles
 npm run db:generate
 ```
 
-两个命令负责不同的结果：
+- `db:migrate` 根据 Schema 生成迁移 SQL，并让 PostgreSQL 建立 `articles` 表。
+- `db:generate` 根据 Schema 生成程序使用的 Prisma Client。
+
+第一条命令中的 `--` 表示把后面的 `--name init_articles` 继续传给 Prisma；`init_articles` 是这次迁移的名称。
+
+执行完成后检查两个位置：
 
 ```text
-prisma migrate dev
--> 根据 schema.prisma 生成并执行 prisma/migrations 中的迁移 SQL
+prisma/migrations/..._init_articles/migration.sql
+-> 数据库结构将执行的 SQL
 
-prisma generate
--> 根据模型生成类型安全的 Prisma Client
+src/generated/prisma/
+-> 程序使用的 Prisma Client 代码
 ```
 
-Prisma 7 的 `migrate dev` 不再自动执行 `prisma generate`，所以修改模型后要显式运行生成命令。
+打开 `migration.sql`，把其中的表、列和约束与 `schema.prisma` 对照起来。`src/generated/prisma/` 是自动生成目录，不要手动修改。
 
-打开 `prisma/migrations/.../migration.sql`，把它和第 07～08 章学过的表、列、约束和 SQL 对照起来。生成目录 `src/generated/prisma` 不要手动修改。
+这两个命令更新的对象不同：`db:migrate` 只把 Schema 的变化应用到 PostgreSQL，`db:generate` 才会更新 `src/generated/prisma/` 中供程序使用的 Client 代码。只运行其中一个，会导致数据库结构或程序代码有一边仍然是旧版本，因此修改 Schema 后要依次运行两个命令。
 
-开发时还可以运行：
+以后修改 Schema 时继续使用同一顺序：
+
+```text
+修改 schema.prisma
+-> npm run db:migrate -- --name 本次变化名称
+-> 检查 migration.sql
+-> npm run db:generate
+```
+
+如果想临时用可视化界面查看数据，可以运行：
 
 ```bash
 npm run db:studio
 ```
 
-Prisma Studio 用于在开发阶段查看和编辑数据库数据，不能代替自己开发的管理页面。
+Prisma Studio 用于开发阶段查看和编辑数据，不能代替自己开发的管理页面。
 
 ---
 
-## 8. 用 Postico 2 查看数据库并亲手执行 SQL
+## 9. 用 Postico 2 查看数据库并亲手执行 SQL
 
 迁移执行后，`articles` 表已经真正存在于 PostgreSQL 中。现在先不写 Prisma Client 代码，而是使用数据库工具亲手执行第 08 章的 SQL。
 
@@ -418,7 +670,7 @@ Postico 2 是 macOS 上的 PostgreSQL 桌面客户端。它不是数据库，也
 brew install --cask postico
 ```
 
-### 8.1 连接 Docker 中的 PostgreSQL
+### 9.1 连接 Docker 中的 PostgreSQL
 
 在 Postico 2 中新建连接，填入与 `compose.yaml` 相同的信息：
 
@@ -432,9 +684,9 @@ brew install --cask postico
 
 点击 `Connect`。如果提示无法连接，先用 `docker compose ps` 确认 PostgreSQL 容器正常运行。
 
-### 8.2 找到 Prisma Migrate 建立的表
+### 9.2 找到 Prisma Migrate 建立的表
 
-连接成功后，在左侧边栏找到 `articles` 表并打开。如果没看到，按 `⌘R` 重新加载，再确认第 7 节的迁移命令已经执行成功。
+连接成功后，在左侧边栏找到 `articles` 表并打开。如果没看到，按 `⌘R` 重新加载，再确认第 8 节的迁移命令已经执行成功。
 
 ```text
 backend_learning
@@ -443,7 +695,7 @@ backend_learning
 
 打开 `articles` 后，先切换查看表内容和表结构，把其中的列、约束和数据与 `schema.prisma` 和 `migration.sql` 对照起来。
 
-### 8.3 亲手执行一轮 CRUD SQL
+### 9.3 亲手执行一轮 CRUD SQL
 
 在 Postico 2 中切换到 SQL Query View，也可以使用快捷键 `⇧⌘T`。按照下面顺序，每次把光标放在一条语句中，按 `⌘↩︎` 执行当前语句，观察下方结果：
 
@@ -491,7 +743,7 @@ DELETE
 
 不要一次运行整段后只看最后结果。这一轮的目标就是亲眼看到每条 SQL 怎样改变数据库。
 
-### 8.4 分清 Postico 2、Prisma Studio 和 Prisma Client
+### 9.4 分清 Postico 2、Prisma Studio 和 Prisma Client
 
 ```text
 Postico 2
@@ -508,7 +760,7 @@ Prisma Client
 
 ---
 
-## 9. 创建一份 Prisma Client
+## 10. 创建并复用一个 Prisma Client 实例
 
 创建 `src/db/client.ts`：
 
@@ -524,27 +776,45 @@ const adapter = new PrismaPg({
 export const prisma = new PrismaClient({ adapter });
 ```
 
-整个应用只创建并复用这一份 `prisma`：
+`export const prisma = new PrismaClient({ adapter })` 创建一个 Prisma Client 实例，将它命名为 `prisma` 并导出。其他文件需要读写数据库时，直接导入它：
+
+```ts
+import { prisma } from "../../db/client.js";
+
+const articles = await prisma.article.findMany();
+```
+
+在同一次服务器运行期间，各个模块都复用这个 `prisma` 实例：
 
 ```text
-PrismaClient
--> 提供和 Article 模型对应的类型安全 API
+prisma（PrismaClient 实例）
+├── article.findMany()
+├── article.create()
+└── article.update()
 
 PrismaPg
--> 使用 pg 连接并复用 PostgreSQL 连接
+-> 把这个 PrismaClient 实例接到 PostgreSQL
 ```
 
 底层会通过连接池管理这些连接。连接池就是预先维护少量可复用连接，避免每次请求都重新建立数据库连接。
 
-不要在每个 route 或每次请求中重新 `new PrismaClient()`。
+不要在每个 route 文件或每次请求中重新执行 `new PrismaClient()`；直接导入 `client.ts` 已经导出的 `prisma` 即可。
 
 ---
 
-## 10. 用 Prisma Client 完成查询和创建
+## 11. 用 Prisma Client 完成查询和创建
+
+这一节先编写读写数据库的 Prisma Client 函数，再把其中的列表查询接到 Express，跑通一条完整链路。
 
 ### 查询文章列表
 
-`findMany()` 表示查询多条记录，`select` 选择要返回的字段，`orderBy` 指定排序方式：
+`findMany()` 表示查询多条记录，`select` 选择要返回的字段，`orderBy` 指定排序方式。先创建文章模块目录：
+
+```bash
+mkdir -p src/modules/articles
+```
+
+创建 `src/modules/articles/article.repository.ts`，先写入：
 
 ```ts
 import { prisma } from "../../db/client.js";
@@ -565,18 +835,62 @@ export async function listArticles() {
 }
 ```
 
-对应第 08 章的概念仍然是：
+这段查询中用了三个 Prisma Client 写法：
+
+| 写法 | 作用 |
+|---|---|
+| `findMany()` | 查询多篇文章 |
+| `select` | 指定返回哪些字段 |
+| `orderBy` | 指定结果的排序方式 |
+
+### 让 Express 调用列表查询
+
+回到 `src/app.ts`，导入 `listArticles()` 并注册 `GET /api/articles`：
+
+```ts
+import express from "express";
+import { listArticles } from "./modules/articles/article.repository.js";
+
+const app = express();
+
+app.use(express.json());
+
+app.get("/api/health", (_request, response) => {
+  response.json({ ok: true });
+});
+
+app.get("/api/articles", async (_request, response) => {
+  const articles = await listArticles();
+  response.json({ data: articles });
+});
+
+app.listen(3000, () => {
+  console.log("Server is running at http://localhost:3000");
+});
+```
+
+保持 PostgreSQL 容器和 Express 服务器正在运行。在浏览器地址栏打开 `http://localhost:3000/api/articles`，JSON 会直接显示在浏览器页面中。也可以在 Apifox 发送 `GET` 请求，然后在响应内容中查看。
+
+如果 `articles` 表中暂时没有文章，浏览器页面或 Apifox 响应中会显示：
+
+```json
+{
+  "data": []
+}
+```
+
+这个响应已经跑通：
 
 ```text
-select
--> 返回哪些字段
-
-findMany
--> 查询多行
-
-orderBy
--> 按创建时间倒序排列
+GET /api/articles
+-> Express 匹配路由
+-> listArticles()
+-> prisma.article.findMany()
+-> PostgreSQL
+-> Express 返回 JSON
 ```
+
+至此，这个独立 demo 已经真正用 Express 读取了 PostgreSQL。
 
 ### 按 id 查询一篇文章
 
@@ -614,7 +928,7 @@ export async function createArticle(input: {
 
 ---
 
-## 11. 用同一种方式完成修改和删除
+## 12. 用同一种方式完成修改和删除
 
 ### 修改文章
 
@@ -654,9 +968,9 @@ export async function deleteArticle(articleId: number) {
 
 ---
 
-## 12. 把 Prisma 错误转换成 API 错误
+## 13. 先认识两个常见的 Prisma 错误码
 
-Prisma 会给常见数据库错误分配固定代码。单表 CRUD 先识别下面两个：
+Prisma 会给常见数据库错误分配固定代码。单表 CRUD 先认识下面两个，等后面接入 Express 错误处理时再完成转换：
 
 ```text
 P2002
@@ -668,11 +982,11 @@ P2025
 -> API 返回 404
 ```
 
-其他未知数据库故障由服务器记录细节，客户端只接收 500，不直接看到 Prisma 原始错误。
+实际接入 API 时，上层会把 `P2002` 转成 409，把 `P2025` 转成 404。其他未知数据库故障由服务器记录细节，客户端只接收 500，不直接看到 Prisma 原始错误。
 
 ---
 
-## 13. 参数化查询现在由 Prisma 完成
+## 14. 参数化查询现在由 Prisma 完成
 
 参数化查询表示“SQL 结构”和“用户提供的值”分开传递。这样用户输入只会被当成数据，不会被当成 SQL 语法执行。
 
@@ -703,7 +1017,7 @@ await prisma.article.update({
 
 ## 第一轮学到这里就够了
 
-现在应该能够完成：
+现在已经准备好下面五个 API 需要的数据库操作：
 
 ```text
 GET    /api/articles
@@ -712,6 +1026,8 @@ POST   /api/articles
 PATCH  /api/articles/:id
 DELETE /api/articles/:id
 ```
+
+本章 demo 已经注册 `GET /api/articles`，用来验证 Express、Prisma 和 PostgreSQL 能够连通。其余四个 CRUD 地址留到第 20 章的实操阶段 3，再与参数校验和错误处理一起完成。
 
 这一章的重点不是记住 Prisma 的全部 API，而是建立下面的对应关系：
 
@@ -738,17 +1054,27 @@ Prisma Studio
 -> 在开发阶段查看数据
 ```
 
-第一轮直接打开第 20 章开始实操；项目做到阶段 3 时再读第 11～12 章。需要文章标签时，再回来学习第 10 章的多表关系和事务。
+完成第 09 章的独立 demo 后，打开第 20 章，正式创建 `mini-cms` 项目，并从实操阶段 1 开始。第 20 章会告诉你每个阶段要完成什么，以及开始前需要回看哪些章节。
+
+实操进入阶段 3 时，先读第 11～12 章，再完成真正的文章 CRUD 和管理页面。等项目需要文章标签时，再学第 10 章的多表关系和事务。
 
 ## 官方参考
 
+- [Express 官方安装说明](https://expressjs.com/en/5x/starter/installing/)
+- [npm `npx` 命令](https://docs.npmjs.com/cli/commands/npx/)
+- [npm `dependencies` 和 `devDependencies`](https://docs.npmjs.com/specifying-dependencies-and-devdependencies-in-a-package-json-file/)
+- [`tsx` 使用说明](https://tsx.is/getting-started)
+- [`tsx` watch 模式](https://tsx.is/watch-mode)
+- [TypeScript `tsconfig.json`](https://www.typescriptlang.org/docs/handbook/tsconfig-json)
 - [Docker PostgreSQL 官方镜像](https://hub.docker.com/_/postgres)
 - [Postico 2](https://eggerapps.at/postico2/)
 - [Postico 2 SQL Query View](https://eggerapps.at/postico2/documentation/sql-query-view.html)
 - [Postico 2 连接地址](https://eggerapps.at/postico2/documentation/postico-url-scheme.html)
 - [Prisma 7 升级说明和运行要求](https://www.prisma.io/docs/guides/upgrade-prisma-orm/v7)
 - [Prisma 7 初始化命令](https://docs.prisma.io/docs/cli/init)
+- [Prisma Config 配置](https://www.prisma.io/docs/orm/reference/prisma-config-reference)
 - [Prisma Client generator](https://docs.prisma.io/docs/orm/prisma-schema/overview/generators)
+- [Prisma `@map` 和 `@@map`](https://www.prisma.io/docs/orm/prisma-schema/data-model/database-mapping)
 - [Prisma Migrate 开发命令](https://docs.prisma.io/docs/cli/migrate/dev)
 - [Prisma CRUD 文档](https://docs.prisma.io/docs/orm/prisma-client/queries/crud)
 - [Prisma Studio](https://docs.prisma.io/docs/studio)
