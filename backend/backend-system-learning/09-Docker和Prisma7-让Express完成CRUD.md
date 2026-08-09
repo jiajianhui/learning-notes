@@ -314,22 +314,25 @@ npm install -D prisma@7 @types/pg
 
 | 包 | 当前作用 |
 |---|---|
-| `prisma` | 提供初始化、迁移、生成和 Studio 命令 |
+| `prisma` | 提供 `prisma init`、`migrate`、`generate`、`studio` 等命令 |
 | `@prisma/client` | Prisma Client 的运行依赖 |
 | `@prisma/adapter-pg` | 把 Prisma Client 接到 PostgreSQL 驱动 |
 | `pg` | 与 PostgreSQL 建立连接并传递查询 |
-| `@types/pg` | 提供 `pg` 的 TypeScript 类型说明 |
+| `@types/pg` | 为 `pg` 提供 TypeScript 类型定义 |
 | `dotenv` | 读取 `.env` |
+
+`prisma` 用于执行 `init`、`migrate`、`generate` 和 `studio` 等开发命令；`@types/pg` 用于 TypeScript 类型检查。两者都只在开发阶段使用，因此使用 `-D` 安装。
 
 执行初始化：
 
 ```bash
 npx prisma init \
   --datasource-provider postgresql \
-  --output ../src/generated/prisma
+  --output ../src/generated/prisma \
+  --no-skills
 ```
 
-这三行属于同一条命令，行尾的 `\` 表示下一行仍是当前命令的一部分：
+这四行属于同一条命令，行尾的 `\` 表示下一行仍是当前命令的一部分：
 
 | 命令部分 | 作用 |
 |---|---|
@@ -337,6 +340,7 @@ npx prisma init \
 | `init` | 创建 Prisma 的基础配置文件 |
 | `--datasource-provider postgresql` | 指定目标数据库为 PostgreSQL |
 | `--output ../src/generated/prisma` | 指定以后生成 Prisma Client 的位置 |
+| `--no-skills` | 不安装供 AI 编程工具使用的 Prisma Skills |
 
 执行后主要得到：
 
@@ -347,6 +351,8 @@ server/
 └── prisma/
     └── schema.prisma
 ```
+
+`.env` 是 Prisma CLI 创建的配置文件；`dotenv` 是读取这个文件的 npm 包。即使没有安装 `dotenv`，`prisma init` 仍会创建 `.env`，但后续读取其中的 `DATABASE_URL` 时需要 `dotenv`。
 
 `--output` 会把 `../src/generated/prisma` 写入 `schema.prisma`。这个相对路径从 `server/prisma/` 出发：`..` 先回到 `server/`，再进入 `src/generated/prisma/`。
 
@@ -461,7 +467,7 @@ generator client {
 ```
 
 - `generator` 表示这是一段代码生成配置。
-- `client` 是这个配置块的名称，不是已经创建好的 `PrismaClient` 对象。
+- `client` 是这段生成器配置的名称。执行 `prisma generate` 时，Prisma 会按照这段配置生成包含 `PrismaClient` 类的程序代码；之后再通过 `new PrismaClient()` 创建查询数据库的对象。`prisma generate` 不迁移数据库，数据库迁移由 `prisma migrate dev` 完成。
 - `provider = "prisma-client"` 表示使用 Prisma Client 生成器。
 - `output` 指定生成的 TypeScript/JavaScript 代码保存在哪里。
 
@@ -583,7 +589,7 @@ Schema 描述的模型
 
 ```ts
 import "dotenv/config";
-import { defineConfig, env } from "prisma/config";
+import { defineConfig } from "prisma/config";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -591,7 +597,7 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    url: process.env["DATABASE_URL"],
   },
 });
 ```
