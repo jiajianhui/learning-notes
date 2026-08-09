@@ -1,4 +1,4 @@
-# 09. Docker、Postico 2 和 Prisma 7：让 Express 读写 PostgreSQL
+# 09. Docker、TablePro 和 Prisma 7：让 Express 读写 PostgreSQL
 
 ## 问题背景
 
@@ -674,21 +674,17 @@ Prisma Studio 用于开发阶段查看和编辑数据，不能代替自己开发
 
 ---
 
-## 9. 用 Postico 2 查看数据库并亲手执行 SQL
+## 9. 用 TablePro 查看数据库并亲手执行 SQL
 
 迁移执行后，`articles` 表已经真正存在于 PostgreSQL 中。现在先不写 Prisma Client 代码，而是使用数据库工具亲手执行第 08 章的 SQL。
 
-Postico 2 是 macOS 上的 PostgreSQL 桌面客户端。它不是数据库，也不是 ORM；它负责连接 PostgreSQL、查看表和数据，以及编写和执行 SQL。
+TablePro 是 macOS 上的数据库客户端。它不是数据库，也不是 ORM；它负责连接 PostgreSQL、查看表和数据，以及编写和执行 SQL。
 
-从 [Postico 2 官方页面](https://eggerapps.at/postico2/) 下载，或使用 Homebrew 安装：
-
-```bash
-brew install --cask postico
-```
+可以从 [TablePro 官方页面](https://tablepro.app/) 下载。
 
 ### 9.1 连接 Docker 中的 PostgreSQL
 
-在 Postico 2 中新建连接，填入与 `compose.yaml` 相同的信息：
+在 TablePro 中新建 PostgreSQL 连接，填入与 `compose.yaml` 相同的信息：
 
 | 连接项 | 值 |
 |---|---|
@@ -698,7 +694,7 @@ brew install --cask postico
 | Username | `backend_learning` |
 | Password | `backend_learning_password` |
 
-点击 `Connect`。如果提示无法连接，回到 `compose.yaml` 所在的 `backend/code-demos/09-prisma-crud/` 目录，使用 `docker compose ps` 确认 PostgreSQL 容器正常运行。
+先点击 `Test Connection`。测试成功后点击 `Save & Connect`。如果提示无法连接，回到 `compose.yaml` 所在的 `backend/code-demos/09-prisma-crud/` 目录，使用 `docker compose ps` 确认 PostgreSQL 容器正常运行。
 
 ### 9.2 找到 Prisma Migrate 建立的表
 
@@ -713,36 +709,49 @@ backend_learning
 
 ### 9.3 亲手执行一轮 CRUD SQL
 
-在 Postico 2 中切换到 SQL Query View，也可以使用快捷键 `⇧⌘T`。按照下面顺序，每次把光标放在一条语句中，按 `⌘↩︎` 执行当前语句，观察下方结果：
+在 TablePro 中按 `⌘T` 打开查询标签。按照下面的顺序，每次把光标放在一条 SQL 中，按 `⌘↩︎` 执行当前语句，并观察下方的结果表格。
+
+这次是直接执行 SQL，没有经过 Prisma Client，因此模型中的 `@updatedAt` 不会生效。数据库里的 `updated_at` 又是必填列，所以 `INSERT` 和 `UPDATE` 都要自己写入当前时间。PostgreSQL 的 `CURRENT_TIMESTAMP` 后面不加括号，也可以改用 `NOW()`。
 
 ```sql
-INSERT INTO articles (title, slug, content, status)
-VALUES ('SQL 练习文章', 'sql-practice', '用 Postico 2 亲手执行 SQL', 'draft')
-RETURNING id, title, slug, status, created_at, updated_at;
+INSERT INTO articles (title, slug, content, status, updated_at)
+VALUES (
+  'SQL 练习文章',
+  'sql-practice',
+  '用 TablePro 亲手执行 SQL',
+  'draft',
+  CURRENT_TIMESTAMP
+)
+RETURNING id, title, slug, content, status, created_at, updated_at;
 
-SELECT id, title, slug, status, created_at, updated_at
+SELECT *
 FROM articles
 WHERE slug = 'sql-practice';
 
 UPDATE articles
 SET title = 'SQL 练习文章（已修改）',
-    updated_at = NOW()
+    updated_at = CURRENT_TIMESTAMP
 WHERE slug = 'sql-practice'
 RETURNING id, title, slug, status, updated_at;
 
 DELETE FROM articles
-WHERE slug = 'sql-practice';
+WHERE slug = 'sql-practice'
+RETURNING id, title, slug;
 
 SELECT id, title, slug
 FROM articles
 WHERE slug = 'sql-practice';
 ```
 
+`INSERT` 中的字段列表决定写入哪些列，`RETURNING` 只决定执行成功后让 PostgreSQL 返回哪些字段。TablePro 会把这些字段显示在下方的结果表格中；如果不写 `RETURNING`，数据仍会改变，但通常只会显示受影响的行数。
+
+`SELECT` 本身就会返回查询结果，所以后面不能再写 `RETURNING`。`SELECT *` 返回匹配记录的全部字段，这里用它检查刚插入的完整文章；`SELECT id, title, slug` 则只返回指定的三个字段，其他字段仍保存在数据库中。实际接口通常只选择需要返回的字段。
+
 这五步分别能看到：
 
 ```text
 INSERT
--> 文章被创建，PostgreSQL 生成 id 和时间
+-> 文章被创建，并返回刚写入的数据
 
 SELECT
 -> 能查到刚创建的文章
@@ -751,7 +760,7 @@ UPDATE
 -> 标题和 updated_at 发生变化
 
 DELETE
--> 练习数据被删除
+-> 练习数据被删除，并返回被删除文章的基本信息
 
 最后一次 SELECT
 -> 返回空结果
@@ -759,10 +768,10 @@ DELETE
 
 不要一次运行整段后只看最后结果。这一轮的目标就是亲眼看到每条 SQL 怎样改变数据库。
 
-### 9.4 分清 Postico 2、Prisma Studio 和 Prisma Client
+### 9.4 分清 TablePro、Prisma Studio 和 Prisma Client
 
 ```text
-Postico 2
+TablePro
 -> 查看表结构和数据，亲手编写并执行 SQL
 
 Prisma Studio
@@ -778,6 +787,12 @@ Prisma Client
 
 ## 10. 创建并复用一个 Prisma Client 实例
 
+先创建数据库工具目录：
+
+```bash
+mkdir -p src/db
+```
+
 创建 `src/db/client.ts`：
 
 ```ts
@@ -792,7 +807,7 @@ const adapter = new PrismaPg({
 export const prisma = new PrismaClient({ adapter });
 ```
 
-`export const prisma = new PrismaClient({ adapter })` 创建一个 Prisma Client 实例，将它命名为 `prisma` 并导出。其他文件需要读写数据库时，直接导入它：
+这段代码先通过 `dotenv` 读取 `DATABASE_URL`，再让 `PrismaPg` 使用这个地址连接 PostgreSQL，最后通过生成的 `PrismaClient` 类创建并导出一个名为 `prisma` 的实例。其他文件需要读写数据库时，直接导入它：
 
 ```ts
 import { prisma } from "../../db/client.js";
@@ -895,6 +910,8 @@ app.listen(3000, () => {
 }
 ```
 
+第 9.3 节最后删除了 SQL 练习文章，因此第一次访问时看到空数组是正常的。如果想看到非空结果，可以先在 Prisma Studio 中创建一篇文章，再刷新这个地址。
+
 这个响应已经跑通：
 
 ```text
@@ -907,6 +924,8 @@ GET /api/articles
 ```
 
 至此，这个独立 demo 已经真正用 Express 读取了 PostgreSQL。
+
+下面先补齐其余 CRUD 需要的数据库操作函数，但暂时不把它们注册成 Express 路由。函数只有被路由调用后，才会成为浏览器或 Apifox 可以请求的 HTTP API。
 
 ### 按 id 查询一篇文章
 
@@ -946,6 +965,8 @@ export async function createArticle(input: {
 
 ## 12. 用同一种方式完成修改和删除
 
+这一节继续补充数据库操作函数，Express 路由仍留到第 20 章接入。
+
 ### 修改文章
 
 ```ts
@@ -968,7 +989,7 @@ export async function updateArticle(
 }
 ```
 
-这里不用手动写 `updatedAt`，因为模型已经声明了 `@updatedAt`。
+这里通过 Prisma Client 修改数据，所以不用手动写 `updatedAt`，模型中的 `@updatedAt` 会自动更新时间。第 9.3 节的原生 SQL 没有经过 Prisma Client，才需要自己更新 `updated_at`。
 
 ### 删除文章
 
@@ -1057,14 +1078,14 @@ schema.prisma
 Prisma Migrate
 -> 生成并执行数据库迁移
 
-Postico 2
+TablePro
 -> 查看本地数据库，并亲手执行 SQL
 
 prisma generate
 -> 生成类型安全的 Prisma Client
 
 Prisma Client CRUD
--> 生成并执行 CRUD 对应的 SQL
+-> 在程序运行时把模型操作转换成 SQL 并执行
 
 Prisma Studio
 -> 在开发阶段查看数据
@@ -1083,9 +1104,9 @@ Prisma Studio
 - [`tsx` watch 模式](https://tsx.is/watch-mode)
 - [TypeScript `tsconfig.json`](https://www.typescriptlang.org/docs/handbook/tsconfig-json)
 - [Docker PostgreSQL 官方镜像](https://hub.docker.com/_/postgres)
-- [Postico 2](https://eggerapps.at/postico2/)
-- [Postico 2 SQL Query View](https://eggerapps.at/postico2/documentation/sql-query-view.html)
-- [Postico 2 连接地址](https://eggerapps.at/postico2/documentation/postico-url-scheme.html)
+- [TablePro](https://tablepro.app/)
+- [TablePro SQL Editor](https://docs.tablepro.app/features/sql-editor)
+- [TablePro 快捷键](https://docs.tablepro.app/features/keyboard-shortcuts)
 - [Prisma 7 升级说明和运行要求](https://www.prisma.io/docs/guides/upgrade-prisma-orm/v7)
 - [Prisma 7 初始化命令](https://docs.prisma.io/docs/cli/init)
 - [Prisma Config 配置](https://www.prisma.io/docs/orm/reference/prisma-config-reference)
