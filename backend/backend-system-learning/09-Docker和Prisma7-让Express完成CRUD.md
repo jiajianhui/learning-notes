@@ -154,12 +154,15 @@ volumes:
 
 这里固定 PostgreSQL 的主版本，避免以后拉取镜像时突然跨大版本变化。上面的用户名和密码只用于本地学习环境。
 
-启动数据库：
+启动数据库时，终端要位于 `compose.yaml` 所在的 demo 根目录，不是后面的 `server/` 目录。如果当前位于 `learning-notes` 根目录，执行：
 
 ```bash
+cd backend/code-demos/09-prisma-crud
 docker compose up -d
 docker compose ps
 ```
+
+Docker Compose 默认会读取当前目录的 `compose.yaml`，所以后面的 `logs`、`stop`、`up` 和 `down` 也都在这个目录执行。
 
 现在发生的是：
 
@@ -176,11 +179,13 @@ postgres_data
 
 常用命令先记三个：
 
-```bash
-docker compose logs postgres
-docker compose stop
-docker compose up -d
-```
+| 命令 | 作用 |
+|---|---|
+| `docker compose logs postgres` | 查看 `postgres` 服务的运行日志，数据库启动失败或连接异常时先看这里 |
+| `docker compose stop` | 停止当前 Compose 项目中的容器，但保留容器和数据卷 |
+| `docker compose up -d` | 按 `compose.yaml` 确保服务已创建并启动；`-d` 表示在后台运行，终端不会一直被占用 |
+
+Docker Desktop 的启动按钮主要是启动已有容器；`docker compose up -d` 还会读取 `compose.yaml`，容器不存在时会创建，配置发生变化时会按新配置更新。因此，初次启动或修改 `compose.yaml` 后，优先使用 `docker compose up -d`。
 
 `docker compose down -v` 会连同数据卷一起删除，相当于清空本地数据库。只有明确要重置数据时才使用。
 
@@ -210,6 +215,8 @@ npm install -D typescript tsx @types/node @types/express
 npx tsc --init
 mkdir src
 ```
+
+`npm init -y` 使用默认值创建 `package.json`，项目名默认是当前文件夹名 `server`。后续如果想改项目名，修改 `package.json` 中的 `name`，然后执行 `npm i` 同步 `package-lock.json`。
 
 两条安装命令分工不同：
 
@@ -284,13 +291,13 @@ app.listen(3000, () => {
 });
 ```
 
-启动并访问 `http://localhost:3000/api/health`：
+先启动 Express 服务器：
 
 ```bash
 npm run dev
 ```
 
-看到 `{"ok":true}`，说明这个 demo 已经是一个可以运行的 Express 项目。这里没有使用 `express-generator`，但使用的框架仍然是 Express。
+保持终端中的服务器继续运行，再在浏览器访问 `http://localhost:3000/api/health`。看到 `{"ok":true}`，说明这个 demo 已经是一个可以运行的 Express 项目。这里没有使用 `express-generator`，但使用的框架仍然是 Express。
 
 ---
 
@@ -376,9 +383,12 @@ Prisma
 -> 进入 Docker 中的 backend_learning 数据库
 ```
 
-这里填 `localhost`，是因为 Express 目前直接运行在 macOS 上，它通过 `compose.yaml` 暴露的 `5432` 端口访问容器。修改 `.env` 只是告诉 Prisma 去哪里连接，不会自动启动数据库。执行迁移前，可以先确认：
+这里填 `localhost`，是因为 Express 目前直接运行在 macOS 上，它通过 `compose.yaml` 暴露的 `5432` 端口访问容器。修改 `.env` 只是告诉 Prisma 去哪里连接，不会自动启动数据库。
+
+执行迁移前，可以另开一个终端，在 `learning-notes` 根目录执行：
 
 ```bash
+cd backend/code-demos/09-prisma-crud
 docker compose ps
 ```
 
@@ -682,7 +692,7 @@ brew install --cask postico
 | Username | `backend_learning` |
 | Password | `backend_learning_password` |
 
-点击 `Connect`。如果提示无法连接，先用 `docker compose ps` 确认 PostgreSQL 容器正常运行。
+点击 `Connect`。如果提示无法连接，回到 `compose.yaml` 所在的 `backend/code-demos/09-prisma-crud/` 目录，使用 `docker compose ps` 确认 PostgreSQL 容器正常运行。
 
 ### 9.2 找到 Prisma Migrate 建立的表
 
