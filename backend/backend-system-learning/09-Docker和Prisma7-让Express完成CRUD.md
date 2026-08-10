@@ -833,24 +833,24 @@ PrismaPg
 
 ---
 
-## 11. 用 Prisma Client 完成查询和创建
+## 11. 用 Prisma Client 完成文章 CRUD
 
-这一节先编写读写数据库的 Prisma Client 函数，再把其中的列表查询接到 Express，跑通一条完整链路。
+这一节先编写文章的 CRUD 函数，再把每个函数注册成 Express 路由，跑通完整的增删改查链路。
 
-### 查询文章列表
+### 11.1 创建文章数据库操作函数
 
-`findMany()` 表示查询多条记录，`select` 选择要返回的字段，`orderBy` 指定排序方式。先创建文章模块目录：
+先创建文章模块目录：
 
 ```bash
 mkdir -p src/modules/articles
 ```
 
-创建 `src/modules/articles/article.repository.ts`，先写入：
+创建 `src/modules/articles/article-repository.ts`，先写入：
 
 ```ts
 import { prisma } from "../../db/client.js";
 
-export async function listArticles() {
+export async function getArticles() {
   return prisma.article.findMany({
     select: {
       id: true,
@@ -864,88 +864,15 @@ export async function listArticles() {
     },
   });
 }
-```
 
-这段查询中用了三个 Prisma Client 写法：
-
-| 写法 | 作用 |
-|---|---|
-| `findMany()` | 查询多篇文章 |
-| `select` | 指定返回哪些字段 |
-| `orderBy` | 指定结果的排序方式 |
-
-### 让 Express 调用列表查询
-
-回到 `src/app.ts`，导入 `listArticles()` 并注册 `GET /api/articles`：
-
-```ts
-import express from "express";
-import { listArticles } from "./modules/articles/article.repository.js";
-
-const app = express();
-
-app.use(express.json());
-
-app.get("/api/health", (_request, response) => {
-  response.json({ ok: true });
-});
-
-app.get("/api/articles", async (_request, response) => {
-  const articles = await listArticles();
-  response.json({ data: articles });
-});
-
-app.listen(3000, () => {
-  console.log("Server is running at http://localhost:3000");
-});
-```
-
-保持 PostgreSQL 容器和 Express 服务器正在运行。在浏览器地址栏打开 `http://localhost:3000/api/articles`，JSON 会直接显示在浏览器页面中。也可以在 Apifox 发送 `GET` 请求，然后在响应内容中查看。
-
-如果 `articles` 表中暂时没有文章，浏览器页面或 Apifox 响应中会显示：
-
-```json
-{
-  "data": []
-}
-```
-
-第 9.3 节最后删除了 SQL 练习文章，因此第一次访问时看到空数组是正常的。如果想看到非空结果，可以先在 Prisma Studio 中创建一篇文章，再刷新这个地址。
-
-这个响应已经跑通：
-
-```text
-GET /api/articles
--> Express 匹配路由
--> listArticles()
--> prisma.article.findMany()
--> PostgreSQL
--> Express 返回 JSON
-```
-
-至此，这个独立 demo 已经真正用 Express 读取了 PostgreSQL。
-
-下面先补齐其余 CRUD 需要的数据库操作函数，但暂时不把它们注册成 Express 路由。函数只有被路由调用后，才会成为浏览器或 Apifox 可以请求的 HTTP API。
-
-### 按 id 查询一篇文章
-
-```ts
-export async function findArticleById(articleId: number) {
+export async function getArticleById(articleId: number) {
   return prisma.article.findUnique({
     where: {
       id: articleId,
     },
   });
 }
-```
 
-找到时返回文章对象，没有匹配数据时返回 `null`，再由上层转换成 404。
-
-### 创建文章
-
-`create()` 表示创建一条记录，`data` 是要写入数据库的字段和值：
-
-```ts
 export async function createArticle(input: {
   title: string;
   slug: string;
@@ -957,19 +884,7 @@ export async function createArticle(input: {
     data: input,
   });
 }
-```
 
-`prisma.article.create()` 对应 SQL `INSERT`，并直接返回数据库最终创建的文章。
-
----
-
-## 12. 用同一种方式完成修改和删除
-
-这一节继续补充数据库操作函数，Express 路由仍留到第 20 章接入。
-
-### 修改文章
-
-```ts
 export async function updateArticle(
   articleId: number,
   input: {
@@ -987,13 +902,7 @@ export async function updateArticle(
     data: input,
   });
 }
-```
 
-这里通过 Prisma Client 修改数据，所以不用手动写 `updatedAt`，模型中的 `@updatedAt` 会自动更新时间。第 9.3 节的原生 SQL 没有经过 Prisma Client，才需要自己更新 `updated_at`。
-
-### 删除文章
-
-```ts
 export async function deleteArticle(articleId: number) {
   await prisma.article.delete({
     where: {
@@ -1003,27 +912,157 @@ export async function deleteArticle(articleId: number) {
 }
 ```
 
+这五个函数分别对应 Prisma Client 的五种常用操作：
+
+| 函数 | Prisma Client API | 作用 |
+|---|---|---|
+| `getArticles()` | `findMany()` | 查询文章列表 |
+| `getArticleById()` | `findUnique()` | 按 id 查询一篇文章 |
+| `createArticle()` | `create()` | 创建文章 |
+| `updateArticle()` | `update()` | 修改文章 |
+| `deleteArticle()` | `delete()` | 删除文章 |
+
+列表查询中的 `select` 指定返回哪些字段，`orderBy` 定义查询结果的排序方式。`getArticleById()` 找到数据时返回文章对象，没有匹配数据时返回 `null`。通过 Prisma Client 修改文章时，不用手动写 `updatedAt`，模型中的 `@updatedAt` 会自动更新时间。
+
+### 11.2 把 CRUD 注册成 Express 路由
+
+只有被路由调用后，这些函数才会成为浏览器或 Apifox 可以请求的 HTTP API。回到 `src/app.ts`，写入：
+
+```ts
+import express from "express";
+import {
+  createArticle,
+  deleteArticle,
+  getArticleById,
+  getArticles,
+  updateArticle,
+} from "./modules/articles/article-repository.js";
+
+const app = express();
+
+// 解析 POST 和 PATCH 请求体中的 JSON
+app.use(express.json());
+
+app.get("/api/health", (_request, response) => {
+  response.json({ ok: true });
+});
+
+// 查询文章列表
+app.get("/api/articles", async (_request, response) => {
+  const articles = await getArticles();
+  response.json({ data: articles });
+});
+
+// 按 id 查询一篇文章
+app.get("/api/articles/:id", async (request, response) => {
+  const articleId = Number(request.params.id);
+
+  if (!Number.isInteger(articleId) || articleId <= 0) {
+    response.status(400).json({ message: "文章 ID 不正确" });
+    return;
+  }
+
+  const article = await getArticleById(articleId);
+
+  if (!article) {
+    response.status(404).json({ message: "文章不存在" });
+    return;
+  }
+
+  response.json({ data: article });
+});
+
+// 创建文章
+app.post("/api/articles", async (request, response) => {
+  const article = await createArticle(request.body);
+  response.status(201).json({ data: article });
+});
+
+// 修改文章
+app.patch("/api/articles/:id", async (request, response) => {
+  const articleId = Number(request.params.id);
+
+  if (!Number.isInteger(articleId) || articleId <= 0) {
+    response.status(400).json({ message: "文章 ID 不正确" });
+    return;
+  }
+
+  const article = await updateArticle(articleId, request.body);
+  response.json({ data: article });
+});
+
+// 删除文章
+app.delete("/api/articles/:id", async (request, response) => {
+  const articleId = Number(request.params.id);
+
+  if (!Number.isInteger(articleId) || articleId <= 0) {
+    response.status(400).json({ message: "文章 ID 不正确" });
+    return;
+  }
+
+  await deleteArticle(articleId);
+  response.status(204).send();
+});
+
+app.listen(3000, () => {
+  console.log("Server is running at http://localhost:3000");
+});
+```
+
+现在五个 CRUD 地址已经全部注册：
+
+| 请求 | 作用 |
+|---|---|
+| `GET /api/articles` | 查询文章列表 |
+| `GET /api/articles/:id` | 查询一篇文章 |
+| `POST /api/articles` | 创建文章 |
+| `PATCH /api/articles/:id` | 修改文章 |
+| `DELETE /api/articles/:id` | 删除文章 |
+
+可以在浏览器中测试两个 `GET` 地址；`POST`、`PATCH` 和 `DELETE` 建议使用 Apifox。创建文章时，请求体可以先使用：
+
+```json
+{
+  "title": "学习 Prisma CRUD",
+  "slug": "learn-prisma-crud",
+  "content": "用 Prisma Client 操作 PostgreSQL"
+}
+```
+
+这时一条完整链路是：
+
+```text
+HTTP 请求
+-> Express 匹配路由
+-> 调用 article-repository 中的函数
+-> Prisma Client 生成并执行数据库操作
+-> PostgreSQL 返回结果
+-> Express 返回 JSON
+```
+
+这一节先直接使用 `request.body` 跑通 CRUD。真实项目还需要校验请求体，并把数据库错误转换成合适的 HTTP 状态码，后续章节再补齐。
+
 ---
 
-## 13. 先认识两个常见的 Prisma 错误码
+## 12. 先认识两个常见的 Prisma 错误码
 
 Prisma 会给常见数据库错误分配固定代码。单表 CRUD 先认识下面两个，等后面接入 Express 错误处理时再完成转换：
 
 ```text
 P2002
 -> 唯一约束冲突，例如 slug 已存在
--> API 返回 409
+-> API 应返回 409
 
 P2025
 -> update 或 delete 需要的目标不存在
--> API 返回 404
+-> API 应返回 404
 ```
 
-实际接入 API 时，上层会把 `P2002` 转成 409，把 `P2025` 转成 404。其他未知数据库故障由服务器记录细节，客户端只接收 500，不直接看到 Prisma 原始错误。
+本章已经接入 CRUD 路由，但还没有编写统一错误处理。正式项目中，上层需要把 `P2002` 转成 409，把 `P2025` 转成 404。其他未知数据库故障由服务器记录细节，客户端只接收 500，不直接看到 Prisma 原始错误。
 
 ---
 
-## 14. 参数化查询现在由 Prisma 完成
+## 13. 参数化查询现在由 Prisma 完成
 
 参数化查询表示“SQL 结构”和“用户提供的值”分开传递。这样用户输入只会被当成数据，不会被当成 SQL 语法执行。
 
@@ -1064,7 +1103,7 @@ PATCH  /api/articles/:id
 DELETE /api/articles/:id
 ```
 
-本章 demo 已经注册 `GET /api/articles`，用来验证 Express、Prisma 和 PostgreSQL 能够连通。其余四个 CRUD 地址留到第 20 章的实操阶段 3，再与参数校验和错误处理一起完成。
+本章 demo 已经把五个 CRUD 地址全部注册到 Express，并跑通了 route、repository、Prisma Client 和 PostgreSQL 之间的调用链路。请求体的完整校验和统一错误处理会在后续正式项目中补齐。
 
 这一章的重点不是记住 Prisma 的全部 API，而是建立下面的对应关系：
 
@@ -1093,7 +1132,7 @@ Prisma Studio
 
 完成第 09 章的独立 demo 后，打开第 20 章，正式创建 `mini-cms` 项目，并从实操阶段 1 开始。第 20 章会告诉你每个阶段要完成什么，以及开始前需要回看哪些章节。
 
-实操进入阶段 3 时，先读第 11～12 章，再完成真正的文章 CRUD 和管理页面。等项目需要文章标签时，再学第 10 章的多表关系和事务。
+实操进入阶段 3 时，先读第 11～12 章，再把本章的文章 CRUD 迁移到正式项目，并补上完整的请求体校验、错误处理和管理页面。等项目需要文章标签时，再学第 10 章的多表关系和事务。
 
 ## 官方参考
 
