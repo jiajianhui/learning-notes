@@ -940,7 +940,7 @@ import {
 
 const app = express();
 
-// 解析 POST 和 PATCH 请求体中的 JSON
+// 将 JSON 请求体解析到 request.body
 app.use(express.json());
 
 app.get("/api/health", (_request, response) => {
@@ -1018,6 +1018,13 @@ app.listen(3000, () => {
 | `POST /api/articles` | 创建文章 |
 | `PATCH /api/articles/:id` | 修改文章 |
 | `DELETE /api/articles/:id` | 删除文章 |
+
+请求方法和 Body 格式是两回事：
+
+- `PUT` 通常替换完整数据，`PATCH` 只修改传入的字段。
+- `JSON` 和 `x-www-form-urlencoded` 只表示 Body 的数据格式。
+- JSON 请求体使用 `express.json()` 解析，`x-www-form-urlencoded` 使用 `express.urlencoded({ extended: true })` 解析；需要同时支持时可以注册两个中间件。
+- 当前 demo 注册的是 `PATCH` 路由，并使用 `express.json()`，因此在 Apifox 中选择 `PATCH + JSON`。
 
 可以在浏览器中测试两个 `GET` 地址；`POST`、`PATCH` 和 `DELETE` 建议使用 Apifox。创建文章时，请求体可以先使用：
 
