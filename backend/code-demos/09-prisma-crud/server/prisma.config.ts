@@ -4,10 +4,15 @@ import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
 export default defineConfig({
+  // Prisma Schema 文件在哪里？
   schema: "prisma/schema.prisma",
+
+  // 迁移记录保存在哪里？
   migrations: {
     path: "prisma/migrations",
   },
+
+  // 数据库连接地址从哪里读取？
   datasource: {
     url: process.env["DATABASE_URL"],
   },

@@ -122,6 +122,7 @@ TypeScript 类型和运行时校验
 07 表结构、数据类型和约束
 08 SQL CRUD（第一遍只读第 1～5 节）
 09 Docker、PostgreSQL、TablePro、Prisma 7 和单表 CRUD
+09A Prisma 从初始化到可用：两个文件、两条命令
 ```
 
 这是 PostgreSQL 入门的优先主线：
@@ -135,7 +136,7 @@ TypeScript 类型和运行时校验
 -> 再用 Prisma Client 完成项目 CRUD
 ```
 
-第 08 章负责读懂最小 SQL。第 09 章先启动 PostgreSQL 并建表，再用 TablePro 亲手执行一轮 SQL，然后才使用 Prisma Client 完成项目 CRUD。
+第 08 章负责读懂最小 SQL。第 09 章先启动 PostgreSQL 并建表，再用 TablePro 亲手执行一轮 SQL，然后才使用 Prisma Client 完成项目 CRUD。第 09A 章从目录角度收口 Prisma 的初始化、迁移、Client 生成和业务代码接入过程，适合完成练习后快速复习。
 
 第一轮只要求单表 CRUD。多表关系不是 PostgreSQL 的入门前提，不要因为还不会 `JOIN`（把多张表中有关的数据组合起来查询）和事务（让多步修改一起成功或失败）而停下项目。
 

@@ -3,11 +3,14 @@
 
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
+
+// Prisma Client 的生成方式和位置
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
 }
 
+// 数据库类型
 datasource db {
   provider = "postgresql"
 }
@@ -19,7 +22,7 @@ enum ArticleStatus {
   @@map("article_status")
 }
 
-// 数据模型
+// 定义数据模型
 model Article {
   id        Int           @id @default(autoincrement())
   title     String
