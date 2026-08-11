@@ -1047,35 +1047,15 @@ HTTP 请求
 -> Express 返回 JSON
 ```
 
-这一节先直接使用 `request.body` 跑通 CRUD。真实项目还需要校验请求体，并把数据库错误转换成合适的 HTTP 状态码，后续章节再补齐。
+这一节先直接使用 `request.body` 跑通 CRUD，只练习正常请求链路。请求体校验和数据库错误到 HTTP 状态码的转换，将在第 10 章完成。
 
 ---
 
-## 12. 先认识两个常见的 Prisma 错误码
+## 12. Prisma 会把用户输入当作数据，不当作 SQL
 
-Prisma 会给常见数据库错误分配固定代码。单表 CRUD 先认识下面两个，等后面接入 Express 错误处理时再完成转换：
+使用正常的 Prisma Client API 时，不需要自己拼接 SQL，也不需要自己写 `$1`、`$2` 这样的占位符。
 
-```text
-P2002
--> 唯一约束冲突，例如 slug 已存在
--> API 应返回 409
-
-P2025
--> update 或 delete 需要的目标不存在
--> API 应返回 404
-```
-
-本章已经接入 CRUD 路由，但还没有编写统一错误处理。正式项目中，上层需要把 `P2002` 转成 409，把 `P2025` 转成 404。其他未知数据库故障由服务器记录细节，客户端只接收 500，不直接看到 Prisma 原始错误。
-
----
-
-## 13. 参数化查询现在由 Prisma 完成
-
-参数化查询表示“SQL 结构”和“用户提供的值”分开传递。这样用户输入只会被当成数据，不会被当成 SQL 语法执行。
-
-直接使用 `pg` 写 SQL 时，通常用 `$1`、`$2` 作为值的位置，再把真实值单独传入。使用 Prisma Client 时，不需要自己写这些占位符；Prisma 会把 `data` 和 `where` 中的值作为参数交给数据库驱动。
-
-例如：
+例如修改文章标题：
 
 ```ts
 await prisma.article.update({
@@ -1084,17 +1064,20 @@ await prisma.article.update({
 });
 ```
 
-可以按下面的关系理解：
+这里：
 
-```text
-查询结构
--> 由 Prisma Client API 表达
+- `update`、`where` 和 `data` 描述要执行什么数据库操作。
+- `articleId` 和 `input.title` 是交给 Prisma 的数据。
+- Prisma 会安全地把这些数据传给 PostgreSQL，不会把标题内容当成 SQL 命令执行。
 
-用户输入
--> 作为值传给 Prisma，再交给 PostgreSQL
+因此业务代码不要把用户输入直接拼进原生 SQL：
+
+```ts
+// 不要这样写
+const sql = `UPDATE articles SET title = '${input.title}'`;
 ```
 
-业务代码不要为了“灵活”再把用户输入拼进原生 SQL 字符串。以后确实需要原生 SQL 时，也必须继续使用参数化能力。
+还要注意：安全传递数据不等于数据内容合法。空标题、错误的 `slug` 和重复的 `slug` 仍然需要请求校验和数据库约束处理。
 
 ---
 
@@ -1110,7 +1093,7 @@ PATCH  /api/articles/:id
 DELETE /api/articles/:id
 ```
 
-本章 demo 已经把五个 CRUD 地址全部注册到 Express，并跑通了 route、repository、Prisma Client 和 PostgreSQL 之间的调用链路。请求体的完整校验和统一错误处理会在后续正式项目中补齐。
+本章 demo 已经把五个 CRUD 地址全部注册到 Express，并跑通了 route、repository、Prisma Client 和 PostgreSQL 之间的调用链路。
 
 这一章的重点不是记住 Prisma 的全部 API，而是建立下面的对应关系：
 
@@ -1137,9 +1120,9 @@ Prisma Studio
 -> 在开发阶段查看数据
 ```
 
-完成第 09 章的独立 demo 后，打开第 20 章，正式创建 `mini-cms` 项目，并从实操阶段 1 开始。第 20 章会告诉你每个阶段要完成什么，以及开始前需要回看哪些章节。
+完成第 09 章的独立 demo 后，就打开第 21 章，正式创建 `mini-cms` 项目，并先完成实操阶段 1～2。
 
-实操进入阶段 3 时，先读第 11～12 章，再把本章的文章 CRUD 迁移到正式项目，并补上完整的请求体校验、错误处理和管理页面。等项目需要文章标签时，再学第 10 章的多表关系和事务。
+准备进入 Mini CMS 阶段 3 时，再读第 10、12～13 章，把文章 CRUD、请求校验和错误处理迁移到正式项目，并增加管理页面。等项目需要文章标签时，再学第 11 章的多表关系和事务。
 
 ## 官方参考
 
