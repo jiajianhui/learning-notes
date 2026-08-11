@@ -787,30 +787,42 @@ Prisma Client
 
 ## 10. 创建并复用一个 Prisma Client 实例
 
-先创建数据库工具目录：
+先创建数据库访问目录：
 
 ```bash
-mkdir -p src/db
+mkdir -p src/data
 ```
 
-创建 `src/db/client.ts`：
+创建 `src/data/client.ts`。下面代码与本章 demo 中的实际文件保持一致：
 
 ```ts
+// 加载 dotenv，读取环境变量
 import "dotenv/config";
+
+// PostgreSQL 数据库适配器；项目使用 PostgreSQL，通过 PostgreSQL 驱动连接数据库。
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../generated/prisma/client.js";
 
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL!,
-});
+// 导入根据 schema.prisma 生成的客户端
+import { PrismaClient } from "../generated/prisma/client";
 
+// 解包环境变量中的 DATABASE_URL
+const databaseURL = process.env.DATABASE_URL;
+
+if (!databaseURL) {
+  throw new Error("DATABASE_URL 不存在");
+}
+
+// 配置 PostgreSQL 连接；创建一个 PostgreSQL 适配器，并把数据库连接地址交给它。
+const adapter = new PrismaPg({ connectionString: databaseURL });
+
+// 创建并导出数据库操作对象；创建整个项目共用的 Prisma Client，并把 PostgreSQL 适配器交给它。
 export const prisma = new PrismaClient({ adapter });
 ```
 
-这段代码先通过 `dotenv` 读取 `DATABASE_URL`，再让 `PrismaPg` 使用这个地址连接 PostgreSQL，最后通过生成的 `PrismaClient` 类创建并导出一个名为 `prisma` 的实例。其他文件需要读写数据库时，直接导入它：
+这段代码先通过 `dotenv` 读取 `DATABASE_URL`。如果地址不存在，服务器会在启动阶段明确报错；地址存在时，再让 `PrismaPg` 使用它连接 PostgreSQL，最后通过生成的 `PrismaClient` 类创建并导出一个名为 `prisma` 的实例。其他文件需要读写数据库时，直接导入它：
 
 ```ts
-import { prisma } from "../../db/client.js";
+import { prisma } from "../../data/client";
 
 const articles = await prisma.article.findMany();
 ```
@@ -845,11 +857,15 @@ PrismaPg
 mkdir -p src/modules/articles
 ```
 
-创建 `src/modules/articles/article-repository.ts`，先写入：
+创建 `src/modules/articles/article-repository.ts`。下面代码与本章 demo 中的实际文件保持一致：
 
 ```ts
-import { prisma } from "../../db/client.js";
+import { prisma } from "../../data/client";
 
+// Prisma Client API：
+// findMany 查询多篇文章；select 指定返回哪些字段；orderBy 定义查询结果的排序方式
+
+// 查询所有文章
 export async function getArticles() {
   return prisma.article.findMany({
     select: {
@@ -865,6 +881,7 @@ export async function getArticles() {
   });
 }
 
+// 查询某篇文章
 export async function getArticleById(articleId: number) {
   return prisma.article.findUnique({
     where: {
@@ -873,7 +890,8 @@ export async function getArticleById(articleId: number) {
   });
 }
 
-export async function createArticle(input: {
+// 创建文章
+export function createArticle(input: {
   title: string;
   slug: string;
   summary?: string;
@@ -885,7 +903,8 @@ export async function createArticle(input: {
   });
 }
 
-export async function updateArticle(
+// 更新文章
+export function updateArticle(
   articleId: number,
   input: {
     title?: string;
@@ -903,8 +922,9 @@ export async function updateArticle(
   });
 }
 
+// 删除某篇文章
 export async function deleteArticle(articleId: number) {
-  await prisma.article.delete({
+  return prisma.article.delete({
     where: {
       id: articleId,
     },
@@ -926,86 +946,90 @@ export async function deleteArticle(articleId: number) {
 
 ### 11.2 把 CRUD 注册成 Express 路由
 
-只有被路由调用后，这些函数才会成为浏览器或 Apifox 可以请求的 HTTP API。回到 `src/app.ts`，写入：
+只有被路由调用后，这些函数才会成为浏览器或 Apifox 可以请求的 HTTP API。回到 `src/app.ts`，下面代码来自当前 `09-prisma-crud` demo，只保留健康检查和五个 CRUD 接口的用途注释：
 
 ```ts
 import express from "express";
-import {
-  createArticle,
-  deleteArticle,
-  getArticleById,
-  getArticles,
-  updateArticle,
-} from "./modules/articles/article-repository.js";
 
 const app = express();
 
-// 将 JSON 请求体解析到 request.body
 app.use(express.json());
 
-app.get("/api/health", (_request, response) => {
-  response.json({ ok: true });
+import {
+  getArticles,
+  getArticleById,
+  createArticle,
+  updateArticle,
+  deleteArticle,
+} from "./modules/articles/article-repository";
+
+// 健康检查接口
+app.get("/api/health", (_req, res) => {
+  res.json({ ok: true });
 });
 
-// 查询文章列表
-app.get("/api/articles", async (_request, response) => {
+// 获取文章列表接口
+app.get("/api/articles", async (_req, res) => {
   const articles = await getArticles();
-  response.json({ data: articles });
+  res.json({ data: articles });
 });
 
-// 按 id 查询一篇文章
-app.get("/api/articles/:id", async (request, response) => {
-  const articleId = Number(request.params.id);
+// 查询某篇文章接口
+app.get("/api/articles/:id", async (req, res) => {
+  const id = Number(req.params.id);
 
-  if (!Number.isInteger(articleId) || articleId <= 0) {
-    response.status(400).json({ message: "文章 ID 不正确" });
+  if (!Number.isInteger(id) || id <= 0) {
+    res.status(400).json({ message: "文章 ID 不正确" });
     return;
   }
 
-  const article = await getArticleById(articleId);
+  const article = await getArticleById(id);
 
   if (!article) {
-    response.status(404).json({ message: "文章不存在" });
+    res.status(404).json({ message: "文章不存在" });
     return;
   }
 
-  response.json({ data: article });
+  res.json({ data: article });
 });
 
-// 创建文章
-app.post("/api/articles", async (request, response) => {
-  const article = await createArticle(request.body);
-  response.status(201).json({ data: article });
+// 创建文章接口
+app.post("/api/articles", async (req, res) => {
+  const article = await createArticle(req.body);
+
+  res.status(201).json({ data: article });
 });
 
-// 修改文章
-app.patch("/api/articles/:id", async (request, response) => {
-  const articleId = Number(request.params.id);
+// 修改文章接口
+app.patch("/api/articles/:id", async (req, res) => {
+  const id = Number(req.params.id);
 
-  if (!Number.isInteger(articleId) || articleId <= 0) {
-    response.status(400).json({ message: "文章 ID 不正确" });
+  if (!Number.isInteger(id) || id <= 0) {
+    res.status(400).json({ message: "文章 ID 不正确" });
     return;
   }
 
-  const article = await updateArticle(articleId, request.body);
-  response.json({ data: article });
+  const article = await updateArticle(id, req.body);
+
+  res.status(200).json({ data: article });
 });
 
-// 删除文章
-app.delete("/api/articles/:id", async (request, response) => {
-  const articleId = Number(request.params.id);
+// 删除某篇文章接口
+app.delete("/api/articles/:id", async (req, res) => {
+  const id = Number(req.params.id);
 
-  if (!Number.isInteger(articleId) || articleId <= 0) {
-    response.status(400).json({ message: "文章 ID 不正确" });
+  if (!Number.isInteger(id) || id <= 0) {
+    res.status(400).json({ message: "文章 ID 不正确" });
     return;
   }
 
-  await deleteArticle(articleId);
-  response.status(204).send();
+  const article = await deleteArticle(id);
+
+  res.json({ data: article });
 });
 
 app.listen(3000, () => {
-  console.log("Server is running at http://localhost:3000");
+  console.log("server is running");
 });
 ```
 

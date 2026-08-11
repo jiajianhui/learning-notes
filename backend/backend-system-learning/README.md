@@ -121,7 +121,7 @@ TypeScript 类型和运行时校验
 ```text
 07 表结构、数据类型和约束
 08 SQL CRUD（第一遍只读第 1～5 节）
-09 Docker、PostgreSQL、Postico 2、Prisma 7 和单表 CRUD
+09 Docker、PostgreSQL、TablePro、Prisma 7 和单表 CRUD
 ```
 
 这是 PostgreSQL 入门的优先主线：
@@ -131,11 +131,11 @@ TypeScript 类型和运行时校验
 -> 读懂 INSERT / SELECT / UPDATE / DELETE 的最小 SQL
 -> 用 Docker 启动 PostgreSQL
 -> 用 Prisma Schema 和 Migrate 建立 articles 表
--> 用 Postico 2 查看表，亲手执行一轮 CRUD SQL
+-> 用 TablePro 查看表，亲手执行一轮 CRUD SQL
 -> 再用 Prisma Client 完成项目 CRUD
 ```
 
-第 08 章负责读懂最小 SQL。第 09 章先启动 PostgreSQL 并建表，再用 Postico 2 亲手执行一轮 SQL，然后才使用 Prisma Client 完成项目 CRUD。
+第 08 章负责读懂最小 SQL。第 09 章先启动 PostgreSQL 并建表，再用 TablePro 亲手执行一轮 SQL，然后才使用 Prisma Client 完成项目 CRUD。
 
 第一轮只要求单表 CRUD。多表关系不是 PostgreSQL 的入门前提，不要因为还不会 `JOIN`（把多张表中有关的数据组合起来查询）和事务（让多步修改一起成功或失败）而停下项目。
 
@@ -148,11 +148,16 @@ TypeScript 类型和运行时校验
 阶段 2：接入 Docker、Prisma 7 和 PostgreSQL
 阶段 3：阅读 10 请求校验、12 项目结构、13 前后端联调
 阶段 4：阅读 11 多表关系、JOIN 和事务
-阶段 5：阅读 14 登录、Cookie 和安全
-阶段 6：阅读 15 后端测试
+阶段 5：阅读 14 登录与安全、14A 登录实操
+阶段 6：阅读 15 测试分层、15A 接口测试实操
 ```
 
 `13A` 是 Next.js 架构对比选读，完成第一轮文章 CRUD 后再看，不影响任何实操阶段。
+
+两章新增的动手收口：
+
+- [14A-管理员登录实操](./14A-管理员登录实操-用Session和Cookie保护写接口.md)：把密码哈希、数据库 Session、HttpOnly Cookie 和认证中间件连起来。
+- [15A-接口测试实操](./15A-接口测试实操-用Vitest和Supertest验证API.md)：用独立测试数据库、Vitest 和 Supertest 验证核心 API。
 
 这样每次只补当前功能需要的知识。项目逐步完成后，应该能把一条文章请求追踪成：
 
@@ -267,7 +272,7 @@ TypeScript 类型和运行时校验
 - [Express 文档](https://expressjs.com/)
 - [PostgreSQL 官方教程](https://www.postgresql.org/docs/current/tutorial.html)
 - [Docker PostgreSQL 官方镜像](https://hub.docker.com/_/postgres)
-- [Postico 2](https://eggerapps.at/postico2/)
+- [TablePro](https://tablepro.app/)
 - [Prisma 文档](https://www.prisma.io/docs/orm)
 - [node-postgres 文档](https://node-postgres.com/)
 - [Next.js App Router 文档](https://nextjs.org/docs/app)
