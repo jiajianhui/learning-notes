@@ -235,10 +235,7 @@ handler
 -> 读取请求，调用业务函数，返回响应
 ```
 
-现在如果要做最小练习，可以先实现：
-
-- `GET /api/health`
-- 内存版 `GET /api/articles`
+现在如果要做最小练习，可以先实现 `GET /api/health`。
 
 ---
 
