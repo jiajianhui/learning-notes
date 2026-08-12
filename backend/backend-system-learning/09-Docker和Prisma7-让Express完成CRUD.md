@@ -328,21 +328,12 @@ npm install -D prisma@7 @types/pg
 执行初始化：
 
 ```bash
-npx prisma init \
-  --datasource-provider postgresql \
-  --output ../src/generated/prisma \
-  --no-skills
+npx prisma init --no-skills
 ```
 
-这四行属于同一条命令，行尾的 `\` 表示下一行仍是当前命令的一部分：
+`npx prisma init` 会运行当前项目安装的 Prisma CLI，并创建基础配置。当前 Prisma 7 默认使用 PostgreSQL 和 `prisma-client` 生成器；本项目已经存在 `src/`，因此还会自动把 Client 输出位置设为 `../src/generated/prisma`。这里不需要重复指定 `--datasource-provider` 和 `--output`。
 
-| 命令部分 | 作用 |
-|---|---|
-| `npx prisma` | 运行当前项目安装的 Prisma CLI，不需要全局安装 |
-| `init` | 创建 Prisma 的基础配置文件 |
-| `--datasource-provider postgresql` | 指定目标数据库为 PostgreSQL |
-| `--output ../src/generated/prisma` | 指定以后生成 Prisma Client 的位置 |
-| `--no-skills` | 不安装供 AI 编程工具使用的 Prisma Skills |
+`--no-skills` 不是 Prisma 的默认配置，它只是不安装供 AI 编程工具使用的 Prisma Skills，让练习工程保持精简。Prisma 的默认输出目录会参考 `tsconfig.json` 和已有的 `src/`、`lib/` 或 `app/` 目录，因此其他项目初始化后仍应以实际生成的 `schema.prisma` 为准。
 
 执行后主要得到：
 
@@ -356,7 +347,7 @@ server/
 
 `.env` 是 Prisma CLI 创建的配置文件；`dotenv` 是读取这个文件的 npm 包。即使没有安装 `dotenv`，`prisma init` 仍会创建 `.env`，但后续读取其中的 `DATABASE_URL` 时需要 `dotenv`。
 
-`--output` 会把 `../src/generated/prisma` 写入 `schema.prisma`。这个相对路径从 `server/prisma/` 出发：`..` 先回到 `server/`，再进入 `src/generated/prisma/`。
+自动生成的 `output = "../src/generated/prisma"` 从 `server/prisma/` 出发：`..` 先回到 `server/`，再进入 `src/generated/prisma/`。
 
 此时只是完成初始化，Client 代码还没有生成。第 8 节执行 `generate` 后，`src/generated/prisma/` 才会真正出现。
 
@@ -392,15 +383,6 @@ Prisma
 ```
 
 这里填 `localhost`，是因为 Express 目前直接运行在 macOS 上，它通过 `compose.yaml` 暴露的 `5432` 端口访问容器。修改 `.env` 只是告诉 Prisma 去哪里连接，不会自动启动数据库。
-
-执行迁移前，可以另开一个终端，在 `learning-notes` 根目录执行：
-
-```bash
-cd backend/code-demos/09-prisma-crud
-docker compose ps
-```
-
-如果 `postgres` 没有处于运行状态，回到第 3 节执行 `docker compose up -d`。
 
 真实 `.env` 不提交到 Git。项目可以提交 `.env.example`，只说明需要 `DATABASE_URL`，不要放生产环境的真实密码。
 
