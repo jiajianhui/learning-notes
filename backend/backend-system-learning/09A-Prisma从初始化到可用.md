@@ -126,13 +126,14 @@ generator client {
 
 这段配置告诉 `prisma generate`：把生成的 TypeScript 客户端代码放进 `src/generated/prisma/`。
 
-因此，`schema.prisma` 是后面两条生成路线共同读取的源头：
+后面执行 `migrate` 和 `generate` 时，都会读取 `schema.prisma`，但目的不同：
 
 ```text
-schema.prisma
-├── datasource：声明使用什么数据库
-├── model 和 enum：描述数据库应该长什么样
-└── generator：配置 Prisma Client 怎样生成
+migrate
+-> 根据 datasource、model 和 enum 生成并执行数据库迁移
+
+generate
+-> 读取 schema.prisma 配置，根据 generator、model 和 enum 生成 Prisma Client API 和 TypeScript 类型
 ```
 
 ---
@@ -341,23 +342,3 @@ POST /articles
 ```
 
 Express 路由会接收 HTTP 请求，然后在内部调用 Prisma Client API。
-
----
-
-## 小结
-
-把整个过程压缩成一句话：
-
-> `prisma.config.ts` 管理 Prisma CLI 怎样运行，`schema.prisma` 配置数据库类型、数据模型和 Client 生成方式；`migrate` 根据 Schema 建立 PostgreSQL 数据库结构，`generate` 生成供 TypeScript/JavaScript 程序使用的 Prisma Client API 以及对应的 TypeScript 类型，最后由 `client.ts` 创建实例交给业务代码使用。
-
-复习时只需要先回忆下面这张最小关系图：
-
-```text
-prisma.config.ts
-├── 指定 Schema 和迁移目录
-└── 提供数据库连接地址
-
-                     ┌─ migrate ─> prisma/migrations/ ─> PostgreSQL
-schema.prisma ───────┤
-                     └─ generate ─> src/generated/prisma/ ─> PrismaClient
-```
