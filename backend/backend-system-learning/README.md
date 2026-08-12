@@ -122,7 +122,7 @@ TypeScript 类型和运行时校验
 07 表结构、数据类型和约束
 08 SQL CRUD（第一遍只读第 1～5 节）
 09 Docker、PostgreSQL、TablePro、Prisma 7 和单表 CRUD
-09A Prisma 从初始化到可用：两个文件、两条命令
+09A Prisma 从初始化到可用：一条线看懂
 ```
 
 这是 PostgreSQL 入门的优先主线：
