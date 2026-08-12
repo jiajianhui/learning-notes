@@ -76,21 +76,14 @@ Prisma 不是数据库，也不是 SQL。它是一套用于 Node.js 后端数据
 `@prisma/adapter-pg` 的作用是把 Prisma Client 与 `pg` 接起来：
 
 ```text
-Express 中的业务代码
--> 调用 Prisma Client 的模型 API
--> Prisma Client 生成 SQL
--> @prisma/adapter-pg 把 Prisma 接到 pg
--> pg 发送 SQL 和参数
--> PostgreSQL 执行 SQL 并返回结果
+业务代码
+-> Prisma Client API
+-> @prisma/adapter-pg
+-> pg
+-> PostgreSQL
 ```
 
-把职责压缩成一句话：
-
-```text
-Prisma 负责“生成什么 SQL”
-pg 负责“把 SQL 送过去”
-PostgreSQL 负责“执行 SQL 并保存数据”
-```
+业务代码只直接调用 Prisma Client。Prisma Client 负责生成 SQL，适配器负责把 Prisma Client 接到 `pg`，`pg` 再把 SQL 发送给 PostgreSQL。
 
 第一轮只要先理解这条链路，不需要研究 ORM 内部怎样生成 SQL。
 
@@ -390,17 +383,11 @@ Prisma
 
 ## 7. Prisma Schema：同时驱动数据库结构和程序 API
 
-`prisma/schema.prisma` 是 Prisma 的中心设计文件。它本身既不是数据库，也不是 Prisma Client；它负责描述“有哪些数据模型、字段和规则”，再作为两个命令的输入：
+`prisma/schema.prisma` 是 Prisma 的模型来源。它主要回答三个问题：
 
-```text
-schema.prisma
-├── migrate
-│   └── 生成迁移 SQL，并把 PostgreSQL 表结构更新成 Schema 描述的样子
-└── generate
-    └── 生成供程序使用的 TypeScript/JavaScript 类型和 Prisma Client API
-```
-
-修改 Schema 后，数据库和程序代码不会自动变化。需要分别执行 `migrate` 和 `generate`，让数据库结构与代码层 API 都跟上新的 Schema。
+- 项目使用哪种数据库？
+- 数据模型包含哪些字段和约束？
+- Prisma Client 按什么方式生成，并保存到哪里？
 
 ### 7.1 先定义 Article 模型
 
@@ -441,42 +428,24 @@ model Article {
 
 ### 7.2 四个代码块分别负责什么
 
-`generator client` 定义怎样生成 Prisma Client：
+| 代码块 | 作用 |
+|---|---|
+| `generator client` | 使用 `prisma-client` 生成器，并把 Client 代码保存到 `src/generated/prisma/` |
+| `datasource db` | 指定数据库类型为 PostgreSQL；连接地址仍由 `prisma.config.ts` 读取 |
+| `enum ArticleStatus` | 把文章状态限制为 `draft` 或 `published` |
+| `model Article` | 定义文章的字段、类型和约束 |
 
-```prisma
-generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
-}
-```
-
-- `generator` 表示这是一段代码生成配置。
-- `client` 是这段生成器配置的名称。执行 `prisma generate` 时，Prisma 会按照这段配置生成包含 `PrismaClient` 类的程序代码；之后再通过 `new PrismaClient()` 创建查询数据库的对象。`prisma generate` 不迁移数据库，数据库迁移由 `prisma migrate dev` 完成。
-- `provider = "prisma-client"` 表示使用 Prisma Client 生成器。
-- `output` 指定生成的 TypeScript/JavaScript 代码保存在哪里。
-
-`datasource db` 指定 Schema 面向哪种数据库：
-
-```prisma
-datasource db {
-  provider = "postgresql"
-}
-```
-
-`db` 是数据源配置块的名称，`provider = "postgresql"` 表示目标数据库是 PostgreSQL。具体连接地址不写在这里，而是由 `prisma.config.ts` 从 `DATABASE_URL` 读取。
-
-`enum ArticleStatus` 定义文章状态只能是 `draft` 或 `published`；`model Article` 定义文章模型、字段、类型和约束。它们仍然对应第 07 章学过的数据库概念：
+模型中的主要写法对应第 07 章学过的数据库规则：
 
 | Prisma 写法 | 表达的数据库规则 |
 |---|---|
-| `generator client` | 指定怎样生成 Prisma Client |
-| `datasource db` | 指定使用 PostgreSQL 数据源 |
 | `Int @id @default(autoincrement())` | id 是自动增长的主键 |
 | `String` | 必填文本 |
 | `String?` | 可以是 `NULL` |
 | `@unique` | 值不能重复 |
 | `@default(draft)` | 没有提供状态时使用草稿 |
 | `@map` / `@@map` | 让 Prisma 代码名称和数据库名称分别保持各自的命名习惯 |
+| `@db.Timestamptz(3)` | 使用 PostgreSQL 带时区、精确到毫秒的时间类型 |
 
 `@map` 和 `@@map` 都是名称映射，但作用范围不同：
 
@@ -487,85 +456,17 @@ datasource db {
 
 `@updatedAt` 表示通过 Prisma Client 修改文章时，Prisma 自动更新这个时间。它是 Prisma 的行为，不是 PostgreSQL 触发器。
 
-### 7.3 `migrate`：让数据库结构跟着 Schema 变化
-
-`migrate` 读取 Schema 中的模型变化，生成对应的迁移 SQL，再把 SQL 应用到 PostgreSQL。例如：
-
-```text
-model Article
--> 创建 articles 表
-
-id Int @id @default(autoincrement())
--> 创建自动增长的主键列 id
-
-slug String @unique
--> 创建 slug 列和唯一约束
-```
-
-生成的 SQL 会保存在 `prisma/migrations/`，数据库执行这些 SQL 后，真实的表、列和约束才会发生变化。因此，`migrate` 的目标是数据库结构：
-
-```text
-Schema 描述的模型
--> migration.sql
--> PostgreSQL 中真实的表结构
-```
-
-它不是搬运文章数据，而是让数据库结构从旧版本更新到 Schema 描述的新版本。
-
-### 7.4 `generate`：根据 Schema 给程序生成 Prisma Client
-
-`generate` 读取同一份 Schema，在 `output` 指定的位置生成一套供程序使用的 TypeScript/JavaScript 代码，其中包括：
-
-- `PrismaClient` 类。
-- `Article` 对应的类型。
-- 创建、查询、修改和删除 Article 的数据库操作 API。
-- 每个方法需要什么参数、会返回什么结果的类型信息。
-
-因为 Schema 中定义了 `model Article`，生成的 `PrismaClient` 实例才会出现下面这些 API：
-
-```ts
-prisma.article.findMany();
-prisma.article.findUnique();
-prisma.article.create();
-prisma.article.update();
-prisma.article.delete();
-```
-
-如果修改了 `model Article` 却没有重新执行 `generate`，程序仍在使用旧的 Client 代码，编辑器的类型提示和可调用 API 也不会更新。因此，`generate` 的目标是程序代码，不会创建数据库表，也不会写入文章数据：
-
-```text
-Schema 描述的模型
--> prisma generate
--> 生成类型 + 数据库操作 API
--> 程序可以调用 prisma.article.*
-```
-
-### 7.5 Prisma Client 在运行时怎样工作
-
-生成 Prisma Client 只是准备好了代码。服务器真正运行后，业务代码调用这些 API，Prisma 再把操作转换成对应的数据库查询：
-
-```text
-业务代码调用 prisma.article.findMany()
--> 生成的 Prisma Client 识别 Article 模型和查询参数
--> Prisma 转换成 PostgreSQL 查询
--> @prisma/adapter-pg 交给 pg
--> PostgreSQL 执行查询并返回数据
--> Prisma Client 按生成的类型把结果交回业务代码
-```
-
-所以三个概念要分开：
-
-| 概念 | 负责什么 |
-|---|---|
-| Prisma Schema | 描述模型、字段和数据库规则 |
-| Prisma Migrate | 根据 Schema 生成 SQL，让真实数据库结构跟上 Schema |
-| Prisma Client | 根据 Schema 生成程序可调用的类型和数据库操作 API，并在运行时执行查询 |
-
 ---
 
 ## 8. 执行迁移并生成 Prisma Client
 
-第 7 节已经解释了 `migrate` 和 `generate` 的工作原理。这一节只负责配置命令并亲手执行一次。
+Schema 只是模型描述。接下来要把它分别变成数据库表结构和程序可调用的 Client：
+
+```text
+schema.prisma
+├── migrate  -> prisma/migrations/ -> PostgreSQL 表结构
+└── generate -> src/generated/prisma/ -> Prisma Client 代码和类型
+```
 
 ### 8.1 确认 Prisma CLI 配置
 
@@ -586,11 +487,11 @@ export default defineConfig({
 });
 ```
 
-这个文件告诉 Prisma CLI 三件事：
+这个文件回答 Prisma CLI 的三个问题：
 
-- 从 `prisma/schema.prisma` 读取模型。
-- 把迁移文件保存在 `prisma/migrations/`。
-- 从 `.env` 的 `DATABASE_URL` 读取 PostgreSQL 地址。
+- Schema 文件在哪里？
+- 迁移记录保存到哪里？
+- CLI 要连接哪个数据库？
 
 运行 Prisma 命令时会自动加载这个文件，业务代码不需要手动导入它。
 
@@ -621,40 +522,18 @@ npm run db:generate
 ```
 
 - `db:migrate` 根据 Schema 生成迁移 SQL，并让 PostgreSQL 建立 `articles` 表。
-- `db:generate` 根据 Schema 生成程序使用的 Prisma Client。
+- `db:generate` 根据 Schema 生成 Prisma Client API 和对应的 TypeScript 类型。
 
 第一条命令中的 `--` 表示把后面的 `--name init_articles` 继续传给 Prisma；`init_articles` 是这次迁移的名称。
 
 执行完成后检查两个位置：
 
-```text
-prisma/migrations/..._init_articles/migration.sql
--> 数据库结构将执行的 SQL
+| 位置 | 检查什么 |
+|---|---|
+| `prisma/migrations/..._init_articles/migration.sql` | 对照 Schema 检查生成的表、列和约束 |
+| `src/generated/prisma/` | 确认 Client 代码已经生成，不要手动修改其中的文件 |
 
-src/generated/prisma/
--> 程序使用的 Prisma Client 代码
-```
-
-打开 `migration.sql`，把其中的表、列和约束与 `schema.prisma` 对照起来。`src/generated/prisma/` 是自动生成目录，不要手动修改。
-
-这两个命令更新的对象不同：`db:migrate` 只把 Schema 的变化应用到 PostgreSQL，`db:generate` 才会更新 `src/generated/prisma/` 中供程序使用的 Client 代码。只运行其中一个，会导致数据库结构或程序代码有一边仍然是旧版本，因此修改 Schema 后要依次运行两个命令。
-
-以后修改 Schema 时继续使用同一顺序：
-
-```text
-修改 schema.prisma
--> npm run db:migrate -- --name 本次变化名称
--> 检查 migration.sql
--> npm run db:generate
-```
-
-如果想临时用可视化界面查看数据，可以运行：
-
-```bash
-npm run db:studio
-```
-
-Prisma Studio 用于开发阶段查看和编辑数据，不能代替自己开发的管理页面。
+Prisma 7 中，`migrate` 不会自动执行 `generate`。以后修改 Schema，仍然按这个顺序分别更新数据库结构和 Client 代码。
 
 ---
 
