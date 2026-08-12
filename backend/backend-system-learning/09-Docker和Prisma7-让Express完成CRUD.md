@@ -218,6 +218,8 @@ mkdir src
 
 `npm init -y` 使用默认值创建 `package.json`，项目名默认是当前文件夹名 `server`。后续如果想改项目名，修改 `package.json` 中的 `name`，然后执行 `npm i` 同步 `package-lock.json`。
 
+`npx tsc --init` 调用当前项目安装的 TypeScript 编译器，在 `server/` 中生成 `tsconfig.json`。这个文件用来配置当前 TypeScript 工程怎样检查和处理 `.ts` 文件。
+
 两条安装命令分工不同：
 
 - `npm install express` 安装服务器运行时真正使用的 Express，记录到 `dependencies`。
