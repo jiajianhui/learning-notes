@@ -757,7 +757,7 @@ export async function getArticleById(articleId: number) {
 export function createArticle(input: {
   title: string;
   slug: string;
-  summary?: string;
+  summary?: string | null;
   content: string;
   status?: "draft" | "published";
 }) {
@@ -804,6 +804,15 @@ export async function deleteArticle(articleId: number) {
 | `createArticle()` | `create()` | 创建文章 |
 | `updateArticle()` | `update()` | 修改文章 |
 | `deleteArticle()` | `delete()` | 删除文章 |
+
+`summary` 是可选的文章内容。本章统一用字符串保存摘要，用 `NULL` 表示没有摘要。
+
+| 位置 | 写法 | 含义 |
+|---|---|---|
+| Prisma Schema | `summary String?` | 列始终存在；列值可以是字符串或 `NULL` |
+| 创建和修改函数 | <code>summary?: string &#124; null</code> | `?` 表示可以不传；传入时可以是字符串或 `null` |
+
+空字符串 `""` 仍然是字符串，不是 `null`。后续加入请求校验时，再统一转换为 `"" -> null -> 数据库 NULL`。当前 demo 还没有转换；在 Apifox 中创建无摘要文章时，不传 `summary` 或传入 `"summary": null`。
 
 列表查询中的 `select` 指定返回哪些字段，`orderBy` 定义查询结果的排序方式。`getArticleById()` 找到数据时返回文章对象，没有匹配数据时返回 `null`。通过 Prisma Client 修改文章时，不用手动写 `updatedAt`，模型中的 `@updatedAt` 会自动更新时间。
 

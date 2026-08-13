@@ -32,7 +32,7 @@ export async function getArticleById(articleId: number) {
 export function createArticle(input: {
   title: string;
   slug: string;
-  summary?: string;
+  summary?: string | null;
   content: string;
   status?: "draft" | "published";
 }) {
