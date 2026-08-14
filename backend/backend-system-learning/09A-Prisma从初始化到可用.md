@@ -4,6 +4,8 @@
 
 第 09 章已经完整跑通了 Prisma CRUD。这里不再重复操作，只串起 Prisma 从初始化到被业务代码调用的过程。
 
+这一章也是独立 demo 和真实 Mini CMS 的分界点：先用短主线检查自己是否真正理解 Prisma，再到新仓库独立复现。
+
 先看整条主线：
 
 ```text
@@ -167,3 +169,19 @@ export function getArticles() {
 - 不清楚文件职责：回看第 1 节。
 - 混淆 `migrate` 和 `generate`：回看第 2 节。
 - 不清楚业务代码怎样连上 PostgreSQL：回看第 3、4 节。
+
+## 下一步：结束 demo，进入 Mini CMS
+
+能不看第 09 章长篇代码说清下面这条线，demo 就完成了它的任务：
+
+```text
+schema.prisma
+-> migrate 更新 PostgreSQL
+-> generate 生成 Prisma Client
+-> 公共 PrismaClient 实例
+-> repository 调用 CRUD
+```
+
+接下来打开 [Mini CMS 项目路线](./MiniCMS-项目路线.md)，在独立 `mini-cms` 仓库中完成阶段 1～2。不要直接复制 demo 整个目录；先尝试根据已经理解的主线重新建立，卡住时再回看第 09 章的对应步骤。
+
+从第 10 章开始，新知识直接应用到真实 Mini CMS，不再继续扩展这个 demo。

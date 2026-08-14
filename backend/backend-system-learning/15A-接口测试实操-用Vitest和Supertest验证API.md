@@ -24,6 +24,8 @@ route
 
 这比只测试一个函数慢，但最接近当前 Mini CMS 最重要的风险。
 
+本章继续修改真实 `mini-cms`，测试已有的文章、标签和认证接口；不再复制一套只用于测试的业务代码。
+
 ---
 
 ## 1. 先把 `app` 和端口监听分开
@@ -250,7 +252,7 @@ describe("GET /api/health", () => {
     const response = await request(app).get("/api/health");
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ status: "ok" });
+    expect(response.body).toEqual({ server: "server is running" });
   });
 });
 ```
@@ -553,6 +555,8 @@ request.agent(app)
 ```
 
 测试的价值不是“证明现在写完了”，而是让以后修改代码时，旧行为一旦被破坏就能尽早发现。
+
+核心测试和项目 README 都完成后，回到 [Mini CMS 项目路线](./MiniCMS-项目路线.md)完成阶段 7 验收。Mini CMS 主体到这里已经完成；需要接入个人网站和部署时，再进入第 16 章的可选阶段 8。
 
 ## 官方参考
 

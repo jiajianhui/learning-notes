@@ -23,6 +23,8 @@ GET  /api/auth/me
 
 第一版只有一个管理员，不做公开注册、找回密码、多角色和第三方登录。
 
+所有代码都继续写在真实 `mini-cms` 中：后端增加认证模块和中间件，`admin-web` 增加登录页和登录状态，不创建新的登录 demo。
+
 ---
 
 ## 1. 先确定本章方案
@@ -452,7 +454,7 @@ app.use("/api/tags", requireAuth, tagRouter);
 app.use(errorHandler);
 ```
 
-这里把 `/api/articles` 和 `/api/tags` 当作管理后台接口，整个 router 都受到保护。这样创建、修改、删除和读取草稿都会先验证登录。以后第 21 章阶段 8 再增加只返回已发布文章的公开 router，例如 `/api/public/articles`，不要让公开接口复用“返回全部管理数据”的查询。
+这里把 `/api/articles` 和 `/api/tags` 当作管理后台接口，整个 router 都受到保护。这样创建、修改、删除和读取草稿都会先验证登录。以后进入 Mini CMS 阶段 8 时再增加只返回已发布文章的公开 router，例如 `/api/public/articles`，不要让公开接口复用“返回全部管理数据”的查询。
 
 如果某个 router 同时包含公开和后台接口，就逐条声明 `requireAuth`。controller 继续使用第 10 章的 Zod Schema 解析输入；如果把解析提取成独立校验中间件，就放在 `requireAuth` 之后。关键不是写法，而是后端真正拦截所有敏感接口。
 
@@ -576,6 +578,8 @@ HttpOnly Cookie
 ```
 
 做到这里，登录才从“有一个登录页面”变成“服务器能够持续验证管理员身份”。
+
+登录、退出、刷新恢复身份和写接口保护都能走通后，回到 [Mini CMS 项目路线](./MiniCMS-项目路线.md)完成阶段 6 验收。下一步再读第 15、15A 章，为核心 API 增加自动化测试。
 
 ## 官方参考
 
