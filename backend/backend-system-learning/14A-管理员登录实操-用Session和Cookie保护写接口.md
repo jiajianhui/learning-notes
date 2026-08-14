@@ -452,7 +452,7 @@ app.use("/api/tags", requireAuth, tagRouter);
 app.use(errorHandler);
 ```
 
-这里把 `/api/articles` 和 `/api/tags` 当作管理后台接口，整个 router 都受到保护。这样创建、修改、删除和读取草稿都会先验证登录。以后第 21 章阶段 7 再增加只返回已发布文章的公开 router，例如 `/api/public/articles`，不要让公开接口复用“返回全部管理数据”的查询。
+这里把 `/api/articles` 和 `/api/tags` 当作管理后台接口，整个 router 都受到保护。这样创建、修改、删除和读取草稿都会先验证登录。以后第 21 章阶段 8 再增加只返回已发布文章的公开 router，例如 `/api/public/articles`，不要让公开接口复用“返回全部管理数据”的查询。
 
 如果某个 router 同时包含公开和后台接口，就逐条声明 `requireAuth`。controller 继续使用第 10 章的 Zod Schema 解析输入；如果把解析提取成独立校验中间件，就放在 `requireAuth` 之后。关键不是写法，而是后端真正拦截所有敏感接口。
 
