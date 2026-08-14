@@ -10,7 +10,7 @@
 
 - 先阅读根目录 `README.md`，再阅读当前专题的 `README.md`。
 - 修改具体章节前，检查相邻章节、目录索引和对应示例代码，避免只根据单个文件判断。
-- 后端学习路线以 `backend/backend-system-learning/README.md` 为准，项目阶段以同目录的 `MiniCMS-项目路线.md` 为准。
+- 后端学习路线以 `backend/backend-system-learning/README.md` 为准，项目阶段以同目录的 `10-MiniCMS项目总览.md` 为准。
 - 如果目录中存在更具体的 `AGENTS.md` 或 `AGENTS.override.md`，同时遵循其中的局部规则。
 
 ## 文档写作原则

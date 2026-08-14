@@ -943,7 +943,7 @@ HTTP 请求
 -> Express 返回 JSON
 ```
 
-这一节先直接使用 `request.body` 跑通 CRUD，只练习正常请求链路。请求体校验和数据库错误到 HTTP 状态码的转换，将在第 10 章完成。
+这一节先直接使用 `request.body` 跑通 CRUD，只练习正常请求链路。请求体校验和数据库错误到 HTTP 状态码的转换，将在第 11 章完成。
 
 ---
 
@@ -1016,11 +1016,11 @@ Prisma Studio
 -> 在开发阶段查看数据
 ```
 
-完成第 09 章的独立 demo 后，先读 09A，尝试不看长篇代码重新说清 `init -> migrate -> generate -> PrismaClient -> CRUD` 主线。
+完成第 09 章的 CRUD demo 后，先读 09A，尝试不看长篇代码重新说清 `init -> migrate -> generate -> PrismaClient -> CRUD` 主线。
 
-09A 完成后，这个 demo 就结束它的任务，不再增加 Zod、标签、登录和测试。接下来打开 [Mini CMS 项目路线](./MiniCMS-项目路线.md)，在独立 `mini-cms` 仓库中复现阶段 1～2。
+09A 完成后，这次阶段性实操就完成了。接下来阅读[第 10 章 Mini CMS 项目总览](./10-MiniCMS项目总览.md)，把已经练过的 CRUD 基础带入 Mini CMS，了解项目全貌和阶段 1～8，再在独立 `mini-cms` 仓库中完成阶段 1～2。
 
-准备进入 Mini CMS 阶段 3 时，再按顺序读第 10、11 章；后续学到的新能力只在真实 Mini CMS 中实现。
+准备进入 Mini CMS 阶段 3 时，再按顺序读第 11、12 章；后续学到的新能力只在 Mini CMS 中实现。
 
 ## 官方参考
 
