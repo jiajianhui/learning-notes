@@ -15,7 +15,7 @@ Docker 启动 PostgreSQL
 -> Prisma Schema 定义 Article
 -> Prisma Migrate 建立 articles 表
 -> Prisma Client 读写数据库
--> Express 注册五个文章 CRUD 接口
+-> Express 注册文章 CRUD 接口
 -> Apifox 验证正常请求
 ```
 
@@ -133,7 +133,7 @@ Next.js 管理后台
 | 阶段 | 要解决的问题 | 完成目标 | 对应章节 |
 |---|---|---|---|
 | 1 | 先建立独立的 Mini CMS 工程 | Express 能接住请求 | 第 01～04 章 |
-| 2 | 把 PostgreSQL 接入文章接口 | 五个文章基础 CRUD 接口可以读写真实数据 | 第 05～09A 章 |
+| 2 | 把 PostgreSQL 接入文章接口 | 文章基础 CRUD 接口可以读写真实数据 | 第 05～09A 章 |
 | 3 | 基础 CRUD 只覆盖正常流程，失败响应不稳定 | Zod 请求校验、统一错误和后端结构可用 | 第 11、11A、12 章 |
 | 4 | 只有 API，没有产品操作入口 | Next.js 管理后台完成文章 CRUD 闭环 | 第 13 章 |
 | 5 | 只有单表文章，没有标签和发布规则 | 多表关系、筛选分页、发布撤回和事务可用 | 第 06、08、14 章 |
@@ -187,13 +187,13 @@ updated_at
 - 创建独立的 `mini-cms` Git 仓库。
 - 创建 `server` 工程和 TypeScript 开发环境。
 - 使用 Node.js 22.x，并把工程配置为 ESM。
-- 跑通 `GET /api/health`。
+- 跑通 `GET /api/articles/health`。
 - 用 Apifox 检查正常响应和不存在路径。
 
 验收：
 
 - 能独立启动服务器，修改路径或响应字段时知道改哪里。
-- 知道 `app.get("/api/health", handler)` 定义了一个只匹配 `GET /api/health` 的路由。
+- 知道 `app.get("/api/articles/health", handler)` 定义了一个只匹配 `GET /api/articles/health` 的路由。
 - 知道健康检查没有读取请求数据，只通过 `res.json()` 返回 JSON。
 - 用其他 HTTP 方法或不存在的路径请求时，不会进入这个路由的 handler。
 
@@ -256,15 +256,15 @@ DELETE /api/articles/:id
 - 增加 `AppError`、404 中间件和统一错误中间件。
 - 把 Prisma `P2002` 和 `P2025` 等已知错误转换成稳定的 409 和 404 响应。
 - 统一处理 404、409、422 和 500 等失败结果。
-- 在错误流程稳定后，再按文章模块整理 route、controller 和 repository 的职责。
+- 在错误流程稳定后，把启动文件和文章路由从 `app.ts` 中拆开。
 
 验收：
 
 - 空标题、错误 slug、非法 id 和多余字段不会进入 repository，并返回可理解的 422 响应。
 - 重复 slug 返回 409，文章不存在返回 404，未知错误统一返回 500。
 - 错误响应使用统一 JSON 结构，不向客户端暴露 Prisma 错误或堆栈。
-- 阶段 2 已经跑通的五个 CRUD 接口仍然可用，正常流程没有被破坏。
-- 能沿着 route、controller、repository 和错误中间件追踪一次请求和失败响应。
+- 阶段 2 已经跑通的文章 CRUD 接口仍然可用，正常流程没有被破坏。
+- 能沿着 article Router、Schema、Repository 和错误中间件追踪一次请求和失败响应。
 
 ### 阶段 4：完成文章管理页面
 
