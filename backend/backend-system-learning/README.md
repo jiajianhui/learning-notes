@@ -21,7 +21,7 @@
 | 对象 | 作用 | 完成标志 |
 |---|---|---|
 | 第 09 章 CRUD demo | 跟着文档第一次集中练习 Docker、PostgreSQL、Prisma 和单表 CRUD | 能跑通 CRUD，并能用 09A 复述 Prisma 主线 |
-| `mini-cms` | 独立复现基础能力，并承接第 11～17 章的所有后续实操 | 逐步完成为最终落地项目 |
+| `mini-cms` | 独立复现基础能力，并完成 Ant Design、shadcn/ui 两个并列的管理后台项目 | 两套后台都能独立完成核心管理链路 |
 | 本目录的学习文档 | 讲清通用知识，并指导修改 Mini CMS | 不保存项目最终运行代码 |
 
 它们不是两个并行发展的项目。第 10 章负责总结 demo 已经完成的实操、它还存在的问题，以及 Mini CMS 如何继续解决这些问题：
@@ -194,6 +194,30 @@ TypeScript 类型和运行时校验
 
 第 17 章已经对应 Mini CMS 可选阶段 8；第 18～21 章用于阅读、排错和复习，不要求第一次连续背完。
 
+### 第六部分：完成 shadcn/ui 并列后台项目
+
+```text
+22 shadcn/ui 为什么不是传统组件库
+23 建立后台骨架并复用登录 API
+24 用 TanStack Table 完成文章列表
+24A 从数据到表格实例
+25 用 React Hook Form 和 Zod 完成文章表单
+25A 表单状态和两次 Zod 校验
+26 独立完成标签管理并比较两套后台
+```
+
+阅读顺序：
+
+```text
+22 -> 23 -> 24 -> 24A -> 25 -> 25A -> 26
+```
+
+Ant Design 和 shadcn/ui 是 Mini CMS 中两个并列的前端项目，两套都要掌握。实现顺序先 Ant Design、再 shadcn/ui，是为了先稳定 API contract，再把注意力集中到第二套 UI 组合方式，不代表项目有主次。
+
+`admin-web` 和 `admin-web-shadcn` 继续使用同一个 Express API 和 PostgreSQL。第 26 章再用相同功能比较两种方案。
+
+shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等新概念需要分别解释，不代表学习重心高于 Ant Design。
+
 ### 第 10 章怎样使用
 
 ```text
@@ -241,7 +265,8 @@ TypeScript 类型和运行时校验
 本地数据库：Docker + PostgreSQL
 数据库访问：Prisma 7 + @prisma/adapter-pg + pg
 请求校验：Zod
-管理页面：Next.js + TypeScript + Ant Design
+管理页面 A：Next.js + TypeScript + Ant Design
+管理页面 B：Next.js + TypeScript + shadcn/ui + TanStack Table + React Hook Form
 接口检查：Apifox
 自动化测试：Vitest + Supertest
 ```
@@ -258,7 +283,7 @@ TypeScript 类型和运行时校验
 - 能读懂常见的单表 CRUD SQL，并知道 Prisma 模型方法对应什么操作。
 - 能用 Docker 启动 PostgreSQL，并用 Prisma 记录表结构变化和管理数据。
 
-读完第 09 章后，先用 09A 收口 Prisma 主线，再读第 10 章完成从 demo 到 Mini CMS 的过渡。阶段 3 先补上请求校验、统一错误处理和项目结构，阶段 4 再完成管理页面，后面逐步增加标签、登录、测试和部署。阶段 5 增加文章标签时，才要求掌握中间表、`JOIN` 和事务；同时回看第 06 章的发布规则和第 08 章的筛选分页。
+读完第 09 章后，先用 09A 收口 Prisma 主线，再读第 10 章完成从 demo 到 Mini CMS 的过渡。阶段 3 先补上请求校验、统一错误处理和项目结构，阶段 4 先完成 Ant Design 后台，阶段 5～7 继续增加标签、登录和测试。共享 API 稳定后，再按第 22～26 章完成 shadcn/ui 后台；阶段 8 的部署仍然可选。两套前端都是学习目标，只是按顺序实现，避免同时学习两套组件体系。
 
 ---
 
@@ -276,9 +301,10 @@ TypeScript 类型和运行时校验
 -> 第 10 章总览 Mini CMS 和项目阶段
 -> 阶段 1 启动 Mini CMS，阶段 2 接入数据库并完成基础 CRUD
 -> 阶段 3 学习请求校验、统一错误处理和项目组织
--> 阶段 4 学习前后端联调并完成管理页面
--> 按阶段学习多表、登录和测试
--> 部署、阅读和排错
+-> 阶段 4 完成 Ant Design 后台
+-> 阶段 5～7 学习多表、登录和测试
+-> 完成 shadcn/ui 并列后台项目
+-> 按需完成部署、阅读和排错
 ```
 
 按这条路线边学边做：第 09 章之后就进入项目，后续知识在对应实操阶段开始前补齐。
@@ -294,3 +320,6 @@ TypeScript 类型和运行时校验
 - [node-postgres 文档](https://node-postgres.com/)
 - [Next.js App Router 文档](https://nextjs.org/docs/app)
 - [Ant Design 文档](https://ant.design/docs/react/introduce)
+- [shadcn/ui 文档](https://ui.shadcn.com/docs)
+- [TanStack Table 文档](https://tanstack.com/table/latest)
+- [React Hook Form 文档](https://react-hook-form.com/)

@@ -66,7 +66,7 @@ CMS 全称是 Content Management System，即内容管理系统。Mini CMS 只�
 
 ```text
 用 Node.js + Express + Prisma 7 + PostgreSQL 写内容 API
--> 用 Next.js + Ant Design 做管理后台
+-> 用 Next.js 分别完成 Ant Design 和 shadcn/ui 两个管理后台
 -> 完成一个可以管理和发布文章的小型内容系统
 ```
 
@@ -82,12 +82,13 @@ learning-notes/
 mini-cms/
 ├── .git/        整个项目共用一份 Git 历史
 ├── server/      Express 后端
-└── admin-web/   Next.js 管理后台
+├── admin-web/          Ant Design 后台项目
+└── admin-web-shadcn/   shadcn/ui 后台项目
 ```
 
-`server` 和 `admin-web` 各自有依赖和启动命令，但同属一个 Mini CMS，所以放在同一个 Git 仓库里。不要在两个子目录里再次运行 `git init`。
+三个子工程各自有依赖和启动命令，但同属一个 Mini CMS，所以放在同一个 Git 仓库里。不要在子目录里再次运行 `git init`。
 
-第一次按这套路线实践时，在本章创建 `mini-cms` 仓库。`admin-web` 到阶段 4 才创建，不需要提前生成空工程。
+第一次按这套路线实践时，在本章创建 `mini-cms` 仓库。`admin-web` 到阶段 4 才创建，不需要提前生成空工程。`admin-web-shadcn` 在共享 API 和 Ant Design 项目稳定后创建。这个顺序用于降低同时学习两套 UI 的难度，不代表两个前端项目有主次。
 
 ### 3.2 默认技术路线和请求链路
 
@@ -96,17 +97,18 @@ mini-cms/
 本地数据库：Docker + PostgreSQL
 数据库访问：Prisma 7 + @prisma/adapter-pg + pg
 请求校验：Zod
-管理后台：Next.js + TypeScript + Ant Design
+管理后台 A：Next.js + TypeScript + Ant Design
+管理后台 B：Next.js + TypeScript + shadcn/ui + TanStack Table + React Hook Form
 接口检查：Apifox
 自动化测试：Vitest + Supertest
 ```
 
-开发时，`admin-web` 默认使用 `http://localhost:3000`，`server` 使用 `http://localhost:3001`，PostgreSQL 通常使用 `localhost:5432`。
+开发时，`admin-web` 默认使用 `http://localhost:3000`，`server` 使用 `http://localhost:3001`，`admin-web-shadcn` 使用 `http://localhost:3002`，PostgreSQL 通常使用 `localhost:5432`。
 
 整条数据流是：
 
 ```text
-Next.js 管理后台
+任一 Next.js 管理后台
 -> HTTP 请求 Express API
 -> Express 校验参数和业务规则
 -> Prisma Client 生成带参数的 SQL
@@ -135,11 +137,20 @@ Next.js 管理后台
 | 1 | 先建立独立的 Mini CMS 工程 | Express 能接住请求 | 第 01～04 章 |
 | 2 | 把 PostgreSQL 接入文章接口 | 文章基础 CRUD 接口可以读写真实数据 | 第 05～09A 章 |
 | 3 | 基础 CRUD 只覆盖正常流程，失败响应不稳定 | Zod 请求校验、统一错误和后端结构可用 | 第 11、11A、12 章 |
-| 4 | 只有 API，没有产品操作入口 | Next.js 管理后台完成文章 CRUD 闭环 | 第 13 章 |
+| 4 | 只有 API，没有产品操作入口 | Ant Design 后台完成文章 CRUD 闭环 | 第 13 章 |
 | 5 | 只有单表文章，没有标签和发布规则 | 多表关系、筛选分页、发布撤回和事务可用 | 第 06、08、14 章 |
 | 6 | 写接口没有身份保护 | 管理员登录、Cookie 和认证中间件可用 | 第 15、15A 章 |
 | 7 | 主要依赖手动检查，项目不易复现 | 核心 API 可自动验证，README 可以指导启动 | 第 16、16A 章 |
 | 8（可选） | 内容只能在本地管理 | 个人网站读取已发布内容，并完成部署 | 第 06、17 章 |
+
+八个阶段组织共享后端和产品能力，两个前端项目则是并列交付：
+
+| 前端项目 | 目录 | 主要章节 | 完成要求 |
+|---|---|---|---|
+| A：Ant Design | `admin-web` | 第 13 章，并跟随阶段 5～6 补齐功能 | 完成登录、文章和标签管理 |
+| B：shadcn/ui | `admin-web-shadcn` | 第 22～26 章 | 完成同等核心链路，并掌握 TanStack Table、React Hook Form |
+
+项目 A 先实现，项目 B 后实现。顺序用于控制学习难度，最终验收时两者地位相同。
 
 第 13A 章只比较 Next.js 自带服务端能力和独立 Express 的边界，是架构选读，不属于任何项目阶段。
 
@@ -169,7 +180,7 @@ updated_at
 - 发布和撤回先作为文章状态更新，基本 CRUD 稳定后再决定是否拆成独立接口。
 - 不在 Mini CMS 主体完成前替换现有个人网站的数据来源。
 
-## 5. 八个实操阶段
+## 5. 八个实操阶段与双前端项目
 
 这份路线是 Mini CMS 项目任务和进度的唯一来源。从阶段 1 开始，一次只完成一个阶段。
 
@@ -266,7 +277,7 @@ DELETE /api/articles/:id
 - 阶段 2 已经跑通的文章 CRUD 接口仍然可用，正常流程没有被破坏。
 - 能沿着 article Router、Schema、Repository 和错误中间件追踪一次请求和失败响应。
 
-### 阶段 4：完成文章管理页面
+### 阶段 4：完成 Ant Design 文章管理页面
 
 开始前回看：
 
@@ -400,6 +411,52 @@ GET  /api/auth/me
 - 不打开浏览器也能验证核心 API，旧行为被破坏时测试会提醒。
 - 新环境按照 README 可以启动项目。
 
+### 并列前端项目 B：shadcn/ui 管理后台
+
+这是 Mini CMS 双前端目标中的必做项目。它不编号为第 9 个阶段，是因为没有增加新的后端业务能力，而是用同一套 API 完成第二种前端实现。
+
+```text
+完成 Ant Design 后台项目
+-> 再完成 shadcn/ui 后台项目
+-> 比较封装程度、状态管理和自定义方式
+```
+
+开始条件：
+
+- 阶段 4～6 已经完成，Ant Design 后台项目可以独立操作。
+- 文章、标签和登录 API 的 contract 已经稳定。
+- 优先完成阶段 7 的自动化测试和 README，避免两个前端同时变化时难以判断问题来源。
+
+阅读顺序：
+
+```text
+22 -> 23 -> 24 -> 24A -> 25 -> 25A -> 26
+```
+
+完成：
+
+- 创建独立的 `admin-web-shadcn`，使用 3002 端口。
+- 复用同一个 Express API、Cookie 登录和 PostgreSQL 数据。
+- 完成后台骨架、文章列表、文章新建和编辑。
+- 独立完成标签管理，作为知识迁移练习。
+- 用相同功能记录 Ant Design 和 shadcn/ui 的真实代码差别。
+
+两个项目的共同边界：
+
+- `admin-web` 和 `admin-web-shadcn` 是两个并列的管理后台项目，都要完成核心功能。
+- 两个前端共享 API contract，不共享 UI 组件源码。
+- 不复制 `server`、数据库或业务接口。
+- 不为了让两套页面视觉一致而增加额外工作。
+
+验收：
+
+- 两个后台可以同时连接同一套 API，并看到同一份数据。
+- 两边都能跑通登录、文章管理和标签管理。
+- 能解释 shadcn/ui、TanStack Table、React Hook Form 和前端 Zod 分别负责什么。
+- 能用实际文件和状态代码说明两种方案的取舍。
+
+入口：[第 22 章](./22-shadcn-ui为什么不是传统组件库.md)。
+
 ### 阶段 8：把内容提供给个人网站，可选
 
 开始前回看：
@@ -414,10 +471,10 @@ GET  /api/auth/me
 - 提供只返回已发布文章的公开 API。
 - 让个人网站读取文章列表和详情。
 - 渲染 Markdown 正文，并接入封面图片地址。
-- 为 `server` 和 `admin-web` 补齐生产构建和启动命令。
+- 为 `server`、`admin-web` 和 `admin-web-shadcn` 补齐生产构建和启动命令。
 - 配置生产环境变量，并使用 `prisma migrate deploy` 应用已提交的迁移。
 - 保留健康检查，增加基础请求日志和错误日志，且不记录密码、Cookie 和密钥。
-- 确认数据库备份方式，再完成管理后台、Express API 和 PostgreSQL 的部署。
+- 确认数据库备份方式，再部署 Express API、PostgreSQL 和计划上线的一套或两套管理后台。
 
 验收：
 
@@ -457,7 +514,7 @@ GET  /api/auth/me
 
 ## 7. 怎样判断项目完成
 
-先走通一条完整的产品链路：
+分别在 Ant Design 和 shadcn/ui 两个后台走通一条完整的产品链路：
 
 ```text
 管理员登录
@@ -473,9 +530,9 @@ GET  /api/auth/me
 
 - 所有正式内容都保存在 PostgreSQL 中。
 - 参数错误、未登录和资源不存在都有明确响应。
-- 管理后台有完整的 `loading`、`empty`、`error` 和 `success` 状态。
+- 两个管理后台都有完整的 `loading`、`empty`、`error` 和 `success` 状态。
 - 核心接口既能用 Apifox 检查，也有自动化测试。
-- Mini CMS README 写清安装、环境变量、建表和启动方式。
+- Mini CMS README 写清安装、环境变量、建表和三个子工程的启动方式。
 - 能解释一次请求从 Next.js 到 PostgreSQL 再返回的完整过程。
 
 每个阶段结束只问四个问题：
