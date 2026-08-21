@@ -1,4 +1,4 @@
-# 22. shadcn/ui 为什么不是传统组件库
+# 23. shadcn/ui 为什么不是传统组件库
 
 ## 问题背景
 
@@ -7,7 +7,7 @@ Mini CMS 使用同一个 Express 后端，完成两个并列的管理后台项�
 ```text
 mini-cms/
 ├── server/                Express 正式后端
-├── admin-web/             Ant Design 后台项目
+├── admin-web-antd/        Ant Design 后台项目
 └── admin-web-shadcn/      shadcn/ui 后台项目
 ```
 
@@ -20,7 +20,7 @@ shadcn/ui 不是 Next.js 这样的应用框架，
 也不是安装一个运行时包就结束的传统组件库。
 ```
 
-读完后应该能判断 shadcn/ui、Tailwind CSS、Base UI、TanStack Table、React Hook Form 和 Zod 分别负责什么。第 23 章再创建项目。
+读完后应该能判断 shadcn/ui、Tailwind CSS、Base UI、TanStack Table、React Hook Form 和 Zod 分别负责什么。第 24 章再创建项目。
 
 ---
 
@@ -204,7 +204,7 @@ Express 返回当前页文章
 
 `Field`、`FieldLabel` 和 `FieldError` 能组织标签、控件和错误提示，但不会自动管理整张文章表单。
 
-第 25 章会加入：
+第 26 章会加入：
 
 ```text
 React Hook Form
@@ -298,7 +298,7 @@ shadcn CLI 把组件源码加入项目
 -> 复杂表格和表单再由专门工具补充行为
 ```
 
-下一章会创建 `admin-web-shadcn`，先完成端口、API 请求、登录保护和后台骨架。文章表格和复杂表单分别留到第 24、25 章。
+下一章会创建 `admin-web-shadcn`，先完成端口、API 请求、登录保护和后台骨架。文章表格和复杂表单分别留到第 25、26 章。
 
 ## 官方参考
 

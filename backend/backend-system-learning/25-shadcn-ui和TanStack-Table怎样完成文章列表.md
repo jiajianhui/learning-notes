@@ -1,8 +1,8 @@
-# 24. shadcn/ui 和 TanStack Table 怎样完成文章列表
+# 25. shadcn/ui 和 TanStack Table 怎样完成文章列表
 
 ## 这一章要完成什么
 
-第 23 章已经完成项目骨架、登录状态和统一请求函数。本章使用同一套 Express API 完成：
+第 24 章已经完成项目骨架、登录状态和统一请求函数。本章使用同一套 Express API 完成：
 
 ```text
 请求当前页文章
@@ -14,7 +14,7 @@
 
 开始前，Ant Design 后台的文章列表、筛选和分页应该已经可用。本项目继续使用同一个 Express API contract，不增加另一套接口。
 
-TanStack Table 的概念较多。先按本章跑通结果，完成后再用 [24A](./24A-TanStack-Table从数据到表格实例.md) 串一次内部主线。
+TanStack Table 的概念较多。先按本章跑通结果，完成后再用 [25A](./25A-TanStack-Table从数据到表格实例.md) 串一次内部主线。
 
 ---
 
@@ -753,7 +753,7 @@ npx tsc --noEmit
 npm run build
 ```
 
-三个检查通过后，阅读 [24A](./24A-TanStack-Table从数据到表格实例.md)，用短主线复习这一章。
+三个检查通过后，阅读 [25A](./25A-TanStack-Table从数据到表格实例.md)，用短主线复习这一章。
 
 ## 官方参考
 

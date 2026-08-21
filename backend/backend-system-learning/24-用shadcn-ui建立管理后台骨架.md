@@ -1,8 +1,8 @@
-# 23. 用 shadcn/ui 建立管理后台骨架
+# 24. 用 shadcn/ui 建立管理后台骨架
 
 ## 这一章要完成什么
 
-第 22 章已经分清 shadcn/ui 与传统组件库的区别。本章开始创建：
+第 23 章已经分清 shadcn/ui 与传统组件库的区别。本章开始创建：
 
 ```text
 mini-cms/admin-web-shadcn/
@@ -23,7 +23,7 @@ Next.js 项目运行在 3002
 
 ## 1. 创建第三个项目
 
-终端进入 `mini-cms` 根目录，不要进入 `server` 或 `admin-web`：
+终端进入 `mini-cms` 根目录，不要进入 `server` 或 `admin-web-antd`：
 
 ```bash
 cd mini-cms
@@ -35,8 +35,11 @@ npx create-next-app@latest admin-web-shadcn \
   --app \
   --src-dir \
   --import-alias "@/*" \
-  --use-npm
+  --use-npm \
+  --disable-git
 ```
+
+`--disable-git` 避免子项目再次初始化 Git。三个子项目共用 `mini-cms/.git`。
 
 进入新项目，把开发端口改成 3002：
 
@@ -64,7 +67,7 @@ npm run dev
 
 | 地址 | 项目 | 负责什么 |
 |---|---|---|
-| `http://localhost:3000` | `admin-web` | Ant Design 后台项目 |
+| `http://localhost:3000` | `admin-web-antd` | Ant Design 后台项目 |
 | `http://localhost:3001` | `server` | Express API |
 | `http://localhost:3002` | `admin-web-shadcn` | shadcn/ui 后台项目 |
 
@@ -127,6 +130,13 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
 ```
 
 真实 `.env.local` 保持在 `.gitignore` 中。
+
+如果 `.gitignore` 使用 `.env*`，增加 `!.env.example`，只让示例文件进入 Git：
+
+```gitignore
+.env*
+!.env.example
+```
 
 ---
 
@@ -376,7 +386,7 @@ export function logout() {
 
 ## 7. 先用普通 React 状态完成登录页
 
-React Hook Form 留到第 25 章。登录页字段很少，本章先用最小状态完成认证闭环。
+React Hook Form 留到第 26 章。登录页字段很少，本章先用最小状态完成认证闭环。
 
 `src/app/login/page.tsx` 的核心结构：
 
@@ -606,7 +616,7 @@ export default function AdminLayout({
 
 ## 10. 在根布局注册 Toast
 
-第 24 章删除文章、第 25 章保存文章都会用 Toast。把它放在根布局一次：
+第 25 章删除文章、第 26 章保存文章都会用 Toast。把它放在根布局一次：
 
 `src/app/layout.tsx`：
 
@@ -647,7 +657,7 @@ toast.add({
 
 按顺序检查：
 
-1. `server`、`admin-web` 和 `admin-web-shadcn` 能同时启动。
+1. `server`、`admin-web-antd` 和 `admin-web-shadcn` 能同时启动。
 2. 访问 3002 的登录页可以成功登录。
 3. 浏览器请求中包含 Cookie，刷新后 `/api/auth/me` 仍返回管理员。
 4. 未登录访问 `/admin/articles` 会跳转到 `/login`。

@@ -82,13 +82,13 @@ learning-notes/
 mini-cms/
 ├── .git/        整个项目共用一份 Git 历史
 ├── server/      Express 后端
-├── admin-web/          Ant Design 后台项目
+├── admin-web-antd/     Ant Design 后台项目
 └── admin-web-shadcn/   shadcn/ui 后台项目
 ```
 
 三个子工程各自有依赖和启动命令，但同属一个 Mini CMS，所以放在同一个 Git 仓库里。不要在子目录里再次运行 `git init`。
 
-第一次按这套路线实践时，在本章创建 `mini-cms` 仓库。`admin-web` 到阶段 4 才创建，不需要提前生成空工程。`admin-web-shadcn` 在共享 API 和 Ant Design 项目稳定后创建。这个顺序用于降低同时学习两套 UI 的难度，不代表两个前端项目有主次。
+第一次按这套路线实践时，在本章创建 `mini-cms` 仓库。`admin-web-antd` 到阶段 4 才创建，不需要提前生成空工程。`admin-web-shadcn` 在共享 API 和 Ant Design 项目稳定后创建。这个顺序用于降低同时学习两套 UI 的难度，不代表两个前端项目有主次。
 
 ### 3.2 默认技术路线和请求链路
 
@@ -103,7 +103,7 @@ mini-cms/
 自动化测试：Vitest + Supertest
 ```
 
-开发时，`admin-web` 默认使用 `http://localhost:3000`，`server` 使用 `http://localhost:3001`，`admin-web-shadcn` 使用 `http://localhost:3002`，PostgreSQL 通常使用 `localhost:5432`。
+开发时，`admin-web-antd` 默认使用 `http://localhost:3000`，`server` 使用 `http://localhost:3001`，`admin-web-shadcn` 使用 `http://localhost:3002`，PostgreSQL 通常使用 `localhost:5432`。
 
 整条数据流是：
 
@@ -137,18 +137,18 @@ mini-cms/
 | 1 | 先建立独立的 Mini CMS 工程 | Express 能接住请求 | 第 01～04 章 |
 | 2 | 把 PostgreSQL 接入文章接口 | 文章基础 CRUD 接口可以读写真实数据 | 第 05～09A 章 |
 | 3 | 基础 CRUD 只覆盖正常流程，失败响应不稳定 | Zod 请求校验、统一错误和后端结构可用 | 第 11、11A、12 章 |
-| 4 | 只有 API，没有产品操作入口 | Ant Design 后台完成文章 CRUD 闭环 | 第 13 章 |
-| 5 | 只有单表文章，没有标签和发布规则 | 多表关系、筛选分页、发布撤回和事务可用 | 第 06、08、14 章 |
-| 6 | 写接口没有身份保护 | 管理员登录、Cookie 和认证中间件可用 | 第 15、15A 章 |
-| 7 | 主要依赖手动检查，项目不易复现 | 核心 API 可自动验证，README 可以指导启动 | 第 16、16A 章 |
-| 8（可选） | 内容只能在本地管理 | 个人网站读取已发布内容，并完成部署 | 第 06、17 章 |
+| 4 | 只有 API，没有产品操作入口 | Ant Design 后台完成文章 CRUD 闭环 | 第 13、14 章 |
+| 5 | 只有单表文章，没有标签和发布规则 | 多表关系、筛选分页、发布撤回和事务可用 | 第 06、08、15 章 |
+| 6 | 写接口没有身份保护 | 管理员登录、Cookie 和认证中间件可用 | 第 16、16A 章 |
+| 7 | 主要依赖手动检查，项目不易复现 | 核心 API 可自动验证，README 可以指导启动 | 第 17、17A 章 |
+| 8（可选） | 内容只能在本地管理 | 个人网站读取已发布内容，并完成部署 | 第 06、18 章 |
 
 八个阶段组织共享后端和产品能力，两个前端项目则是并列交付：
 
 | 前端项目 | 目录 | 主要章节 | 完成要求 |
 |---|---|---|---|
-| A：Ant Design | `admin-web` | 第 13 章，并跟随阶段 5～6 补齐功能 | 完成登录、文章和标签管理 |
-| B：shadcn/ui | `admin-web-shadcn` | 第 22～26 章 | 完成同等核心链路，并掌握 TanStack Table、React Hook Form |
+| A：Ant Design | `admin-web-antd` | 第 13 章过渡，第 14 章跟练，并跟随阶段 5～6 补齐功能 | 完成登录、文章和标签管理 |
+| B：shadcn/ui | `admin-web-shadcn` | 第 23～27 章 | 完成同等核心链路，并掌握 TanStack Table、React Hook Form |
 
 项目 A 先实现，项目 B 后实现。顺序用于控制学习难度，最终验收时两者地位相同。
 
@@ -279,9 +279,12 @@ DELETE /api/articles/:id
 
 ### 阶段 4：完成 Ant Design 文章管理页面
 
+这是 Mini CMS 的前端起点。第 13 章先讲清前后端之间的 HTTP 边界和两个前端项目总览，第 14 章再创建真实 `admin-web-antd`，不会新建临时前端 demo。
+
 开始前回看：
 
-- [13-Next.js 管理后台](./13-Nextjs管理后台怎样接Express.md)
+- [13-前后端怎样通过 HTTP 协作](./13-前后端怎样通过HTTP协作.md)
+- [14-Ant Design 管理后台跟练](./14-Ant-Design管理后台跟练.md)
 
 完成：
 
@@ -291,7 +294,7 @@ DELETE /api/articles/:id
 /admin/articles/[id]/edit
 ```
 
-- 创建 `admin-web` Next.js 工程。
+- 创建 `admin-web-antd` Next.js 工程。
 - 配置只允许开发管理后台来源的 CORS。
 - 完成文章列表、新建、编辑和删除确认。
 - 处理 `loading`、`empty`、`error` 和 `success` 状态。
@@ -309,14 +312,14 @@ DELETE /api/articles/:id
 
 - [06-API 设计和校验](./06-API设计和参数校验.md)
 - [08-SQL CRUD](./08-SQL-用CRUD查询和修改数据.md)
-- [14-数据关系、JOIN 和事务](./14-数据关系JOIN和事务.md)
+- [15-数据关系、JOIN 和事务](./15-数据关系JOIN和事务.md)
 
 标签自身的 CRUD 复用阶段 2 的文章 CRUD 做法，标签管理页复用阶段 4 的页面流程。本阶段真正新增的是发布规则、多表关系、关联查询和事务。
 
 完成：
 
 - 创建 `tags` 和 `article_tags` 表，建立文章和标签的多对多关系。
-- 完成标签接口和 `/admin/tags` 管理页：
+- 完成标签接口和 `admin-web-antd` 中的 `/admin/tags` 管理页：
 
 ```text
 GET    /api/tags
@@ -352,8 +355,8 @@ DELETE /api/tags/:id
 
 开始前回看：
 
-- [15-登录、Cookie 和安全](./15-登录Cookie和基本安全.md)
-- [15A-管理员登录实操](./15A-管理员登录实操-用Session和Cookie保护写接口.md)
+- [16-登录、Cookie 和安全](./16-登录Cookie和基本安全.md)
+- [16A-管理员登录实操](./16A-管理员登录实操-用Session和Cookie保护写接口.md)
 
 完成：
 
@@ -370,7 +373,7 @@ GET  /api/auth/me
 - 配置 CORS 和 Cookie credentials。
 - 使用认证中间件保护管理后台使用的文章、标签读写接口；阶段 8 之前不另外提供公开内容 API。
 - `POST /api/auth/login` 和幂等的退出接口不使用 `requireAuth`，`GET /api/auth/me` 必须通过认证。
-- 增加 `/login` 页面和前端登录状态。
+- 在 `admin-web-antd` 中增加 `/login` 页面和前端登录状态。
 
 验收：
 
@@ -385,15 +388,15 @@ GET  /api/auth/me
 
 开始前回看：
 
-- [16-后端测试](./16-后端测试怎么分层.md)
-- [16A-接口测试实操](./16A-接口测试实操-用Vitest和Supertest验证API.md)
+- [17-后端测试](./17-后端测试怎么分层.md)
+- [17A-接口测试实操](./17A-接口测试实操-用Vitest和Supertest验证API.md)
 
 完成：
 
 - 配置 Vitest 和 Supertest，使用独立测试数据库。
 - 为测试命令增加数据库环境检查，防止测试误连开发数据库。
 - 提供 `.env.test.example`，并让测试库执行与开发库相同的迁移。
-- 写清 Mini CMS README：安装、环境变量、Docker、Prisma Migrate、Prisma Client 生成、`server` 和 `admin-web` 的启动顺序。
+- 写清 Mini CMS README：安装、环境变量、Docker、Prisma Migrate、Prisma Client 生成、`server` 和 `admin-web-antd` 的启动顺序。
 
 优先测试：
 
@@ -430,7 +433,7 @@ GET  /api/auth/me
 阅读顺序：
 
 ```text
-22 -> 23 -> 24 -> 24A -> 25 -> 25A -> 26
+23 -> 24 -> 25 -> 25A -> 26 -> 26A -> 27
 ```
 
 完成：
@@ -443,7 +446,7 @@ GET  /api/auth/me
 
 两个项目的共同边界：
 
-- `admin-web` 和 `admin-web-shadcn` 是两个并列的管理后台项目，都要完成核心功能。
+- `admin-web-antd` 和 `admin-web-shadcn` 是两个并列的管理后台项目，都要完成核心功能。
 - 两个前端共享 API contract，不共享 UI 组件源码。
 - 不复制 `server`、数据库或业务接口。
 - 不为了让两套页面视觉一致而增加额外工作。
@@ -455,23 +458,23 @@ GET  /api/auth/me
 - 能解释 shadcn/ui、TanStack Table、React Hook Form 和前端 Zod 分别负责什么。
 - 能用实际文件和状态代码说明两种方案的取舍。
 
-入口：[第 22 章](./22-shadcn-ui为什么不是传统组件库.md)。
+入口：[第 23 章](./23-shadcn-ui为什么不是传统组件库.md)。
 
 ### 阶段 8：把内容提供给个人网站，可选
 
 开始前回看：
 
 - [06-API 设计和校验](./06-API设计和参数校验.md)
-- [17-运行和部署](./17-从开发环境到线上运行.md)
+- [18-运行和部署](./18-从开发环境到线上运行.md)
 
-公开文章路由复用前面已经掌握的 GET 接口、筛选和错误处理；第 17 章重点解决构建、生产迁移、日志和部署。
+公开文章路由复用前面已经掌握的 GET 接口、筛选和错误处理；第 18 章重点解决构建、生产迁移、日志和部署。
 
 完成：
 
 - 提供只返回已发布文章的公开 API。
 - 让个人网站读取文章列表和详情。
 - 渲染 Markdown 正文，并接入封面图片地址。
-- 为 `server`、`admin-web` 和 `admin-web-shadcn` 补齐生产构建和启动命令。
+- 为 `server`、`admin-web-antd` 和 `admin-web-shadcn` 补齐生产构建和启动命令。
 - 配置生产环境变量，并使用 `prisma migrate deploy` 应用已提交的迁移。
 - 保留健康检查，增加基础请求日志和错误日志，且不记录密码、Cookie 和密钥。
 - 确认数据库备份方式，再部署 Express API、PostgreSQL 和计划上线的一套或两套管理后台。
