@@ -153,9 +153,14 @@ export type ArticleDetail = {
 };
 ```
 
-继续在 `api.ts` 中增加：
+继续在 `api.ts` 中增加。先把第 25 章的请求函数导入补成：
 
 ```ts
+import {
+  apiRequest,
+  apiRequestNoContent,
+  apiRequestResult,
+} from "@/lib/api";
 import type { ArticleFormValues } from "./article-form-schema";
 import type {
   ArticleDetail,
@@ -163,27 +168,27 @@ import type {
 } from "./types";
 
 export function getArticle(articleId: number) {
-  return apiFetch<ArticleDetail>(
+  return apiRequest<ArticleDetail>(
     `/api/articles/${articleId}`,
   );
 }
 
 export function getTags() {
-  return apiFetch<TagSummary[]>("/api/tags");
+  return apiRequest<TagSummary[]>("/api/tags");
 }
 
 export function createArticle(values: ArticleFormValues) {
   const { summary, ...input } = values;
   const normalizedSummary = summary.trim();
 
-  return apiFetch<ArticleDetail>("/api/articles", {
+  return apiRequest<ArticleDetail>("/api/articles", {
     method: "POST",
-    body: JSON.stringify({
+    data: {
       ...input,
       ...(normalizedSummary
         ? { summary: normalizedSummary }
         : {}),
-    }),
+    },
   });
 }
 
@@ -191,14 +196,14 @@ export function updateArticle(
   articleId: number,
   values: ArticleFormValues,
 ) {
-  return apiFetch<ArticleDetail>(
+  return apiRequest<ArticleDetail>(
     `/api/articles/${articleId}`,
     {
       method: "PATCH",
-      body: JSON.stringify({
+      data: {
         ...values,
         summary: values.summary.trim() || null,
-      }),
+      },
     },
   );
 }
@@ -728,7 +733,7 @@ export default function EditArticlePage() {
 
 ## 11. 后端错误怎样落到字段
 
-前端先检查 `response.ok`，`apiFetch` 再把错误转成 `ApiError`。
+Axios 遇到非 2xx 响应时，会进入第 24 章配置的响应拦截器，再统一转换成 `ApiError`。
 
 建议映射：
 

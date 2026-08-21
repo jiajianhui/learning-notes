@@ -154,7 +154,7 @@ TypeScript 类型和运行时校验
 阶段 1：先启动 Express
 阶段 2：接入 Docker、Prisma 7 和 PostgreSQL，完成基础文章 CRUD
 阶段 3：阅读 11 请求校验、11A 错误处理拆解、12 项目结构
-阶段 4：阅读 13 前后端衔接，再用 14 完成 admin-web-antd 跟练
+阶段 4：阅读 13 前后端衔接和 fetch，再用 14 完成 admin-web-antd 跟练
 阶段 5：回看 06 API 设计、08 筛选分页，阅读 15 多表关系和事务
 阶段 6：阅读 16 登录与安全、16A 登录实操
 阶段 7：阅读 17 测试分层、17A 接口测试实操
@@ -198,7 +198,7 @@ TypeScript 类型和运行时校验
 
 ```text
 23 shadcn/ui 为什么不是传统组件库
-24 建立后台骨架并复用登录 API
+24 用 Axios 建立后台骨架并复用登录 API
 25 用 TanStack Table 完成文章列表
 25A 从数据到表格实例
 26 用 React Hook Form 和 Zod 完成文章表单
@@ -213,6 +213,8 @@ TypeScript 类型和运行时校验
 ```
 
 Ant Design 和 shadcn/ui 是 Mini CMS 中两个并列的前端项目，两套都要掌握。实现顺序先 Ant Design、再 shadcn/ui，是为了先稳定 API contract，再把注意力集中到第二套 UI 组合方式，不代表项目有主次。
+
+请求工具也按同一条渐进路线练习：第 13 章认识原生 `fetch`，Ant Design 项目用它完成 CRUD；shadcn/ui 项目再用 Axios 请求同一套 API。这个组合只服务于学习，不代表 Ant Design 必须用 `fetch`，或 shadcn/ui 必须用 Axios。
 
 `admin-web-antd` 和 `admin-web-shadcn` 继续使用同一个 Express API 和 PostgreSQL。第 27 章再用相同功能比较两种方案。
 
@@ -265,8 +267,8 @@ shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等
 本地数据库：Docker + PostgreSQL
 数据库访问：Prisma 7 + @prisma/adapter-pg + pg
 请求校验：Zod
-管理页面 A：Next.js + TypeScript + Ant Design
-管理页面 B：Next.js + TypeScript + shadcn/ui + TanStack Table + React Hook Form
+管理页面 A：Next.js + TypeScript + Ant Design + fetch
+管理页面 B：Next.js + TypeScript + shadcn/ui + Axios + TanStack Table + React Hook Form
 接口检查：Apifox
 自动化测试：Vitest + Supertest
 ```

@@ -229,7 +229,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
 
 ## 6. 把第 13 章的约定收进统一请求函数
 
-本章直接使用这条结论：Express `res` 负责发送 HTTP 响应，浏览器 fetch `Response` 负责读取响应；先检查 `response.ok`，再返回 `body.data`。下面把这套处理集中到一个文件，页面不重复实现。
+第 13 章已经讲过一次完整请求：`await fetch(...)` 得到 `response`，`await response.json()` 得到 `body`，再用 `response.ok` 判断请求是否成功。本章会把这套流程真正用于文章 CRUD，并集中到一个文件中。
 
 ---
 
@@ -1029,7 +1029,7 @@ npm run build
 
 - `admin-web-antd` 和 `server` 为什么是两个项目？
 - `.env.local` 里的地址指向谁，为什么不是 `http://localhost:3000`？
-- Express `res` 和 fetch 得到的 `Response` 分别在哪一端？
+- `await fetch(...)` 和 `await response.json()` 分别得到什么？
 - 为什么 404 和 500 也要自己检查 `response.ok`？
 - 为什么前端表单已经校验，Express 仍然要保留 Zod？
 - 新建一篇文章时，数据经过了哪些文件和进程？
@@ -1056,9 +1056,10 @@ npm run build
 -> 用测试固定共享 API 的核心行为
 ```
 
-下一步进入[第 15 章](./15-数据关系JOIN和事务.md)，给文章增加标签和发布规则。共享 API 稳定以后，再按第 23～27 章完成并列的 `admin-web-shadcn`。
+下一步进入[第 15 章](./15-数据关系JOIN和事务.md)，给文章增加标签和发布规则。共享 API 稳定以后，再按第 23～27 章用 Axios 完成并列的 `admin-web-shadcn`。
 
 ## 官方参考
 
 - [Next.js：create-next-app CLI](https://nextjs.org/docs/app/api-reference/cli/create-next-app)
 - [Ant Design：在 Next.js App Router 中使用](https://ant.design/docs/react/use-with-next/)
+- [MDN：使用 Fetch](https://developer.mozilla.org/zh-CN/docs/Web/API/Fetch_API/Using_Fetch)

@@ -97,8 +97,8 @@ mini-cms/
 本地数据库：Docker + PostgreSQL
 数据库访问：Prisma 7 + @prisma/adapter-pg + pg
 请求校验：Zod
-管理后台 A：Next.js + TypeScript + Ant Design
-管理后台 B：Next.js + TypeScript + shadcn/ui + TanStack Table + React Hook Form
+管理后台 A：Next.js + TypeScript + Ant Design + fetch
+管理后台 B：Next.js + TypeScript + shadcn/ui + Axios + TanStack Table + React Hook Form
 接口检查：Apifox
 自动化测试：Vitest + Supertest
 ```
@@ -147,8 +147,8 @@ mini-cms/
 
 | 前端项目 | 目录 | 主要章节 | 完成要求 |
 |---|---|---|---|
-| A：Ant Design | `admin-web-antd` | 第 13 章过渡，第 14 章跟练，并跟随阶段 5～6 补齐功能 | 完成登录、文章和标签管理 |
-| B：shadcn/ui | `admin-web-shadcn` | 第 23～27 章 | 完成同等核心链路，并掌握 TanStack Table、React Hook Form |
+| A：Ant Design | `admin-web-antd` | 第 13 章学习 `fetch`，第 14 章跟练，并跟随阶段 5～6 补齐功能 | 用 `fetch` 完成登录、文章和标签管理 |
+| B：shadcn/ui | `admin-web-shadcn` | 第 23～27 章 | 用 Axios 完成同等核心链路，并掌握 TanStack Table、React Hook Form |
 
 项目 A 先实现，项目 B 后实现。顺序用于控制学习难度，最终验收时两者地位相同。
 
@@ -440,6 +440,7 @@ GET  /api/auth/me
 
 - 创建独立的 `admin-web-shadcn`，使用 3002 端口。
 - 复用同一个 Express API、Cookie 登录和 PostgreSQL 数据。
+- 使用 Axios 实例统一 API 地址、Cookie 和错误处理。
 - 完成后台骨架、文章列表、文章新建和编辑。
 - 独立完成标签管理，作为知识迁移练习。
 - 用相同功能记录 Ant Design 和 shadcn/ui 的真实代码差别。
@@ -455,6 +456,7 @@ GET  /api/auth/me
 
 - 两个后台可以同时连接同一套 API，并看到同一份数据。
 - 两边都能跑通登录、文章管理和标签管理。
+- 能解释 `fetch` 和 Axios 的请求流程差别，知道它们不与 UI 框架绑定。
 - 能解释 shadcn/ui、TanStack Table、React Hook Form 和前端 Zod 分别负责什么。
 - 能用实际文件和状态代码说明两种方案的取舍。
 
@@ -537,6 +539,7 @@ GET  /api/auth/me
 - 核心接口既能用 Apifox 检查，也有自动化测试。
 - Mini CMS README 写清安装、环境变量、建表和三个子工程的启动方式。
 - 能解释一次请求从 Next.js 到 PostgreSQL 再返回的完整过程。
+- 能分开比较请求工具和 UI 方案，不把 Axios 的能力算到 shadcn/ui 上。
 
 每个阶段结束只问四个问题：
 

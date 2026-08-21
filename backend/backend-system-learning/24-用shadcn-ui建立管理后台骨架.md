@@ -1,4 +1,4 @@
-# 24. 用 shadcn/ui 建立管理后台骨架
+# 24. 用 shadcn/ui 和 Axios 建立管理后台骨架
 
 ## 这一章要完成什么
 
@@ -13,7 +13,7 @@ mini-cms/admin-web-shadcn/
 ```text
 Next.js 项目运行在 3002
 -> shadcn/ui 组件可以使用
--> 登录请求能够携带 Cookie
+-> Axios 可以调用 Express 并携带 Cookie
 -> 受保护页面显示统一后台骨架
 ```
 
@@ -111,6 +111,14 @@ npx shadcn@latest add \
 
 执行命令后，组件源码会进入 `src/components/ui/`。不要把这些文件当作不能阅读的生成产物；它们就是当前项目的 UI 基础代码。
 
+再安装本项目使用的请求客户端：
+
+```bash
+npm install axios
+```
+
+Axios 只负责 HTTP 请求，不是 shadcn/ui 的依赖。这里使用它，是为了在完成 Ant Design 的 `fetch` 练习后，再用同一套 API 学习常见的请求客户端。
+
 ---
 
 ## 3. 配置 API 地址
@@ -121,7 +129,7 @@ npx shadcn@latest add \
 NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
 ```
 
-这个变量会进入浏览器代码，只能保存公开的 API 地址，不能放数据库密码、Session Token 或其他密钥。
+Next.js 规定，浏览器端代码读取的环境变量必须以 `NEXT_PUBLIC_` 开头。这里用它保存 Express API 地址。
 
 同时在 `.env.example` 中留下变量名：
 
@@ -140,11 +148,16 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
 
 ---
 
-## 4. 先统一请求函数
+## 4. 用 Axios 建立统一请求函数
 
 新建 `src/lib/api.ts`：
 
 ```ts
+import axios, {
+  type AxiosError,
+  type AxiosRequestConfig,
+} from "axios";
+
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 if (!API_URL) {
@@ -176,12 +189,12 @@ export type ApiSuccessBody<T> = {
 };
 
 export class ApiError extends Error {
-  status: number;
+  status?: number;
   code: string;
   details?: ApiErrorDetail[];
 
   constructor(
-    status: number,
+    status: number | undefined,
     code: string,
     message: string,
     details?: ApiErrorDetail[],
@@ -194,90 +207,91 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetchResponse<T>(
+const apiClient = axios.create({
+  baseURL: API_URL,
+  withCredentials: true,
+});
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError<ApiErrorBody>) => {
+    if (axios.isCancel(error)) {
+      return Promise.reject(error);
+    }
+
+    const body = error.response?.data;
+
+    return Promise.reject(
+      new ApiError(
+        error.response?.status,
+        body?.error?.code ?? "REQUEST_FAILED",
+        body?.error?.message ??
+          (error.response ? "请求失败" : "无法连接服务器"),
+        body?.error?.details ?? undefined,
+      ),
+    );
+  },
+);
+
+export async function apiRequestResult<T>(
   path: string,
-  init: RequestInit = {},
+  config: AxiosRequestConfig = {},
 ): Promise<ApiSuccessBody<T>> {
-  const response = await fetch(`${API_URL}${path}`, {
-    ...init,
-    credentials: "include",
-    headers: {
-      ...(init.body ? { "Content-Type": "application/json" } : {}),
-      ...init.headers,
-    },
+  const response = await apiClient.request<ApiSuccessBody<T>>({
+    ...config,
+    url: path,
   });
 
-  const body = (await response.json().catch(() => null)) as
-    | (Partial<ApiSuccessBody<T>> & ApiErrorBody)
-    | null;
+  return response.data;
+}
 
-  if (!response.ok) {
-    throw new ApiError(
-      response.status,
-      body?.error?.code ?? "REQUEST_FAILED",
-      body?.error?.message ?? "请求失败",
-      body?.error?.details ?? undefined,
-    );
-  }
+export async function apiRequest<T>(
+  path: string,
+  config: AxiosRequestConfig = {},
+): Promise<T> {
+  const body = await apiRequestResult<T>(path, config);
 
   if (!body || !("data" in body)) {
     throw new Error("API 成功响应缺少 data");
   }
 
-  return body as ApiSuccessBody<T>;
-}
-
-export async function apiFetch<T>(
-  path: string,
-  init: RequestInit = {},
-): Promise<T> {
-  const body = await apiFetchResponse<T>(path, init);
   return body.data;
 }
-```
 
-它统一完成三件事：
-
-```text
-发送请求并携带 Cookie
--> 检查 HTTP 状态
--> 把统一错误 JSON 转成 ApiError
-```
-
-普通接口通过 `apiFetch()` 取得 `data`；列表接口可以通过 `apiFetchResponse()` 同时读取 `data` 和 `pagination`。请求和错误处理仍然只有一份。
-
-`ApiError.code` 用来判断 `UNAUTHORIZED`、`ARTICLE_NOT_FOUND` 等稳定错误；页面不要比较完整中文文案。
-
-退出接口返回 204，没有 `data`。可以另外增加：
-
-```ts
-export async function apiRequest(
+export async function apiRequestNoContent(
   path: string,
-  init: RequestInit = {},
+  config: AxiosRequestConfig = {},
 ) {
-  const response = await fetch(`${API_URL}${path}`, {
-    ...init,
-    credentials: "include",
-    headers: {
-      ...(init.body ? { "Content-Type": "application/json" } : {}),
-      ...init.headers,
-    },
+  await apiClient.request({
+    ...config,
+    url: path,
   });
+}
 
-  if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as ApiErrorBody | null;
-
-    throw new ApiError(
-      response.status,
-      body?.error?.code ?? "REQUEST_FAILED",
-      body?.error?.message ?? "请求失败",
-      body?.error?.details ?? undefined,
-    );
-  }
+export function isRequestCanceled(error: unknown) {
+  return axios.isCancel(error);
 }
 ```
 
-不要让每个页面再手写一次 `response.ok` 和错误结构。
+这部分和 Ant Design 项目中的 `fetch` 请求函数解决同一个问题，但写法不同：
+
+| Ant Design 中的 `fetch` | shadcn/ui 中的 Axios |
+|---|---|
+| 手动拼接 API 地址 | `baseURL` 统一保存 API 地址 |
+| `credentials: "include"` | `withCredentials: true` |
+| `JSON.stringify(input)` 放入 `body` | 直接把对象放入 `data` |
+| 检查 `response.ok` | 非 2xx 响应自动进入错误处理 |
+| `response.json()` 解析 JSON | 从 `response.data` 读取已解析的数据 |
+
+`apiClient` 保存所有请求共用的地址和 Cookie 配置。响应拦截器把后端错误统一转换成 `ApiError`，页面仍然使用 `status`、`code` 和 `message` 判断结果。
+
+三个请求函数分别服务不同响应：
+
+- `apiRequest()` 返回普通成功响应中的 `data`。
+- `apiRequestResult()` 同时保留列表需要的 `data` 和 `pagination`。
+- `apiRequestNoContent()` 用于退出登录这类 204 响应。
+
+第 25 章会使用 `isRequestCanceled()` 忽略已经取消的列表请求。页面不需要直接处理 `AxiosError`。
 
 ---
 
@@ -355,7 +369,10 @@ app.use((request, _response, next) => {
 新建 `src/features/auth/api.ts`：
 
 ```ts
-import { apiFetch, apiRequest } from "@/lib/api";
+import {
+  apiRequest,
+  apiRequestNoContent,
+} from "@/lib/api";
 
 export type Admin = {
   id: number;
@@ -363,18 +380,18 @@ export type Admin = {
 };
 
 export function getCurrentAdmin() {
-  return apiFetch<Admin>("/api/auth/me");
+  return apiRequest<Admin>("/api/auth/me");
 }
 
 export function login(input: { username: string; password: string }) {
-  return apiFetch<Admin>("/api/auth/login", {
+  return apiRequest<Admin>("/api/auth/login", {
     method: "POST",
-    body: JSON.stringify(input),
+    data: input,
   });
 }
 
 export function logout() {
-  return apiRequest("/api/auth/logout", {
+  return apiRequestNoContent("/api/auth/logout", {
     method: "POST",
   });
 }
@@ -659,7 +676,7 @@ toast.add({
 
 1. `server`、`admin-web-antd` 和 `admin-web-shadcn` 能同时启动。
 2. 访问 3002 的登录页可以成功登录。
-3. 浏览器请求中包含 Cookie，刷新后 `/api/auth/me` 仍返回管理员。
+3. Axios 请求中包含 Cookie，刷新后 `/api/auth/me` 仍返回管理员。
 4. 未登录访问 `/admin/articles` 会跳转到 `/login`。
 5. Express 停止时，页面显示“无法验证登录状态”，不是无限 loading。
 6. 3000 的 Ant Design 后台仍然可以正常登录和请求。
@@ -680,6 +697,7 @@ npm run build
 
 - 不实现文章 Table。
 - 不引入 TanStack Table。
+- 不引入 TanStack Query。
 - 不引入 React Hook Form。
 - 不改变 Express 登录方案。
 - 不让两套后台共享 UI 组件；它们只共享 API contract。
@@ -691,4 +709,7 @@ npm run build
 - [shadcn/ui Next.js 安装](https://ui.shadcn.com/docs/installation/next)
 - [shadcn/ui Sidebar](https://ui.shadcn.com/docs/components/base/sidebar)
 - [shadcn/ui Toast](https://ui.shadcn.com/docs/components/base/toast)
+- [Axios：创建实例](https://axios-http.com/docs/instance)
+- [Axios：响应拦截器](https://axios-http.com/docs/interceptors)
+- [Axios：错误处理](https://axios-http.com/docs/handling_errors)
 - [Express cors middleware](https://expressjs.com/en/resources/middleware/cors.html)

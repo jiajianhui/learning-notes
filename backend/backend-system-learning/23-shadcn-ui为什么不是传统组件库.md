@@ -31,6 +31,7 @@ shadcn/ui 不是 Next.js 这样的应用框架，
 | Next.js | 路由、页面结构、构建和运行方式 |
 | React | 组件、状态和页面更新 |
 | TypeScript | 检查组件、请求和表单数据的类型 |
+| Axios | 调用 Express API，并统一地址、Cookie 和请求错误 |
 | Tailwind CSS | 通过工具类组织样式 |
 | shadcn/ui | 把可修改的组件源码加入项目，并提供统一的组合方式和默认视觉 |
 | Base UI | 提供弹窗、下拉菜单等组件底层的交互和可访问性行为 |
@@ -52,6 +53,7 @@ Next.js 组织应用
 -> React 组织页面
 -> shadcn/ui 提供可修改的 UI 组件
 -> TanStack Table 或 React Hook Form 补充复杂行为
+-> Axios 调用 Express API
 -> Express 继续处理真正的业务和数据
 ```
 
@@ -273,6 +275,7 @@ npx shadcn@latest add button --diff
 
 - 源码分发模式。
 - Tailwind CSS 的最小页面样式。
+- Axios 实例、请求配置和错误处理。
 - Sidebar、Table、AlertDialog、Field 和 Toast。
 - TanStack Table 的列、行和服务端分页边界。
 - React Hook Form 与前端 Zod 的表单链路。
@@ -298,7 +301,7 @@ shadcn CLI 把组件源码加入项目
 -> 复杂表格和表单再由专门工具补充行为
 ```
 
-下一章会创建 `admin-web-shadcn`，先完成端口、API 请求、登录保护和后台骨架。文章表格和复杂表单分别留到第 25、26 章。
+下一章会创建 `admin-web-shadcn`，用 Axios 完成 API 请求、登录保护和后台骨架。文章表格和复杂表单分别留到第 25、26 章。
 
 ## 官方参考
 
@@ -306,3 +309,4 @@ shadcn CLI 把组件源码加入项目
 - [shadcn/ui Next.js 安装](https://ui.shadcn.com/docs/installation/next)
 - [shadcn/ui components.json](https://ui.shadcn.com/docs/components-json)
 - [shadcn/ui CLI](https://ui.shadcn.com/docs/cli)
+- [Axios：创建实例](https://axios-http.com/docs/instance)

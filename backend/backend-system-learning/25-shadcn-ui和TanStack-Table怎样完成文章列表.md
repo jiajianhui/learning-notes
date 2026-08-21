@@ -35,7 +35,7 @@ npx shadcn@latest add \
   table
 ```
 
-先不要安装 TanStack Query。本项目继续使用第 13 章已经学过的 `fetch` 和 React 请求状态，只把新的学习重点放在 UI 组合与 TanStack Table。
+第 24 章已经用 Axios 建立统一请求层。本章继续使用这套请求函数和 React 页面状态，不安装 TanStack Query，先把学习重点放在 UI 组合与 TanStack Table。
 
 ---
 
@@ -106,8 +106,8 @@ export type ArticleListPage = {
 
 ```ts
 import {
-  apiFetchResponse,
-  apiRequest,
+  apiRequestNoContent,
+  apiRequestResult,
 } from "@/lib/api";
 import type {
   ArticleListItem,
@@ -128,7 +128,7 @@ export async function getArticles(
   if (query.status) search.set("status", query.status);
   if (query.tagId) search.set("tagId", String(query.tagId));
 
-  const response = await apiFetchResponse<ArticleListItem[]>(
+  const response = await apiRequestResult<ArticleListItem[]>(
     `/api/articles?${search.toString()}`,
     { signal },
   );
@@ -144,7 +144,7 @@ export async function getArticles(
 }
 
 export function deleteArticle(articleId: number) {
-  return apiRequest(`/api/articles/${articleId}`, {
+  return apiRequestNoContent(`/api/articles/${articleId}`, {
     method: "DELETE",
   });
 }
@@ -421,7 +421,7 @@ import type {
   ArticleListPage,
   ArticleListQuery,
 } from "@/features/articles/types";
-import { ApiError } from "@/lib/api";
+import { ApiError, isRequestCanceled } from "@/lib/api";
 import { ArticleDataTable } from "./article-data-table";
 import { getArticleColumns } from "./article-columns";
 
@@ -447,10 +447,7 @@ export default function ArticlesPage() {
         const nextResult = await getArticles(query, signal);
         setResult(nextResult);
       } catch (requestError) {
-        if (
-          requestError instanceof DOMException &&
-          requestError.name === "AbortError"
-        ) {
+        if (isRequestCanceled(requestError)) {
           return;
         }
 
