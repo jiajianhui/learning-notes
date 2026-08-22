@@ -35,18 +35,68 @@ React 页面
 
 ---
 
-## 2. `fetch()` 做了什么
+## 2. `fetch()` 怎样得到文章数组
 
-`fetch()` 是浏览器提供的请求函数。传入 API 地址，它会发送 HTTP 请求，并异步返回服务器的响应。
+假设文章列表接口返回状态码 `200`，响应体是：
 
-先看读取文章列表：
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "title": "文章 A"
+    },
+    {
+      "id": 2,
+      "title": "文章 B"
+    }
+  ]
+}
+```
+
+响应体通过网络传输时是 JSON 文本。先发送请求：
 
 ```ts
 const response = await fetch(
   "http://localhost:3001/api/articles",
 );
-const body = await response.json();
+```
 
+为了看清结构，可以把此时的 `response` 简化理解成下面这样。这是概念示意，不是浏览器真实打印出的 JavaScript 对象：
+
+```text
+response ≈ {
+  status: 200,
+  ok: true,
+  body: ReadableStream(
+    '{"data":[{"id":1,"title":"文章 A"},{"id":2,"title":"文章 B"}]}'
+  ),
+  headers: ...
+}
+```
+
+`Response` 保存了状态码、响应头和响应体等信息。它的 `body` 是一个可读取的数据流，里面承载着服务器返回的 JSON 文本。
+
+接着调用：
+
+```ts
+const body = await response.json();
+```
+
+`response.json()` 会直接读取这个 `Response` 对象中的响应体，也就是 `response.body`，等待内容读取完成，再把 JSON 文本解析成 JavaScript 对象。此时得到的 `body` 可以理解为：
+
+```text
+body = {
+  data: [
+    { id: 1, title: "文章 A" },
+    { id: 2, title: "文章 B" },
+  ],
+};
+```
+
+最后检查状态码并取出文章数组：
+
+```ts
 if (!response.ok) {
   throw new Error(
     body.error?.message ?? `请求失败：${response.status}`,
@@ -56,13 +106,27 @@ if (!response.ok) {
 const articles = body.data;
 ```
 
-按顺序理解：
+此时：
 
-1. `fetch(url)` 向这个地址发送请求；没有填写 `method` 时默认使用 `GET`。
-2. `await fetch(...)` 等服务器返回，得到浏览器用于读取响应的 `Response` 对象。
-3. `response.status` 是 HTTP 状态码；`response.ok` 表示状态码是否在 200～299。
-4. `await response.json()` 读取响应体，并把 JSON 解析成 JavaScript 数据。
-5. Mini CMS 把成功数据放在 `body.data` 中，所以这里最终得到文章数组。
+```text
+articles = [
+  { id: 1, title: "文章 A" },
+  { id: 2, title: "文章 B" },
+]
+
+Array.isArray(articles) = true
+```
+
+```text
+Express 返回 JSON 响应体
+-> fetch() 得到包含 response.body 的 Response 对象
+-> response.json() 读取 response.body，并得到 JavaScript 对象 body
+-> body.data 得到 JavaScript 数组 articles
+```
+
+Express 中的 `response.json({ data: articles })` 负责发送 JSON；浏览器中的 `response.json()` 负责读取并解析 JSON。两边变量名字可以相同，但动作方向相反。
+
+`response.json()` 只负责解析响应体，不负责判断请求是否成功。404、422 和 500 也可能带有 JSON 响应体，所以还要使用 `response.ok` 判断状态码。
 
 本套路线会练习两种请求方式：第 14 章在 Ant Design 后台中封装 `fetch` 并完成整套文章 CRUD；第 24 章在 shadcn/ui 后台中改用 Axios 请求同一套 API。两边都会把请求细节集中到统一函数中，页面只调用文章和登录 API。
 

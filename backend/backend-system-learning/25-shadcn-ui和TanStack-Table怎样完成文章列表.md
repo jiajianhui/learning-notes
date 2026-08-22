@@ -42,13 +42,13 @@ npx shadcn@latest add \
 ## 2. 先确定目录和职责
 
 ```text
-src/app/(admin)/admin/articles/
+app/(admin)/admin/articles/
 ├── page.tsx                  组合筛选、列表和页面状态
 ├── article-columns.tsx       定义每一列怎样读取和显示数据
 ├── article-data-table.tsx    创建 table 实例并渲染行
 └── delete-article-button.tsx 删除确认和删除请求
 
-src/features/articles/
+features/articles/
 ├── api.ts                    请求 Express
 └── types.ts                  文章列表和查询类型
 ```
@@ -63,7 +63,7 @@ src/features/articles/
 
 下面用这一组名称表示共同 contract；如果项目已经使用其他名称，以 Express 的真实实现为准，并同时调整两个前端：
 
-`src/features/articles/types.ts`：
+`features/articles/types.ts`：
 
 ```ts
 export type ArticleStatus = "draft" | "published";
@@ -102,7 +102,7 @@ export type ArticleListPage = {
 
 这里的 `page` 从 1 开始，和页面以及 Express 查询参数保持一致。TanStack Table 内部的 `pageIndex` 从 0 开始，第 6 节只在一个位置转换。
 
-`src/features/articles/api.ts`：
+`features/articles/api.ts`：
 
 ```ts
 import {

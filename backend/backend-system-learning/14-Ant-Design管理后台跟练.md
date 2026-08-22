@@ -49,12 +49,13 @@ npx create-next-app@latest admin-web-antd \
   --ts \
   --eslint \
   --app \
-  --src-dir \
   --no-tailwind \
   --import-alias "@/*" \
   --use-npm \
   --disable-git
 ```
+
+如果命令询问是否把代码放进 `src/`，选择 `No`。本项目使用根目录的 `app/`。
 
 `--disable-git` 避免子项目再次初始化 Git。三个子项目共用 `mini-cms/.git`。
 
@@ -73,7 +74,7 @@ npm install antd @ant-design/icons
 npm run dev
 ```
 
-先不做后台页面，只验证组件能否正常显示。把 `src/app/page.tsx` 改成：
+先不做后台页面，只验证组件能否正常显示。把 `app/page.tsx` 改成：
 
 ```tsx
 "use client";
@@ -120,7 +121,7 @@ npm install @ant-design/nextjs-registry
 
 `AntdRegistry` 会收集服务器渲染时产生的 Ant Design 样式，并把它们放进首屏 HTML，避免刷新时先看到无样式内容再恢复。
 
-修改 `src/app/layout.tsx`：
+修改 `app/layout.tsx`：
 
 ```tsx
 import { AntdRegistry } from "@ant-design/nextjs-registry";
@@ -145,7 +146,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 }
 ```
 
-把 `src/app/globals.css` 简化为：
+把 `app/globals.css` 简化为：
 
 ```css
 * {
@@ -228,11 +229,133 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
 
 ---
 
-## 6. 写一个最小 `fetch` 请求函数
+## 6. 先跑通最小请求流程
 
-文章列表、新建、编辑和删除都会重复三步：拼接 Express 地址、解析 JSON、检查 `response.ok`。把这三步放进一个函数即可。
+先只验证一件事：Next.js 页面能不能拿到 Express 返回的文章。把 `app/page.tsx` 改成：
 
-新建 `src/lib/api-client.ts`：
+```tsx
+"use client";
+
+import { useEffect, useState } from "react";
+
+export default function HomePage() {
+  const [articles, setArticles] = useState([]);
+  const [message, setMessage] = useState("正在请求文章……");
+
+  useEffect(() => {
+    async function loadArticles() {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/articles`,
+      );
+      // 读取 response.body，并把其中的 JSON 解析成 JavaScript 对象
+      const body = await response.json();
+
+      setArticles(body.data);
+      setMessage("请求成功");
+    }
+
+    loadArticles();
+  }, []);
+
+  return (
+    <main style={{ maxWidth: 720, margin: "48px auto" }}>
+      <h1>文章请求测试</h1>
+      <p>{message}</p>
+      {/* 转成两空格缩进的 JSON 文本；pre 会保留换行和空格 */}
+      <pre>{JSON.stringify(articles, null, 2)}</pre>
+    </main>
+  );
+}
+```
+
+打开 `http://localhost:3000`。如果数据库中已有文章，页面会显示文章 JSON；没有文章时显示 `[]`。
+
+这段代码只走成功流程：
+
+```text
+页面第一次显示
+-> useEffect 调用 loadArticles()
+-> fetch() 请求 Express 并得到 Response 对象
+-> response.json() 把响应体解析成 JavaScript 对象 body
+-> body.data 取出 JavaScript 文章数组
+-> setArticles() 和 setMessage() 更新页面
+```
+
+到这里先确认请求能跑通。类型检查和失败处理放到下一节。
+
+---
+
+## 7. 在能运行的代码上逐步完善
+
+### 7.1 先补上文章类型
+
+第 6 节只是把数组显示成 JSON，还没有读取某篇文章的字段。正式列表要使用 `id`、`title` 等字段，因此先告诉 TypeScript 数据长什么样。
+
+在 `page.tsx` 的 import 下方增加：
+
+```tsx
+type Article = {
+  id: number;
+  title: string;
+};
+
+type ArticleListResponse = {
+  data: Article[];
+};
+```
+
+再给两处数据补上类型：
+
+```tsx
+const [articles, setArticles] = useState<Article[]>([]);
+
+// loadArticles() 内
+const body = (await response.json()) as ArticleListResponse;
+```
+
+`Article` 表示一篇文章，`ArticleListResponse` 对应 Express 返回的 `{ data: [...] }`。这里只描述当前页面用到的字段，后面实现编辑时再补全。
+
+### 7.2 再处理请求失败
+
+关闭 Express 或写错 API 地址，当前页面会一直停在“正在请求文章”。现在让已有的 `message` 同时显示失败信息。
+
+把 `loadArticles()` 改成：
+
+```tsx
+async function loadArticles() {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/articles`,
+    );
+    const body = (await response.json()) as ArticleListResponse;
+
+    if (!response.ok) {
+      throw new Error(`请求失败：${response.status}`);
+    }
+
+    setArticles(body.data);
+    setMessage(`请求成功，共 ${body.data.length} 篇文章`);
+  } catch (requestError) {
+    setMessage(
+      requestError instanceof Error
+        ? requestError.message
+        : "请求失败",
+    );
+  }
+}
+```
+
+现在正常响应会显示文章数量，HTTP 错误或无法连接 Express 时会显示失败信息。
+
+### 7.3 请求即将增加，再提取通用函数
+
+一个 GET 请求直接写在页面里很清楚。但接下来还要写详情、新建、编辑和删除，每次都会重复 API 地址、`fetch()`、`response.json()` 和 `response.ok`。
+
+可以把这些共同步骤放进 `lib`。`lib` 不是 Next.js 的固定目录，这里只用它存放与具体业务无关的通用代码。
+
+不同接口返回的数据不同，所以通用函数不能把 `data` 固定成文章数组。下面用 `T` 暂时代表调用方需要的数据类型，例如 `apiRequest<Article[]>()` 中的 `T` 就是 `Article[]`。`RequestInit` 对应 `fetch()` 的第二个参数，后面用来传入 `method`、`headers` 和 `body`。
+
+新建 `lib/api-client.ts`：
 
 ```ts
 type ApiSuccess<T> = {
@@ -271,24 +394,13 @@ export async function apiRequest<T>(
 }
 ```
 
-运行流程没有变化：`fetch()` 发送请求，`response.json()` 解析 JSON，`response.ok` 判断成功或失败，最后返回 `body.data`。
+`api-client.ts` 不关心请求的是文章还是标签，只负责发送请求、解析 JSON 和处理失败。`ApiSuccess<T>` 描述成功响应，`ApiFailure` 描述失败响应；`Promise<T>` 表示调用方等待完成后会得到 `T`。
 
-代码中的类型分别负责：
+### 7.4 最后按文章功能整理文件
 
-- `ApiSuccess<T>`：成功响应是 `{ data: ... }`，`T` 代表 `data` 的具体类型。
-- `ApiFailure`：失败响应中可能有后端返回的错误信息。
-- `RequestInit`：`fetch()` 第二个参数的类型，包含 `method`、`headers` 和 `body`。
-- `Promise<T>`：调用方 `await apiRequest(...)` 后会得到 `T` 类型的数据。
+通用请求函数已经准备好，文章字段和文章接口也需要有明确位置。这里使用 `features/articles` 把文章相关代码放在一起；`features` 同样只是普通目录，不是 Next.js 规定的结构。
 
-第 7 节看到文章字段后，再把 `Article` 或 `Article[]` 填给 `T`。
-
----
-
-## 7. 定义前端文章类型和 API
-
-`server` 和 `admin-web-antd` 是两个独立的 TypeScript 项目。后端的 `Article` 类型不会自动进入前端，所以前端要根据 API 返回的 JSON 描述自己会收到哪些字段。这不会新建数据库模型，只用于检查前端代码。
-
-新建 `src/features/articles/types.ts`：
+新建 `features/articles/types.ts`：
 
 ```ts
 export type ArticleStatus = "draft" | "published";
@@ -297,79 +409,41 @@ export type Article = {
   id: number;
   title: string;
   slug: string;
-  summary: string | null;
-  content: string;
   status: ArticleStatus;
   createdAt: string;
-  updatedAt: string;
-};
-
-export type ArticleInput = {
-  title: string;
-  slug: string;
-  summary?: string;
-  content: string;
-  status: ArticleStatus;
 };
 ```
 
-这三个类型分别表示：
+`ArticleStatus` 把状态限制为草稿或已发布。`Article` 从临时页面移到了文章功能目录，并补上正式列表需要的字段；编辑页需要的正文等字段，等写到编辑功能时再增加。
 
-- `ArticleStatus`：文章状态只能是草稿或已发布。
-- `Article`：Express 返回给前端的一篇完整文章。
-- `ArticleInput`：新建和编辑表单要发送的字段。
-
-调用 `apiRequest<Article[]>("/api/articles")` 时，`T` 就是 `Article[]`；调用 `apiRequest<Article>(...)` 时，`T` 就是 `Article`。类型只帮助 TypeScript 检查前端代码，不会改变 HTTP 响应。
-
-再新建 `src/features/articles/api.ts`，把文章路径和 HTTP 方法写清楚：
+再新建 `features/articles/api.ts`：
 
 ```ts
 import { apiRequest } from "@/lib/api-client";
 
-import type { Article, ArticleInput } from "./types";
+import type { Article } from "./types";
 
 export function getArticles() {
   return apiRequest<Article[]>("/api/articles");
 }
-
-export function getArticle(id: number) {
-  return apiRequest<Article>(`/api/articles/${id}`);
-}
-
-export function createArticle(input: ArticleInput) {
-  return apiRequest<Article>("/api/articles", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(input),
-  });
-}
-
-export function updateArticle(id: number, input: ArticleInput) {
-  return apiRequest<Article>(`/api/articles/${id}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(input),
-  });
-}
-
-export function deleteArticle(id: number) {
-  return apiRequest<Article>(`/api/articles/${id}`, {
-    method: "DELETE",
-  });
-}
 ```
 
-`api-client.ts` 处理所有请求共有的流程，`features/articles/api.ts` 只说明文章接口的路径、方法和数据。页面以后直接调用 `getArticles()`、`createArticle()` 等函数。
+整理后的调用顺序是：
+
+```text
+页面调用 getArticles()
+-> getArticles() 写明文章接口路径
+-> apiRequest() 完成通用请求流程
+-> Express 返回文章数据
+```
+
+第 9 节会把 `getArticles()` 用于正式文章列表，其他文章请求等用到时再增加。当前临时首页已经完成验证，下一步直接替换成后台入口。
 
 ---
 
 ## 8. 建立后台页面骨架
 
-第 2 节的按钮页面只用于确认 Ant Design 已经接入。现在把首页改成跳转到文章列表。修改 `src/app/page.tsx`：
+第 6～7 节的首页只用于跑通和完善第一条请求。现在开始搭建正式后台，把首页改成跳转到文章列表。修改 `app/page.tsx`：
 
 ```tsx
 import { redirect } from "next/navigation";
@@ -379,7 +453,7 @@ export default function HomePage() {
 }
 ```
 
-文章列表、新建和编辑页面都会使用同一套侧边栏和顶部区域，所以把这部分放进 `src/app/admin/layout.tsx`：
+文章列表、新建和编辑页面都会使用同一套侧边栏和顶部区域，所以把这部分放进 `app/admin/layout.tsx`：
 
 ```tsx
 "use client";
@@ -443,7 +517,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
 删除成功后要调用 `message.success()`。Ant Design 的 `App.useApp()` 只有放在 `<App>` 里面才能使用，所以现在再增加全局 Provider。
 
-新建 `src/components/antd-provider.tsx`：
+新建 `components/antd-provider.tsx`：
 
 ```tsx
 "use client";
@@ -456,7 +530,7 @@ export function AntdProvider({ children }: { children: ReactNode }) {
 }
 ```
 
-在 `src/app/layout.tsx` 中导入它，并把原来的 `{children}` 包起来：
+在 `app/layout.tsx` 中导入它，并把原来的 `{children}` 包起来：
 
 ```tsx
 import { AntdProvider } from "@/components/antd-provider";
@@ -466,9 +540,19 @@ import { AntdProvider } from "@/components/antd-provider";
 </AntdRegistry>
 ```
 
-Next.js 没有规定所有组件都必须放进 `_components`。本章把覆盖整个应用的 Provider 放在 `src/components`；第 10 节的文章表单只服务文章路由，所以放在 `app/admin/articles/_components`。下划线表示这个目录不参与路由。
+Next.js 没有规定所有组件都必须放进 `_components`。本章把覆盖整个应用的 Provider 放在 `components`；第 10 节的文章表单只服务文章路由，所以放在 `app/admin/articles/_components`。下划线表示这个目录不参与路由。
 
-新建 `src/app/admin/articles/page.tsx`：
+列表还需要删除文章。回到 `features/articles/api.ts`，增加：
+
+```ts
+export function deleteArticle(id: number) {
+  return apiRequest<Article>(`/api/articles/${id}`, {
+    method: "DELETE",
+  });
+}
+```
+
+新建 `app/admin/articles/page.tsx`：
 
 ```tsx
 "use client";
@@ -649,7 +733,21 @@ export default function ArticleListPage() {
 
 ## 10. 写一个新建和编辑共用的文章表单
 
-新建 `src/app/admin/articles/_components/article-form.tsx`。它只负责文章表单界面和提交状态，新建页与编辑页都可以使用：
+表单提交的数据和 Express 返回的完整文章不同。先在 `features/articles/types.ts` 中增加：
+
+```ts
+export type ArticleInput = {
+  title: string;
+  slug: string;
+  summary?: string;
+  content: string;
+  status: ArticleStatus;
+};
+```
+
+`ArticleInput` 只描述新建和编辑时要提交的字段，不包含数据库生成的 `id` 和时间。
+
+新建 `app/admin/articles/_components/article-form.tsx`。它只负责文章表单界面和提交状态，新建页与编辑页都可以使用：
 
 ```tsx
 "use client";
@@ -782,7 +880,27 @@ Ant Design Form 会在提交前提示明显的字段错误。Express 中的 Zod 
 
 ## 11. 完成新建页面
 
-新建 `src/app/admin/articles/new/page.tsx`：
+新建页面需要发送 POST 请求。先把 `features/articles/api.ts` 中的类型导入改成：
+
+```ts
+import type { Article, ArticleInput } from "./types";
+```
+
+再增加：
+
+```ts
+export function createArticle(input: ArticleInput) {
+  return apiRequest<Article>("/api/articles", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+}
+```
+
+新建 `app/admin/articles/new/page.tsx`：
 
 ```tsx
 "use client";
@@ -831,7 +949,40 @@ export default function NewArticlePage() {
 
 ## 12. 完成编辑页面
 
-新建 `src/app/admin/articles/[id]/edit/page.tsx`：
+编辑页要读取文章正文和摘要。先把 `features/articles/types.ts` 中的 `Article` 补充完整：
+
+```ts
+export type Article = {
+  id: number;
+  title: string;
+  slug: string;
+  summary: string | null;
+  content: string;
+  status: ArticleStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+```
+
+再在 `features/articles/api.ts` 中增加详情和编辑请求：
+
+```ts
+export function getArticle(id: number) {
+  return apiRequest<Article>(`/api/articles/${id}`);
+}
+
+export function updateArticle(id: number, input: ArticleInput) {
+  return apiRequest<Article>(`/api/articles/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+}
+```
+
+新建 `app/admin/articles/[id]/edit/page.tsx`：
 
 ```tsx
 "use client";
@@ -991,24 +1142,23 @@ npm run dev
 
 ```text
 admin-web-antd/
-└── src/
-    ├── app/
-    │   ├── admin/
-    │   │   ├── articles/
-    │   │   │   ├── _components/article-form.tsx
-    │   │   │   ├── [id]/edit/page.tsx
-    │   │   │   ├── new/page.tsx
-    │   │   │   └── page.tsx
-    │   │   └── layout.tsx
-    │   ├── layout.tsx
-    │   └── page.tsx
-    ├── components/
-    │   └── antd-provider.tsx
-    ├── features/articles/
-    │   ├── api.ts
-    │   └── types.ts
-    └── lib/
-        └── api-client.ts
+├── app/
+│   ├── admin/
+│   │   ├── articles/
+│   │   │   ├── _components/article-form.tsx
+│   │   │   ├── [id]/edit/page.tsx
+│   │   │   ├── new/page.tsx
+│   │   │   └── page.tsx
+│   │   └── layout.tsx
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/
+│   └── antd-provider.tsx
+├── features/articles/
+│   ├── api.ts
+│   └── types.ts
+└── lib/
+    └── api-client.ts
 ```
 
 完成后运行：
@@ -1024,6 +1174,7 @@ npm run build
 - `.env.local` 里的地址指向谁，为什么不是 `http://localhost:3000`？
 - `await fetch(...)` 和 `await response.json()` 分别得到什么？
 - 为什么 404 和 500 也要自己检查 `response.ok`？
+- 为什么第一次请求直接写在页面里，后面又拆成 `lib` 和 `features`？
 - 为什么前端表单已经校验，Express 仍然要保留 Zod？
 - 新建一篇文章时，数据经过了哪些文件和进程？
 - loading、empty、error 和 success 分别怎样显示？

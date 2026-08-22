@@ -85,10 +85,9 @@ CLI 会把 Button 的源码和需要的依赖加入当前工程，例如：
 
 ```text
 admin-web-shadcn/
-└── src/
-    └── components/
-        └── ui/
-            └── button.tsx
+└── components/
+    └── ui/
+        └── button.tsx
 ```
 
 页面随后从自己的目录导入：

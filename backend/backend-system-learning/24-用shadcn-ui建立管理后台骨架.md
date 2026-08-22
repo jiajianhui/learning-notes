@@ -33,11 +33,12 @@ npx create-next-app@latest admin-web-shadcn \
   --tailwind \
   --eslint \
   --app \
-  --src-dir \
   --import-alias "@/*" \
   --use-npm \
   --disable-git
 ```
+
+如果命令询问是否把代码放进 `src/`，选择 `No`。本项目使用根目录的 `app/`。
 
 `--disable-git` 避免子项目再次初始化 Git。三个子项目共用 `mini-cms/.git`。
 
@@ -86,11 +87,10 @@ shadcn/ui 项目使用 Base UI 作为底层方案，其余选项保持项目生�
 ```text
 admin-web-shadcn/
 ├── components.json
-└── src/
-    ├── app/
-    │   └── globals.css
-    └── lib/
-        └── utils.ts
+├── app/
+│   └── globals.css
+└── lib/
+    └── utils.ts
 ```
 
 然后加入本章需要的组件：
@@ -109,7 +109,7 @@ npx shadcn@latest add \
   toast
 ```
 
-执行命令后，组件源码会进入 `src/components/ui/`。不要把这些文件当作不能阅读的生成产物；它们就是当前项目的 UI 基础代码。
+执行命令后，组件源码会进入 `components/ui/`。不要把这些文件当作不能阅读的生成产物；它们就是当前项目的 UI 基础代码。
 
 再安装本项目使用的请求客户端：
 
@@ -150,7 +150,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
 
 ## 4. 用 Axios 建立统一请求函数
 
-新建 `src/lib/api.ts`：
+新建 `lib/api.ts`：
 
 ```ts
 import axios, {
@@ -366,7 +366,7 @@ app.use((request, _response, next) => {
 
 ## 6. 封装登录请求
 
-新建 `src/features/auth/api.ts`：
+新建 `features/auth/api.ts`：
 
 ```ts
 import {
@@ -405,7 +405,7 @@ export function logout() {
 
 React Hook Form 留到第 26 章。登录页字段很少，本章先用最小状态完成认证闭环。
 
-`src/app/login/page.tsx` 的核心结构：
+`app/login/page.tsx` 的核心结构：
 
 ```tsx
 "use client";
@@ -505,7 +505,7 @@ export default function LoginPage() {
 
 ## 8. 用 AuthGuard 保护后台页面
 
-新建 `src/features/auth/auth-guard.tsx`：
+新建 `features/auth/auth-guard.tsx`：
 
 ```tsx
 "use client";
@@ -576,7 +576,7 @@ AuthGuard 解决的是页面进入时的状态：
 建议使用路由组：
 
 ```text
-src/app/
+app/
 ├── login/
 │   └── page.tsx
 └── (admin)/
@@ -635,7 +635,7 @@ export default function AdminLayout({
 
 第 25 章删除文章、第 26 章保存文章都会用 Toast。把它放在根布局一次：
 
-`src/app/layout.tsx`：
+`app/layout.tsx`：
 
 ```tsx
 import { Toaster } from "@/components/ui/toast";

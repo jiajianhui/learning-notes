@@ -40,14 +40,14 @@ npx shadcn@latest add \
 ## 2. 确定目录和复用边界
 
 ```text
-src/app/(admin)/admin/articles/
+app/(admin)/admin/articles/
 ├── new/
 │   └── page.tsx
 └── [id]/
     └── edit/
         └── page.tsx
 
-src/features/articles/
+features/articles/
 ├── api.ts
 ├── article-form-schema.ts
 ├── article-form.tsx
