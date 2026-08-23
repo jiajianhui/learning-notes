@@ -289,7 +289,18 @@ export default function HomePage() {
 
 ### 7.1 先补上文章类型
 
-第 6 节只是把数组显示成 JSON，还没有读取某篇文章的字段。正式列表要使用 `id`、`title` 等字段，因此先告诉 TypeScript 数据长什么样。
+类型不是凭空定义的，要和后端返回的数据结构对应。`GET /api/articles` 的响应体解析后大致是：
+
+```ts
+{
+  data: [
+    { id: 1, title: "文章 A" },
+    { id: 2, title: "文章 B" },
+  ],
+}
+```
+
+其中，`data` 是文章数组，数组中的每一项是一篇文章。
 
 在 `page.tsx` 的 import 下方增加：
 
@@ -299,7 +310,7 @@ type Article = {
   title: string;
 };
 
-type ArticleListResponse = {
+type ArticleListBody = {
   data: Article[];
 };
 ```
@@ -310,10 +321,14 @@ type ArticleListResponse = {
 const [articles, setArticles] = useState<Article[]>([]);
 
 // loadArticles() 内
-const body = (await response.json()) as ArticleListResponse;
+const body: ArticleListBody = await response.json();
 ```
 
-`Article` 表示一篇文章，`ArticleListResponse` 对应 Express 返回的 `{ data: [...] }`。这里只描述当前页面用到的字段，后面实现编辑时再补全。
+- `Article` 对应 `data` 数组中的一篇文章。
+- `Article[]` 对应整个文章数组。
+- `ArticleListBody` 对应解析后的完整响应体 `{ data: [...] }`。
+
+类型不会改变后端数据，也不会在运行时检查接口。它主要帮助编辑器补全字段，并在写错字段名或赋错值时提前报错。去掉类型，请求仍然能运行；但在 TypeScript 项目中，保留类型更不容易写错。这里只定义当前页面会读取的字段，后面用到其他字段时再补充。
 
 ### 7.2 再处理请求失败
 
@@ -327,35 +342,132 @@ async function loadArticles() {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/articles`,
     );
-    const body = (await response.json()) as ArticleListResponse;
 
     if (!response.ok) {
       throw new Error(`请求失败：${response.status}`);
     }
 
+    const body: ArticleListBody = await response.json();
+
     setArticles(body.data);
     setMessage(`请求成功，共 ${body.data.length} 篇文章`);
-  } catch (requestError) {
-    setMessage(
-      requestError instanceof Error
-        ? requestError.message
-        : "请求失败",
-    );
+  } catch (error) {
+    if (error instanceof Error) {
+      setMessage(error.message);
+    } else {
+      setMessage("请求失败");
+    }
   }
 }
 ```
 
-现在正常响应会显示文章数量，HTTP 错误或无法连接 Express 时会显示失败信息。
+`catch (error)` 中的 `error` 不是提前定义的变量。只要 `try` 中抛出错误，JavaScript 就会自动把这个错误交给它。这里主要会接住两类错误：
 
-### 7.3 请求即将增加，再提取通用函数
+```text
+后端返回 404 / 500
+-> fetch() 仍然拿到 Response
+-> 代码发现 response.ok 为 false，主动 throw
+-> catch 接住这个 Error
 
-一个 GET 请求直接写在页面里很清楚。但接下来还要写详情、新建、编辑和删除，每次都会重复 API 地址、`fetch()`、`response.json()` 和 `response.ok`。
+Express 未启动、网络中断或请求被跨域策略拦截
+-> fetch() 自己抛出错误
+-> catch 接住这个 Error
+```
 
-可以把这些共同步骤放进 `lib`。`lib` 不是 Next.js 的固定目录，这里只用它存放与具体业务无关的通用代码。
+两类错误最后都会进入同一个 `catch`。`error instanceof Error` 用来确认它是标准错误对象，确认后才能读取 `error.message`。
 
-不同接口返回的数据不同，所以通用函数不能把 `data` 固定成文章数组。下面用 `T` 暂时代表调用方需要的数据类型，例如 `apiRequest<Article[]>()` 中的 `T` 就是 `Article[]`。`RequestInit` 对应 `fetch()` 的第二个参数，后面用来传入 `method`、`headers` 和 `body`。
+### 7.3 从 `loadArticles()` 提取通用请求函数
 
-新建 `lib/api-client.ts`：
+第 7.2 节已经完成了文章列表请求，也补上了类型和错误处理。当前只有一个请求，直接写在页面里没有问题。
+
+接下来还要请求文章详情，以及完成新建、编辑和删除。如果每个页面都重新写一遍 API 地址、`fetch()`、状态判断和 `response.json()`，相同代码会越来越多。因此从这里开始，把页面逻辑和通用请求逻辑分开：
+
+```text
+页面自己的工作：更新 articles 和 message
+每个接口都要做的工作：拼接 API 地址、发送请求、检查结果、解析 JSON
+```
+
+这些接口的通用请求流程相同，但接口路径、请求选项和返回的 `data` 不同：
+
+```text
+文章列表：GET  /api/articles    -> data 是 Article[]
+文章详情：GET  /api/articles/1  -> data 是 Article
+新建文章：POST /api/articles    -> data 是 Article
+```
+
+因此可以把通用流程提取成 `apiRequest()`，由调用它的代码提供这三项信息。
+
+#### 先看 `fetch()` 的两个参数
+
+`fetch()` 的基本写法是：
+
+```ts
+fetch(url, options);
+```
+
+- `url` 是请求地址。
+- `options` 是可选的请求配置。普通 GET 请求可以省略；POST、PATCH 或 DELETE 请求可以在这里设置 `method`、`headers` 和 `body`。
+
+例如，获取列表时只需要地址：
+
+```ts
+await fetch(`${API_BASE_URL}/api/articles`);
+```
+
+新建文章时还要说明请求方法，并把表单数据放进请求体：
+
+```ts
+await fetch(`${API_BASE_URL}/api/articles`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(input),
+});
+```
+
+`options` 会原样传给 `fetch()` 的第二个参数。TypeScript 已经为这个参数提供了 `RequestInit` 类型，不需要安装或导入；`options?: RequestInit` 中的 `?` 表示整个参数可以省略。
+
+#### 泛型函数中的 `<T>`
+
+**`<T>` 是什么**：紧跟在函数名后面、用尖括号声明的**类型参数**。它的作用是给函数占一个"类型插槽"，具体填什么类型，由调用时决定。
+
+**类比但不等于函数参数**：
+
+```typescript
+apiRequest<Article[]>('/articles')
+//         ^^^^^^^^^   ^^^^^^^^^^
+//          类型参数      函数参数
+```
+
+两者逻辑相似（外部传入、内部使用），但活在不同世界：函数参数传的是"值"，运行时真实存在；类型参数传的是"类型"，只服务于编译期检查，代码一旦编译成 JS，T 就彻底消失，没有任何运行时痕迹。
+
+**它不是什么**（对应前面聊到的几个容易混的概念）：
+
+- 不是"返回类型"本身——`Promise<T>` 才是完整返回类型，T 只是嵌在里面的占位符
+- 不是"函数类型"——函数类型描述的是整个函数长什么样（如 `(req: Request) => void`），T 是另一回事
+- 不是"可变的类型"（跟 mutable/immutable 无关）——它是"每次调用可被替换成不同具体类型"的占位符
+
+**为什么在 apiRequest 里必须手动指定**：因为 T 只出现在返回类型 `Promise<T>` 里，参数 `path`、`options` 跟它没关系，TS 没有线索能反推，所以只能靠调用时显式传入，比如 `apiRequest<Article[]>('/articles')`，TS 才会把签名里所有的 T 替换成 `Article[]`，最终返回类型具体化为 `Promise<Article[]>`。
+
+#### 再确定函数内部的流程
+
+`API_BASE_URL` 继续读取前面 `.env.local` 中配置的后端地址。调用函数时只传 `/api/articles` 这样的接口路径，函数会把两部分拼成完整地址。
+
+函数内部按照下面的顺序工作：
+
+```text
+用 API_BASE_URL 和 path 拼出完整地址
+-> 把地址和 options 交给 fetch()
+-> 请求失败时，读取后端的 error.message 并抛出错误
+-> 请求成功时，读取并返回后端的 data
+```
+
+后端成功时返回 `{ data: ... }`，所以用 `ApiSuccess<T>` 表示 `{ data: T }`。失败响应中虽然同时有 `code` 和 `message`，但当前函数只读取 `message`，所以 `ApiFailure` 只定义用到的字段。
+
+#### 按照这个流程写代码
+
+在 `admin-web-antd` 项目根目录新建 `lib/api-client.ts`。`lib` 不是 Next.js 的固定目录，这里用它存放不属于某个具体页面的通用请求代码：
 
 ```ts
 type ApiSuccess<T> = {
@@ -363,8 +475,8 @@ type ApiSuccess<T> = {
 };
 
 type ApiFailure = {
-  error?: {
-    message?: string;
+  error: {
+    message: string;
   };
 };
 
@@ -376,25 +488,23 @@ if (!API_BASE_URL) {
 
 export async function apiRequest<T>(
   path: string,
-  init?: RequestInit,
+  options?: RequestInit,
 ): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, init);
-  const body = (await response.json()) as
-    | ApiSuccess<T>
-    | ApiFailure;
+  const response = await fetch(`${API_BASE_URL}${path}`, options);
 
   if (!response.ok) {
-    const failure = body as ApiFailure;
-    throw new Error(
-      failure.error?.message ?? `请求失败：${response.status}`,
-    );
+    const errorBody: ApiFailure = await response.json();
+    throw new Error(errorBody.error.message);
   }
 
-  return (body as ApiSuccess<T>).data;
+  const successBody: ApiSuccess<T> = await response.json();
+  return successBody.data;
 }
 ```
 
-`api-client.ts` 不关心请求的是文章还是标签，只负责发送请求、解析 JSON 和处理失败。`ApiSuccess<T>` 描述成功响应，`ApiFailure` 描述失败响应；`Promise<T>` 表示调用方等待完成后会得到 `T`。
+失败分支中的 `response.json()` 把后端错误响应体解析成 JavaScript 对象，`: ApiFailure` 告诉 TypeScript 当前代码会读取 `error.message`。随后代码把这个提示转成 JavaScript `Error`，交给页面的 `catch`。
+
+类型不必列出后端对象的所有字段。没有写进 `ApiFailure` 的 `code`、`details` 仍然存在于真实对象中，不影响赋值和运行；只是 TypeScript 不允许当前代码直接读取它们，需要使用时再补进类型。`ApiFailure` 也不会验证真实响应。下一节会把第一次正式调用放进文章功能目录。
 
 ### 7.4 最后按文章功能整理文件
 
