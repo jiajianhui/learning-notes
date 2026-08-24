@@ -267,7 +267,7 @@ shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等
 本地数据库：Docker + PostgreSQL
 数据库访问：Prisma 7 + @prisma/adapter-pg + pg
 请求校验：Zod
-管理页面 A：Next.js + TypeScript + Ant Design + fetch
+管理页面 A：Next.js + TypeScript + Ant Design + Tailwind CSS + fetch
 管理页面 B：Next.js + TypeScript + shadcn/ui + Axios + TanStack Table + React Hook Form
 接口检查：Apifox
 自动化测试：Vitest + Supertest

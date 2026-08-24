@@ -97,7 +97,7 @@ mini-cms/
 本地数据库：Docker + PostgreSQL
 数据库访问：Prisma 7 + @prisma/adapter-pg + pg
 请求校验：Zod
-管理后台 A：Next.js + TypeScript + Ant Design + fetch
+管理后台 A：Next.js + TypeScript + Ant Design + Tailwind CSS + fetch
 管理后台 B：Next.js + TypeScript + shadcn/ui + Axios + TanStack Table + React Hook Form
 接口检查：Apifox
 自动化测试：Vitest + Supertest

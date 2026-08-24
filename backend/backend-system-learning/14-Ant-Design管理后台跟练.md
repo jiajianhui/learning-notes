@@ -608,9 +608,455 @@ export default function HomePage() {
 
 ---
 
-## 8. 建立后台页面骨架
+## 8. 先在独立页面建立后台骨架
 
-第 6～7 节的首页只用于跑通和完善第一条请求。现在开始搭建正式后台，把首页改成跳转到文章列表。修改 `app/page.tsx`：
+页面按下面的顺序排列，`Header` 位于整个后台顶部：
+
+```text
+Layout
+├── Header
+└── Layout
+    ├── Sider
+    └── Content
+```
+
+新建 `app/admin/articles/page.tsx`：
+
+```tsx
+"use client";
+
+// Ant Design
+import { Layout, Menu } from "antd";
+
+const { Header, Sider, Content } = Layout;
+
+export default function AdminPage() {
+  const items = [
+    {
+      key: "/item1",
+      label: "item1",
+    },
+    {
+      key: "/item2",
+      label: "item2",
+    },
+    {
+      key: "/item3",
+      label: "item3",
+    },
+  ];
+
+  return (
+    <Layout>
+      <Header>1</Header>
+
+      <Layout>
+        <Sider>
+          <Menu selectedKeys={[items[0].key]} items={items} />
+        </Sider>
+        <Content></Content>
+      </Layout>
+    </Layout>
+  );
+}
+```
+
+打开 `http://localhost:3000/admin/articles`，先只确认三块区域的位置：顶部是 `Header`，下面左边是 `Sider`，右边是空的 `Content`。
+
+- `const { Header, Sider, Content } = Layout` 使用对象解构，后面可以直接写 `<Header>`，不用写 `<Layout.Header>`。
+- `items` 是菜单数据，每一项使用 `key` 标识自己，使用 `label` 显示文字。
+- `selectedKeys={[items[0].key]}` 表示当前选中第一项。`selectedKeys` 接收数组，因此外面还要写一层 `[]`。
+- 外层 `Layout` 负责上下排列，内层 `Layout` 再把 `Sider` 和 `Content` 放到左右两边。
+
+这里不加 Tailwind 样式，也不接 API。第 9 节先完成文章数据展示并抽出公共布局，再在第 9.3 节跑通页面切换，第 9.4 节统一美化。删除功能留到第 13 节。
+
+---
+
+## 9. 完成文章列表，再建立可切换的后台布局
+
+### 9.1 先完成文章数据展示
+
+继续修改第 8 节的 `app/admin/articles/page.tsx`。这一步只调用 `getArticles()`，再把返回的文章数组交给 `Table`：
+
+```tsx
+"use client";
+
+// Ant Design
+import { Layout, Menu, Table } from "antd";
+import { useEffect, useState } from "react";
+
+import { getArticles } from "@/features/articles/api";
+import type { Article } from "@/features/articles/types";
+
+const { Header, Sider, Content } = Layout;
+
+export default function AdminPage() {
+  // 状态
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [message, setMessage] = useState("loading");
+
+  // 初始化
+  useEffect(() => {
+    async function loadArticles() {
+      const result = await getArticles();
+      setArticles(result);
+      setMessage("加载成功");
+    }
+
+    loadArticles();
+  }, []);
+
+  // 侧边栏菜单
+  const items = [
+    {
+      key: "/item1",
+      label: "item1",
+    },
+    {
+      key: "/item2",
+      label: "item2",
+    },
+    {
+      key: "/item3",
+      label: "item3",
+    },
+  ];
+
+  // 表格列
+  const columns = [
+    {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+    },
+    {
+      title: "标题",
+      dataIndex: "title",
+      key: "title",
+    },
+    {
+      title: "Slug",
+      dataIndex: "slug",
+      key: "slug",
+    },
+    {
+      title: "状态",
+      dataIndex: "status",
+      key: "status",
+    },
+  ];
+
+  return (
+    <Layout>
+      <Header>1</Header>
+
+      <Layout>
+        <Sider>
+          <Menu selectedKeys={[items[0].key]} items={items} />
+        </Sider>
+        <Content>
+          <p>{message}</p>
+          <Table
+            bordered
+            rowKey="id"
+            columns={columns}
+            dataSource={articles}
+          />
+        </Content>
+      </Layout>
+    </Layout>
+  );
+}
+```
+
+`columns` 决定表格显示哪些列。每个 `dataIndex` 都对应 `Article` 中的同名属性，`dataSource={articles}` 再把文章数组交给表格。请求完成并执行 `setArticles(result)` 后，组件重新渲染，表格就会显示文章数据。
+
+打开 `/admin/articles`，看到“加载成功”和文章表格，这一步就完成。删除、确认提示和操作状态留到后面再加。
+
+### 9.2 列表可用后再抽出共享布局
+
+新建 `app/admin/layout.tsx`：
+
+```tsx
+"use client";
+
+import { Layout, Menu } from "antd";
+import { usePathname, useRouter } from "next/navigation";
+import type { ReactNode } from "react";
+
+const { Header, Sider, Content } = Layout;
+
+export default function AdminLayout({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const items = [
+    {
+      key: "/admin/articles",
+      label: "文章管理",
+    },
+  ];
+
+  return (
+    <Layout>
+      <Header>Mini CMS</Header>
+
+      <Layout>
+        <Sider>
+          <Menu
+            selectedKeys={[pathname]}
+            items={items}
+            onClick={({ key }) => router.push(key)}
+          />
+        </Sider>
+        <Content>{children}</Content>
+      </Layout>
+    </Layout>
+  );
+}
+```
+
+`Header` 和 `Sider` 是后台页面都会使用的固定部分，所以放进 `layout.tsx`。`children` 是当前路由对应的页面内容，会显示在 `Content` 中。`usePathname()` 提供当前地址，`router.push(key)` 在点击菜单后切换地址。
+
+回到 `app/admin/articles/page.tsx`：
+
+- 从 Ant Design 导入中删除 `Layout` 和 `Menu`，只保留 `Table`。
+- 删除 `const { Header, Sider, Content } = Layout` 和 `items`。
+- 保留文章状态、`useEffect` 和 `columns`，只把最后的 `return` 替换为：
+
+```tsx
+return (
+  <>
+    <p>{message}</p>
+    <Table
+      bordered
+      rowKey="id"
+      columns={columns}
+      dataSource={articles}
+    />
+  </>
+);
+```
+
+刷新 `/admin/articles`，文章数据应保持不变。现在 `layout.tsx` 只负责公共的 `Header` 和 `Sider`，`page.tsx` 只负责 `Content` 中的文章表格。
+
+### 9.3 用“页面一”和“页面二”验证 Content 切换
+
+`app/admin/layout.tsx` 已经把 `children` 放进 `Content`，`Menu` 也会调用 `router.push(key)`。但侧边栏目前只有一个菜单项，还看不出路由切换时谁保持不变、谁发生变化。
+
+这里暂时不把菜单绑定到文章的新建、编辑等操作。增删改查是否拆成多个页面，要等产品结构确定后再决定。现在只用“页面一”和“页面二”验证布局与路由的关系。
+
+把 `items` 改成：
+
+```tsx
+const items = [
+  {
+    key: "/admin/page-one",
+    label: "页面一",
+  },
+  {
+    key: "/admin/page-two",
+    label: "页面二",
+  },
+];
+```
+
+把 `Menu` 原来的 `selectedKeys` 替换为：
+
+```tsx
+<Menu
+  mode="inline"
+  selectedKeys={[pathname]}
+  items={items}
+  onClick={({ key }) => router.push(key)}
+/>
+```
+
+`selectedKeys={[pathname]}` 使用当前地址匹配菜单项，决定高亮“页面一”还是“页面二”。真正改变地址的是 `router.push(key)`。
+
+新建 `app/admin/page-one/page.tsx`：
+
+```tsx
+export default function PageOne() {
+  return <h1>页面一</h1>;
+}
+```
+
+再新建 `app/admin/page-two/page.tsx`：
+
+```tsx
+export default function PageTwo() {
+  return <h1>页面二</h1>;
+}
+```
+
+现在点击侧边栏：
+
+```text
+点击“页面一”
+-> router.push("/admin/page-one")
+-> app/admin/page-one/page.tsx 成为 children
+-> Content 显示“页面一”
+
+点击“页面二”
+-> router.push("/admin/page-two")
+-> app/admin/page-two/page.tsx 成为 children
+-> Content 显示“页面二”
+```
+
+两个页面都位于 `app/admin` 下面，因此会共用同一个 `app/admin/layout.tsx`。切换时 `Header` 和 `Sider` 继续保留，`Content` 中的 `children` 随当前路由变化。以后确定后台有哪些业务页面时，再替换 `items` 和这两个演示页面。
+
+### 9.4 页面跑通后再统一主题
+
+现在页面中已经有 `Layout`、`Menu` 和 `Table`。这一节再加入页面间距、内容卡片和主要操作按钮，并统一 Ant Design 组件主题。
+
+新建 `components/antd-provider.tsx`：
+
+```tsx
+"use client";
+
+import { App, ConfigProvider } from "antd";
+import type { ReactNode } from "react";
+
+export function AntdProvider({ children }: { children: ReactNode }) {
+  return (
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: "#1677ff",
+          colorBgLayout: "#f5f7fa",
+          colorText: "#1f2329",
+          borderRadius: 8,
+        },
+        components: {
+          Layout: {
+            bodyBg: "#f5f7fa",
+            headerBg: "#ffffff",
+            headerPadding: "0 24px",
+            lightSiderBg: "#ffffff",
+          },
+        },
+      }}
+    >
+      <App>{children}</App>
+    </ConfigProvider>
+  );
+}
+```
+
+在 `app/layout.tsx` 中增加导入：
+
+```tsx
+import { AntdProvider } from "@/components/antd-provider";
+```
+
+再把原来的 `<AntdRegistry>{children}</AntdRegistry>` 替换为：
+
+```tsx
+<AntdRegistry>
+  <AntdProvider>{children}</AntdProvider>
+</AntdRegistry>
+```
+
+`ConfigProvider` 把主题配置放进 React 上下文，内部的 Ant Design 组件会读取这些配置。这里的 `token` 不是直接写到某一个元素上的 CSS 属性，而是 Ant Design 组件共同使用的设计变量。
+
+Ant Design 把 token 分成几层：
+
+- Seed Token 是主题的起点，例如 `colorPrimary` 和 `borderRadius`。
+- Map Token 是主题算法根据 Seed Token 算出的成套值，例如主色的悬停色、按下色和不同尺寸的圆角。
+- Alias Token 为这些值补上使用含义，例如 `colorText` 表示基础文字色，`colorBgLayout` 表示布局背景色。
+- Component Token 只服务某个组件，例如 `components.Layout.headerBg` 只控制 `Layout.Header` 的背景色。
+
+它们之间的关系可以简化为：
+
+```text
+Seed Token
+-> 主题算法生成 Map Token
+-> Alias Token 和 Component Token 表达具体用途
+-> Button、Menu、Card 等组件读取对应 token
+-> 组件生成最终样式
+```
+
+例如，配置一个 `colorPrimary` 后，Ant Design 还会根据它生成悬停色、按下色和浅色背景，再分别用于主按钮、选中状态等位置，不需要手动把每一种蓝色都写出来。
+
+当前代码中的配置分为两层：
+
+| 配置 | 层级 | 在当前页面中的作用 |
+|---|---|---|
+| `colorPrimary` | Seed Token | 生成主要操作的颜色及其悬停、按下等状态，影响主要操作按钮和菜单选中状态 |
+| `borderRadius` | Seed Token | 生成不同尺寸的圆角，供按钮、卡片、输入框等组件使用 |
+| `colorText` | Alias Token | 作为 Ant Design 组件的基础文字色，例如表格和菜单中的普通文字 |
+| `colorBgLayout` | Alias Token | 表示页面布局区域使用的背景色 |
+| `components.Layout` | Component Token | 只调整 `Layout`，分别控制内容背景、顶部栏背景、顶部栏内边距和浅色侧边栏背景 |
+
+`theme.token` 可以修改全局 Seed Token 和 Alias Token，适合统一多个组件的基础风格；`components.Layout` 只修改 `Layout`。这里让 `colorBgLayout` 和 `Layout.bodyBg` 使用同一个颜色，前者表达全局布局背景，后者明确覆盖 `Layout` 组件。如果以后只想调整 `Button`，可以写进 `components.Button`，不用影响其他组件。
+
+把 `app/admin/layout.tsx` 中 `AdminLayout` 的 `return` 替换为：
+
+```tsx
+return (
+  <Layout className="min-h-screen">
+    <Header className="border-b border-slate-200 text-lg font-semibold text-slate-950">
+      Mini CMS
+    </Header>
+
+    <Layout>
+      <Sider width={200} theme="light">
+        <Menu
+          mode="inline"
+          selectedKeys={[pathname]}
+          items={items}
+          onClick={({ key }) => router.push(key)}
+        />
+      </Sider>
+      <Content className="p-6">{children}</Content>
+    </Layout>
+  </Layout>
+);
+```
+
+`min-h-screen` 让后台至少占满一屏，`p-6` 给内容区留出间距。顶部栏背景由 `components.Layout.headerBg` 控制，侧边栏因为使用 `theme="light"`，会读取 `lightSiderBg`。
+
+最后把 `app/admin/articles/page.tsx` 的 Ant Design 导入改成：
+
+```tsx
+import { Button, Card, Table } from "antd";
+```
+
+再把 `return` 替换为：
+
+```tsx
+return (
+  <div>
+    <div className="flex items-end justify-between">
+      <div>
+        <h1 className="text-2xl font-semibold text-slate-950">文章管理</h1>
+        <p className="mt-1 text-sm text-slate-500">{message}</p>
+      </div>
+      <Button type="primary">主要操作</Button>
+    </div>
+
+    <Card className="mt-6 border-slate-200 shadow-sm">
+      <Table
+        bordered
+        rowKey="id"
+        columns={columns}
+        dataSource={articles}
+      />
+    </Card>
+  </div>
+);
+```
+
+现在页面形成白色顶部栏、白色侧边栏、浅灰背景和白色内容卡片。Tailwind 控制页面结构和间距，主题 token 控制 Ant Design 组件内部的颜色和圆角。
+
+可以临时把 `colorPrimary` 改成 `#722ed1`。刷新后观察主按钮和菜单选中状态变成紫色，再改回 `#1677ff`。这个对比能直接看到全局 token 如何被多个组件共同使用。
+
+Tailwind 继续负责页面结构、间距和标题层级；Ant Design token 负责组件内部统一的颜色、圆角和交互状态。`<App>` 则让后面的页面可以通过 `App.useApp()` 使用能够读取当前主题的全局提示。
+
+### 9.5 删除测试页代码，再设置首页跳转
+
+把 `app/page.tsx` 中第 6～7 节用于测试 API 的代码全部删除，并用下面的代码完整替换这个文件：
 
 ```tsx
 import { redirect } from "next/navigation";
@@ -620,281 +1066,7 @@ export default function HomePage() {
 }
 ```
 
-文章列表、新建和编辑页面都会使用同一套侧边栏和顶部区域，所以把这部分放进 `app/admin/layout.tsx`：
-
-```tsx
-"use client";
-
-import { FileTextOutlined } from "@ant-design/icons";
-import { Layout, Menu, Typography } from "antd";
-import { usePathname, useRouter } from "next/navigation";
-import type { ReactNode } from "react";
-
-const { Content, Header, Sider } = Layout;
-
-export default function AdminLayout({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const router = useRouter();
-
-  return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Sider width={220}>
-        <Typography.Title
-          level={4}
-          style={{ color: "white", margin: 24 }}
-        >
-          Mini CMS
-        </Typography.Title>
-
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={[
-            pathname.startsWith("/admin/articles") ? "/admin/articles" : "",
-          ]}
-          items={[
-            {
-              key: "/admin/articles",
-              icon: <FileTextOutlined />,
-              label: "文章管理",
-            },
-          ]}
-          onClick={({ key }) => router.push(key)}
-        />
-      </Sider>
-
-      <Layout>
-        <Header style={{ background: "white", paddingInline: 24 }}>
-          <Typography.Text strong>Ant Design 管理后台</Typography.Text>
-        </Header>
-        <Content style={{ margin: 24 }}>{children}</Content>
-      </Layout>
-    </Layout>
-  );
-}
-```
-
-这个布局使用 `usePathname()`、`useRouter()` 和菜单点击事件，因此文件顶部需要 `"use client"`。
-
-当前菜单只有文章管理。第 15 章真正完成标签 API 后，再增加“标签管理”入口，避免先放一个点进去就 404 的菜单。
-
----
-
-## 9. 完成文章列表和删除
-
-删除成功后要调用 `message.success()`。Ant Design 的 `App.useApp()` 只有放在 `<App>` 里面才能使用，所以现在再增加全局 Provider。
-
-新建 `components/antd-provider.tsx`：
-
-```tsx
-"use client";
-
-import { App } from "antd";
-import type { ReactNode } from "react";
-
-export function AntdProvider({ children }: { children: ReactNode }) {
-  return <App>{children}</App>;
-}
-```
-
-在 `app/layout.tsx` 中导入它，并把原来的 `{children}` 包起来：
-
-```tsx
-import { AntdProvider } from "@/components/antd-provider";
-
-<AntdRegistry>
-  <AntdProvider>{children}</AntdProvider>
-</AntdRegistry>
-```
-
-Next.js 没有规定所有组件都必须放进 `_components`。本章把覆盖整个应用的 Provider 放在 `components`；第 10 节的文章表单只服务文章路由，所以放在 `app/admin/articles/_components`。下划线表示这个目录不参与路由。
-
-列表还需要删除文章。回到 `features/articles/api.ts`，增加：
-
-```ts
-export function deleteArticle(id: number) {
-  return apiRequest<Article>(`/api/articles/${id}`, {
-    method: "DELETE",
-  });
-}
-```
-
-新建 `app/admin/articles/page.tsx`：
-
-```tsx
-"use client";
-
-import {
-  Alert,
-  App,
-  Button,
-  Card,
-  Flex,
-  Popconfirm,
-  Space,
-  Table,
-  Tag,
-  Typography,
-  type TableColumnsType,
-} from "antd";
-import { useCallback, useEffect, useState } from "react";
-
-import { deleteArticle, getArticles } from "@/features/articles/api";
-import type {
-  Article,
-  ArticleStatus,
-} from "@/features/articles/types";
-
-export default function ArticleListPage() {
-  const { message } = App.useApp();
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadArticles = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      setArticles(await getArticles());
-    } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "文章列表加载失败",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadArticles();
-  }, [loadArticles]);
-
-  async function handleDelete(id: number) {
-    setDeletingId(id);
-    setError(null);
-
-    try {
-      await deleteArticle(id);
-      message.success("文章已删除");
-      await loadArticles();
-    } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "删除失败",
-      );
-    } finally {
-      setDeletingId(null);
-    }
-  }
-
-  const columns: TableColumnsType<Article> = [
-    {
-      title: "标题",
-      dataIndex: "title",
-    },
-    {
-      title: "Slug",
-      dataIndex: "slug",
-    },
-    {
-      title: "状态",
-      dataIndex: "status",
-      render: (status: ArticleStatus) => (
-        <Tag color={status === "published" ? "green" : "default"}>
-          {status === "published" ? "已发布" : "草稿"}
-        </Tag>
-      ),
-    },
-    {
-      title: "创建时间",
-      dataIndex: "createdAt",
-      render: (value: string) => new Date(value).toLocaleString("zh-CN"),
-    },
-    {
-      title: "操作",
-      key: "actions",
-      render: (_, article) => (
-        <Space>
-          <Button
-            type="link"
-            href={`/admin/articles/${article.id}/edit`}
-          >
-            编辑
-          </Button>
-          <Popconfirm
-            title="确认删除这篇文章吗？"
-            description="删除后不能通过页面恢复。"
-            okText="删除"
-            cancelText="取消"
-            onConfirm={() => handleDelete(article.id)}
-          >
-            <Button
-              type="link"
-              danger
-              loading={deletingId === article.id}
-            >
-              删除
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
-
-  return (
-    <Card>
-      <Flex justify="space-between" align="center" gap={16} wrap>
-        <div>
-          <Typography.Title level={2}>文章管理</Typography.Title>
-          <Typography.Text type="secondary">
-            查看、新建、编辑和删除文章。
-          </Typography.Text>
-        </div>
-        <Button type="primary" href="/admin/articles/new">
-          新建文章
-        </Button>
-      </Flex>
-
-      {error ? (
-        <Alert
-          type="error"
-          showIcon
-          message="文章列表加载失败"
-          description={error}
-          action={<Button onClick={() => void loadArticles()}>重试</Button>}
-          style={{ marginBlock: 24 }}
-        />
-      ) : null}
-
-      <Table<Article>
-        rowKey="id"
-        columns={columns}
-        dataSource={articles}
-        loading={loading}
-        pagination={false}
-        locale={{ emptyText: "还没有文章，先新建一篇" }}
-        style={{ marginTop: 24 }}
-      />
-    </Card>
-  );
-}
-```
-
-这一个页面已经处理四种读取结果：
-
-| 状态 | 页面表现 |
-|---|---|
-| loading | `Table` 显示加载状态 |
-| empty | 没有数据时提示先新建文章 |
-| error | 显示错误和重试按钮 |
-| success | 显示文章表格 |
-
-删除另外增加了确认、操作中状态和成功反馈。现在先打开 `/admin/articles`，确认列表和删除都能调用 Express，再继续写表单。
+测试页中的 `useState`、`useEffect`、`loadArticles()` 和 JSON 输出都不再保留。通用请求代码已经放在 `lib/api-client.ts` 和 `features/articles/` 中，文章列表页正在使用它们。
 
 ---
 
@@ -967,7 +1139,7 @@ export function ArticleForm({
           showIcon
           message="保存失败"
           description={submitError}
-          style={{ marginBottom: 24 }}
+          className="mb-6"
         />
       ) : null}
 
@@ -1072,7 +1244,7 @@ export function createArticle(input: ArticleInput) {
 ```tsx
 "use client";
 
-import { App, Card, Typography } from "antd";
+import { App, Card } from "antd";
 import { useRouter } from "next/navigation";
 
 import { ArticleForm } from "@/app/admin/articles/_components/article-form";
@@ -1090,12 +1262,30 @@ export default function NewArticlePage() {
   }
 
   return (
-    <Card>
-      <Typography.Title level={2}>新建文章</Typography.Title>
-      <ArticleForm submitText="创建文章" onSubmit={handleSubmit} />
-    </Card>
+    <div>
+      <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
+        新建文章
+      </h1>
+      <p className="mt-1 text-sm text-slate-500">
+        填写文章内容并保存到 Mini CMS。
+      </p>
+
+      <Card className="mt-6 border-slate-200 shadow-sm">
+        <ArticleForm submitText="创建文章" onSubmit={handleSubmit} />
+      </Card>
+    </div>
   );
 }
+```
+
+当前跟练选择用独立页面完成新建，但不把它固定成侧边栏菜单项。以后如果产品决定在文章列表中使用弹窗或抽屉，可以调整页面组织，不影响第 9.3 节讲清的布局与路由关系。
+
+回到 `app/admin/articles/page.tsx`，把第 9.4 节的“主要操作”按钮替换为：
+
+```tsx
+<Button type="primary" href="/admin/articles/new">
+  新建文章
+</Button>
 ```
 
 先实际创建一篇文章，并确认：
@@ -1154,7 +1344,7 @@ export function updateArticle(id: number, input: ArticleInput) {
 ```tsx
 "use client";
 
-import { Alert, App, Button, Card, Spin, Typography } from "antd";
+import { Alert, App, Button, Card, Spin } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -1224,20 +1414,28 @@ export default function EditArticlePage() {
   }
 
   return (
-    <Card>
-      <Typography.Title level={2}>编辑文章</Typography.Title>
-      <ArticleForm
-        submitText="保存修改"
-        initialValues={{
-          title: article.title,
-          slug: article.slug,
-          summary: article.summary ?? "",
-          content: article.content,
-          status: article.status,
-        }}
-        onSubmit={handleSubmit}
-      />
-    </Card>
+    <div>
+      <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
+        编辑文章
+      </h1>
+      <p className="mt-1 text-sm text-slate-500">
+        修改文章内容、地址和发布状态。
+      </p>
+
+      <Card className="mt-6 border-slate-200 shadow-sm">
+        <ArticleForm
+          submitText="保存修改"
+          initialValues={{
+            title: article.title,
+            slug: article.slug,
+            summary: article.summary ?? "",
+            content: article.content,
+            status: article.status,
+          }}
+          onSubmit={handleSubmit}
+        />
+      </Card>
+    </div>
   );
 }
 ```
@@ -1246,7 +1444,129 @@ export default function EditArticlePage() {
 
 ---
 
-## 13. 按四条链路完成联调
+## 13. 最后增加删除功能
+
+读取、新建和编辑已经完成，现在再给文章列表增加删除操作。
+
+先在 `features/articles/api.ts` 中增加：
+
+```ts
+export function deleteArticle(id: number) {
+  return apiRequest<Article>(`/api/articles/${id}`, {
+    method: "DELETE",
+  });
+}
+```
+
+回到 `app/admin/articles/page.tsx`，把 Ant Design 导入改成：
+
+```tsx
+import {
+  App,
+  Button,
+  Card,
+  Popconfirm,
+  Space,
+  Table,
+  type TableColumnsType,
+} from "antd";
+```
+
+文章 API 导入改成：
+
+```tsx
+import { deleteArticle, getArticles } from "@/features/articles/api";
+```
+
+在原有状态下面增加：
+
+```tsx
+const { message: messageApi } = App.useApp();
+const [deletingId, setDeletingId] = useState<number | null>(null);
+```
+
+`messageApi` 用来显示删除结果，`deletingId` 记录当前正在删除哪一篇文章。接着在 `columns` 前面增加删除函数：
+
+```tsx
+async function handleDelete(id: number) {
+  setDeletingId(id);
+
+  try {
+    await deleteArticle(id);
+    setArticles((current) =>
+      current.filter((article) => article.id !== id),
+    );
+    messageApi.success("文章已删除");
+  } catch (error) {
+    messageApi.error(error instanceof Error ? error.message : "删除失败");
+  } finally {
+    setDeletingId(null);
+  }
+}
+```
+
+DELETE 请求成功后，`filter()` 从当前 `articles` 中排除这篇文章，`setArticles()` 触发表格重新渲染。最后把原来的 `columns` 替换为：
+
+```tsx
+const columns: TableColumnsType<Article> = [
+  {
+    title: "ID",
+    dataIndex: "id",
+    key: "id",
+  },
+  {
+    title: "标题",
+    dataIndex: "title",
+    key: "title",
+  },
+  {
+    title: "Slug",
+    dataIndex: "slug",
+    key: "slug",
+  },
+  {
+    title: "状态",
+    dataIndex: "status",
+    key: "status",
+  },
+  {
+    title: "操作",
+    key: "actions",
+    render: (_, article) => (
+      <Space>
+        <Button
+          type="link"
+          href={`/admin/articles/${article.id}/edit`}
+        >
+          编辑
+        </Button>
+
+        <Popconfirm
+          title="确认删除这篇文章吗？"
+          description="删除后不能通过页面恢复。"
+          okText="删除"
+          cancelText="取消"
+          onConfirm={() => handleDelete(article.id)}
+        >
+          <Button
+            type="link"
+            danger
+            loading={deletingId === article.id}
+          >
+            删除
+          </Button>
+        </Popconfirm>
+      </Space>
+    ),
+  },
+];
+```
+
+`render` 不再读取某个 `dataIndex`，而是拿到当前行的 `article`，再使用 `article.id` 生成编辑地址和删除请求。`Popconfirm` 先要求用户确认，确认后才调用 `handleDelete()`。
+
+---
+
+## 14. 按四条链路完成联调
 
 同时启动两个项目：
 
@@ -1260,7 +1580,7 @@ npm run dev
 
 依次检查：
 
-### 13.1 列表
+### 14.1 列表
 
 ```text
 打开 /admin/articles
@@ -1269,7 +1589,7 @@ npm run dev
 -> 有数据时显示表格，无数据时显示空状态
 ```
 
-### 13.2 新建
+### 14.2 新建
 
 ```text
 打开 /admin/articles/new
@@ -1280,7 +1600,7 @@ npm run dev
 
 再提交一次相同 slug，确认 Express 返回 409，页面能显示后端给出的错误信息。
 
-### 13.3 编辑
+### 14.3 编辑
 
 ```text
 进入 /admin/articles/[id]/edit
@@ -1289,13 +1609,13 @@ npm run dev
 -> 列表显示修改结果
 ```
 
-### 13.4 删除
+### 14.4 删除
 
 ```text
 点击删除
 -> 先出现确认提示
 -> DELETE /api/articles/:id 返回 200
--> 重新请求列表
+-> 从 articles 状态中移除这篇文章
 -> 被删除文章消失
 ```
 
@@ -1303,7 +1623,7 @@ npm run dev
 
 ---
 
-## 14. 本章验收
+## 15. 本章验收
 
 目录至少包含：
 
@@ -1316,7 +1636,10 @@ admin-web-antd/
 │   │   │   ├── [id]/edit/page.tsx
 │   │   │   ├── new/page.tsx
 │   │   │   └── page.tsx
+│   │   ├── page-one/page.tsx
+│   │   ├── page-two/page.tsx
 │   │   └── layout.tsx
+│   ├── globals.css
 │   ├── layout.tsx
 │   └── page.tsx
 ├── components/
@@ -1324,8 +1647,9 @@ admin-web-antd/
 ├── features/articles/
 │   ├── api.ts
 │   └── types.ts
-└── lib/
-    └── api-client.ts
+├── lib/
+│   └── api-client.ts
+└── postcss.config.mjs
 ```
 
 完成后运行：
@@ -1342,15 +1666,22 @@ npm run build
 - `await fetch(...)` 和 `await response.json()` 分别得到什么？
 - 为什么 404 和 500 也要自己检查 `response.ok`？
 - 为什么第一次请求直接写在页面里，后面又拆成 `lib` 和 `features`？
+- `ConfigProvider` 和 Tailwind CSS 分别负责哪一层样式？
+- `colorPrimary` 为什么能同时影响主按钮和菜单选中状态？
+- 全局 `theme.token` 和 `components.Layout` 的作用范围有什么不同？
+- 为什么要等独立文章列表完成并验证后，再把公共部分移进 `admin/layout.tsx`？
+- 点击侧边栏后，是谁改变 URL，又是谁把新页面放进 `Content`？
+- 为什么切换“页面一”和“页面二”时，`Header` 与 `Sider` 不需要重新写？
 - 为什么前端表单已经校验，Express 仍然要保留 Zod？
 - 新建一篇文章时，数据经过了哪些文件和进程？
-- loading、empty、error 和 success 分别怎样显示？
+- `columns`、`dataIndex`、`dataSource` 和 `rowKey` 分别怎样帮助 `Table` 展示数据？
+- 删除成功后，为什么要使用 `setArticles()` 更新列表？
 
 全部能运行、能操作、能解释，再回到[第 10 章项目总览](./10-MiniCMS项目总览.md)完成阶段 4 验收。
 
 ---
 
-## 15. 下一步继续完善同一个系统
+## 16. 下一步继续完善同一个系统
 
 第 15～17 章继续修改同一套 Mini CMS：
 
@@ -1373,6 +1704,11 @@ npm run build
 
 - [Next.js：create-next-app CLI](https://nextjs.org/docs/app/api-reference/cli/create-next-app)
 - [Next.js：项目目录和私有文件夹](https://nextjs.org/docs/app/getting-started/project-structure)
+- [Next.js：Layouts and Pages](https://nextjs.org/docs/app/getting-started/layouts-and-pages)
+- [Next.js：useRouter](https://nextjs.org/docs/app/api-reference/functions/use-router)
 - [Next.js：环境变量](https://nextjs.org/docs/app/guides/environment-variables)
+- [Tailwind CSS：在 Next.js 中安装](https://tailwindcss.com/docs/installation/framework-guides/nextjs)
+- [Ant Design：定制主题](https://ant.design/docs/react/customize-theme-cn/)
+- [Ant Design：Layout 布局](https://ant.design/components/layout-cn/)
 - [Ant Design：在 Next.js App Router 中使用](https://ant.design/docs/react/use-with-next/)
 - [MDN：使用 Fetch](https://developer.mozilla.org/zh-CN/docs/Web/API/Fetch_API/Using_Fetch)
