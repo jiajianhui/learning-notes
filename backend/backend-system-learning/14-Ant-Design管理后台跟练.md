@@ -289,7 +289,7 @@ export default function HomePage() {
 
 ### 7.1 先补上文章类型
 
-类型不是凭空定义的，要和后端返回的数据结构对应。`GET /api/articles` 的响应体解析后大致是：
+类型要根据后端返回的数据定义，但不必一次写全。当前测试页只用到文章的 `id` 和 `title`，所以先看 `GET /api/articles` 响应体中的这部分：
 
 ```ts
 {
@@ -300,7 +300,7 @@ export default function HomePage() {
 }
 ```
 
-其中，`data` 是文章数组，数组中的每一项是一篇文章。
+其中，`data` 是文章数组，数组中的每一项是一篇文章。真实响应中还有 `slug`、`status` 等字段，第 7.4 节用到时再补进类型。
 
 在 `page.tsx` 的 import 下方增加：
 
@@ -328,7 +328,7 @@ const body: ArticleListBody = await response.json();
 - `Article[]` 对应整个文章数组。
 - `ArticleListBody` 对应解析后的完整响应体 `{ data: [...] }`。
 
-类型不会改变后端数据，也不会在运行时检查接口。它主要帮助编辑器补全字段，并在写错字段名或赋错值时提前报错。去掉类型，请求仍然能运行；但在 TypeScript 项目中，保留类型更不容易写错。这里只定义当前页面会读取的字段，后面用到其他字段时再补充。
+这些类型只在开发时帮助编辑器补全和检查代码，不会改变或验证后端数据。
 
 ### 7.2 再处理请求失败
 
@@ -361,20 +361,16 @@ async function loadArticles() {
 }
 ```
 
-`catch (error)` 中的 `error` 不是提前定义的变量。只要 `try` 中抛出错误，JavaScript 就会自动把这个错误交给它。这里主要会接住两类错误：
+`catch (error)` 中的 `error` 不是提前定义的变量。只要 `try` 中有内容被抛出，JavaScript 就会自动把它交给 `catch`。
+
+当 `response.ok` 为 `false` 时，代码会主动抛出 `new Error(...)`；Express 未启动或网络中断时，`fetch()` 也会抛出 `Error`。它们都会进入 `error instanceof Error` 分支，代码可以读取 `error.message`。
+
+JavaScript 也允许抛出不是 `Error` 对象的值，所以 `else` 分支用来接住这类未知值。两个分支真正区分的是：
 
 ```text
-后端返回 404 / 500
--> fetch() 仍然拿到 Response
--> 代码发现 response.ok 为 false，主动 throw
--> catch 接住这个 Error
-
-Express 未启动、网络中断或请求被跨域策略拦截
--> fetch() 自己抛出错误
--> catch 接住这个 Error
+Error 对象 -> 读取具体的 error.message
+其他未知值 -> 显示统一的失败信息
 ```
-
-两类错误最后都会进入同一个 `catch`。`error instanceof Error` 用来确认它是标准错误对象，确认后才能读取 `error.message`。
 
 ### 7.3 从 `loadArticles()` 提取通用请求函数
 
@@ -395,7 +391,7 @@ Express 未启动、网络中断或请求被跨域策略拦截
 新建文章：POST /api/articles    -> data 是 Article
 ```
 
-因此可以把通用流程提取成 `apiRequest()`，由调用它的代码提供这三项信息。
+因此可以把通用流程提取成 `apiRequest()`：调用时用 `<T>` 说明返回的数据类型，用 `path` 传入接口路径，用 `options` 传入请求配置。
 
 #### 先看 `fetch()` 的两个参数
 
@@ -426,7 +422,9 @@ await fetch(`${API_BASE_URL}/api/articles`, {
 });
 ```
 
-`options` 会原样传给 `fetch()` 的第二个参数。TypeScript 已经为这个参数提供了 `RequestInit` 类型，不需要安装或导入；`options?: RequestInit` 中的 `?` 表示整个参数可以省略。
+`options` 会原样传给 `fetch()` 的第二个参数。TypeScript 已经为这个参数提供了 `RequestInit` 类型，不需要安装或导入。`options?: RequestInit` 中的 `?` 表示整个参数可以省略。
+
+`RequestInit` 只描述第二个参数中可以填写的配置，不会提供接口路径的候选值。
 
 #### 泛型函数中的 `<T>`
 
@@ -459,8 +457,9 @@ apiRequest<Article[]>('/articles')
 ```text
 用 API_BASE_URL 和 path 拼出完整地址
 -> 把地址和 options 交给 fetch()
--> 请求失败时，读取后端的 error.message 并抛出错误
--> 请求成功时，读取并返回后端的 data
+   ├─ 无法完成请求：fetch() 直接抛出错误
+   ├─ Express 返回失败响应：读取 error.message 并抛出错误
+   └─ Express 返回成功响应：读取并返回 data
 ```
 
 后端成功时返回 `{ data: ... }`，所以用 `ApiSuccess<T>` 表示 `{ data: T }`。失败响应中虽然同时有 `code` 和 `message`，但当前函数只读取 `message`，所以 `ApiFailure` 只定义用到的字段。
@@ -470,6 +469,7 @@ apiRequest<Article[]>('/articles')
 在 `admin-web-antd` 项目根目录新建 `lib/api-client.ts`。`lib` 不是 Next.js 的固定目录，这里用它存放不属于某个具体页面的通用请求代码：
 
 ```ts
+// 根据后端响应定义，只描述当前请求函数会读取的字段
 type ApiSuccess<T> = {
   data: T;
 };
@@ -504,13 +504,15 @@ export async function apiRequest<T>(
 
 失败分支中的 `response.json()` 把后端错误响应体解析成 JavaScript 对象，`: ApiFailure` 告诉 TypeScript 当前代码会读取 `error.message`。随后代码把这个提示转成 JavaScript `Error`，交给页面的 `catch`。
 
-类型不必列出后端对象的所有字段。没有写进 `ApiFailure` 的 `code`、`details` 仍然存在于真实对象中，不影响赋值和运行；只是 TypeScript 不允许当前代码直接读取它们，需要使用时再补进类型。`ApiFailure` 也不会验证真实响应。下一节会把第一次正式调用放进文章功能目录。
+这里的 TypeScript 类型不是后端响应数据本身，而是前端根据后端响应，为当前代码会读取的字段写出的静态描述，因此无需与后端完整响应结构一致。没有写进 `ApiFailure` 的 `code`、`details` 仍然存在于真实对象中，不影响赋值和运行；只是 TypeScript 不允许当前代码直接读取它们，需要使用时再补进类型。
 
-### 7.4 最后按文章功能整理文件
+类型标注也不会验证真实响应。下一节会把第一次正式调用放进文章功能目录。
 
-通用请求函数已经准备好，文章字段和文章接口也需要有明确位置。这里使用 `features/articles` 把文章相关代码放在一起；`features` 同样只是普通目录，不是 Next.js 规定的结构。
+### 7.4 最后整理文章功能代码
 
-新建 `features/articles/types.ts`：
+目前只有 `app/page.tsx` 使用 `Article` 时，类型留在页面中也可以。但后面的文章请求、列表、表单和编辑页都会使用文章类型，继续写在页面中就会重复定义。因此现在集中放到 `features/articles/types.ts`；这是为了复用，不是每个类型都必须单独建文件。
+
+在 `admin-web-antd` 项目根目录新建 `features/articles`，它与 `app` 目录同级。新建 `features/articles/types.ts`：
 
 ```ts
 export type ArticleStatus = "draft" | "published";
@@ -524,7 +526,7 @@ export type Article = {
 };
 ```
 
-`ArticleStatus` 把状态限制为草稿或已发布。`Article` 从临时页面移到了文章功能目录，并补上正式列表需要的字段；编辑页需要的正文等字段，等写到编辑功能时再增加。
+第 7.1 节只定义了用于跑通请求的 `id` 和 `title`。现在增加第 9 节文章列表会显示的 `slug`、`status` 和 `createdAt`，`ArticleStatus` 把 `status` 限制为草稿或已发布。编辑页需要的正文、摘要等属性，等第 12 节用到时再增加。
 
 再新建 `features/articles/api.ts`：
 
@@ -538,16 +540,71 @@ export function getArticles() {
 }
 ```
 
-整理后的调用顺序是：
+`getArticles()` 没有手写返回类型，因为 TypeScript 会根据 `apiRequest<Article[]>("/api/articles")` 自动推断它返回 `Promise<Article[]>`。也可以写成 `getArticles(): Promise<Article[]>`，结果相同，这里不重复标注。
 
-```text
-页面调用 getArticles()
--> getArticles() 写明文章接口路径
--> apiRequest() 完成通用请求流程
--> Express 返回文章数据
+第 9 节会继续在此目录中增加其他文章请求。现在先把 `getArticles()` 接回测试页面，确认整理后的代码仍然可以运行。
+
+### 7.5 用封装后的请求重新验证页面
+
+第 7.3～7.4 节只是提取和整理代码。还要让页面真正调用 `getArticles()`，才能确认封装后的完整请求流程没有问题。
+
+把 `app/page.tsx` 替换为：
+
+```tsx
+"use client";
+
+import { useEffect, useState } from "react";
+
+import { getArticles } from "@/features/articles/api";
+import type { Article } from "@/features/articles/types";
+
+export default function HomePage() {
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [message, setMessage] = useState("正在请求文章……");
+
+  useEffect(() => {
+    // getArticles() 返回 Promise<Article[]>，不是 Article[]。
+    // useEffect 的回调不能直接写成 async，所以在内部定义
+    // 异步函数，用 await 取出文章数组后再更新页面。
+    async function loadArticles() {
+      try {
+        const articleList = await getArticles();
+
+        setArticles(articleList);
+        setMessage(`请求成功，共 ${articleList.length} 篇文章`);
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "请求失败");
+      }
+    }
+
+    loadArticles();
+  }, []);
+
+  return (
+    <main style={{ maxWidth: 720, margin: "48px auto" }}>
+      <h1>文章请求测试</h1>
+      <p>{message}</p>
+      <pre>{JSON.stringify(articles, null, 2)}</pre>
+    </main>
+  );
+}
 ```
 
-第 9 节会把 `getArticles()` 用于正式文章列表，其他文章请求等用到时再增加。当前临时首页已经完成验证，下一步直接替换成后台入口。
+与第 7.2 节相比，页面不再需要 `ArticleListBody` 和 `response.json()`，因为 `apiRequest()` 已经解析了 `{ data: ... }` 并返回其中的 `data`。
+
+`getArticles()` 虽然没有使用 `async` 声明，但它直接返回了 `apiRequest()` 产生的 `Promise<Article[]>`。页面使用 `await` 等待请求完成后，`articleList` 才是可以交给 `setArticles()` 的 `Article[]`。
+
+此时的调用顺序是：
+
+```text
+页面的 loadArticles() 调用 getArticles()
+-> getArticles() 调用 apiRequest("/api/articles")
+-> apiRequest() 使用 fetch() 请求 Express
+-> apiRequest() 取出并返回文章数组
+-> loadArticles() 更新 articles 和 message
+```
+
+重新打开 `http://localhost:3000`，页面应该与第 6 节一样显示文章 JSON，失败时显示 `apiRequest()` 抛出的错误信息。这样第一条封装后的请求就验证完成了。
 
 ---
 
