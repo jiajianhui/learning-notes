@@ -305,27 +305,27 @@ export default function HomePage() {
 在 `page.tsx` 的 import 下方增加：
 
 ```tsx
-type Article = {
+type ArticleListItem = {
   id: number;
   title: string;
 };
 
 type ArticleListBody = {
-  data: Article[];
+  data: ArticleListItem[];
 };
 ```
 
 再给两处数据补上类型：
 
 ```tsx
-const [articles, setArticles] = useState<Article[]>([]);
+const [articles, setArticles] = useState<ArticleListItem[]>([]);
 
 // loadArticles() 内
 const body: ArticleListBody = await response.json();
 ```
 
-- `Article` 对应 `data` 数组中的一篇文章。
-- `Article[]` 对应整个文章数组。
+- `ArticleListItem` 对应 `data` 数组中的一篇文章。
+- `ArticleListItem[]` 对应整个文章数组。
 - `ArticleListBody` 对应解析后的完整响应体 `{ data: [...] }`。
 
 这些类型只在开发时帮助编辑器补全和检查代码，不会改变或验证后端数据。
@@ -376,7 +376,7 @@ Error 对象 -> 读取具体的 error.message
 
 第 7.2 节已经完成了文章列表请求，也补上了类型和错误处理。当前只有一个请求，直接写在页面里没有问题。
 
-接下来还要请求文章详情，以及完成新建、编辑和删除。如果每个页面都重新写一遍 API 地址、`fetch()`、状态判断和 `response.json()`，相同代码会越来越多。因此从这里开始，把页面逻辑和通用请求逻辑分开：
+接下来还要请求文章详情，以及完成新建、编辑和删除。如果每个操作都重新写一遍 API 地址、`fetch()`、状态判断和 `response.json()`，相同代码会越来越多。因此从这里开始，把页面逻辑和通用请求逻辑分开：
 
 ```text
 页面自己的工作：更新 articles 和 message
@@ -386,9 +386,9 @@ Error 对象 -> 读取具体的 error.message
 这些接口的通用请求流程相同，但接口路径、请求选项和返回的 `data` 不同：
 
 ```text
-文章列表：GET  /api/articles    -> data 是 Article[]
-文章详情：GET  /api/articles/1  -> data 是 Article
-新建文章：POST /api/articles    -> data 是 Article
+文章列表：GET  /api/articles    -> data 是 ArticleListItem[]
+文章详情：GET  /api/articles/1  -> data 是完整文章对象
+新建文章：POST /api/articles    -> data 是创建后的完整文章对象
 ```
 
 因此可以把通用流程提取成 `apiRequest()`：调用时用 `<T>` 说明返回的数据类型，用 `path` 传入接口路径，用 `options` 传入请求配置。
@@ -433,8 +433,8 @@ await fetch(`${API_BASE_URL}/api/articles`, {
 **类比但不等于函数参数**：
 
 ```typescript
-apiRequest<Article[]>('/articles')
-//         ^^^^^^^^^   ^^^^^^^^^^
+apiRequest<ArticleListItem[]>('/articles')
+//         ^^^^^^^^^^^^^^^^^   ^^^^^^^^^^
 //          类型参数      函数参数
 ```
 
@@ -446,7 +446,7 @@ apiRequest<Article[]>('/articles')
 - 不是"函数类型"——函数类型描述的是整个函数长什么样（如 `(req: Request) => void`），T 是另一回事
 - 不是"可变的类型"（跟 mutable/immutable 无关）——它是"每次调用可被替换成不同具体类型"的占位符
 
-**为什么在 apiRequest 里必须手动指定**：因为 T 只出现在返回类型 `Promise<T>` 里，参数 `path`、`options` 跟它没关系，TS 没有线索能反推，所以只能靠调用时显式传入，比如 `apiRequest<Article[]>('/articles')`，TS 才会把签名里所有的 T 替换成 `Article[]`，最终返回类型具体化为 `Promise<Article[]>`。
+**为什么在 apiRequest 里必须手动指定**：因为 T 只出现在返回类型 `Promise<T>` 里，参数 `path`、`options` 跟它没关系，TS 没有线索能反推，所以只能靠调用时显式传入，比如 `apiRequest<ArticleListItem[]>('/articles')`，TS 才会把签名里所有的 T 替换成 `ArticleListItem[]`，最终返回类型具体化为 `Promise<ArticleListItem[]>`。
 
 #### 再确定函数内部的流程
 
@@ -510,14 +510,14 @@ export async function apiRequest<T>(
 
 ### 7.4 最后整理文章功能代码
 
-目前只有 `app/page.tsx` 使用 `Article` 时，类型留在页面中也可以。但后面的文章请求、列表、表单和编辑页都会使用文章类型，继续写在页面中就会重复定义。因此现在集中放到 `features/articles/types.ts`；这是为了复用，不是每个类型都必须单独建文件。
+目前只有 `app/page.tsx` 使用 `ArticleListItem` 时，类型留在页面中也可以。但后面的文章请求和列表还会继续使用它，继续写在页面中就会重复定义。因此现在集中放到 `features/articles/types.ts`；这是为了复用，不是每个类型都必须单独建文件。
 
 在 `admin-web-antd` 项目根目录新建 `features/articles`，它与 `app` 目录同级。新建 `features/articles/types.ts`：
 
 ```ts
 export type ArticleStatus = "draft" | "published";
 
-export type Article = {
+export type ArticleListItem = {
   id: number;
   title: string;
   slug: string;
@@ -526,21 +526,21 @@ export type Article = {
 };
 ```
 
-第 7.1 节只定义了用于跑通请求的 `id` 和 `title`。现在增加第 9 节文章列表会显示的 `slug`、`status` 和 `createdAt`，`ArticleStatus` 把 `status` 限制为草稿或已发布。编辑页需要的正文、摘要等属性，等第 12 节用到时再增加。
+第 7.1 节只定义了用于跑通请求的 `id` 和 `title`。现在增加第 9 节文章列表会显示的 `slug`、`status` 和 `createdAt`，`ArticleStatus` 把 `status` 限制为草稿或已发布。这里只描述列表接口真正返回的字段；完整文章类型等第 10 节补齐其他请求时再增加。
 
 再新建 `features/articles/api.ts`：
 
 ```ts
 import { apiRequest } from "@/lib/api-client";
 
-import type { Article } from "./types";
+import type { ArticleListItem } from "./types";
 
 export function getArticles() {
-  return apiRequest<Article[]>("/api/articles");
+  return apiRequest<ArticleListItem[]>("/api/articles");
 }
 ```
 
-`getArticles()` 没有手写返回类型，因为 TypeScript 会根据 `apiRequest<Article[]>("/api/articles")` 自动推断它返回 `Promise<Article[]>`。也可以写成 `getArticles(): Promise<Article[]>`，结果相同，这里不重复标注。
+`getArticles()` 没有手写返回类型，因为 TypeScript 会根据 `apiRequest<ArticleListItem[]>("/api/articles")` 自动推断它返回 `Promise<ArticleListItem[]>`。也可以写成 `getArticles(): Promise<ArticleListItem[]>`，结果相同，这里不重复标注。
 
 第 9 节会继续在此目录中增加其他文章请求。现在先把 `getArticles()` 接回测试页面，确认整理后的代码仍然可以运行。
 
@@ -556,14 +556,14 @@ export function getArticles() {
 import { useEffect, useState } from "react";
 
 import { getArticles } from "@/features/articles/api";
-import type { Article } from "@/features/articles/types";
+import type { ArticleListItem } from "@/features/articles/types";
 
 export default function HomePage() {
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<ArticleListItem[]>([]);
   const [message, setMessage] = useState("正在请求文章……");
 
   useEffect(() => {
-    // getArticles() 返回 Promise<Article[]>，不是 Article[]。
+    // getArticles() 返回 Promise<ArticleListItem[]>，不是 ArticleListItem[]。
     // useEffect 的回调不能直接写成 async，所以在内部定义
     // 异步函数，用 await 取出文章数组后再更新页面。
     async function loadArticles() {
@@ -592,7 +592,7 @@ export default function HomePage() {
 
 与第 7.2 节相比，页面不再需要 `ArticleListBody` 和 `response.json()`，因为 `apiRequest()` 已经解析了 `{ data: ... }` 并返回其中的 `data`。
 
-`getArticles()` 虽然没有使用 `async` 声明，但它直接返回了 `apiRequest()` 产生的 `Promise<Article[]>`。页面使用 `await` 等待请求完成后，`articleList` 才是可以交给 `setArticles()` 的 `Article[]`。
+`getArticles()` 虽然没有使用 `async` 声明，但它直接返回了 `apiRequest()` 产生的 `Promise<ArticleListItem[]>`。页面使用 `await` 等待请求完成后，`articleList` 才是可以交给 `setArticles()` 的 `ArticleListItem[]`。
 
 此时的调用顺序是：
 
@@ -686,13 +686,13 @@ import { Layout, Menu, Table } from "antd";
 import { useEffect, useState } from "react";
 
 import { getArticles } from "@/features/articles/api";
-import type { Article } from "@/features/articles/types";
+import type { ArticleListItem } from "@/features/articles/types";
 
 const { Header, Sider, Content } = Layout;
 
 export default function AdminPage() {
   // 状态
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<ArticleListItem[]>([]);
   const [message, setMessage] = useState("loading");
 
   // 初始化
@@ -769,7 +769,7 @@ export default function AdminPage() {
 }
 ```
 
-`columns` 决定表格显示哪些列。每个 `dataIndex` 都对应 `Article` 中的同名属性，`dataSource={articles}` 再把文章数组交给表格。请求完成并执行 `setArticles(result)` 后，组件重新渲染，表格就会显示文章数据。
+`columns` 决定表格显示哪些列。每个 `dataIndex` 都对应 `ArticleListItem` 中的同名属性，`dataSource={articles}` 再把文章数组交给表格。请求完成并执行 `setArticles(result)` 后，组件重新渲染，表格就会显示文章数据。
 
 打开 `/admin/articles`，看到“加载成功”和文章表格，这一步就完成。删除、确认提示和操作状态留到后面再加。
 
@@ -843,10 +843,10 @@ import { Table } from "antd";
 import { useEffect, useState } from "react";
 
 import { getArticles } from "@/features/articles/api";
-import type { Article } from "@/features/articles/types";
+import type { ArticleListItem } from "@/features/articles/types";
 
 export default function ArticlesPage() {
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<ArticleListItem[]>([]);
   const [message, setMessage] = useState("loading");
 
   useEffect(() => {
@@ -902,7 +902,7 @@ export default function ArticlesPage() {
 
 ### 9.3 用两个演示页面验证切换
 
-侧边栏目前只有“文章管理”，还看不出切换效果。这里先增加“页面一”和“页面二”，只验证 `Sider` 切换 `Content`，暂时不绑定文章的新建、编辑等功能。
+侧边栏目前只有“文章管理”，还看不出切换效果。这里先增加“页面一”和“页面二”，只验证 `Sider` 切换 `Content`，暂时不绑定文章的新建和编辑功能。
 
 把 `items` 改成：
 
@@ -1066,11 +1066,31 @@ export default function HomePage() {
 
 ---
 
-## 10. 写一个新建和编辑共用的文章表单
+## 10. 先补齐文章 CRUD 的类型和 API
 
-表单提交的数据和 Express 返回的完整文章不同。先在 `features/articles/types.ts` 中增加：
+第 9 节只完成了列表请求。接下来集中补齐文章详情、新建、编辑和删除请求，让 `features/articles/api.ts` 先形成完整的 CRUD 请求层。
+
+先把 `features/articles/types.ts` 整理为：
 
 ```ts
+export type ArticleStatus = "draft" | "published";
+
+export type Article = {
+  id: number;
+  title: string;
+  slug: string;
+  summary: string | null;
+  content: string;
+  status: ArticleStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ArticleListItem = Pick<
+  Article,
+  "id" | "title" | "slug" | "status" | "createdAt"
+>;
+
 export type ArticleInput = {
   title: string;
   slug: string;
@@ -1080,9 +1100,76 @@ export type ArticleInput = {
 };
 ```
 
-`ArticleInput` 只描述新建和编辑时要提交的字段，不包含数据库生成的 `id` 和时间。
+这几个类型对应不同方向的数据：
 
-新建 `app/admin/articles/_components/article-form.tsx`。它只负责文章表单界面和提交状态，新建页与编辑页都可以使用：
+| 类型 | 描述什么 |
+|---|---|
+| `ArticleStatus` | 文章状态允许使用哪些值 |
+| `Article` | 详情、新建、编辑和删除接口返回的完整文章 |
+| `ArticleListItem` | 列表接口返回的一行，只包含列表需要的五个字段 |
+| `ArticleInput` | 表单通过 POST 或 PATCH 提交给后端的字段 |
+
+前端类型按照 API 请求和响应定义，不需要照搬数据库模型。`id` 用来拼接编辑和删除接口地址，`createdAt`、`updatedAt` 也会随完整文章返回，所以它们都保留在 `Article` 中。
+
+`id`、`createdAt` 和 `updatedAt` 由后端生成，不需要用户填写，因此不属于 `ArticleInput`。数据库和 Prisma 中的时间是 `DateTime` / `Date`，经过 JSON 传到浏览器后变成字符串，所以前端把两个时间字段写成 `string`。
+
+`ArticleListItem` 使用 `Pick` 从 `Article` 中选出列表字段，不必重新写一遍相同属性；以后这些公共字段的类型发生变化时，只需要修改 `Article`。
+
+再把 `features/articles/api.ts` 整理为：
+
+```ts
+import { apiRequest } from "@/lib/api-client";
+
+import type {
+  Article,
+  ArticleInput,
+  ArticleListItem,
+} from "./types";
+
+export function getArticles() {
+  return apiRequest<ArticleListItem[]>("/api/articles");
+}
+
+export function getArticle(id: number) {
+  return apiRequest<Article>(`/api/articles/${id}`);
+}
+
+export function createArticle(input: ArticleInput) {
+  return apiRequest<Article>("/api/articles", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+}
+
+export function updateArticle(id: number, input: ArticleInput) {
+  return apiRequest<Article>(`/api/articles/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteArticle(id: number) {
+  return apiRequest<Article>(`/api/articles/${id}`, {
+    method: "DELETE",
+  });
+}
+```
+
+这一层只负责发送 HTTP 请求并返回解析后的数据：列表和详情使用 GET，新建使用 POST，编辑使用 PATCH，删除使用 DELETE。
+
+---
+
+## 11. 写一个由新建和编辑抽屉共用的文章表单
+
+新建和编辑需要填写相同字段，所以只写一份 `ArticleForm`。抽屉负责决定当前是新建还是编辑，表单只负责收集字段、校验和提交。
+
+新建 `app/admin/articles/_components/article-form.tsx`：
 
 ```tsx
 "use client";
@@ -1095,12 +1182,14 @@ import type { ArticleInput } from "@/features/articles/types";
 type ArticleFormProps = {
   initialValues?: ArticleInput;
   submitText: string;
+  onCancel: () => void;
   onSubmit: (values: ArticleInput) => Promise<void>;
 };
 
 export function ArticleForm({
   initialValues,
   submitText,
+  onCancel,
   onSubmit,
 }: ArticleFormProps) {
   const [submitting, setSubmitting] = useState(false);
@@ -1202,265 +1291,277 @@ export function ArticleForm({
         <Button type="primary" htmlType="submit" loading={submitting}>
           {submitText}
         </Button>
-        <Button href="/admin/articles">取消</Button>
+        <Button onClick={onCancel} disabled={submitting}>
+          取消
+        </Button>
       </Space>
     </Form>
   );
 }
 ```
 
+`initialValues` 为空时，表单用于新建并默认选择草稿；传入已有文章字段时，同一张表单用于编辑。取消按钮调用抽屉传入的 `onCancel`，不会改变 URL。
+
 Ant Design Form 会在提交前提示明显的字段错误。Express 中的 Zod 仍然必须保留，因为后端也会收到来自 Apifox、另一套后台或其他客户端的请求。后端返回的错误信息统一显示在表单顶部。
 
 ---
 
-## 11. 完成新建页面
+## 12. 在文章列表页接入新建和编辑抽屉
 
-新建页面需要发送 POST 请求。先把 `features/articles/api.ts` 中的类型导入改成：
+CRUD 全部留在 `/admin/articles`。点击“新建文章”时直接打开空表单；点击某一行的“编辑”时，先请求文章详情，再把正文和摘要回填到同一个表单。整个过程不创建新路由，也不使用 `router.push()`。
 
-```ts
-import type { Article, ArticleInput } from "./types";
-```
-
-再增加：
-
-```ts
-export function createArticle(input: ArticleInput) {
-  return apiRequest<Article>("/api/articles", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(input),
-  });
-}
-```
-
-新建 `app/admin/articles/new/page.tsx`：
+把 `app/admin/articles/page.tsx` 替换为：
 
 ```tsx
 "use client";
 
-import { App, Card } from "antd";
-import { useRouter } from "next/navigation";
-
-import { ArticleForm } from "@/app/admin/articles/_components/article-form";
-import { createArticle } from "@/features/articles/api";
-import type { ArticleInput } from "@/features/articles/types";
-
-export default function NewArticlePage() {
-  const router = useRouter();
-  const { message } = App.useApp();
-
-  async function handleSubmit(values: ArticleInput) {
-    await createArticle(values);
-    message.success("文章已创建");
-    router.push("/admin/articles");
-  }
-
-  return (
-    <div>
-      <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
-        新建文章
-      </h1>
-      <p className="mt-1 text-sm text-slate-500">
-        填写文章内容并保存到 Mini CMS。
-      </p>
-
-      <Card className="mt-6 border-slate-200 shadow-sm">
-        <ArticleForm submitText="创建文章" onSubmit={handleSubmit} />
-      </Card>
-    </div>
-  );
-}
-```
-
-当前跟练选择用独立页面完成新建，但不把它固定成侧边栏菜单项。以后如果产品决定在文章列表中使用弹窗或抽屉，可以调整页面组织，不影响第 9.3 节讲清的布局与路由关系。
-
-回到 `app/admin/articles/page.tsx`，把第 9.4 节的“主要操作”按钮替换为：
-
-```tsx
-<Button type="primary" href="/admin/articles/new">
-  新建文章
-</Button>
-```
-
-先实际创建一篇文章，并确认：
-
-```text
-点击创建文章
--> Ant Design Form 完成第一轮校验
--> fetch POST /api/articles
--> Express 用 Zod 再校验一次
--> Prisma 写入 PostgreSQL
--> Express 返回 201 和文章 JSON
--> 页面提示成功并回到列表
-```
-
-如果保存失败，表单不会跳走，用户已经输入的内容仍然保留。
-
----
-
-## 12. 完成编辑页面
-
-编辑页要读取文章正文和摘要。先把 `features/articles/types.ts` 中的 `Article` 补充完整：
-
-```ts
-export type Article = {
-  id: number;
-  title: string;
-  slug: string;
-  summary: string | null;
-  content: string;
-  status: ArticleStatus;
-  createdAt: string;
-  updatedAt: string;
-};
-```
-
-再在 `features/articles/api.ts` 中增加详情和编辑请求：
-
-```ts
-export function getArticle(id: number) {
-  return apiRequest<Article>(`/api/articles/${id}`);
-}
-
-export function updateArticle(id: number, input: ArticleInput) {
-  return apiRequest<Article>(`/api/articles/${id}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(input),
-  });
-}
-```
-
-新建 `app/admin/articles/[id]/edit/page.tsx`：
-
-```tsx
-"use client";
-
-import { Alert, App, Button, Card, Spin } from "antd";
-import { useParams, useRouter } from "next/navigation";
+import {
+  Alert,
+  App,
+  Button,
+  Card,
+  Drawer,
+  Space,
+  Table,
+  type TableColumnsType,
+} from "antd";
 import { useEffect, useState } from "react";
 
 import { ArticleForm } from "@/app/admin/articles/_components/article-form";
-import { getArticle, updateArticle } from "@/features/articles/api";
+import {
+  createArticle,
+  getArticle,
+  getArticles,
+  updateArticle,
+} from "@/features/articles/api";
 import type {
   Article,
   ArticleInput,
+  ArticleListItem,
 } from "@/features/articles/types";
 
-export default function EditArticlePage() {
-  const params = useParams<{ id: string }>();
-  const router = useRouter();
-  const { message } = App.useApp();
-  const id = Number(params.id);
+type DrawerMode = "create" | "edit";
 
-  const [article, setArticle] = useState<Article | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+export default function ArticlesPage() {
+  const { message: messageApi } = App.useApp();
+  const [articles, setArticles] = useState<ArticleListItem[]>([]);
+  const [listLoading, setListLoading] = useState(true);
+  const [listError, setListError] = useState<string | null>(null);
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<DrawerMode>("create");
+  const [editingArticle, setEditingArticle] = useState<Article | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadArticle() {
-      setLoading(true);
-      setLoadError(null);
+    async function loadArticles() {
+      setListLoading(true);
+      setListError(null);
 
       try {
-        setArticle(await getArticle(id));
+        setArticles(await getArticles());
       } catch (requestError) {
-        setLoadError(
+        setListError(
           requestError instanceof Error
             ? requestError.message
-            : "文章加载失败",
+            : "文章列表加载失败",
         );
       } finally {
-        setLoading(false);
+        setListLoading(false);
       }
     }
 
-    if (Number.isInteger(id) && id > 0) {
-      void loadArticle();
-    } else {
-      setLoadError("文章 ID 不正确");
-      setLoading(false);
+    void loadArticles();
+  }, []);
+
+  function openCreateDrawer() {
+    setDrawerMode("create");
+    setEditingArticle(null);
+    setDetailError(null);
+    setDrawerOpen(true);
+  }
+
+  async function openEditDrawer(id: number) {
+    setDrawerMode("edit");
+    setEditingArticle(null);
+    setDetailError(null);
+    setDetailLoading(true);
+    setDrawerOpen(true);
+
+    try {
+      setEditingArticle(await getArticle(id));
+    } catch (requestError) {
+      setDetailError(
+        requestError instanceof Error
+          ? requestError.message
+          : "文章详情加载失败",
+      );
+    } finally {
+      setDetailLoading(false);
     }
-  }, [id]);
-
-  async function handleSubmit(values: ArticleInput) {
-    await updateArticle(id, values);
-    message.success("文章已保存");
-    router.push("/admin/articles");
   }
 
-  if (loading) {
-    return <Spin tip="正在加载文章" />;
+  async function handleCreate(values: ArticleInput) {
+    const createdArticle = await createArticle(values);
+    setArticles((current) => [createdArticle, ...current]);
+    setDrawerOpen(false);
+    messageApi.success("文章已创建");
   }
 
-  if (loadError || !article) {
-    return (
-      <Alert
-        type="error"
-        showIcon
-        message="文章加载失败"
-        description={loadError ?? "文章不存在"}
-        action={<Button href="/admin/articles">返回列表</Button>}
-      />
+  async function handleUpdate(values: ArticleInput) {
+    if (!editingArticle) {
+      throw new Error("缺少要编辑的文章");
+    }
+
+    const updatedArticle = await updateArticle(editingArticle.id, values);
+    setArticles((current) =>
+      current.map((article) =>
+        article.id === updatedArticle.id ? updatedArticle : article,
+      ),
     );
+    setDrawerOpen(false);
+    messageApi.success("文章已保存");
   }
+
+  const columns: TableColumnsType<ArticleListItem> = [
+    {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+    },
+    {
+      title: "标题",
+      dataIndex: "title",
+      key: "title",
+    },
+    {
+      title: "Slug",
+      dataIndex: "slug",
+      key: "slug",
+    },
+    {
+      title: "状态",
+      dataIndex: "status",
+      key: "status",
+    },
+    {
+      title: "操作",
+      key: "actions",
+      render: (_, article) => (
+        <Space>
+          <Button
+            type="link"
+            onClick={() => void openEditDrawer(article.id)}
+          >
+            编辑
+          </Button>
+        </Space>
+      ),
+    },
+  ];
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
-        编辑文章
-      </h1>
-      <p className="mt-1 text-sm text-slate-500">
-        修改文章内容、地址和发布状态。
-      </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
+            文章管理
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            在当前页面查看、新建和编辑文章。
+          </p>
+        </div>
+
+        <Button type="primary" onClick={openCreateDrawer}>
+          新建文章
+        </Button>
+      </div>
+
+      {listError ? (
+        <Alert
+          type="error"
+          showIcon
+          message="文章列表加载失败"
+          description={listError}
+          className="mt-6"
+        />
+      ) : null}
 
       <Card className="mt-6 border-slate-200 shadow-sm">
-        <ArticleForm
-          submitText="保存修改"
-          initialValues={{
-            title: article.title,
-            slug: article.slug,
-            summary: article.summary ?? "",
-            content: article.content,
-            status: article.status,
-          }}
-          onSubmit={handleSubmit}
+        <Table
+          rowKey="id"
+          loading={listLoading}
+          columns={columns}
+          dataSource={articles}
+          locale={{ emptyText: "暂无文章" }}
         />
       </Card>
+
+      <Drawer
+        title={drawerMode === "create" ? "新建文章" : "编辑文章"}
+        open={drawerOpen}
+        size="large"
+        loading={drawerMode === "edit" && detailLoading}
+        destroyOnHidden
+        onClose={() => setDrawerOpen(false)}
+      >
+        {drawerMode === "create" ? (
+          <ArticleForm
+            key="create"
+            submitText="创建文章"
+            onCancel={() => setDrawerOpen(false)}
+            onSubmit={handleCreate}
+          />
+        ) : detailError ? (
+          <Alert
+            type="error"
+            showIcon
+            message="文章详情加载失败"
+            description={detailError}
+          />
+        ) : editingArticle ? (
+          <ArticleForm
+            key={`edit-${editingArticle.id}`}
+            initialValues={{
+              title: editingArticle.title,
+              slug: editingArticle.slug,
+              summary: editingArticle.summary ?? "",
+              content: editingArticle.content,
+              status: editingArticle.status,
+            }}
+            submitText="保存修改"
+            onCancel={() => setDrawerOpen(false)}
+            onSubmit={handleUpdate}
+          />
+        ) : null}
+      </Drawer>
     </div>
   );
 }
 ```
 
-编辑页比新建页多一步：先根据 URL 中的 `id` 请求文章详情，再把数据交给同一个 `ArticleForm`。表单结构和校验不需要复制第二份。
+新建成功后，`POST` 返回的文章直接加入 `articles`；编辑成功后，`PATCH` 返回的文章替换数组中的旧数据。两次操作都会关闭抽屉并更新当前表格，不需要跳转页面或重新请求整个列表。
+
+编辑比新建多一次详情请求：列表数据没有正文和摘要，所以点击“编辑”后先调用 `getArticle(id)`。不同的 `key` 会让新建表单和不同文章的编辑表单各自重新初始化；`Drawer` 的 `loading` 显示详情加载状态，`destroyOnHidden` 在抽屉关闭后卸载表单，下一次打开时不会保留上一次输入。
+
+先实际新建和编辑一篇文章，并确认浏览器地址始终是 `/admin/articles`。如果保存失败，抽屉不会关闭，用户已经输入的内容仍然保留。
 
 ---
 
 ## 13. 最后增加删除功能
 
-读取、新建和编辑已经完成，现在再给文章列表增加删除操作。
+第 10 节已经准备好 DELETE 请求。现在只补删除确认和页面状态，CRUD 仍然全部留在文章列表页。
 
-先在 `features/articles/api.ts` 中增加：
-
-```ts
-export function deleteArticle(id: number) {
-  return apiRequest<Article>(`/api/articles/${id}`, {
-    method: "DELETE",
-  });
-}
-```
-
-回到 `app/admin/articles/page.tsx`，把 Ant Design 导入改成：
+把 `app/admin/articles/page.tsx` 的 Ant Design 导入补上 `Popconfirm`：
 
 ```tsx
 import {
+  Alert,
   App,
   Button,
   Card,
+  Drawer,
   Popconfirm,
   Space,
   Table,
@@ -1468,20 +1569,25 @@ import {
 } from "antd";
 ```
 
-文章 API 导入改成：
+文章 API 导入补上 `deleteArticle`：
 
 ```tsx
-import { deleteArticle, getArticles } from "@/features/articles/api";
+import {
+  createArticle,
+  deleteArticle,
+  getArticle,
+  getArticles,
+  updateArticle,
+} from "@/features/articles/api";
 ```
 
-在原有状态下面增加：
+在文章列表状态下面增加：
 
 ```tsx
-const { message: messageApi } = App.useApp();
 const [deletingId, setDeletingId] = useState<number | null>(null);
 ```
 
-`messageApi` 用来显示删除结果，`deletingId` 记录当前正在删除哪一篇文章。接着在 `columns` 前面增加删除函数：
+再在 `columns` 前面增加删除函数：
 
 ```tsx
 async function handleDelete(id: number) {
@@ -1501,64 +1607,42 @@ async function handleDelete(id: number) {
 }
 ```
 
-DELETE 请求成功后，`filter()` 从当前 `articles` 中排除这篇文章，`setArticles()` 触发表格重新渲染。最后把原来的 `columns` 替换为：
+DELETE 请求成功后，`filter()` 从当前 `articles` 中排除这篇文章，`setArticles()` 触发表格重新渲染。最后把操作列替换为：
 
 ```tsx
-const columns: TableColumnsType<Article> = [
-  {
-    title: "ID",
-    dataIndex: "id",
-    key: "id",
-  },
-  {
-    title: "标题",
-    dataIndex: "title",
-    key: "title",
-  },
-  {
-    title: "Slug",
-    dataIndex: "slug",
-    key: "slug",
-  },
-  {
-    title: "状态",
-    dataIndex: "status",
-    key: "status",
-  },
-  {
-    title: "操作",
-    key: "actions",
-    render: (_, article) => (
-      <Space>
+{
+  title: "操作",
+  key: "actions",
+  render: (_, article) => (
+    <Space>
+      <Button
+        type="link"
+        onClick={() => void openEditDrawer(article.id)}
+      >
+        编辑
+      </Button>
+
+      <Popconfirm
+        title="确认删除这篇文章吗？"
+        description="删除后不能通过页面恢复。"
+        okText="删除"
+        cancelText="取消"
+        onConfirm={() => handleDelete(article.id)}
+      >
         <Button
           type="link"
-          href={`/admin/articles/${article.id}/edit`}
+          danger
+          loading={deletingId === article.id}
         >
-          编辑
+          删除
         </Button>
-
-        <Popconfirm
-          title="确认删除这篇文章吗？"
-          description="删除后不能通过页面恢复。"
-          okText="删除"
-          cancelText="取消"
-          onConfirm={() => handleDelete(article.id)}
-        >
-          <Button
-            type="link"
-            danger
-            loading={deletingId === article.id}
-          >
-            删除
-          </Button>
-        </Popconfirm>
-      </Space>
-    ),
-  },
-];
+      </Popconfirm>
+    </Space>
+  ),
+},
 ```
 
-`render` 不再读取某个 `dataIndex`，而是拿到当前行的 `article`，再使用 `article.id` 生成编辑地址和删除请求。`Popconfirm` 先要求用户确认，确认后才调用 `handleDelete()`。
+`render` 拿到当前行的 `article`，编辑按钮用 `article.id` 打开抽屉，删除按钮用同一个 `id` 发送 DELETE 请求。`Popconfirm` 会先要求用户确认，确认后才调用 `handleDelete()`。
 
 ---
 
@@ -1588,21 +1672,22 @@ npm run dev
 ### 14.2 新建
 
 ```text
-打开 /admin/articles/new
--> 提交合法文章
+在 /admin/articles 点击“新建文章”
+-> 打开新建抽屉并提交合法文章
 -> POST /api/articles 返回 201
--> 回到列表并看到新文章
+-> 抽屉关闭，当前表格出现新文章
 ```
 
-再提交一次相同 slug，确认 Express 返回 409，页面能显示后端给出的错误信息。
+再提交一次相同 slug，确认 Express 返回 409，抽屉保留输入并显示后端给出的错误信息。
 
 ### 14.3 编辑
 
 ```text
-进入 /admin/articles/[id]/edit
+在 /admin/articles 点击某一行的“编辑”
 -> GET /api/articles/:id 返回详情
+-> 编辑抽屉回填文章内容
 -> 修改后 PATCH /api/articles/:id 返回 200
--> 列表显示修改结果
+-> 抽屉关闭，当前表格显示修改结果
 ```
 
 ### 14.4 删除
@@ -1629,8 +1714,6 @@ admin-web-antd/
 │   ├── admin/
 │   │   ├── articles/
 │   │   │   ├── _components/article-form.tsx
-│   │   │   ├── [id]/edit/page.tsx
-│   │   │   ├── new/page.tsx
 │   │   │   └── page.tsx
 │   │   ├── page-one/page.tsx
 │   │   ├── page-two/page.tsx
@@ -1669,6 +1752,8 @@ npm run build
 - 点击侧边栏后，是谁改变 URL，又是谁把新页面放进 `Content`？
 - 为什么切换“页面一”和“页面二”时，`Header` 与 `Sider` 不需要重新写？
 - 为什么前端表单已经校验，Express 仍然要保留 Zod？
+- 为什么新建和编辑使用同一个 `ArticleForm`，但不需要新建两个页面？
+- 编辑抽屉为什么要先请求文章详情，而新建抽屉不需要？
 - 新建一篇文章时，数据经过了哪些文件和进程？
 - `columns`、`dataIndex`、`dataSource` 和 `rowKey` 分别怎样帮助 `Table` 展示数据？
 - 删除成功后，为什么要使用 `setArticles()` 更新列表？
@@ -1707,5 +1792,6 @@ npm run build
 - [Ant Design：定制主题](https://ant.design/docs/react/customize-theme-cn/)
 - [Ant Design：Layout 布局](https://ant.design/components/layout-cn/)
 - [Ant Design：Menu 导航菜单](https://ant.design/components/menu-cn/)
+- [Ant Design：Drawer 抽屉](https://ant.design/components/drawer-cn/)
 - [Ant Design：在 Next.js App Router 中使用](https://ant.design/docs/react/use-with-next/)
 - [MDN：使用 Fetch](https://developer.mozilla.org/zh-CN/docs/Web/API/Fetch_API/Using_Fetch)

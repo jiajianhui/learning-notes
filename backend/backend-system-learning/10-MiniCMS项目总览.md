@@ -290,13 +290,11 @@ DELETE /api/articles/:id
 
 ```text
 /admin/articles
-/admin/articles/new
-/admin/articles/[id]/edit
 ```
 
 - 创建 `admin-web-antd` Next.js 工程。
 - 配置只允许开发管理后台来源的 CORS。
-- 完成文章列表、新建、编辑和删除确认。
+- 在文章列表页完成文章列表、新建、编辑和删除确认；新建和编辑使用抽屉，不跳转到独立页面。
 - 处理 `loading`、`empty`、`error` 和 `success` 状态。
 
 验收：
