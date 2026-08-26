@@ -693,17 +693,21 @@ const { Header, Sider, Content } = Layout;
 export default function AdminPage() {
   // 状态
   const [articles, setArticles] = useState<ArticleListItem[]>([]);
-  const [message, setMessage] = useState("loading");
+  const [message, setMessage] = useState("加载中……");
 
   // 初始化
   useEffect(() => {
     async function loadArticles() {
-      const result = await getArticles();
-      setArticles(result);
-      setMessage("加载成功");
+      try {
+        const result = await getArticles();
+        setArticles(result);
+        setMessage("加载成功");
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "加载失败");
+      }
     }
 
-    loadArticles();
+    void loadArticles();
   }, []);
 
   // 侧边栏菜单
@@ -771,7 +775,9 @@ export default function AdminPage() {
 
 `columns` 决定表格显示哪些列。每个 `dataIndex` 都对应 `ArticleListItem` 中的同名属性，`dataSource={articles}` 再把文章数组交给表格。请求完成并执行 `setArticles(result)` 后，组件重新渲染，表格就会显示文章数据。
 
-打开 `/admin/articles`，看到“加载成功”和文章表格，这一步就完成。删除、确认提示和操作状态留到后面再加。
+`getArticles()` 请求失败时，`apiRequest()` 抛出的错误会沿着 Promise 回到 `loadArticles()`。这里用 `catch` 把错误信息写入 `message`，页面就不会一直停在“加载中……”。
+
+打开 `/admin/articles`，请求成功时会看到“加载成功”和文章表格；请求失败时会看到错误信息。删除、确认提示和操作状态留到后面再加。
 
 ### 9.2 列表可用后再抽出共享布局
 
@@ -847,16 +853,20 @@ import type { ArticleListItem } from "@/features/articles/types";
 
 export default function ArticlesPage() {
   const [articles, setArticles] = useState<ArticleListItem[]>([]);
-  const [message, setMessage] = useState("loading");
+  const [message, setMessage] = useState("加载中……");
 
   useEffect(() => {
     async function loadArticles() {
-      const result = await getArticles();
-      setArticles(result);
-      setMessage("加载成功");
+      try {
+        const result = await getArticles();
+        setArticles(result);
+        setMessage("加载成功");
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "加载失败");
+      }
     }
 
-    loadArticles();
+    void loadArticles();
   }, []);
 
   const columns = [
@@ -1091,12 +1101,20 @@ export type ArticleListItem = Pick<
   "id" | "title" | "slug" | "status" | "createdAt"
 >;
 
-export type ArticleInput = {
+export type CreateArticleInput = {
   title: string;
   slug: string;
   summary?: string;
   content: string;
-  status: ArticleStatus;
+  status?: ArticleStatus;
+};
+
+export type UpdateArticleInput = {
+  title?: string;
+  slug?: string;
+  summary?: string | null;
+  content?: string;
+  status?: ArticleStatus;
 };
 ```
 
@@ -1107,11 +1125,14 @@ export type ArticleInput = {
 | `ArticleStatus` | 文章状态允许使用哪些值 |
 | `Article` | 详情、新建、编辑和删除接口返回的完整文章 |
 | `ArticleListItem` | 列表接口返回的一行，只包含列表需要的五个字段 |
-| `ArticleInput` | 表单通过 POST 或 PATCH 提交给后端的字段 |
+| `CreateArticleInput` | POST 新建文章时允许提交的字段 |
+| `UpdateArticleInput` | PATCH 更新文章时允许提交的字段 |
 
 前端类型按照 API 请求和响应定义，不需要照搬数据库模型。`id` 用来拼接编辑和删除接口地址，`createdAt`、`updatedAt` 也会随完整文章返回，所以它们都保留在 `Article` 中。
 
-`id`、`createdAt` 和 `updatedAt` 由后端生成，不需要用户填写，因此不属于 `ArticleInput`。数据库和 Prisma 中的时间是 `DateTime` / `Date`，经过 JSON 传到浏览器后变成字符串，所以前端把两个时间字段写成 `string`。
+`id`、`createdAt` 和 `updatedAt` 由后端生成，不需要客户端提交，因此不属于两个请求输入类型。数据库和 Prisma 中的时间是 `DateTime` / `Date`，经过 JSON 传到浏览器后变成字符串，所以前端把两个时间字段写成 `string`。
+
+创建文章时，`title`、`slug` 和 `content` 必须存在，`summary`、`status` 可以省略。更新文章时只提交需要修改的字段，所以 `UpdateArticleInput` 中的属性都是可选的；后端 Zod 仍会拒绝空对象。
 
 `ArticleListItem` 使用 `Pick` 从 `Article` 中选出列表字段，不必重新写一遍相同属性；以后这些公共字段的类型发生变化时，只需要修改 `Article`。
 
@@ -1122,8 +1143,9 @@ import { apiRequest } from "@/lib/api-client";
 
 import type {
   Article,
-  ArticleInput,
   ArticleListItem,
+  CreateArticleInput,
+  UpdateArticleInput,
 } from "./types";
 
 export function getArticles() {
@@ -1134,7 +1156,7 @@ export function getArticle(id: number) {
   return apiRequest<Article>(`/api/articles/${id}`);
 }
 
-export function createArticle(input: ArticleInput) {
+export function createArticle(input: CreateArticleInput) {
   return apiRequest<Article>("/api/articles", {
     method: "POST",
     headers: {
@@ -1144,7 +1166,7 @@ export function createArticle(input: ArticleInput) {
   });
 }
 
-export function updateArticle(id: number, input: ArticleInput) {
+export function updateArticle(id: number, input: UpdateArticleInput) {
   return apiRequest<Article>(`/api/articles/${id}`, {
     method: "PATCH",
     headers: {
@@ -1169,6 +1191,20 @@ export function deleteArticle(id: number) {
 
 新建和编辑需要填写相同字段，所以只写一份 `ArticleForm`。抽屉负责决定当前是新建还是编辑，表单只负责收集字段、校验和提交。
 
+第 10 节的 `CreateArticleInput` 和 `UpdateArticleInput` 描述两个 API 的请求体。进入 UI 后，再在 `features/articles/types.ts` 中增加共用的表单类型：
+
+```ts
+export type ArticleFormValues = {
+  title: string;
+  slug: string;
+  summary?: string;
+  content: string;
+  status: ArticleStatus;
+};
+```
+
+新建和编辑抽屉都会显示完整表单，所以 `ArticleFormValues` 要求填写标题、slug、正文和状态。它描述的是页面收集到的值，不会取代两个 API 输入类型：新建时交给接收 `CreateArticleInput` 的 `createArticle()`，编辑时交给接收 `UpdateArticleInput` 的 `updateArticle()`。
+
 新建 `app/admin/articles/_components/article-form.tsx`：
 
 ```tsx
@@ -1177,13 +1213,13 @@ export function deleteArticle(id: number) {
 import { Alert, Button, Form, Input, Select, Space } from "antd";
 import { useState } from "react";
 
-import type { ArticleInput } from "@/features/articles/types";
+import type { ArticleFormValues } from "@/features/articles/types";
 
 type ArticleFormProps = {
-  initialValues?: ArticleInput;
+  initialValues?: ArticleFormValues;
   submitText: string;
   onCancel: () => void;
-  onSubmit: (values: ArticleInput) => Promise<void>;
+  onSubmit: (values: ArticleFormValues) => Promise<void>;
 };
 
 export function ArticleForm({
@@ -1195,7 +1231,7 @@ export function ArticleForm({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  async function handleFinish(values: ArticleInput) {
+  async function handleFinish(values: ArticleFormValues) {
     setSubmitting(true);
     setSubmitError(null);
 
@@ -1213,7 +1249,7 @@ export function ArticleForm({
   }
 
   return (
-    <Form<ArticleInput>
+    <Form<ArticleFormValues>
       layout="vertical"
       initialValues={{ status: "draft", ...initialValues }}
       onFinish={handleFinish}
@@ -1336,7 +1372,7 @@ import {
 } from "@/features/articles/api";
 import type {
   Article,
-  ArticleInput,
+  ArticleFormValues,
   ArticleListItem,
 } from "@/features/articles/types";
 
@@ -1402,14 +1438,14 @@ export default function ArticlesPage() {
     }
   }
 
-  async function handleCreate(values: ArticleInput) {
+  async function handleCreate(values: ArticleFormValues) {
     const createdArticle = await createArticle(values);
     setArticles((current) => [createdArticle, ...current]);
     setDrawerOpen(false);
     messageApi.success("文章已创建");
   }
 
-  async function handleUpdate(values: ArticleInput) {
+  async function handleUpdate(values: ArticleFormValues) {
     if (!editingArticle) {
       throw new Error("缺少要编辑的文章");
     }
