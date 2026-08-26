@@ -806,7 +806,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <Menu
             selectedKeys={[pathname]}
             items={items}
-            onClick={(menuInfo) => router.push(menuInfo.key)}
+            onClick={(item) => router.push(item.key)}
           />
         </Sider>
         <Content>{children}</Content>
@@ -820,20 +820,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
 这三个 `Menu` 属性分别负责不同的事情：
 
-- `selectedKeys={[pathname]}` 只负责菜单高亮。`usePathname()` 返回当前地址，例如 `/admin/articles`；Ant Design 的 `selectedKeys` 要接收 `string[]`，所以即使只选中一项，也要把 `pathname` 放进数组。
-- `items={items}` 决定显示哪些菜单项。当前 `items` 中的 `key` 是 `/admin/articles`，`label` 是用户看到的“文章管理”。菜单项的 `key` 同时作为后面要跳转的地址。
-- `onClick={(menuInfo) => router.push(menuInfo.key)}` 负责点击后的跳转。可以把 `menuInfo` 理解成“刚才点了哪一项”。如果点击“文章管理”，`menuInfo.key` 就是 `/admin/articles`，`router.push()` 会跳到这个地址。
+- `items={items}`：`Menu` 会遍历 `items`，数组中的每一项生成一个菜单项。
+- `selectedKeys={[pathname]}` 根据当前地址高亮菜单项。
+- `onClick` 处理菜单点击。
 
-因此，`selectedKeys` 不负责跳转，`router.push()` 也不负责菜单样式。两者通过当前 URL 配合：
+页面中只有一个 `Menu`，但它根据 `items` 生成了多个菜单项。点击哪个菜单项，`onClick` 的参数 `item` 就对应 `items` 中的哪一项，因此可以通过 `item.key` 取得这一项的 `key`。
 
-```text
-点击菜单项
--> onClick 得到 menuInfo
--> router.push(menuInfo.key) 改变地址
--> usePathname() 读到新地址
--> selectedKeys 高亮与地址同名的菜单项
--> 新路由的 page.tsx 成为 children，显示在 Content 中
+```tsx
+onClick={(item) => router.push(item.key)}
 ```
+
+例如点击“文章管理”，对应项的 `key` 是 `/admin/articles`，`router.push()` 就会进入 `/admin/articles`。
 
 当前只有“文章管理”一个菜单项，下一节会增加“页面一”和“页面二”，实际观察这条切换流程。
 
@@ -937,7 +934,7 @@ const items = [
 `Menu` 继续使用第 9.2 节的点击写法：
 
 ```tsx
-onClick={(menuInfo) => router.push(menuInfo.key)}
+onClick={(item) => router.push(item.key)}
 ```
 
 新建 `app/admin/page-one/page.tsx`：
@@ -956,7 +953,7 @@ export default function PageTwo() {
 }
 ```
 
-点击菜单项后，`router.push(menuInfo.key)` 进入对应地址。两个页面都位于 `app/admin` 下，因此继续共用 `app/admin/layout.tsx`：`Header` 和 `Sider` 不变，`Content` 在“页面一”和“页面二”之间切换。验证完成后，再根据实际产品页面替换这两个示例。
+点击菜单项后，`router.push(item.key)` 进入对应地址。两个页面都位于 `app/admin` 下，因此继续共用 `app/admin/layout.tsx`：`Header` 和 `Sider` 不变，`Content` 在“页面一”和“页面二”之间切换。验证完成后，再根据实际产品页面替换这两个示例。
 
 ### 9.4 页面跑通后再统一主题
 
@@ -1037,7 +1034,7 @@ return (
           mode="inline"
           selectedKeys={[pathname]}
           items={items}
-          onClick={(menuInfo) => router.push(menuInfo.key)}
+          onClick={(item) => router.push(item.key)}
         />
       </Sider>
       <Content className="p-6">{children}</Content>
