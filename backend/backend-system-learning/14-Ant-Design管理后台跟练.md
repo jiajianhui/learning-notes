@@ -957,7 +957,7 @@ export default function PageTwo() {
 
 ### 9.4 页面跑通后再统一主题
 
-现在页面中已经有 `Layout`、`Menu` 和 `Table`。这一节再加入页面间距、内容卡片和主要操作按钮，并统一 Ant Design 组件主题。
+现在页面中已经有 `Layout`、`Menu` 和 `Table`。这一节只美化公共布局，并统一 Ant Design 组件主题。
 
 新建 `components/antd-provider.tsx`：
 
@@ -1011,7 +1011,7 @@ import { AntdProvider } from "@/components/antd-provider";
 
 | 配置 | 怎样影响组件 |
 |---|---|
-| `colorPrimary` | Ant Design 根据主色生成悬停色、按下色等状态色，再用于主按钮和菜单选中状态 |
+| `colorPrimary` | Ant Design 根据主色生成悬停色、按下色等状态色，再用于菜单选中状态和后续的主按钮 |
 | `borderRadius` | 作为基础圆角，影响按钮、卡片和输入框等组件 |
 | `colorText` | 作为组件的基础文字色 |
 | `colorBgLayout` | 作为布局区域的背景色 |
@@ -1023,62 +1023,32 @@ import { AntdProvider } from "@/components/antd-provider";
 
 ```tsx
 return (
-  <Layout className="min-h-screen">
-    <Header className="border-b border-slate-200 text-lg font-semibold text-slate-950">
-      Mini CMS
+  <Layout className="h-screen">
+    <Header className="border-b border-gray-100 flex justify-between items-center">
+      <h1 className="font-black text-xl">Mini-CMS</h1>
+      <p>user</p>
     </Header>
 
     <Layout>
-      <Sider width={200} theme="light">
+      <Sider theme="light">
+        {/* selectedKeys 要接收 string[] */}
         <Menu
-          mode="inline"
-          selectedKeys={[pathname]}
           items={items}
+          selectedKeys={[pathname]}
           onClick={(item) => router.push(item.key)}
         />
       </Sider>
-      <Content className="p-6">{children}</Content>
+      <Content className="p-10">{children}</Content>
     </Layout>
   </Layout>
 );
 ```
 
-`min-h-screen` 让后台至少占满一屏，`p-6` 给内容区留出间距。顶部栏背景由 `components.Layout.headerBg` 控制，侧边栏因为使用 `theme="light"`，会读取 `lightSiderBg`。
+`h-screen` 让后台占满一屏，`p-10` 给内容区留出间距。顶部栏使用 Flex 把标题和用户信息放在两边；顶部栏背景由 `headerBg` 控制，浅色侧边栏会读取 `lightSiderBg`。
 
-最后把 `app/admin/articles/page.tsx` 的 Ant Design 导入改成：
+`app/admin/articles/page.tsx` 不需要改成布局代码，它继续返回文章状态和 `Table`。这个返回值会作为 `children` 显示在上面的 `Content` 中。
 
-```tsx
-import { Button, Card, Table } from "antd";
-```
-
-再把 `return` 替换为：
-
-```tsx
-return (
-  <div>
-    <div className="flex items-end justify-between">
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-950">文章管理</h1>
-        <p className="mt-1 text-sm text-slate-500">{message}</p>
-      </div>
-      <Button type="primary">主要操作</Button>
-    </div>
-
-    <Card className="mt-6 border-slate-200 shadow-sm">
-      <Table
-        bordered
-        rowKey="id"
-        columns={columns}
-        dataSource={articles}
-      />
-    </Card>
-  </div>
-);
-```
-
-页面现在是白色顶部栏和侧边栏、浅灰背景、白色内容卡片。Tailwind 负责布局、间距和文字层级，Ant Design token 负责组件内部的颜色、圆角和交互状态。
-
-可以临时把 `colorPrimary` 改成 `#722ed1`，观察主按钮和菜单选中状态一起变成紫色，再改回 `#1677ff`。`<App>` 暂时不产生可见样式，后面的页面会通过 `App.useApp()` 使用消息提示。
+可以临时把 `colorPrimary` 改成 `#722ed1`，观察菜单选中状态变成紫色，再改回 `#1677ff`。Tailwind 负责布局和间距，Ant Design token 负责组件内部样式。`<App>` 会在后面的页面中提供消息提示。
 
 ### 9.5 删除测试页代码，再设置首页跳转
 
