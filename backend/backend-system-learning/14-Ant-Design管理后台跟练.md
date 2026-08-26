@@ -806,7 +806,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <Menu
             selectedKeys={[pathname]}
             items={items}
-            onClick={({ key }) => router.push(key)}
+            onClick={(menuInfo) => router.push(menuInfo.key)}
           />
         </Sider>
         <Content>{children}</Content>
@@ -816,40 +816,105 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 }
 ```
 
-`Header` 和 `Sider` 是后台页面都会使用的固定部分，所以放进 `layout.tsx`。`children` 是当前路由对应的页面内容，会显示在 `Content` 中。`usePathname()` 提供当前地址，`router.push(key)` 在点击菜单后切换地址。
+`Header` 和 `Sider` 是后台页面都会使用的固定部分，所以放进 `layout.tsx`。`children` 是当前路由对应的页面内容，会显示在 `Content` 中。
 
-回到 `app/admin/articles/page.tsx`：
+这三个 `Menu` 属性分别负责不同的事情：
 
-- 从 Ant Design 导入中删除 `Layout` 和 `Menu`，只保留 `Table`。
-- 删除 `const { Header, Sider, Content } = Layout` 和 `items`。
-- 保留文章状态、`useEffect` 和 `columns`，只把最后的 `return` 替换为：
+- `selectedKeys={[pathname]}` 只负责菜单高亮。`usePathname()` 返回当前地址，例如 `/admin/articles`；Ant Design 的 `selectedKeys` 要接收 `string[]`，所以即使只选中一项，也要把 `pathname` 放进数组。
+- `items={items}` 决定显示哪些菜单项。当前 `items` 中的 `key` 是 `/admin/articles`，`label` 是用户看到的“文章管理”。菜单项的 `key` 同时作为后面要跳转的地址。
+- `onClick={(menuInfo) => router.push(menuInfo.key)}` 负责点击后的跳转。可以把 `menuInfo` 理解成“刚才点了哪一项”。如果点击“文章管理”，`menuInfo.key` 就是 `/admin/articles`，`router.push()` 会跳到这个地址。
 
-```tsx
-return (
-  <>
-    <p>{message}</p>
-    <Table
-      bordered
-      rowKey="id"
-      columns={columns}
-      dataSource={articles}
-    />
-  </>
-);
+因此，`selectedKeys` 不负责跳转，`router.push()` 也不负责菜单样式。两者通过当前 URL 配合：
+
+```text
+点击菜单项
+-> onClick 得到 menuInfo
+-> router.push(menuInfo.key) 改变地址
+-> usePathname() 读到新地址
+-> selectedKeys 高亮与地址同名的菜单项
+-> 新路由的 page.tsx 成为 children，显示在 Content 中
 ```
 
-刷新 `/admin/articles`，文章数据应保持不变。现在 `layout.tsx` 只负责公共的 `Header` 和 `Sider`，`page.tsx` 只负责 `Content` 中的文章表格。
+当前只有“文章管理”一个菜单项，下一节会增加“页面一”和“页面二”，实际观察这条切换流程。
 
-### 9.3 用“页面一”和“页面二”验证 Content 切换
+布局抽离后，`app/admin/articles/page.tsx` 的完整代码是：
 
-`app/admin/layout.tsx` 已经把 `children` 放进 `Content`，`Menu` 也会调用 `router.push(key)`。但侧边栏目前只有一个菜单项，还看不出路由切换时谁保持不变、谁发生变化。
+```tsx
+"use client";
 
-这里暂时不把菜单绑定到文章的新建、编辑等操作。增删改查是否拆成多个页面，要等产品结构确定后再决定。现在只用“页面一”和“页面二”验证布局与路由的关系。
+import { Table } from "antd";
+import { useEffect, useState } from "react";
+
+import { getArticles } from "@/features/articles/api";
+import type { Article } from "@/features/articles/types";
+
+export default function ArticlesPage() {
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [message, setMessage] = useState("loading");
+
+  useEffect(() => {
+    async function loadArticles() {
+      const result = await getArticles();
+      setArticles(result);
+      setMessage("加载成功");
+    }
+
+    loadArticles();
+  }, []);
+
+  const columns = [
+    {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+    },
+    {
+      title: "标题",
+      dataIndex: "title",
+      key: "title",
+    },
+    {
+      title: "Slug",
+      dataIndex: "slug",
+      key: "slug",
+    },
+    {
+      title: "状态",
+      dataIndex: "status",
+      key: "status",
+    },
+  ];
+
+  return (
+    <>
+      <p>{message}</p>
+      <Table
+        bordered
+        rowKey="id"
+        columns={columns}
+        dataSource={articles}
+      />
+    </>
+  );
+}
+```
+
+`Table` 就写在文章页面中。打开 `/admin/articles` 时，Next.js 把这个页面返回的内容作为 `children` 传给 `app/admin/layout.tsx`，再由 `<Content>{children}</Content>` 显示出来。
+
+`app/admin/page.tsx` 只对应 `/admin`，不会参与 `/admin/articles` 的渲染。本章直接进入 `/admin/articles`，因此不需要这个文件；如果之前创建过，可以删除。
+
+### 9.3 用两个演示页面验证切换
+
+侧边栏目前只有“文章管理”，还看不出切换效果。这里先增加“页面一”和“页面二”，只验证 `Sider` 切换 `Content`，暂时不绑定文章的新建、编辑等功能。
 
 把 `items` 改成：
 
 ```tsx
 const items = [
+  {
+    key: "/admin/articles",
+    label: "文章管理",
+  },
   {
     key: "/admin/page-one",
     label: "页面一",
@@ -861,18 +926,19 @@ const items = [
 ];
 ```
 
-把 `Menu` 原来的 `selectedKeys` 替换为：
+`items` 中的 `key` 要与页面文件夹生成的路由一致：
 
-```tsx
-<Menu
-  mode="inline"
-  selectedKeys={[pathname]}
-  items={items}
-  onClick={({ key }) => router.push(key)}
-/>
+```text
+/admin/articles -> app/admin/articles/page.tsx
+/admin/page-one -> app/admin/page-one/page.tsx
+/admin/page-two -> app/admin/page-two/page.tsx
 ```
 
-`selectedKeys={[pathname]}` 使用当前地址匹配菜单项，决定高亮“页面一”还是“页面二”。真正改变地址的是 `router.push(key)`。
+`Menu` 继续使用第 9.2 节的点击写法：
+
+```tsx
+onClick={(menuInfo) => router.push(menuInfo.key)}
+```
 
 新建 `app/admin/page-one/page.tsx`：
 
@@ -890,21 +956,7 @@ export default function PageTwo() {
 }
 ```
 
-现在点击侧边栏：
-
-```text
-点击“页面一”
--> router.push("/admin/page-one")
--> app/admin/page-one/page.tsx 成为 children
--> Content 显示“页面一”
-
-点击“页面二”
--> router.push("/admin/page-two")
--> app/admin/page-two/page.tsx 成为 children
--> Content 显示“页面二”
-```
-
-两个页面都位于 `app/admin` 下面，因此会共用同一个 `app/admin/layout.tsx`。切换时 `Header` 和 `Sider` 继续保留，`Content` 中的 `children` 随当前路由变化。以后确定后台有哪些业务页面时，再替换 `items` 和这两个演示页面。
+点击菜单项后，`router.push(menuInfo.key)` 进入对应地址。两个页面都位于 `app/admin` 下，因此继续共用 `app/admin/layout.tsx`：`Header` 和 `Sider` 不变，`Content` 在“页面一”和“页面二”之间切换。验证完成后，再根据实际产品页面替换这两个示例。
 
 ### 9.4 页面跑通后再统一主题
 
@@ -958,38 +1010,17 @@ import { AntdProvider } from "@/components/antd-provider";
 </AntdRegistry>
 ```
 
-`ConfigProvider` 把主题配置放进 React 上下文，内部的 Ant Design 组件会读取这些配置。这里的 `token` 不是直接写到某一个元素上的 CSS 属性，而是 Ant Design 组件共同使用的设计变量。
+`ConfigProvider` 会把主题交给内部的 Ant Design 组件。`token` 可以理解为一组统一的样式变量，组件会把这些变量用到自己的具体位置：
 
-Ant Design 把 token 分成几层：
+| 配置 | 怎样影响组件 |
+|---|---|
+| `colorPrimary` | Ant Design 根据主色生成悬停色、按下色等状态色，再用于主按钮和菜单选中状态 |
+| `borderRadius` | 作为基础圆角，影响按钮、卡片和输入框等组件 |
+| `colorText` | 作为组件的基础文字色 |
+| `colorBgLayout` | 作为布局区域的背景色 |
+| `components.Layout` | 只覆盖 `Layout`，这里分别设置顶部栏、侧边栏和内容区 |
 
-- Seed Token 是主题的起点，例如 `colorPrimary` 和 `borderRadius`。
-- Map Token 是主题算法根据 Seed Token 算出的成套值，例如主色的悬停色、按下色和不同尺寸的圆角。
-- Alias Token 为这些值补上使用含义，例如 `colorText` 表示基础文字色，`colorBgLayout` 表示布局背景色。
-- Component Token 只服务某个组件，例如 `components.Layout.headerBg` 只控制 `Layout.Header` 的背景色。
-
-它们之间的关系可以简化为：
-
-```text
-Seed Token
--> 主题算法生成 Map Token
--> Alias Token 和 Component Token 表达具体用途
--> Button、Menu、Card 等组件读取对应 token
--> 组件生成最终样式
-```
-
-例如，配置一个 `colorPrimary` 后，Ant Design 还会根据它生成悬停色、按下色和浅色背景，再分别用于主按钮、选中状态等位置，不需要手动把每一种蓝色都写出来。
-
-当前代码中的配置分为两层：
-
-| 配置 | 层级 | 在当前页面中的作用 |
-|---|---|---|
-| `colorPrimary` | Seed Token | 生成主要操作的颜色及其悬停、按下等状态，影响主要操作按钮和菜单选中状态 |
-| `borderRadius` | Seed Token | 生成不同尺寸的圆角，供按钮、卡片、输入框等组件使用 |
-| `colorText` | Alias Token | 作为 Ant Design 组件的基础文字色，例如表格和菜单中的普通文字 |
-| `colorBgLayout` | Alias Token | 表示页面布局区域使用的背景色 |
-| `components.Layout` | Component Token | 只调整 `Layout`，分别控制内容背景、顶部栏背景、顶部栏内边距和浅色侧边栏背景 |
-
-`theme.token` 可以修改全局 Seed Token 和 Alias Token，适合统一多个组件的基础风格；`components.Layout` 只修改 `Layout`。这里让 `colorBgLayout` 和 `Layout.bodyBg` 使用同一个颜色，前者表达全局布局背景，后者明确覆盖 `Layout` 组件。如果以后只想调整 `Button`，可以写进 `components.Button`，不用影响其他组件。
+前四项放在 `theme.token` 中，会被多个组件共同读取；`components.Layout` 只影响 `Layout`。这就是“主题值到组件样式”的映射关系。
 
 把 `app/admin/layout.tsx` 中 `AdminLayout` 的 `return` 替换为：
 
@@ -1006,7 +1037,7 @@ return (
           mode="inline"
           selectedKeys={[pathname]}
           items={items}
-          onClick={({ key }) => router.push(key)}
+          onClick={(menuInfo) => router.push(menuInfo.key)}
         />
       </Sider>
       <Content className="p-6">{children}</Content>
@@ -1048,15 +1079,13 @@ return (
 );
 ```
 
-现在页面形成白色顶部栏、白色侧边栏、浅灰背景和白色内容卡片。Tailwind 控制页面结构和间距，主题 token 控制 Ant Design 组件内部的颜色和圆角。
+页面现在是白色顶部栏和侧边栏、浅灰背景、白色内容卡片。Tailwind 负责布局、间距和文字层级，Ant Design token 负责组件内部的颜色、圆角和交互状态。
 
-可以临时把 `colorPrimary` 改成 `#722ed1`。刷新后观察主按钮和菜单选中状态变成紫色，再改回 `#1677ff`。这个对比能直接看到全局 token 如何被多个组件共同使用。
-
-Tailwind 继续负责页面结构、间距和标题层级；Ant Design token 负责组件内部统一的颜色、圆角和交互状态。`<App>` 则让后面的页面可以通过 `App.useApp()` 使用能够读取当前主题的全局提示。
+可以临时把 `colorPrimary` 改成 `#722ed1`，观察主按钮和菜单选中状态一起变成紫色，再改回 `#1677ff`。`<App>` 暂时不产生可见样式，后面的页面会通过 `App.useApp()` 使用消息提示。
 
 ### 9.5 删除测试页代码，再设置首页跳转
 
-把 `app/page.tsx` 中第 6～7 节用于测试 API 的代码全部删除，并用下面的代码完整替换这个文件：
+第 6～7 节的 API 已经跑通，测试首页不再需要。把 `app/page.tsx` 完整替换为：
 
 ```tsx
 import { redirect } from "next/navigation";
@@ -1066,7 +1095,7 @@ export default function HomePage() {
 }
 ```
 
-测试页中的 `useState`、`useEffect`、`loadArticles()` 和 JSON 输出都不再保留。通用请求代码已经放在 `lib/api-client.ts` 和 `features/articles/` 中，文章列表页正在使用它们。
+原测试页中的状态、请求和 JSON 输出全部删除。`lib/api-client.ts` 和 `features/articles/` 是正式请求代码，文章列表仍在使用，不要删除。
 
 ---
 
@@ -1710,5 +1739,6 @@ npm run build
 - [Tailwind CSS：在 Next.js 中安装](https://tailwindcss.com/docs/installation/framework-guides/nextjs)
 - [Ant Design：定制主题](https://ant.design/docs/react/customize-theme-cn/)
 - [Ant Design：Layout 布局](https://ant.design/components/layout-cn/)
+- [Ant Design：Menu 导航菜单](https://ant.design/components/menu-cn/)
 - [Ant Design：在 Next.js App Router 中使用](https://ant.design/docs/react/use-with-next/)
 - [MDN：使用 Fetch](https://developer.mozilla.org/zh-CN/docs/Web/API/Fetch_API/Using_Fetch)
