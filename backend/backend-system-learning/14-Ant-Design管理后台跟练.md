@@ -1189,9 +1189,13 @@ export function deleteArticle(id: number) {
 
 ## 11. 写一个由新建和编辑抽屉共用的文章表单
 
-新建和编辑需要填写相同字段，所以只写一份 `ArticleForm`。抽屉负责决定当前是新建还是编辑，表单只负责收集字段、校验和提交。
+第 10 节已经准备好文章 CRUD 的请求函数。这一节开始写 UI，先把新建和编辑都会使用的文章表单抽成 `ArticleForm`。
 
-第 10 节的 `CreateArticleInput` 和 `UpdateArticleInput` 描述两个 API 的请求体。进入 UI 后，再在 `features/articles/types.ts` 中增加共用的表单类型：
+新建和编辑显示的字段和校验规则相同，因此只需要一个表单组件。它不需要知道当前是新建还是编辑，只负责收集字段、校验和提交；第 12 节再由文章列表页决定提交时调用新建还是更新接口。
+
+### 11.1 定义表单收集的值
+
+`CreateArticleInput` 和 `UpdateArticleInput` 描述 API 允许接收的请求体，`ArticleFormValues` 则描述这张表单实际收集的字段。在 `features/articles/types.ts` 中增加：
 
 ```ts
 export type ArticleFormValues = {
@@ -1203,7 +1207,16 @@ export type ArticleFormValues = {
 };
 ```
 
-新建和编辑抽屉都会显示完整表单，所以 `ArticleFormValues` 要求填写标题、slug、正文和状态。它描述的是页面收集到的值，不会取代两个 API 输入类型：新建时交给接收 `CreateArticleInput` 的 `createArticle()`，编辑时交给接收 `UpdateArticleInput` 的 `updateArticle()`。
+标题、slug 和正文必须由用户填写。状态不需要用户每次手动选择：新建表单会默认使用 `draft`，编辑表单会回填原状态，因此提交时 `status` 一定有值。摘要可以不填，所以只有 `summary` 是可选字段。
+
+当前表单中的摘要只有两类值：
+
+- 新建时没有填写摘要，值是 `undefined`。
+- 输入过摘要时，值是字符串；清空文本框得到的是空字符串 `""`，也不是 `null`。
+
+因此 `ArticleFormValues.summary` 写成 `summary?: string`。而更新接口还要区分三种意图：不提交 `summary` 表示不修改，提交字符串表示保存这个字符串，提交 `null` 表示明确把数据库记录的 `summary` 字段设为 `null`。所以 `UpdateArticleInput.summary` 是 `summary?: string | null`；其中 `null` 可以由 Apifox 等其他客户端提交，当前表单不会提交它。
+
+### 11.2 写出新建和编辑共用的表单
 
 新建 `app/admin/articles/_components/article-form.tsx`：
 
@@ -1216,7 +1229,9 @@ import { useState } from "react";
 import type { ArticleFormValues } from "@/features/articles/types";
 
 type ArticleFormProps = {
+  // 新建时不传，编辑时传入当前文章的表单值
   initialValues?: ArticleFormValues;
+  // 父组件根据新建或编辑传入不同文案和提交函数
   submitText: string;
   onCancel: () => void;
   onSubmit: (values: ArticleFormValues) => Promise<void>;
@@ -1228,14 +1243,17 @@ export function ArticleForm({
   onCancel,
   onSubmit,
 }: ArticleFormProps) {
+  // 请求期间禁止重复操作，请求失败时保留错误信息
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Form.Item 的 rules 全部通过后，onFinish 才会调用这个函数
   async function handleFinish(values: ArticleFormValues) {
     setSubmitting(true);
     setSubmitError(null);
 
     try {
+      // 具体发送 POST 还是 PATCH，由父组件传入的 onSubmit 决定
       await onSubmit(values);
     } catch (requestError) {
       setSubmitError(
@@ -1248,6 +1266,7 @@ export function ArticleForm({
     }
   }
 
+  // 新建时默认为草稿；编辑时 initialValues 会用原状态覆盖 draft
   return (
     <Form<ArticleFormValues>
       layout="vertical"
@@ -1336,9 +1355,61 @@ export function ArticleForm({
 }
 ```
 
-`initialValues` 为空时，表单用于新建并默认选择草稿；传入已有文章字段时，同一张表单用于编辑。取消按钮调用抽屉传入的 `onCancel`，不会改变 URL。
+### 11.3 读懂表单的提交流程
 
-Ant Design Form 会在提交前提示明显的字段错误。Express 中的 Zod 仍然必须保留，因为后端也会收到来自 Apifox、另一套后台或其他客户端的请求。后端返回的错误信息统一显示在表单顶部。
+新建时，父组件没有传入 `initialValues`，所以它的值是 `undefined`。对象展开会按从左到右的顺序合并字段：
+
+```text
+{ status: "draft", ...initialValues }
+-> initialValues 是 undefined，展开时没有增加任何字段
+-> 最终得到 { status: "draft" }
+```
+
+这个对象传给 Ant Design Form 的 `initialValues` 属性。Form 再用对象中的 `status` 找到 `name="status"` 的 `Form.Item`，把其中 `Select` 的初始值设为 `draft`。其他字段没有初始值，所以保持空白。
+
+编辑时，父组件会传入完整的 `initialValues`。因为 `...initialValues` 写在 `status: "draft"` 后面，文章原来的 `status` 会覆盖默认的 `draft`，其他字段也会按各自的 `name` 回填到表单。
+
+`onSubmit` 的返回类型是 `Promise<void>`，因为第 12 节传入的 `handleCreate()` 和 `handleUpdate()` 都要等待 API 请求。`Promise` 表示提交结果稍后才能确定，`void` 表示函数完成后不需要再返回业务数据。`ArticleForm` 通过 `await onSubmit(values)` 等待请求结束，才能正确维持 `loading` 并捕获请求错误。
+
+这段代码按下面的顺序工作：
+
+1. 父组件传入初始值、按钮文案、取消函数和提交函数。
+2. Ant Design Form 保存用户输入，并使用每个 `Form.Item` 的 `rules` 校验字段。
+3. 校验通过后，`onFinish` 把整张表单的 `values` 交给 `handleFinish()`。
+4. `handleFinish()` 开启提交状态并等待 `onSubmit(values)`；失败时显示错误，结束后恢复按钮。
+
+`ArticleForm` 不导入 `createArticle()` 或 `updateArticle()`。第 12 节的父组件会根据新建或编辑传入不同的 `onSubmit`，所以这里只需要调用 `onSubmit(values)`。
+
+取消按钮调用 `onCancel` 关闭抽屉，提交失败时则把后端返回的错误显示在表单顶部。
+
+### 11.4 代码中用到的 Ant Design 属性
+
+代码中用到的 Ant Design 属性如下：
+
+因为 Form 提交的数据类型是 `ArticleFormValues`，所以写成 `<Form<ArticleFormValues>>`。这样 `onFinish` 收到的 `values` 也会按照 `ArticleFormValues` 进行 TypeScript 类型检查。
+
+| 写法 | 作用 |
+|---|---|
+| `<Form<ArticleFormValues>>` | 告诉 TypeScript 这张表单收集的值符合 `ArticleFormValues` |
+| `layout="vertical"` | 让标签显示在输入控件上方 |
+| `initialValues={...}` | 设置表单初始值：新建时默认为草稿，编辑时由文章原值覆盖 |
+| `onFinish={handleFinish}` | 点击提交且 `rules` 全部通过后，调用 `handleFinish(values)` |
+| `Form.Item` 的 `name` / `label` / `rules` / `extra` | 分别定义字段名、页面标签、校验规则和补充说明 |
+| `Input` 的 `placeholder` | 在没有输入时显示示例文字 |
+| `Input.TextArea` 的 `rows` | 设置多行文本框的默认行数 |
+| `Select` 的 `options` | 定义下拉选项的值和显示文字 |
+| `Alert` 的 `type` / `showIcon` / `message` / `description` | 定义提示类型、图标、标题和详细错误 |
+| `<Space>` | 让内部按钮自动保持间距 |
+| `type="primary"` | 使用 Ant Design 的主操作按钮样式 |
+| `htmlType="submit"` | 把按钮设为 HTML 提交按钮，点击后触发 Form 提交 |
+| `loading={submitting}` | 请求期间显示加载状态并防止重复点击 |
+| `onClick={onCancel}` / `disabled={submitting}` | 点击时执行取消函数；提交期间禁用取消按钮 |
+
+`rules` 是 Ant Design `Form.Item` 的前端校验写法。标题长度、slug 格式、摘要长度和正文长度等业务限制应当与后端 Zod 保持一致，这样页面能尽早给出正确提示。但两层不需要完全复制：例如后端允许创建时省略 `status`，而当前 UI 会默认提交 `draft`。
+
+当前代码中，`required` 表示必填，`whitespace` 表示不能只输入空格，`max` 限制最大字符数，`pattern` 使用正则检查格式，`message` 是校验失败时显示的文字。
+
+前端 `rules` 只负责页面交互，不能取代 Zod。后端还要校验 Apifox、另一套后台或其他客户端发来的请求，并执行 `trim()`、`toLowerCase()` 等最终数据处理，因此 Zod 才是 API 输入的最终标准。
 
 ---
 
@@ -1576,6 +1647,8 @@ export default function ArticlesPage() {
   );
 }
 ```
+
+新建抽屉通过 `onSubmit={handleCreate}` 让表单提交时调用 `createArticle()`，编辑抽屉通过 `onSubmit={handleUpdate}` 调用 `updateArticle()`。`ArticleForm` 始终只调用收到的 `onSubmit`，不需要自己判断当前模式。
 
 新建成功后，`POST` 返回的文章直接加入 `articles`；编辑成功后，`PATCH` 返回的文章替换数组中的旧数据。两次操作都会关闭抽屉并更新当前表格，不需要跳转页面或重新请求整个列表。
 
@@ -1828,6 +1901,8 @@ npm run build
 - [Ant Design：定制主题](https://ant.design/docs/react/customize-theme-cn/)
 - [Ant Design：Layout 布局](https://ant.design/components/layout-cn/)
 - [Ant Design：Menu 导航菜单](https://ant.design/components/menu-cn/)
+- [Ant Design：Form 表单](https://ant.design/components/form-cn/)
+- [Ant Design：Button 按钮](https://ant.design/components/button-cn/)
 - [Ant Design：Drawer 抽屉](https://ant.design/components/drawer-cn/)
 - [Ant Design：在 Next.js App Router 中使用](https://ant.design/docs/react/use-with-next/)
 - [MDN：使用 Fetch](https://developer.mozilla.org/zh-CN/docs/Web/API/Fetch_API/Using_Fetch)
