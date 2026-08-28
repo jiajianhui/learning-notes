@@ -1415,9 +1415,383 @@ export function ArticleForm({
 
 ## 12. 在文章列表页接入新建和编辑抽屉
 
-CRUD 全部留在 `/admin/articles`。点击“新建文章”时直接打开空表单；点击某一行的“编辑”时，先请求文章详情，再把正文和摘要回填到同一个表单。整个过程不创建新路由，也不使用 `router.push()`。
+第 11 节已经写好 `ArticleForm`，但公共组件本身不会生成页面。这一节把它导入 `app/admin/articles/page.tsx`，用按钮打开 Drawer，完成两条交互链路：
 
-把 `app/admin/articles/page.tsx` 替换为：
+```text
+新建文章
+-> 点击“新建文章”
+-> 打开空表单
+-> 提交 POST 请求
+-> 把新文章加入当前表格
+
+编辑文章
+-> 点击某一行的“编辑”
+-> 请求这篇文章的详情
+-> 用详情回填表单
+-> 提交 PATCH 请求
+-> 用新数据替换表格中的旧数据
+```
+
+两条链路都留在 `/admin/articles`，不创建新路由，也不使用 `router.push()`。下面按“新建 → 编辑 → 完善反馈”推进；每一步都形成一条可运行的完整链路，不写用完马上删除的临时代码。
+
+### 12.1 先完整跑通新建文章
+
+先只接新建需要的内容。把页面顶部相关导入整理为：
+
+```tsx
+import { Button, Drawer, Table } from "antd";
+import { useEffect, useState } from "react";
+
+import { ArticleForm } from "@/app/admin/articles/_components/article-form";
+import { createArticle, getArticles } from "@/features/articles/api";
+import type {
+  ArticleFormValues,
+  ArticleListItem,
+} from "@/features/articles/types";
+```
+
+在组件外定义抽屉模式，在组件中增加抽屉状态：
+
+```tsx
+type DrawerMode = "create" | "edit";
+
+const [drawerOpen, setDrawerOpen] = useState(false);
+const [drawerMode, setDrawerMode] = useState<DrawerMode>("create");
+```
+
+`drawerOpen` 决定抽屉是否显示，`drawerMode` 决定同一个抽屉用于新建还是编辑。现在先写新建按钮和提交逻辑：
+
+```tsx
+function openCreateDrawer() {
+  setDrawerMode("create");
+  setDrawerOpen(true);
+}
+
+async function handleCreate(values: ArticleFormValues) {
+  const createdArticle = await createArticle(values);
+  setArticles((currentArticles) => [
+    createdArticle,
+    ...currentArticles,
+  ]);
+  setDrawerOpen(false);
+}
+```
+
+`handleCreate()` 把表单值交给 POST 请求。`currentArticles` 是更新函数的形参，React 会把最新的 `articles` 数组传给它；新文章放到这个数组最前面后，页面再关闭抽屉。
+
+在 Table 上方放置按钮：
+
+```tsx
+<div className="flex items-center justify-between">
+  <div>
+    <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
+      文章管理
+    </h1>
+    <p className="mt-1 text-sm text-slate-500">
+      在当前页面查看、新建和编辑文章。
+    </p>
+  </div>
+
+  <Button type="primary" onClick={openCreateDrawer}>
+    新建文章
+  </Button>
+</div>
+```
+
+再在 Table 后面放置 Drawer 和表单：
+
+```tsx
+<Drawer
+  title={drawerMode === "create" ? "新建文章" : "编辑文章"}
+  open={drawerOpen}
+  size="large"
+  destroyOnHidden
+  onClose={() => setDrawerOpen(false)}
+>
+  {drawerMode === "create" ? (
+    <ArticleForm
+      submitText="创建文章"
+      onCancel={() => setDrawerOpen(false)}
+      onSubmit={handleCreate}
+    />
+  ) : null}
+</Drawer>
+```
+
+`submitText` 设置提交按钮文字，`onCancel` 负责关闭抽屉，`onSubmit` 把校验通过的表单值交给 `handleCreate()`。
+
+`size="large"` 使用较宽的抽屉，`destroyOnHidden` 在抽屉关闭后卸载表单，避免下次打开时保留上一次输入。
+
+现在先验证一条完整链路：点击“新建文章”打开表单，提交后发送 POST 请求，抽屉关闭，新文章出现在表格第一行。
+
+### 12.2 再完整跑通编辑文章
+
+编辑需要先读取完整文章，再提交更新。把相关导入扩展为：
+
+```tsx
+import {
+  Button,
+  Drawer,
+  Table,
+  type TableColumnsType,
+} from "antd";
+import {
+  createArticle,
+  getArticle,
+  getArticles,
+  updateArticle,
+} from "@/features/articles/api";
+import type {
+  Article,
+  ArticleFormValues,
+  ArticleListItem,
+} from "@/features/articles/types";
+```
+
+这时再增加当前编辑文章的状态：
+
+```tsx
+const [editingArticle, setEditingArticle] = useState<Article | null>(null);
+```
+
+列表中的一行没有正文和摘要，所以编辑前要通过 `id` 请求完整文章。先读取详情，拿到数据后再打开抽屉：
+
+```tsx
+async function openEditDrawer(id: number) {
+  const article = await getArticle(id);
+  setEditingArticle(article);
+  setDrawerMode("edit");
+  setDrawerOpen(true);
+}
+```
+
+先把原来的 `const columns = [` 改为 `const columns: TableColumnsType<ArticleListItem> = [`，数组中已有的四列保持不变。
+
+再把下面的操作列追加到数组末尾：
+
+```tsx
+{
+  title: "操作",
+  key: "actions",
+  render: (_, article) => (
+    <Button
+      type="link"
+      onClick={() => void openEditDrawer(article.id)}
+    >
+      编辑
+    </Button>
+  ),
+},
+```
+
+`render` 拿到当前行的 `article`，再把 `article.id` 交给异步的 `openEditDrawer()`；`void` 表示点击事件不使用这个 Promise 的返回值。
+
+编辑表单提交时，使用当前文章的 `id` 发送 PATCH 请求：
+
+```tsx
+async function handleUpdate(values: ArticleFormValues) {
+  if (!editingArticle) {
+    throw new Error("缺少要编辑的文章");
+  }
+
+  const updatedArticle = await updateArticle(editingArticle.id, values);
+  setArticles((currentArticles) =>
+    currentArticles.map((article) =>
+      article.id === updatedArticle.id ? updatedArticle : article,
+    ),
+  );
+  setDrawerOpen(false);
+}
+```
+
+最后把 Drawer 的内容改为根据模式显示新建或编辑表单：
+
+```tsx
+{drawerMode === "create" ? (
+  <ArticleForm
+    key="create"
+    submitText="创建文章"
+    onCancel={() => setDrawerOpen(false)}
+    onSubmit={handleCreate}
+  />
+) : editingArticle ? (
+  <ArticleForm
+    key={`edit-${editingArticle.id}`}
+    initialValues={{
+      title: editingArticle.title,
+      slug: editingArticle.slug,
+      summary: editingArticle.summary ?? "",
+      content: editingArticle.content,
+      status: editingArticle.status,
+    }}
+    submitText="保存修改"
+    onCancel={() => setDrawerOpen(false)}
+    onSubmit={handleUpdate}
+  />
+) : null}
+```
+
+新建和编辑开始共用 Drawer 后，`key="create"` 和 ``key={`edit-${editingArticle.id}`}`` 让 React 把它们识别为不同的表单实例，切换时会重新应用各自的初始值。
+
+`editingArticle` 为编辑表单提供完整原值；其中 `summary ?? ""` 把 API 可能返回的 `null` 转成文本框使用的空字符串。现在编辑按钮、详情回填、PATCH 请求和表格更新已经形成一条完整链路。
+
+### 12.3 正常流程跑通后，再完善页面反馈
+
+前两步已经完成 CRUD 的正常流程。现在再处理三个实际问题：列表加载、详情加载和请求失败。
+
+先在 Ant Design 导入中增加 `Alert` 和 `App`：
+
+```tsx
+import {
+  Alert,
+  App,
+  Button,
+  Drawer,
+  Table,
+  type TableColumnsType,
+} from "antd";
+```
+
+删除第 9 节的 `message` 状态，保留 `articles`，再增加页面反馈需要的状态：
+
+```tsx
+const { message: messageApi } = App.useApp();
+const [articles, setArticles] = useState<ArticleListItem[]>([]);
+const [listLoading, setListLoading] = useState(true);
+const [listError, setListError] = useState<string | null>(null);
+const [detailLoading, setDetailLoading] = useState(false);
+const [detailError, setDetailError] = useState<string | null>(null);
+```
+
+第 12.2 节的 `editingArticle` 保存详情数据；现在补上的 `detailLoading` 和 `detailError` 分别保存加载状态和失败原因。三个状态合在一起，才能完整描述一次详情请求。
+
+把第 9 节的列表请求改为：
+
+```tsx
+useEffect(() => {
+  async function loadArticles() {
+    setListLoading(true);
+    setListError(null);
+
+    try {
+      setArticles(await getArticles());
+    } catch (requestError) {
+      setListError(
+        requestError instanceof Error
+          ? requestError.message
+          : "文章列表加载失败",
+      );
+    } finally {
+      setListLoading(false);
+    }
+  }
+
+  void loadArticles();
+}, []);
+```
+
+再给详情请求补上加载和错误处理：
+
+```tsx
+async function openEditDrawer(id: number) {
+  setDrawerMode("edit");
+  setEditingArticle(null);
+  setDetailError(null);
+  setDetailLoading(true);
+  setDrawerOpen(true);
+
+  try {
+    setEditingArticle(await getArticle(id));
+  } catch (requestError) {
+    setDetailError(
+      requestError instanceof Error
+        ? requestError.message
+        : "文章详情加载失败",
+    );
+  } finally {
+    setDetailLoading(false);
+  }
+}
+```
+
+新建抽屉打开时，也清除上一次编辑留下的文章和错误：
+
+```tsx
+function openCreateDrawer() {
+  setDrawerMode("create");
+  setEditingArticle(null);
+  setDetailError(null);
+  setDrawerOpen(true);
+}
+```
+
+Drawer 使用 `loading` 显示详情加载状态，失败时显示 `Alert`，成功时显示编辑表单。Table 同样使用 `listLoading` 和 `listError`：
+
+```tsx
+{listError ? (
+  <Alert
+    type="error"
+    showIcon
+    message="文章列表加载失败"
+    description={listError}
+  />
+) : null}
+
+<Table
+  rowKey="id"
+  loading={listLoading}
+  columns={columns}
+  dataSource={articles}
+/>
+
+<Drawer
+  title={drawerMode === "create" ? "新建文章" : "编辑文章"}
+  open={drawerOpen}
+  size="large"
+  loading={drawerMode === "edit" && detailLoading}
+  destroyOnHidden
+  onClose={() => setDrawerOpen(false)}
+>
+  {drawerMode === "create" ? (
+    <ArticleForm
+      key="create"
+      submitText="创建文章"
+      onCancel={() => setDrawerOpen(false)}
+      onSubmit={handleCreate}
+    />
+  ) : detailError ? (
+    <Alert
+      type="error"
+      showIcon
+      message="文章详情加载失败"
+      description={detailError}
+    />
+  ) : editingArticle ? (
+    <ArticleForm
+      key={`edit-${editingArticle.id}`}
+      initialValues={{
+        title: editingArticle.title,
+        slug: editingArticle.slug,
+        summary: editingArticle.summary ?? "",
+        content: editingArticle.content,
+        status: editingArticle.status,
+      }}
+      submitText="保存修改"
+      onCancel={() => setDrawerOpen(false)}
+      onSubmit={handleUpdate}
+    />
+  ) : null}
+</Drawer>
+```
+
+在 `handleCreate()` 和 `handleUpdate()` 的 `setDrawerOpen(false)` 后面，分别调用 `messageApi.success("文章已创建")` 和 `messageApi.success("文章已保存")`。保存失败仍由第 11 节的 `ArticleForm` 显示错误并保留输入内容。这些状态和提示不负责完成 CRUD，只负责把已经跑通的页面补完整。
+
+### 12.4 按需对照完整页面代码
+
+前面三步已经依次完成新建、编辑和页面反馈。如果需要确认它们在 `app/admin/articles/page.tsx` 中的最终位置，再展开下面的完整代码。完整代码还用 `Card` 包住 Table，并设置了空列表文字，这两项只影响展示：
+
+<details>
+<summary>展开完整的文章列表页代码</summary>
 
 ```tsx
 "use client";
@@ -1428,7 +1802,6 @@ import {
   Button,
   Card,
   Drawer,
-  Space,
   Table,
   type TableColumnsType,
 } from "antd";
@@ -1511,7 +1884,10 @@ export default function ArticlesPage() {
 
   async function handleCreate(values: ArticleFormValues) {
     const createdArticle = await createArticle(values);
-    setArticles((current) => [createdArticle, ...current]);
+    setArticles((currentArticles) => [
+      createdArticle,
+      ...currentArticles,
+    ]);
     setDrawerOpen(false);
     messageApi.success("文章已创建");
   }
@@ -1522,8 +1898,8 @@ export default function ArticlesPage() {
     }
 
     const updatedArticle = await updateArticle(editingArticle.id, values);
-    setArticles((current) =>
-      current.map((article) =>
+    setArticles((currentArticles) =>
+      currentArticles.map((article) =>
         article.id === updatedArticle.id ? updatedArticle : article,
       ),
     );
@@ -1556,14 +1932,12 @@ export default function ArticlesPage() {
       title: "操作",
       key: "actions",
       render: (_, article) => (
-        <Space>
-          <Button
-            type="link"
-            onClick={() => void openEditDrawer(article.id)}
-          >
-            编辑
-          </Button>
-        </Space>
+        <Button
+          type="link"
+          onClick={() => void openEditDrawer(article.id)}
+        >
+          编辑
+        </Button>
       ),
     },
   ];
@@ -1648,13 +2022,32 @@ export default function ArticlesPage() {
 }
 ```
 
-新建抽屉通过 `onSubmit={handleCreate}` 让表单提交时调用 `createArticle()`，编辑抽屉通过 `onSubmit={handleUpdate}` 调用 `updateArticle()`。`ArticleForm` 始终只调用收到的 `onSubmit`，不需要自己判断当前模式。
+</details>
 
-新建成功后，`POST` 返回的文章直接加入 `articles`；编辑成功后，`PATCH` 返回的文章替换数组中的旧数据。两次操作都会关闭抽屉并更新当前表格，不需要跳转页面或重新请求整个列表。
+### 12.5 按两条链路完成验证
 
-编辑比新建多一次详情请求：列表数据没有正文和摘要，所以点击“编辑”后先调用 `getArticle(id)`。不同的 `key` 会让新建表单和不同文章的编辑表单各自重新初始化；`Drawer` 的 `loading` 显示详情加载状态，`destroyOnHidden` 在抽屉关闭后卸载表单，下一次打开时不会保留上一次输入。
+先测试新建：
 
-先实际新建和编辑一篇文章，并确认浏览器地址始终是 `/admin/articles`。如果保存失败，抽屉不会关闭，用户已经输入的内容仍然保留。
+```text
+点击“新建文章”
+-> 抽屉打开，表单为空，状态默认是草稿
+-> 填写并提交
+-> POST /api/articles 返回新文章
+-> 抽屉关闭，新文章出现在表格第一行
+```
+
+再测试编辑：
+
+```text
+点击某一行的“编辑”
+-> 抽屉打开并显示详情加载状态
+-> GET /api/articles/:id 返回完整文章
+-> 表单回填文章内容
+-> 修改并提交 PATCH /api/articles/:id
+-> 抽屉关闭，表格中这一行更新
+```
+
+两次操作中的浏览器地址都应始终是 `/admin/articles`。如果保存失败，抽屉不会关闭，用户已经输入的内容仍然保留。
 
 ---
 
@@ -1662,7 +2055,7 @@ export default function ArticlesPage() {
 
 第 10 节已经准备好 DELETE 请求。现在只补删除确认和页面状态，CRUD 仍然全部留在文章列表页。
 
-把 `app/admin/articles/page.tsx` 的 Ant Design 导入补上 `Popconfirm`：
+把 `app/admin/articles/page.tsx` 的 Ant Design 导入补上 `Popconfirm` 和 `Space`：
 
 ```tsx
 import {
@@ -1704,8 +2097,8 @@ async function handleDelete(id: number) {
 
   try {
     await deleteArticle(id);
-    setArticles((current) =>
-      current.filter((article) => article.id !== id),
+    setArticles((currentArticles) =>
+      currentArticles.filter((article) => article.id !== id),
     );
     messageApi.success("文章已删除");
   } catch (error) {
