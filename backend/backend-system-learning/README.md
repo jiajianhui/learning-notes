@@ -158,7 +158,7 @@ TypeScript 类型和运行时校验
 阶段 5：回看 06 API 设计、08 筛选分页，阅读 15 多表关系和事务
 阶段 6：阅读 16 登录与安全、16A 登录实操
 阶段 7：阅读 17 测试分层、17A 接口测试实操
-阶段 8：回看 06 公开 API 设计，阅读 18 运行和部署
+阶段 8：回看 06 公开 API 设计，阅读 18 运行和部署，再用 18A 完成 1Panel 部署
 ```
 
 `13A` 是 Next.js 架构对比选读，完成第一轮文章 CRUD 后再看，不影响任何实操阶段。
@@ -192,7 +192,7 @@ TypeScript 类型和运行时校验
 22 练习题
 ```
 
-第 18 章已经对应 Mini CMS 可选阶段 8；第 19～22 章用于阅读、排错和复习，不要求第一次连续背完。
+第 18、18A 章已经对应 Mini CMS 可选阶段 8；第 19～22 章用于阅读、排错和复习，不要求第一次连续背完。
 
 ### 第六部分：完成 shadcn/ui 并列后台项目
 
@@ -271,6 +271,7 @@ shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等
 管理页面 B：Next.js + TypeScript + shadcn/ui + Axios + TanStack Table + React Hook Form
 接口检查：Apifox
 自动化测试：Vitest + Supertest
+自托管部署（阶段 8 可选）：1Panel + Docker Compose + OpenResty
 ```
 
 ---

@@ -8,7 +8,8 @@
 - `github/`：GitHub 相关笔记
 - `frontend/`：前端相关笔记
 - `backend/`：后端学习路线和项目练习
-- `tools/`：终端、CLI、工具链相关笔记
+- `linux/`：面向当前 Web 技术栈的 Linux、SSH 和云服务器学习路线
+- `tools/`：终端、CLI 和工具链相关笔记
 
 ## 当前内容
 
@@ -18,6 +19,8 @@
 - `frontend/前端常见术语关系速查.md`
 - `backend/backend-system-learning/README.md`
 - `backend/backend-system-learning/10-MiniCMS项目总览.md`
+- `linux/README.md`
+- `tools/README.md`
 - `tools/终端、Shell、CLI、Node.js关系速查.md`
 - `tools/CODEX_使用指南.md`
 
