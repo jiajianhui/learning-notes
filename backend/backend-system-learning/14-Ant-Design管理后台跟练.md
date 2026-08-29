@@ -1574,7 +1574,7 @@ const [editingArticle, setEditingArticle] = useState<Article | null>(null);
 
 先把原来的 `const columns = [` 改为 `const columns: TableColumnsType<ArticleListItem> = [`，数组中已有的四列保持不变。
 
-`TableColumnsType` 表示 `columns` 是 Ant Design Table 的列配置，`<ArticleListItem>` 指定每一行的数据类型，因此 `render` 中的 `article` 也会被识别为 `ArticleListItem`。
+`TableColumnsType` 是 Ant Design 提供的泛型类型，用来描述 Table 的列配置；`ArticleListItem` 是传给它的具体类型，告诉它表格每一行的数据结构。因此，`render` 中的 `article` 也会被识别为 `ArticleListItem`。
 
 再把操作列追加到数组末尾：
 
@@ -1667,10 +1667,14 @@ async function handleUpdate(values: ArticleFormValues) {
 }
 ```
 
-`updateArticle()` 返回更新后的完整文章。React 把最新文章数组作为 `currentArticles` 传入更新函数，`map()` 再逐行检查：
+`updateArticle()` 返回更新后的完整文章。React 把最新文章数组作为 `currentArticles` 传入更新函数。`map()` 遍历旧数组，并把每次返回的元素组成一个新数组，不会直接修改原数组：
 
 - 当前行的 `id` 等于 `updatedArticle.id`：用 `updatedArticle` 替换旧文章。
 - `id` 不相等：保留原来的 `article`。
+
+这里没有把 `Article` 自动转换成 `ArticleListItem`。`ArticleListItem` 是从 `Article` 中选出列表字段得到的类型，完整的 `Article` 已经包含它要求的全部字段，因此可以直接作为一条列表数据使用。运行时保存的仍是完整对象，只是 `articles` 的类型仍然是 `ArticleListItem[]`，后续代码按列表字段使用它。
+
+> 可以先这样理解：Swift 更关注“值声明成什么类型”；TypeScript 使用结构类型，更关注“值是否具备目标类型需要的字段”。
 
 `setArticles()` 保存新数组后，Table 重新渲染，刚才编辑的那一行就会显示最新数据，然后 Drawer 关闭。到这里，“点击编辑 → 请求详情 → 回填表单 → 提交更新 → 刷新当前行”形成一条完整链路。
 
