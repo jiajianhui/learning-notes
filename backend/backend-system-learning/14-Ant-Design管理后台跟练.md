@@ -1526,7 +1526,21 @@ async function handleCreate(values: ArticleFormValues) {
 
 ### 12.2 再完整跑通编辑文章
 
-编辑需要先读取完整文章，再提交更新。把相关导入扩展为：
+编辑从 Table 中某一行的“编辑”按钮开始，完整的数据流是：
+
+```text
+Table 渲染每一行时，调用操作列的 render，并传入当前行的 article
+-> 点击“编辑”，把 article.id 交给 openEditDrawer()
+-> getArticle(id) 请求完整文章
+-> setEditingArticle() 保存完整文章
+-> 打开 Drawer，用 editingArticle 回填表单
+-> 提交 PATCH 请求
+-> 用更新后的文章替换 Table 中 id 相同的旧行
+```
+
+Table 当前行是 `ArticleListItem`，只有列表需要的字段；编辑表单需要完整的 `Article`，所以按钮不会把这一行直接交给 Drawer，而是只取它的 `id`，再请求完整文章。
+
+先把相关导入扩展为：
 
 ```tsx
 import {
@@ -1548,26 +1562,21 @@ import type {
 } from "@/features/articles/types";
 ```
 
-这时再增加当前编辑文章的状态：
+再增加 `editingArticle`，保存详情接口返回的完整文章：
 
 ```tsx
 const [editingArticle, setEditingArticle] = useState<Article | null>(null);
 ```
 
-列表中的一行没有正文和摘要，所以编辑前要通过 `id` 请求完整文章。先读取详情，拿到数据后再打开抽屉：
+`openEditDrawer()` 和 Drawer 都在 `ArticlesPage` 中：前者把完整文章写入 `editingArticle`，后者读取它并回填表单。这个状态是详情请求与编辑表单之间的连接点。
 
-```tsx
-async function openEditDrawer(id: number) {
-  const article = await getArticle(id);
-  setEditingArticle(article);
-  setDrawerMode("edit");
-  setDrawerOpen(true);
-}
-```
+#### 12.2.1 从 Table 当前行取得文章 id
 
 先把原来的 `const columns = [` 改为 `const columns: TableColumnsType<ArticleListItem> = [`，数组中已有的四列保持不变。
 
-再把下面的操作列追加到数组末尾：
+`TableColumnsType` 表示 `columns` 是 Ant Design Table 的列配置，`<ArticleListItem>` 指定每一行的数据类型，因此 `render` 中的 `article` 也会被识别为 `ArticleListItem`。
+
+再把操作列追加到数组末尾：
 
 ```tsx
 {
@@ -1584,27 +1593,28 @@ async function openEditDrawer(id: number) {
 },
 ```
 
-`render` 拿到当前行的 `article`，再把 `article.id` 交给异步的 `openEditDrawer()`；`void` 表示点击事件不使用这个 Promise 的返回值。
+`render` 是操作列配置中的函数，用来决定这个单元格显示什么。Table 渲染每一行时都会调用它，并把当前行数据作为第二个参数 `article` 传入。点击按钮时读取 `article.id`，再把它交给 `openEditDrawer()`；`void` 表示点击事件不使用这个异步函数返回的 Promise。
 
-编辑表单提交时，使用当前文章的 `id` 发送 PATCH 请求：
+#### 12.2.2 用 id 请求完整文章，再打开 Drawer
+
+增加 `openEditDrawer()`：
 
 ```tsx
-async function handleUpdate(values: ArticleFormValues) {
-  if (!editingArticle) {
-    throw new Error("缺少要编辑的文章");
-  }
-
-  const updatedArticle = await updateArticle(editingArticle.id, values);
-  setArticles((currentArticles) =>
-    currentArticles.map((article) =>
-      article.id === updatedArticle.id ? updatedArticle : article,
-    ),
-  );
-  setDrawerOpen(false);
+async function openEditDrawer(id: number) {
+  const articleDetail = await getArticle(id);
+  setEditingArticle(articleDetail);
+  setDrawerMode("edit");
+  setDrawerOpen(true);
 }
 ```
 
-最后把 Drawer 的内容改为根据模式显示新建或编辑表单：
+`getArticle(id)` 返回完整的 `Article`。`articleDetail` 表示这次请求拿到的文章详情；把它保存到 `editingArticle` 后，再把模式切换为编辑并打开 Drawer。
+
+这一小节先跑通请求成功的正常流程，所以拿到详情后才打开 Drawer；第 12.3 节再改成先打开 Drawer 显示加载状态，并补上请求失败提示。
+
+#### 12.2.3 Drawer 读取 editingArticle 并回填表单
+
+把 Drawer 的内容改为根据模式显示新建或编辑表单：
 
 ```tsx
 {drawerMode === "create" ? (
@@ -1631,9 +1641,38 @@ async function handleUpdate(values: ArticleFormValues) {
 ) : null}
 ```
 
+Drawer 没有直接接收 Table 当前行。它读取同一页面状态中的 `editingArticle`，再把标题、slug、摘要、正文和状态转换成 `ArticleFormValues`，交给表单的 `initialValues`。
+
 新建和编辑开始共用 Drawer 后，`key="create"` 和 ``key={`edit-${editingArticle.id}`}`` 让 React 把它们识别为不同的表单实例，切换时会重新应用各自的初始值。
 
-`editingArticle` 为编辑表单提供完整原值；其中 `summary ?? ""` 把 API 可能返回的 `null` 转成文本框使用的空字符串。现在编辑按钮、详情回填、PATCH 请求和表格更新已经形成一条完整链路。
+`summary ?? ""` 把 API 可能返回的 `null` 转成文本框使用的空字符串。
+
+#### 12.2.4 提交更新，再替换 Table 中的旧行
+
+编辑表单提交后，使用 `editingArticle.id` 和新的表单值发送 PATCH 请求：
+
+```tsx
+async function handleUpdate(values: ArticleFormValues) {
+  if (!editingArticle) {
+    throw new Error("缺少要编辑的文章");
+  }
+
+  const updatedArticle = await updateArticle(editingArticle.id, values);
+  setArticles((currentArticles) =>
+    currentArticles.map((article) =>
+      article.id === updatedArticle.id ? updatedArticle : article,
+    ),
+  );
+  setDrawerOpen(false);
+}
+```
+
+`updateArticle()` 返回更新后的完整文章。React 把最新文章数组作为 `currentArticles` 传入更新函数，`map()` 再逐行检查：
+
+- 当前行的 `id` 等于 `updatedArticle.id`：用 `updatedArticle` 替换旧文章。
+- `id` 不相等：保留原来的 `article`。
+
+`setArticles()` 保存新数组后，Table 重新渲染，刚才编辑的那一行就会显示最新数据，然后 Drawer 关闭。到这里，“点击编辑 → 请求详情 → 回填表单 → 提交更新 → 刷新当前行”形成一条完整链路。
 
 ### 12.3 正常流程跑通后，再完善页面反馈
 
