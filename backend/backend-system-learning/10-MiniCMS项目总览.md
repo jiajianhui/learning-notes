@@ -147,7 +147,7 @@ mini-cms/
 
 | 前端项目 | 目录 | 主要章节 | 完成要求 |
 |---|---|---|---|
-| A：Ant Design | `admin-web-antd` | 第 13 章学习 `fetch`，第 14 章跟练，并跟随阶段 5～6 补齐功能 | 用 `fetch` 完成登录、文章和标签管理 |
+| A：Ant Design | `admin-web-antd` | 第 13 章学习 `fetch`，第 14 章跟练，第 14A 章串起数据和错误传递，并跟随阶段 5～6 补齐功能 | 用 `fetch` 完成登录、文章和标签管理 |
 | B：shadcn/ui | `admin-web-shadcn` | 第 23～27 章 | 用 Axios 完成同等核心链路，并掌握 TanStack Table、React Hook Form |
 
 项目 A 先实现，项目 B 后实现。顺序用于控制学习难度，最终验收时两者地位相同。
@@ -279,12 +279,13 @@ DELETE /api/articles/:id
 
 ### 阶段 4：完成 Ant Design 文章管理页面
 
-这是 Mini CMS 的前端起点。第 13 章先讲清前后端之间的 HTTP 边界和两个前端项目总览，第 14 章再创建真实 `admin-web-antd`，不会新建临时前端 demo。
+这是 Mini CMS 的前端起点。第 13 章先讲清前后端之间的 HTTP 边界和两个前端项目总览，第 14 章再创建真实 `admin-web-antd`，第 14A 章专门拆解页面、表单和 API 之间的数据与错误传递。这两章都不会新建临时前端 demo。
 
 开始前回看：
 
 - [13-前后端怎样通过 HTTP 协作](./13-前后端怎样通过HTTP协作.md)
 - [14-Ant Design 管理后台跟练](./14-Ant-Design管理后台跟练.md)
+- [14A-数据和错误怎样在页面与表单之间传递](./14A-数据和错误怎样在页面与表单之间传递.md)
 
 完成：
 

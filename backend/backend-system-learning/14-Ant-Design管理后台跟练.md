@@ -773,7 +773,7 @@ export default function AdminPage() {
 }
 ```
 
-`columns` 决定表格显示哪些列。每个 `dataIndex` 都对应 `ArticleListItem` 中的同名属性，`dataSource={articles}` 再把文章数组交给表格。请求完成并执行 `setArticles(result)` 后，组件重新渲染，表格就会显示文章数据。
+`columns` 决定表格显示哪些列。每个 `dataIndex` 都对应 `ArticleListItem` 中的同名属性，`dataSource={articles}` 再把文章数组交给表格。`rowKey="id"` 告诉 Table 使用每篇文章的 `id` 识别对应的行，它不负责把 ID 显示成一列。请求完成并执行 `setArticles(result)` 后，组件重新渲染，表格就会显示文章数据。
 
 `getArticles()` 请求失败时，`apiRequest()` 抛出的错误会沿着 Promise 回到 `loadArticles()`。这里用 `catch` 把错误信息写入 `message`，页面就不会一直停在“加载中……”。
 
@@ -1277,7 +1277,7 @@ export function ArticleForm({
         <Alert
           type="error"
           showIcon
-          message="保存失败"
+          title="保存失败"
           description={submitError}
           className="mb-6"
         />
@@ -1369,13 +1369,24 @@ export function ArticleForm({
 
 编辑时，父组件会传入完整的 `initialValues`。因为 `...initialValues` 写在 `status: "draft"` 后面，文章原来的 `status` 会覆盖默认的 `draft`，其他字段也会按各自的 `name` 回填到表单。
 
-`onSubmit` 的返回类型是 `Promise<void>`，因为第 12 节传入的 `handleCreate()` 和 `handleUpdate()` 都要等待 API 请求。`Promise` 表示提交结果稍后才能确定，`void` 表示函数完成后不需要再返回业务数据。`ArticleForm` 通过 `await onSubmit(values)` 等待请求结束，才能正确维持 `loading` 并捕获请求错误。
+每个 `Form.Item` 的 `name` 都会把一个字段登记给 Form。用户输入时，Ant Design Form 会在内部保存这些字段的当前值；点击提交且全部校验通过后，它会调用 `onFinish` 接收的函数，并把当前表单数据作为第一个参数传入：
+
+```tsx
+onFinish={handleFinish}
+
+// 校验通过后，可以理解为 Ant Design Form 调用：
+handleFinish(currentFormValues);
+```
+
+因此，`handleFinish(values)` 中的 `values` 就是这次提交时的表单数据。`values` 只是形参名，改成 `formData` 也可以；对象中的 `title`、`slug` 等属性名来自对应 `Form.Item` 的 `name`，不是 Ant Design 凭空生成的。
+
+`onSubmit` 的返回类型是 `Promise<void>`，因为第 12 节传入的箭头函数会返回 `handleCreate()` 或 `handleUpdate()` 产生的 Promise。`Promise` 表示提交结果稍后才能确定，`void` 表示函数完成后不需要再返回业务数据。`ArticleForm` 通过 `await onSubmit(values)` 等待请求结束，才能正确维持 `loading` 并捕获请求错误。
 
 这段代码按下面的顺序工作：
 
 1. 父组件传入初始值、按钮文案、取消函数和提交函数。
 2. Ant Design Form 保存用户输入，并使用每个 `Form.Item` 的 `rules` 校验字段。
-3. 校验通过后，`onFinish` 把整张表单的 `values` 交给 `handleFinish()`。
+3. 校验通过后，Form 调用 `onFinish={handleFinish}` 传入的函数，并把当前表单数据作为第一个参数交给 `handleFinish()`。
 4. `handleFinish()` 开启提交状态并等待 `onSubmit(values)`；失败时显示错误，结束后恢复按钮。
 
 `ArticleForm` 不导入 `createArticle()` 或 `updateArticle()`。第 12 节的父组件会根据新建或编辑传入不同的 `onSubmit`，所以这里只需要调用 `onSubmit(values)`。
@@ -1398,12 +1409,14 @@ export function ArticleForm({
 | `Input` 的 `placeholder` | 在没有输入时显示示例文字 |
 | `Input.TextArea` 的 `rows` | 设置多行文本框的默认行数 |
 | `Select` 的 `options` | 定义下拉选项的值和显示文字 |
-| `Alert` 的 `type` / `showIcon` / `message` / `description` | 定义提示类型、图标、标题和详细错误 |
+| `Alert` 的 `type` / `showIcon` / `title` / `description` | 定义提示类型、图标、标题和详细错误 |
 | `<Space>` | 让内部按钮自动保持间距 |
 | `type="primary"` | 使用 Ant Design 的主操作按钮样式 |
 | `htmlType="submit"` | 把按钮设为 HTML 提交按钮，点击后触发 Form 提交 |
 | `loading={submitting}` | 请求期间显示加载状态并防止重复点击 |
 | `onClick={onCancel}` / `disabled={submitting}` | 点击时执行取消函数；提交期间禁用取消按钮 |
+
+Ant Design 6 已弃用 `Alert` 的 `message` 属性，本章使用 `title` 设置提示标题。下面 `Form.Item` 校验规则中的 `message` 是另一个属性，仍用来设置字段校验失败时的文案。
 
 `rules` 是 Ant Design `Form.Item` 的前端校验写法。标题长度、slug 格式、摘要长度和正文长度等业务限制应当与后端 Zod 保持一致，这样页面能尽早给出正确提示。但两层不需要完全复制：例如后端允许创建时省略 `status`，而当前 UI 会默认提交 `draft`。
 
@@ -1512,13 +1525,13 @@ async function handleCreate(values: ArticleFormValues) {
     <ArticleForm
       submitText="创建文章"
       onCancel={() => setDrawerOpen(false)}
-      onSubmit={handleCreate}
+      onSubmit={(values) => handleCreate(values)}
     />
   ) : null}
 </Drawer>
 ```
 
-`submitText` 设置提交按钮文字，`onCancel` 负责关闭抽屉，`onSubmit` 把校验通过的表单值交给 `handleCreate()`。
+`submitText` 设置提交按钮文字，`onCancel` 负责关闭抽屉。`onSubmit` 的箭头函数显式接收校验通过的 `values`，再调用 `handleCreate(values)`。
 
 `size="large"` 使用较宽的抽屉，`destroyOnHidden` 在抽屉关闭后卸载表单，避免下次打开时保留上一次输入。
 
@@ -1622,7 +1635,7 @@ async function openEditDrawer(id: number) {
     key="create"
     submitText="创建文章"
     onCancel={() => setDrawerOpen(false)}
-    onSubmit={handleCreate}
+    onSubmit={(values) => handleCreate(values)}
   />
 ) : editingArticle ? (
   <ArticleForm
@@ -1636,7 +1649,9 @@ async function openEditDrawer(id: number) {
     }}
     submitText="保存修改"
     onCancel={() => setDrawerOpen(false)}
-    onSubmit={handleUpdate}
+    onSubmit={(values) =>
+      handleUpdate(editingArticle.id, values)
+    }
   />
 ) : null}
 ```
@@ -1649,15 +1664,14 @@ Drawer 没有直接接收 Table 当前行。它读取同一页面状态中的 `e
 
 #### 12.2.4 提交更新，再替换 Table 中的旧行
 
-编辑表单提交后，使用 `editingArticle.id` 和新的表单值发送 PATCH 请求：
+编辑表单提交后，`onSubmit` 的箭头函数把 `editingArticle.id` 作为第一个参数，把表单 `values` 作为第二个参数，再调用 `handleUpdate(id, values)`：
 
 ```tsx
-async function handleUpdate(values: ArticleFormValues) {
-  if (!editingArticle) {
-    throw new Error("缺少要编辑的文章");
-  }
-
-  const updatedArticle = await updateArticle(editingArticle.id, values);
+async function handleUpdate(
+  id: number,
+  values: ArticleFormValues,
+) {
+  const updatedArticle = await updateArticle(id, values);
   setArticles((currentArticles) =>
     currentArticles.map((article) =>
       article.id === updatedArticle.id ? updatedArticle : article,
@@ -1681,6 +1695,8 @@ async function handleUpdate(values: ArticleFormValues) {
 ### 12.3 正常流程跑通后，再完善页面反馈
 
 前两步已经完成 CRUD 的正常流程。现在再处理三个实际问题：列表加载、详情加载和请求失败。
+
+请求状态的处理模式可以复用，但不同请求的状态不能混用。列表请求和详情请求都会经历“加载→成功或失败”，但它们影响的页面区域不同：列表状态交给 Table 使用，详情状态交给编辑 Drawer 使用。因此本节分别保存两组状态。
 
 先在 Ant Design 导入中增加 `Alert` 和 `App`：
 
@@ -1706,7 +1722,11 @@ const [detailLoading, setDetailLoading] = useState(false);
 const [detailError, setDetailError] = useState<string | null>(null);
 ```
 
-第 12.2 节的 `editingArticle` 保存详情数据；现在补上的 `detailLoading` 和 `detailError` 分别保存加载状态和失败原因。三个状态合在一起，才能完整描述一次详情请求。
+`App.useApp()` 读取前面 `<App>` 提供的页面反馈工具。`const { message: messageApi }` 从返回对象中取出 `message` 并改名为 `messageApi`，后面便可以调用 `messageApi.success()` 显示成功提示。
+
+`listLoading` 和 `listError` 描述 `getArticles()` 列表请求。第 12.2 节的 `editingArticle` 保存 `getArticle(id)` 返回的详情数据，`detailLoading` 和 `detailError` 分别保存这次详情请求的加载状态和失败原因。
+
+`detailLoading` 只会在编辑前使用，因为编辑需要先请求已有文章的详情，新建空表单没有这次请求。这个名称按“正在加载文章详情”命名，不叫 `drawerLoading`；Drawer 同时承载新建和编辑，不能准确说明是哪次请求正在加载。
 
 把第 9 节的列表请求改为：
 
@@ -1775,7 +1795,7 @@ Drawer 使用 `loading` 显示详情加载状态，失败时显示 `Alert`，成
   <Alert
     type="error"
     showIcon
-    message="文章列表加载失败"
+    title="文章列表加载失败"
     description={listError}
   />
 ) : null}
@@ -1800,13 +1820,13 @@ Drawer 使用 `loading` 显示详情加载状态，失败时显示 `Alert`，成
       key="create"
       submitText="创建文章"
       onCancel={() => setDrawerOpen(false)}
-      onSubmit={handleCreate}
+      onSubmit={(values) => handleCreate(values)}
     />
   ) : detailError ? (
     <Alert
       type="error"
       showIcon
-      message="文章详情加载失败"
+      title="文章详情加载失败"
       description={detailError}
     />
   ) : editingArticle ? (
@@ -1821,13 +1841,17 @@ Drawer 使用 `loading` 显示详情加载状态，失败时显示 `Alert`，成
       }}
       submitText="保存修改"
       onCancel={() => setDrawerOpen(false)}
-      onSubmit={handleUpdate}
+      onSubmit={(values) =>
+        handleUpdate(editingArticle.id, values)
+      }
     />
   ) : null}
 </Drawer>
 ```
 
 在 `handleCreate()` 和 `handleUpdate()` 的 `setDrawerOpen(false)` 后面，分别调用 `messageApi.success("文章已创建")` 和 `messageApi.success("文章已保存")`。保存失败仍由第 11 节的 `ArticleForm` 显示错误并保留输入内容。这些状态和提示不负责完成 CRUD，只负责把已经跑通的页面补完整。
+
+这里同时存在两个方向：表单值通过 `onSubmit` 传给外层页面，请求错误又沿着 `handleCreate()` 或 `handleUpdate()` 返回的失败 Promise 传回 `ArticleForm`。如果还不清楚函数、成功数据、错误和状态分别怎样传递，先阅读[14A-数据和错误怎样在页面与表单之间传递](./14A-数据和错误怎样在页面与表单之间传递.md)，再继续对照完整页面代码。
 
 ### 12.4 按需对照完整页面代码
 
@@ -1935,12 +1959,11 @@ export default function ArticlesPage() {
     messageApi.success("文章已创建");
   }
 
-  async function handleUpdate(values: ArticleFormValues) {
-    if (!editingArticle) {
-      throw new Error("缺少要编辑的文章");
-    }
-
-    const updatedArticle = await updateArticle(editingArticle.id, values);
+  async function handleUpdate(
+    id: number,
+    values: ArticleFormValues,
+  ) {
+    const updatedArticle = await updateArticle(id, values);
     setArticles((currentArticles) =>
       currentArticles.map((article) =>
         article.id === updatedArticle.id ? updatedArticle : article,
@@ -2006,7 +2029,7 @@ export default function ArticlesPage() {
         <Alert
           type="error"
           showIcon
-          message="文章列表加载失败"
+          title="文章列表加载失败"
           description={listError}
           className="mt-6"
         />
@@ -2035,13 +2058,13 @@ export default function ArticlesPage() {
             key="create"
             submitText="创建文章"
             onCancel={() => setDrawerOpen(false)}
-            onSubmit={handleCreate}
+            onSubmit={(values) => handleCreate(values)}
           />
         ) : detailError ? (
           <Alert
             type="error"
             showIcon
-            message="文章详情加载失败"
+            title="文章详情加载失败"
             description={detailError}
           />
         ) : editingArticle ? (
@@ -2056,7 +2079,9 @@ export default function ArticlesPage() {
             }}
             submitText="保存修改"
             onCancel={() => setDrawerOpen(false)}
-            onSubmit={handleUpdate}
+            onSubmit={(values) =>
+              handleUpdate(editingArticle.id, values)
+            }
           />
         ) : null}
       </Drawer>
@@ -2338,6 +2363,7 @@ npm run build
 - [Ant Design：Layout 布局](https://ant.design/components/layout-cn/)
 - [Ant Design：Menu 导航菜单](https://ant.design/components/menu-cn/)
 - [Ant Design：Form 表单](https://ant.design/components/form-cn/)
+- [Ant Design：Alert 警告提示](https://ant.design/components/alert-cn/)
 - [Ant Design：Button 按钮](https://ant.design/components/button-cn/)
 - [Ant Design：Drawer 抽屉](https://ant.design/components/drawer-cn/)
 - [Ant Design：在 Next.js App Router 中使用](https://ant.design/docs/react/use-with-next/)
