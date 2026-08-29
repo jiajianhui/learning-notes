@@ -49,7 +49,7 @@ npx create-next-app@latest admin-web-antd \
   --ts \
   --eslint \
   --app \
-  --no-tailwind \
+  --tailwind \
   --import-alias "@/*" \
   --use-npm \
   --disable-git
@@ -57,7 +57,7 @@ npx create-next-app@latest admin-web-antd \
 
 如果命令询问是否把代码放进 `src/`，选择 `No`。本项目使用根目录的 `app/`。
 
-`--disable-git` 避免子项目再次初始化 Git。三个子项目共用 `mini-cms/.git`。
+`--tailwind` 会安装 Tailwind CSS 和 PostCSS 配置。后面的页面使用 Tailwind 工具类处理布局与间距，再使用 Ant Design token 调整组件内部样式。`--disable-git` 避免子项目再次初始化 Git，三个子项目共用 `mini-cms/.git`。
 
 先进入新项目并启动一次：
 
@@ -149,6 +149,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 把 `app/globals.css` 简化为：
 
 ```css
+@import "tailwindcss";
+
 * {
   box-sizing: border-box;
 }
@@ -159,6 +161,8 @@ body {
   min-height: 100%;
 }
 ```
+
+第一行 `@import "tailwindcss";` 必须保留，它负责生成后面会使用的 `h-screen`、`p-10`、`mb-4` 等工具类。删除这一行后，项目虽然仍然安装了 Tailwind，页面中的这些 class 也不会产生对应样式。
 
 根 `layout.tsx` 只负责包住整个应用，没有状态和点击事件，因此不需要写 `"use client"`。
 
@@ -1272,17 +1276,8 @@ export function ArticleForm({
       layout="vertical"
       initialValues={{ status: "draft", ...initialValues }}
       onFinish={handleFinish}
+      scrollToFirstError={{ focus: true }}
     >
-      {submitError ? (
-        <Alert
-          type="error"
-          showIcon
-          title="保存失败"
-          description={submitError}
-          className="mb-6"
-        />
-      ) : null}
-
       <Form.Item
         name="title"
         label="标题"
@@ -1342,6 +1337,17 @@ export function ArticleForm({
         />
       </Form.Item>
 
+      {submitError ? (
+        <div className="mb-4">
+          <Alert
+            type="error"
+            showIcon
+            title="保存失败"
+            description={submitError}
+          />
+        </div>
+      ) : null}
+
       <Space>
         <Button type="primary" htmlType="submit" loading={submitting}>
           {submitText}
@@ -1389,9 +1395,11 @@ handleFinish(currentFormValues);
 3. 校验通过后，Form 调用 `onFinish={handleFinish}` 传入的函数，并把当前表单数据作为第一个参数交给 `handleFinish()`。
 4. `handleFinish()` 开启提交状态并等待 `onSubmit(values)`；失败时显示错误，结束后恢复按钮。
 
+`scrollToFirstError={{ focus: true }}` 只处理 `rules` 发现的字段错误：点击提交后，Form 会滚动到第一个错误字段并把输入焦点放进去，此时不会调用 `handleFinish()`。重复 slug 等 API 错误发生在 `rules` 已经通过、`handleFinish()` 已经执行之后，因此不会触发这个自动滚动；这类错误通过提交按钮上方的 `Alert` 展示，用户刚点击完保存就能看到。
+
 `ArticleForm` 不导入 `createArticle()` 或 `updateArticle()`。第 12 节的父组件会根据新建或编辑传入不同的 `onSubmit`，所以这里只需要调用 `onSubmit(values)`。
 
-取消按钮调用 `onCancel` 关闭抽屉，提交失败时则把后端返回的错误显示在表单顶部。
+取消按钮调用 `onCancel` 关闭抽屉，提交失败时则把后端返回的错误显示在提交按钮上方。
 
 ### 11.4 代码中用到的 Ant Design 属性
 
@@ -1405,11 +1413,13 @@ handleFinish(currentFormValues);
 | `layout="vertical"` | 让标签显示在输入控件上方 |
 | `initialValues={...}` | 设置表单初始值：新建时默认为草稿，编辑时由文章原值覆盖 |
 | `onFinish={handleFinish}` | 点击提交且 `rules` 全部通过后，调用 `handleFinish(values)` |
+| `scrollToFirstError={{ focus: true }}` | `rules` 校验失败时滚动并聚焦第一个错误字段 |
 | `Form.Item` 的 `name` / `label` / `rules` / `extra` | 分别定义字段名、页面标签、校验规则和补充说明 |
 | `Input` 的 `placeholder` | 在没有输入时显示示例文字 |
 | `Input.TextArea` 的 `rows` | 设置多行文本框的默认行数 |
 | `Select` 的 `options` | 定义下拉选项的值和显示文字 |
 | `Alert` 的 `type` / `showIcon` / `title` / `description` | 定义提示类型、图标、标题和详细错误 |
+| `<div className="mb-4">` | 在 `Alert` 外层使用 Tailwind，给错误提示和提交按钮之间增加下间距 |
 | `<Space>` | 让内部按钮自动保持间距 |
 | `type="primary"` | 使用 Ant Design 的主操作按钮样式 |
 | `htmlType="submit"` | 把按钮设为 HTML 提交按钮，点击后触发 Form 提交 |
@@ -1417,6 +1427,8 @@ handleFinish(currentFormValues);
 | `onClick={onCancel}` / `disabled={submitting}` | 点击时执行取消函数；提交期间禁用取消按钮 |
 
 Ant Design 6 已弃用 `Alert` 的 `message` 属性，本章使用 `title` 设置提示标题。下面 `Form.Item` 校验规则中的 `message` 是另一个属性，仍用来设置字段校验失败时的文案。
+
+Ant Design 会给 `Alert` 根节点设置自己的重置样式，其中包含 `margin: 0`。因此不要直接给 `Alert` 写 `className="mb-4"`；Tailwind 虽然会生成下边距，但可能被组件样式覆盖。把间距加在普通 `div` 上，可以让外层负责布局，`Alert` 只负责显示错误。后面的列表错误提示和 `Card` 也使用同样的外层包裹方式设置间距。
 
 `rules` 是 Ant Design `Form.Item` 的前端校验写法。标题长度、slug 格式、摘要长度和正文长度等业务限制应当与后端 Zod 保持一致，这样页面能尽早给出正确提示。但两层不需要完全复制：例如后端允许创建时省略 `status`，而当前 UI 会默认提交 `draft`。
 
@@ -2026,24 +2038,27 @@ export default function ArticlesPage() {
       </div>
 
       {listError ? (
-        <Alert
-          type="error"
-          showIcon
-          title="文章列表加载失败"
-          description={listError}
-          className="mt-6"
-        />
+        <div className="mt-6">
+          <Alert
+            type="error"
+            showIcon
+            title="文章列表加载失败"
+            description={listError}
+          />
+        </div>
       ) : null}
 
-      <Card className="mt-6 border-slate-200 shadow-sm">
-        <Table
-          rowKey="id"
-          loading={listLoading}
-          columns={columns}
-          dataSource={articles}
-          locale={{ emptyText: "暂无文章" }}
-        />
-      </Card>
+      <div className="mt-6">
+        <Card>
+          <Table
+            rowKey="id"
+            loading={listLoading}
+            columns={columns}
+            dataSource={articles}
+            locale={{ emptyText: "暂无文章" }}
+          />
+        </Card>
+      </div>
 
       <Drawer
         title={drawerMode === "create" ? "新建文章" : "编辑文章"}
@@ -2271,6 +2286,29 @@ npm run dev
 ```
 
 当前 Mini CMS 的删除接口返回 `200` 和被删除文章的 JSON，与 `apiRequest()` 读取 JSON 的写法一致。
+
+### 14.5 手动验证加载状态和错误提示
+
+正常请求在本机可能很快结束，页面上的 loading 会一闪而过。要观察加载状态，可以打开浏览器开发者工具的 Network 面板，选择一个慢速网络预设，再执行刷新、编辑、保存或删除操作。
+
+按照下面的顺序分别验证。每次停止 Express 后，先重新启动它并恢复正常页面，再进入下一个场景，避免一次失败影响其他判断。
+
+| 要验证的状态 | 怎样触发 | 页面应该怎样显示 |
+|---|---|---|
+| `listLoading` | 使用慢速网络刷新 `/admin/articles` | Table 显示加载状态，请求完成后显示列表或空状态 |
+| `listError` | 停止 Express，再刷新页面 | Table 上方显示“文章列表加载失败” |
+| `detailLoading` | 使用慢速网络点击某一行的“编辑” | Drawer 打开并显示详情加载状态，完成后出现表单 |
+| `detailError` | 先正常打开列表，再停止 Express，点击“编辑” | Drawer 内显示“文章详情加载失败”，原列表仍然保留 |
+| `submitting` | 使用慢速网络提交新建或编辑表单 | 提交按钮显示加载状态，不能重复提交 |
+| `submitError` | Express 正常运行时，再提交一次已经存在的 slug | Drawer 不关闭，已填内容保留，提交按钮上方显示保存错误 |
+| `deletingId` | 使用慢速网络确认删除 | 只有当前行的删除按钮显示加载状态 |
+| 删除错误提示 | 先正常打开列表，再停止 Express，确认删除 | 页面显示删除失败消息，原文章仍然留在列表中 |
+
+标题留空或输入错误格式的 slug，验证的是 `Form.Item rules` 的前端校验提示。这类错误会阻止提交，不会发送 API 请求。重复 slug、服务器停止等情况验证的才是 API 请求失败后的错误传递和展示。
+
+不要只把 `listError` 或 `submitError` 的初始值临时改成一段文字。这样只能看到提示组件的外观，不能证明请求失败后对应的 `catch`、状态更新和页面展示已经连通。
+
+第 17、17A 章会使用 Vitest 和 Supertest 自动验证后端 API 的状态码与错误结构，但不会打开浏览器检查这里的 `Alert`、Drawer 和按钮 loading。当前学习路线暂时不增加浏览器端 E2E 测试，因此本节仍是前端页面反馈的手动验收。
 
 ---
 
