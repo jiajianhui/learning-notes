@@ -162,7 +162,7 @@ body {
 }
 ```
 
-第一行 `@import "tailwindcss";` 必须保留，它负责生成后面会使用的 `h-screen`、`p-10`、`mb-4` 等工具类。删除这一行后，项目虽然仍然安装了 Tailwind，页面中的这些 class 也不会产生对应样式。
+第一行 `@import "tailwindcss";` 必须保留，它负责生成后面会使用的 `h-screen`、`p-10`、`mb-6` 等工具类。删除这一行后，项目虽然仍然安装了 Tailwind，页面中的这些 class 也不会产生对应样式。
 
 根 `layout.tsx` 只负责包住整个应用，没有状态和点击事件，因此不需要写 `"use client"`。
 
@@ -1156,7 +1156,7 @@ export function getArticles() {
   return apiRequest<ArticleListItem[]>("/api/articles");
 }
 
-export function getArticle(id: number) {
+export function getArticleById(id: number) {
   return apiRequest<Article>(`/api/articles/${id}`);
 }
 
@@ -1321,7 +1321,7 @@ export function ArticleForm({
           { max: 100000, message: "正文不能超过 100000 个字符" },
         ]}
       >
-        <Input.TextArea rows={12} />
+        <Input.TextArea rows={14} />
       </Form.Item>
 
       <Form.Item
@@ -1338,7 +1338,7 @@ export function ArticleForm({
       </Form.Item>
 
       {submitError ? (
-        <div className="mb-4">
+        <div className="mb-6">
           <Alert
             type="error"
             showIcon
@@ -1419,7 +1419,7 @@ handleFinish(currentFormValues);
 | `Input.TextArea` 的 `rows` | 设置多行文本框的默认行数 |
 | `Select` 的 `options` | 定义下拉选项的值和显示文字 |
 | `Alert` 的 `type` / `showIcon` / `title` / `description` | 定义提示类型、图标、标题和详细错误 |
-| `<div className="mb-4">` | 在 `Alert` 外层使用 Tailwind，给错误提示和提交按钮之间增加下间距 |
+| `<div className="mb-6">` | 在 `Alert` 外层使用 Tailwind，给错误提示和提交按钮之间增加下间距 |
 | `<Space>` | 让内部按钮自动保持间距 |
 | `type="primary"` | 使用 Ant Design 的主操作按钮样式 |
 | `htmlType="submit"` | 把按钮设为 HTML 提交按钮，点击后触发 Form 提交 |
@@ -1428,7 +1428,7 @@ handleFinish(currentFormValues);
 
 Ant Design 6 已弃用 `Alert` 的 `message` 属性，本章使用 `title` 设置提示标题。下面 `Form.Item` 校验规则中的 `message` 是另一个属性，仍用来设置字段校验失败时的文案。
 
-Ant Design 会给 `Alert` 根节点设置自己的重置样式，其中包含 `margin: 0`。因此不要直接给 `Alert` 写 `className="mb-4"`；Tailwind 虽然会生成下边距，但可能被组件样式覆盖。把间距加在普通 `div` 上，可以让外层负责布局，`Alert` 只负责显示错误。后面的列表错误提示和 `Card` 也使用同样的外层包裹方式设置间距。
+Ant Design 会给 `Alert` 根节点设置自己的重置样式，其中包含 `margin: 0`。因此不要直接给 `Alert` 写 `className="mb-6"`；Tailwind 虽然会生成下边距，但可能被组件样式覆盖。把间距加在普通 `div` 上，可以让外层负责布局，`Alert` 只负责显示错误。后面的列表错误提示和 `Card` 也使用同样的外层包裹方式设置间距。
 
 `rules` 是 Ant Design `Form.Item` 的前端校验写法。标题长度、slug 格式、摘要长度和正文长度等业务限制应当与后端 Zod 保持一致，这样页面能尽早给出正确提示。但两层不需要完全复制：例如后端允许创建时省略 `status`，而当前 UI 会默认提交 `draft`。
 
@@ -1493,16 +1493,16 @@ function openCreateDrawer() {
 }
 
 async function handleCreate(values: ArticleFormValues) {
-  const createdArticle = await createArticle(values);
-  setArticles((currentArticles) => [
-    createdArticle,
-    ...currentArticles,
+  const newArticle = await createArticle(values);
+  setArticles((current) => [
+    newArticle,
+    ...current,
   ]);
   setDrawerOpen(false);
 }
 ```
 
-`handleCreate()` 把表单值交给 POST 请求。`currentArticles` 是更新函数的形参，React 会把最新的 `articles` 数组传给它；新文章放到这个数组最前面后，页面再关闭抽屉。
+`handleCreate()` 把表单值交给 POST 请求。`current` 是更新函数的形参，React 会把最新的 `articles` 数组传给它；新文章放到这个数组最前面后，页面再关闭抽屉。
 
 在 Table 上方放置按钮：
 
@@ -1556,7 +1556,7 @@ async function handleCreate(values: ArticleFormValues) {
 ```text
 Table 渲染每一行时，调用操作列的 render，并传入当前行的 article
 -> 点击“编辑”，把 article.id 交给 openEditDrawer()
--> getArticle(id) 请求完整文章
+-> getArticleById(id) 请求完整文章
 -> setEditingArticle() 保存完整文章
 -> 打开 Drawer，用 editingArticle 回填表单
 -> 提交 PATCH 请求
@@ -1576,7 +1576,7 @@ import {
 } from "antd";
 import {
   createArticle,
-  getArticle,
+  getArticleById,
   getArticles,
   updateArticle,
 } from "@/features/articles/api";
@@ -1626,14 +1626,14 @@ const [editingArticle, setEditingArticle] = useState<Article | null>(null);
 
 ```tsx
 async function openEditDrawer(id: number) {
-  const articleDetail = await getArticle(id);
+  const articleDetail = await getArticleById(id);
   setEditingArticle(articleDetail);
   setDrawerMode("edit");
   setDrawerOpen(true);
 }
 ```
 
-`getArticle(id)` 返回完整的 `Article`。`articleDetail` 表示这次请求拿到的文章详情；把它保存到 `editingArticle` 后，再把模式切换为编辑并打开 Drawer。
+`getArticleById(id)` 返回完整的 `Article`。`articleDetail` 表示这次请求拿到的文章详情；把它保存到 `editingArticle` 后，再把模式切换为编辑并打开 Drawer。
 
 这一小节先跑通请求成功的正常流程，所以拿到详情后才打开 Drawer；第 12.3 节再改成先打开 Drawer 显示加载状态，并补上请求失败提示。
 
@@ -1684,8 +1684,8 @@ async function handleUpdate(
   values: ArticleFormValues,
 ) {
   const updatedArticle = await updateArticle(id, values);
-  setArticles((currentArticles) =>
-    currentArticles.map((article) =>
+  setArticles((current) =>
+    current.map((article) =>
       article.id === updatedArticle.id ? updatedArticle : article,
     ),
   );
@@ -1693,7 +1693,7 @@ async function handleUpdate(
 }
 ```
 
-`updateArticle()` 返回更新后的完整文章。React 把最新文章数组作为 `currentArticles` 传入更新函数。`map()` 遍历旧数组，并把每次返回的元素组成一个新数组，不会直接修改原数组：
+`updateArticle()` 返回更新后的完整文章。React 把最新文章数组作为 `current` 传入更新函数。`map()` 遍历旧数组，并把每次返回的元素组成一个新数组，不会直接修改原数组：
 
 - 当前行的 `id` 等于 `updatedArticle.id`：用 `updatedArticle` 替换旧文章。
 - `id` 不相等：保留原来的 `article`。
@@ -1736,7 +1736,7 @@ const [detailError, setDetailError] = useState<string | null>(null);
 
 `App.useApp()` 读取前面 `<App>` 提供的页面反馈工具。`const { message: messageApi }` 从返回对象中取出 `message` 并改名为 `messageApi`，后面便可以调用 `messageApi.success()` 显示成功提示。
 
-`listLoading` 和 `listError` 描述 `getArticles()` 列表请求。第 12.2 节的 `editingArticle` 保存 `getArticle(id)` 返回的详情数据，`detailLoading` 和 `detailError` 分别保存这次详情请求的加载状态和失败原因。
+`listLoading` 和 `listError` 描述 `getArticles()` 列表请求。第 12.2 节的 `editingArticle` 保存 `getArticleById(id)` 返回的详情数据，`detailLoading` 和 `detailError` 分别保存这次详情请求的加载状态和失败原因。
 
 `detailLoading` 只会在编辑前使用，因为编辑需要先请求已有文章的详情，新建空表单没有这次请求。这个名称按“正在加载文章详情”命名，不叫 `drawerLoading`；Drawer 同时承载新建和编辑，不能准确说明是哪次请求正在加载。
 
@@ -1776,7 +1776,7 @@ async function openEditDrawer(id: number) {
   setDrawerOpen(true);
 
   try {
-    setEditingArticle(await getArticle(id));
+    setEditingArticle(await getArticleById(id));
   } catch (requestError) {
     setDetailError(
       requestError instanceof Error
@@ -1824,8 +1824,8 @@ async function handleUpdate(
   }
 
   const updatedArticle = await updateArticle(id, values);
-  setArticles((currentArticles) =>
-    currentArticles.map((article) =>
+  setArticles((current) =>
+    current.map((article) =>
       article.id === updatedArticle.id ? updatedArticle : article,
     ),
   );
@@ -1903,7 +1903,7 @@ Drawer 使用 `loading` 显示详情加载状态，失败时显示 `Alert`，成
 
 在 `handleCreate()` 的 `setDrawerOpen(false)` 后面调用 `messageApi.success("文章已创建")`；`handleUpdate()` 的成功提示已经在上面的完整函数中加入。保存失败仍由第 11 节的 `ArticleForm` 显示错误并保留输入内容。这些状态和提示不负责完成 CRUD，只负责把已经跑通的页面补完整。
 
-这里同时存在两个方向：表单值通过 `onSubmit` 传给外层页面，请求错误又沿着 `handleCreate()` 或 `handleUpdate()` 返回的失败 Promise 传回 `ArticleForm`。如果还不清楚函数、成功数据、错误和状态分别怎样传递，先阅读[14A-数据和错误怎样在页面与表单之间传递](./14A-数据和错误怎样在页面与表单之间传递.md)，再继续对照完整页面代码。
+这里同时存在两个方向：表单值通过 `onSubmit` 传给外层页面，请求错误又沿着 `handleCreate()` 或 `handleUpdate()` 返回的失败 Promise 传回 `ArticleForm`。本章先继续完成页面；全部跟练结束后，可以用第 14B 章进一步理解这段传递。
 
 ### 12.4 按需对照完整页面代码
 
@@ -1929,7 +1929,7 @@ import { useEffect, useState } from "react";
 import { ArticleForm } from "@/app/admin/articles/_components/article-form";
 import {
   createArticle,
-  getArticle,
+  getArticleById,
   getArticles,
   updateArticle,
 } from "@/features/articles/api";
@@ -1989,7 +1989,7 @@ export default function ArticlesPage() {
     setDrawerOpen(true);
 
     try {
-      setEditingArticle(await getArticle(id));
+      setEditingArticle(await getArticleById(id));
     } catch (requestError) {
       setDetailError(
         requestError instanceof Error
@@ -2002,10 +2002,10 @@ export default function ArticlesPage() {
   }
 
   async function handleCreate(values: ArticleFormValues) {
-    const createdArticle = await createArticle(values);
-    setArticles((currentArticles) => [
-      createdArticle,
-      ...currentArticles,
+    const newArticle = await createArticle(values);
+    setArticles((current) => [
+      newArticle,
+      ...current,
     ]);
     setDrawerOpen(false);
     messageApi.success("文章已创建");
@@ -2032,8 +2032,8 @@ export default function ArticlesPage() {
     }
 
     const updatedArticle = await updateArticle(id, values);
-    setArticles((currentArticles) =>
-      currentArticles.map((article) =>
+    setArticles((current) =>
+      current.map((article) =>
         article.id === updatedArticle.id ? updatedArticle : article,
       ),
     );
@@ -2218,7 +2218,7 @@ import {
 import {
   createArticle,
   deleteArticle,
-  getArticle,
+  getArticleById,
   getArticles,
   updateArticle,
 } from "@/features/articles/api";
@@ -2238,8 +2238,8 @@ async function handleDelete(id: number) {
 
   try {
     await deleteArticle(id);
-    setArticles((currentArticles) =>
-      currentArticles.filter((article) => article.id !== id),
+    setArticles((current) =>
+      current.filter((article) => article.id !== id),
     );
     messageApi.success("文章已删除");
   } catch (error) {
@@ -2480,7 +2480,7 @@ npm run dev
 
 -> Express 返回新文章
 -> apiRequest() 解析响应
--> handleCreate() 得到 createdArticle
+-> handleCreate() 得到 newArticle
 -> setArticles() 更新列表
 -> Table 显示新文章
 ```
@@ -2488,6 +2488,8 @@ npm run dev
 ---
 
 ## 16. 下一步继续完善同一个系统
+
+完成跟练后，先阅读[第 14A 章](./14A-从页面操作到数据库-一条线看懂管理后台CRUD.md)，把页面操作、`fetch`、Express、Prisma、数据库和 UI 更新收成一条完整主线；再阅读[第 14B 章](./14B-数据和错误怎样在页面与表单之间传递.md)，放大页面、表单、Promise、状态和错误之间的传递。这两章都是完成第 14 章后的扩展阅读，不需要在跟练中途跳出本章。
 
 第 15～17 章继续修改同一套 Mini CMS：
 
