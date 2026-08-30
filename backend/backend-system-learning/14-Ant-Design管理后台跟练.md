@@ -2252,6 +2252,10 @@ async function handleDelete(id: number) {
 
 DELETE 请求成功后，`filter()` 从当前 `articles` 中排除这篇文章，`setArticles()` 触发表格重新渲染。最后把操作列替换为：
 
+这里的 `id` 和 `deletingId` 职责不同：函数参数 `id` 表示本次确定要删除的文章，因此 `deleteArticle(id)` 和 `filter()` 都直接使用它；`deletingId` 只保存“当前正在删除哪一篇”，供按钮判断是否显示 loading。`setDeletingId(id)` 不会立即改变当前函数中的状态值，所以不能使用 `deletingId` 代替 `id` 过滤列表。
+
+名称使用 `deletingId`，而不是 `deletedId`：`deleting` 表示删除请求仍在进行，`finally` 执行后它会恢复为 `null`；它并不保存已经删除完成的文章。
+
 ```tsx
 {
   title: "操作",
@@ -2285,11 +2289,92 @@ DELETE 请求成功后，`filter()` 从当前 `articles` 中排除这篇文章�
 },
 ```
 
-`render` 拿到当前行的 `article`，编辑按钮用 `article.id` 打开抽屉，删除按钮用同一个 `id` 发送 DELETE 请求。`Popconfirm` 会先要求用户确认，确认后才调用 `handleDelete()`。
+`render` 拿到当前行的 `article`，编辑按钮用 `article.id` 打开抽屉，删除按钮用同一个 `id` 发送 DELETE 请求。`Popconfirm` 会先要求用户确认，确认后才调用 `handleDelete()`。`setDeletingId()` 本身不会显示任何内容；只有按钮读取 `deletingId === article.id` 后，当前行才会进入 loading 状态。本地请求很快时可能看不到这个短暂变化，第 14.5 节会说明怎样使用慢速网络验证。
 
 ---
 
 ## 14. 按四条链路完成联调
+
+### 14.0 先让 Express 打印 API 请求日志
+
+Next.js 开发终端会打印它处理的页面请求，例如：
+
+```text
+GET /admin/articles 200
+```
+
+这只能说明 `http://localhost:3000/admin/articles` 页面加载成功。页面挂载后，浏览器还会直接请求 `http://localhost:3001/api/articles`；这次请求绕过 Next.js，当前 Express 又没有请求日志，所以两个终端中不会自动出现对应的 API 记录。
+
+为了在联调时直接看到 Express 收到了什么请求，并更直观地识别每次响应的状态码，先在 `server/src/app.ts` 顶部导入 Node.js 自带的 `styleText`：
+
+```ts
+import { styleText } from "node:util";
+```
+
+再在 `export const app = express()` 后面增加一个日志中间件，并把它放在 CORS、JSON 解析和文章路由之前：
+
+```ts
+export const app = express();
+
+app.use((request, response, next) => {
+  const startTime = Date.now();
+
+  response.on("finish", () => {
+    const duration = Date.now() - startTime;
+    const statusCode = styleText(
+      "blue",
+      String(response.statusCode),
+    );
+
+    console.log(
+      `${request.method} ${request.originalUrl} ${statusCode} in ${duration}ms`,
+    );
+  });
+
+  next();
+});
+
+app.use(cors({
+  origin: "http://localhost:3000",
+}));
+```
+
+这段代码按照下面的顺序工作：
+
+```text
+浏览器的 API 请求到达 app.ts 中创建的 Express 应用
+-> Express 按 app.use() 的注册顺序，首先执行日志中间件
+-> startTime 记录请求进入日志中间件的时间
+-> response.on("finish", callback) 登记响应结束后要执行的函数
+-> next() 把请求交给后面的 CORS、JSON 解析和业务路由
+-> 路由查询数据库并返回响应
+-> 响应发送完成，触发 finish
+-> 用当前时间减去 startTime，得到请求耗时
+-> styleText() 把状态码显示为蓝色
+-> 打印请求方法、地址、状态码和耗时
+```
+
+`response.on("finish", ...)` 在登记时不会立即打印。只有后面的路由完成 `response.json()` 等响应操作后，回调才会读取最终的 `statusCode` 并计算总耗时。`styleText("blue", String(response.statusCode))` 先把数字状态码转成字符串，再给它增加蓝色终端样式；颜色只用于突出状态码，不改变响应内容。`next()` 则负责让请求继续进入后面的中间件和路由；如果这里不调用它，请求会停在日志中间件中。
+
+日志中间件需要放在文章路由之前，因为 Express 按注册顺序处理请求。如果文章路由已经返回响应，它通常不会再调用 `next()`，放在路由后面的日志中间件便没有机会执行。它不必绝对占据 `app.ts` 的第一行，只要位于需要记录的路由之前即可。
+
+增加后，Express 终端会出现类似记录：
+
+```text
+GET /api/articles 200 in 8ms
+POST /api/articles 201 in 15ms
+DELETE /api/articles/3 200 in 6ms
+```
+
+上面示例中的状态码会在实际终端中显示为蓝色。`styleText` 来自 Node.js，不需要安装新的依赖。
+
+#### Next.js 开发模式为什么可能出现两次请求
+
+当前 Next.js 项目在开发模式下使用 React Strict Mode。刷新页面时，它可能让负责加载列表的 `useEffect` 额外执行一次，因此 Express 终端和 Network 面板可能出现两次 `GET /api/articles`。这项检查只发生在开发模式，不要为了消除这两条记录关闭 Strict Mode。
+
+#### 浏览器为什么可能收到 304
+
+浏览器缓存中已经存在相同响应时，Express 还可能记录 `304`。它表示内容没有变化，浏览器继续使用缓存中的文章数据，不是请求失败；在 Network 面板勾选 `Disable cache` 后刷新，通常会重新看到 `200`。
 
 同时启动两个项目：
 
@@ -2308,7 +2393,7 @@ npm run dev
 ```text
 打开 /admin/articles
 -> 页面显示 loading
--> GET /api/articles 返回 200
+-> 在 Network 面板和 Express 终端确认 GET /api/articles 返回 200；使用缓存时可能是 304
 -> 有数据时显示表格，无数据时显示空状态
 ```
 
