@@ -2393,14 +2393,14 @@ npm run dev
 npm run dev
 ```
 
-依次检查：
+依次检查：页面用于确认操作结果，Express 终端用于确认请求和状态码。只有排错时才需要打开 Network 面板。
 
 ### 14.1 列表
 
 ```text
 打开 /admin/articles
 -> 页面显示 loading
--> 在 Network 面板和 Express 终端确认 GET /api/articles 返回 200；使用缓存时可能是 304
+-> 在 Express 终端确认 GET /api/articles 返回 200；使用缓存时可能是 304
 -> 有数据时显示表格，无数据时显示空状态
 ```
 
@@ -2409,19 +2409,19 @@ npm run dev
 ```text
 在 /admin/articles 点击“新建文章”
 -> 打开新建抽屉并提交合法文章
--> POST /api/articles 返回 201
+-> 在 Express 终端确认 POST /api/articles 返回 201
 -> 抽屉关闭，当前表格出现新文章
 ```
 
-再提交一次相同 slug，确认 Express 返回 409，抽屉保留输入并显示后端给出的错误信息。
+再提交一次相同 slug，在 Express 终端确认 `POST /api/articles` 返回 `409`；抽屉应保留输入并显示后端给出的错误信息。
 
 ### 14.3 编辑
 
 ```text
 在 /admin/articles 点击某一行的“编辑”
--> GET /api/articles/:id 返回详情
+-> 在 Express 终端确认 GET /api/articles/:id 返回 200
 -> 编辑抽屉回填文章内容
--> 修改后 PATCH /api/articles/:id 返回 200
+-> 修改并提交后，在 Express 终端确认 PATCH /api/articles/:id 返回 200
 -> 抽屉关闭，当前表格显示修改结果
 ```
 
@@ -2430,7 +2430,7 @@ npm run dev
 ```text
 点击删除
 -> 先出现确认提示
--> DELETE /api/articles/:id 返回 200
+-> 确认删除后，在 Express 终端确认 DELETE /api/articles/:id 返回 200
 -> 从 articles 状态中移除这篇文章
 -> 被删除文章消失
 ```
@@ -2462,61 +2462,28 @@ npm run dev
 
 ---
 
-## 15. 本章验收
-
-目录至少包含：
+## 15. 用新建文章串起完整数据流
 
 ```text
-admin-web-antd/
-├── app/
-│   ├── admin/
-│   │   ├── articles/
-│   │   │   ├── _components/article-form.tsx
-│   │   │   └── page.tsx
-│   │   ├── page-one/page.tsx
-│   │   ├── page-two/page.tsx
-│   │   └── layout.tsx
-│   ├── globals.css
-│   ├── layout.tsx
-│   └── page.tsx
-├── components/
-│   └── antd-provider.tsx
-├── features/articles/
-│   ├── api.ts
-│   └── types.ts
-├── lib/
-│   └── api-client.ts
-└── postcss.config.mjs
+浏览器中的 ArticleForm 收集 values
+-> page.tsx 的 handleCreate(values)
+-> features/articles/api.ts 的 createArticle()
+-> lib/api-client.ts 的 apiRequest()
+-> 浏览器直接向 localhost:3001 发送 POST /api/articles
+
+-> Express 进程收到请求
+-> app.ts 中间件依次处理请求
+-> article-router.ts 匹配 POST 路由
+-> article-schema.ts 校验数据
+-> article-repository.ts 调用 Prisma
+-> PostgreSQL 保存文章
+
+-> Express 返回新文章
+-> apiRequest() 解析响应
+-> handleCreate() 得到 createdArticle
+-> setArticles() 更新列表
+-> Table 显示新文章
 ```
-
-完成后运行：
-
-```bash
-npm run lint
-npm run build
-```
-
-并确认自己能回答：
-
-- `admin-web-antd` 和 `server` 为什么是两个项目？
-- `.env.local` 里的地址指向谁，为什么不是 `http://localhost:3000`？
-- `await fetch(...)` 和 `await response.json()` 分别得到什么？
-- 为什么 404 和 500 也要自己检查 `response.ok`？
-- 为什么第一次请求直接写在页面里，后面又拆成 `lib` 和 `features`？
-- `ConfigProvider` 和 Tailwind CSS 分别负责哪一层样式？
-- `colorPrimary` 为什么能同时影响主按钮和菜单选中状态？
-- 全局 `theme.token` 和 `components.Layout` 的作用范围有什么不同？
-- 为什么要等独立文章列表完成并验证后，再把公共部分移进 `admin/layout.tsx`？
-- 点击侧边栏后，是谁改变 URL，又是谁把新页面放进 `Content`？
-- 为什么切换“页面一”和“页面二”时，`Header` 与 `Sider` 不需要重新写？
-- 为什么前端表单已经校验，Express 仍然要保留 Zod？
-- 为什么新建和编辑使用同一个 `ArticleForm`，但不需要新建两个页面？
-- 编辑抽屉为什么要先请求文章详情，而新建抽屉不需要？
-- 新建一篇文章时，数据经过了哪些文件和进程？
-- `columns`、`dataIndex`、`dataSource` 和 `rowKey` 分别怎样帮助 `Table` 展示数据？
-- 删除成功后，为什么要使用 `setArticles()` 更新列表？
-
-全部能运行、能操作、能解释，再回到[第 10 章项目总览](./10-MiniCMS项目总览.md)完成阶段 4 验收。
 
 ---
 
