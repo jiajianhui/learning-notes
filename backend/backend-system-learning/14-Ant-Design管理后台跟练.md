@@ -1706,7 +1706,7 @@ async function handleUpdate(
 
 ### 12.3 正常流程跑通后，再完善页面反馈
 
-前两步已经完成 CRUD 的正常流程。现在再处理三个实际问题：列表加载、详情加载和请求失败。
+前两步已经完成 CRUD 的正常流程。现在再处理四个实际问题：列表加载、详情加载、请求失败，以及编辑内容没有变化时产生的无意义更新请求。
 
 请求状态的处理模式可以复用，但不同请求的状态不能混用。列表请求和详情请求都会经历“加载→成功或失败”，但它们影响的页面区域不同：列表状态交给 Table 使用，详情状态交给编辑 Drawer 使用。因此本节分别保存两组状态。
 
@@ -1800,6 +1800,46 @@ function openCreateDrawer() {
 }
 ```
 
+最后把 `handleUpdate()` 改为先比较表单值和原始文章，再决定是否发送更新请求：
+
+```tsx
+async function handleUpdate(
+  id: number,
+  values: ArticleFormValues,
+) {
+  if (!editingArticle) {
+    throw new Error("缺少要编辑的文章");
+  }
+
+  const isUnchanged =
+    values.title === editingArticle.title &&
+    values.slug === editingArticle.slug &&
+    values.summary === (editingArticle.summary ?? "") &&
+    values.content === editingArticle.content &&
+    values.status === editingArticle.status;
+
+  if (isUnchanged) {
+    messageApi.warning("内容没有变化");
+    return;
+  }
+
+  const updatedArticle = await updateArticle(id, values);
+  setArticles((currentArticles) =>
+    currentArticles.map((article) =>
+      article.id === updatedArticle.id ? updatedArticle : article,
+    ),
+  );
+  setDrawerOpen(false);
+  messageApi.success("文章已保存");
+}
+```
+
+`isUnchanged` 比较的是提交时的最终值。因此，无论用户完全没有修改，还是修改后又恢复原值，都不会调用 `updateArticle()`。如果确实修改了字段，当前固定字段的小表单仍然把完整的 `values` 交给 PATCH 接口，写法简单且足够清楚。
+
+摘要需要写成 `values.summary === (editingArticle.summary ?? "")`。API 中未填写的摘要可能是 `null`，但编辑表单的 `initialValues` 已经把它转换成空字符串；如果直接比较 `"" === null`，没有修改的摘要也会被误判为发生变化。
+
+`editingArticle` 的类型包含 `null`，所以函数开头先确认原始文章存在。没有变化时直接 `return`，`ArticleForm` 等待的 Promise 会正常结束，提交按钮恢复可用；Drawer 保持打开，并通过 `messageApi.warning()` 告诉用户没有需要保存的变化。
+
 Drawer 使用 `loading` 显示详情加载状态，失败时显示 `Alert`，成功时显示编辑表单。Table 同样使用 `listLoading` 和 `listError`：
 
 ```tsx
@@ -1861,7 +1901,7 @@ Drawer 使用 `loading` 显示详情加载状态，失败时显示 `Alert`，成
 </Drawer>
 ```
 
-在 `handleCreate()` 和 `handleUpdate()` 的 `setDrawerOpen(false)` 后面，分别调用 `messageApi.success("文章已创建")` 和 `messageApi.success("文章已保存")`。保存失败仍由第 11 节的 `ArticleForm` 显示错误并保留输入内容。这些状态和提示不负责完成 CRUD，只负责把已经跑通的页面补完整。
+在 `handleCreate()` 的 `setDrawerOpen(false)` 后面调用 `messageApi.success("文章已创建")`；`handleUpdate()` 的成功提示已经在上面的完整函数中加入。保存失败仍由第 11 节的 `ArticleForm` 显示错误并保留输入内容。这些状态和提示不负责完成 CRUD，只负责把已经跑通的页面补完整。
 
 这里同时存在两个方向：表单值通过 `onSubmit` 传给外层页面，请求错误又沿着 `handleCreate()` 或 `handleUpdate()` 返回的失败 Promise 传回 `ArticleForm`。如果还不清楚函数、成功数据、错误和状态分别怎样传递，先阅读[14A-数据和错误怎样在页面与表单之间传递](./14A-数据和错误怎样在页面与表单之间传递.md)，再继续对照完整页面代码。
 
@@ -1975,6 +2015,22 @@ export default function ArticlesPage() {
     id: number,
     values: ArticleFormValues,
   ) {
+    if (!editingArticle) {
+      throw new Error("缺少要编辑的文章");
+    }
+
+    const isUnchanged =
+      values.title === editingArticle.title &&
+      values.slug === editingArticle.slug &&
+      values.summary === (editingArticle.summary ?? "") &&
+      values.content === editingArticle.content &&
+      values.status === editingArticle.status;
+
+    if (isUnchanged) {
+      messageApi.warning("内容没有变化");
+      return;
+    }
+
     const updatedArticle = await updateArticle(id, values);
     setArticles((currentArticles) =>
       currentArticles.map((article) =>
@@ -2126,11 +2182,13 @@ export default function ArticlesPage() {
 -> 抽屉打开并显示详情加载状态
 -> GET /api/articles/:id 返回完整文章
 -> 表单回填文章内容
--> 修改并提交 PATCH /api/articles/:id
+-> 不修改直接保存：显示“内容没有变化”，不发送 PATCH
+-> 修改后恢复原值再保存：仍然不发送 PATCH
+-> 真正修改一个字段：提交一次 PATCH /api/articles/:id
 -> 抽屉关闭，表格中这一行更新
 ```
 
-两次操作中的浏览器地址都应始终是 `/admin/articles`。如果保存失败，抽屉不会关闭，用户已经输入的内容仍然保留。
+可以在浏览器开发者工具的 Network 面板中确认 PATCH 是否出现。两次操作中的浏览器地址都应始终是 `/admin/articles`。如果内容没有变化或保存失败，抽屉不会关闭；保存失败时，用户已经输入的内容仍然保留。
 
 ---
 
