@@ -8,7 +8,7 @@
 - `github/`：GitHub 相关笔记
 - `frontend/`：前端相关笔记
 - `backend/`：后端学习路线和项目练习
-- `linux/`：面向当前 Web 技术栈的 Linux、SSH 和云服务器学习路线
+- `linux/`：面向当前 Web 技术栈的 Linux、终端工作流、SSH 和云服务器学习路线
 - `tools/`：终端、CLI 和工具链相关笔记
 
 ## 当前内容

@@ -1,4 +1,4 @@
-# 07. 打开 Docker 套娃：容器不是一台迷你云服务器
+# 09. 打开 Docker 套娃：容器不是一台迷你云服务器
 
 Docker Desktop 图标一点，PostgreSQL 就跑起来了。看起来像是 Mac 直接变出了一个 Linux 小服务器。
 
