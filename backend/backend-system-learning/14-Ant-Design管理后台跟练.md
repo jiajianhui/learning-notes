@@ -2362,11 +2362,18 @@ app.use(cors({
 
 ```text
 GET /api/articles 200 in 8ms
+OPTIONS /api/articles 204 in 1ms
 POST /api/articles 201 in 15ms
 DELETE /api/articles/3 200 in 6ms
 ```
 
 上面示例中的状态码会在实际终端中显示为蓝色。`styleText` 来自 Node.js，不需要安装新的依赖。
+
+#### 为什么会看到 OPTIONS 请求
+
+Next.js 页面运行在 `localhost:3000`，Express API 运行在 `localhost:3001`，端口不同，所以浏览器会把它们视为不同源。发送 JSON POST、PATCH 或 DELETE 等写请求前，浏览器可能先自动发送一个 `OPTIONS` 预检请求，询问 Express 是否允许当前来源、请求方法和请求头。
+
+`OPTIONS` 是正常的 CORS 检查，不是错误，也不是页面代码重复调用了业务 API。预检由 `cors()` 中间件处理；通过后，浏览器才继续发送真正的 POST、PATCH 或 DELETE。普通 GET 通常不需要这一步。
 
 #### Next.js 开发模式为什么可能出现两次请求
 
