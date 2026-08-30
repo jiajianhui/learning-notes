@@ -1,14 +1,38 @@
 # 从 Mac 出发，去 Linux 里跑一个网站
 
-先说结论：你的 M1 Max MacBook Pro 不用让位。
+## 导读：一边押注 Linux 桌面，一边押注未来工作现场
 
-DHH 对 Linux、Omakub 和 Omarchy 的热情很有感染力。但这趟旅程不从“换掉 macOS”开始，而从一个更有用也更好玩的目标开始：
+2026 年 8 月，Linux 与终端这条看起来有点古早的赛道，忽然坐满了你会认识的人。
+
+DHH 为自己基于 Arch 与 Hyprland 打造的 Linux 桌面 Omarchy 成立了非营利的 [Omacom Foundation](https://omarchy.org/news/2026/08/omacom-foundation-launches-with-8-million/)。Tobi Lütke、Patrick Collison、Michael Dell、Jack Dorsey、DHH 等首批 8 位 Founding Patrons 每人出资 100 万美元；三天后 Drew Houston 与 Peter Steinberger 加入，数字变成了[十人、1000 万美元](https://omarchy.org/news/2026/08/omacom-foundation-funding-hits-10m/)。完整阵容留在附录，这里先记住：钱会流向基础设施，以及 Omarchy 所依赖的开源项目与开发者。
+
+另一边，Ghostty 作者、HashiCorp 联合创始人 Mitchell Hashimoto 组建了 [Superlogical](https://www.superlogical.com/)。团队里有 HashiCorp 第一位员工和前工程负责人 Jack Pearkes，也有来自 Poolside、Vercel、HashiCorp、Heroku 的开发者工具设计者 Alasdair Monk 与 Hector Simpson；背后则站着 Notable Capital、Amplify Partners，以及 Aaron Levie、Armon Dadgar、Guillermo Rauch、Patrick Collison、Tobias Lütke 等一群做过开发者产品的人。
+
+他们做的不是同一个产品，却在押注同一件更大的事：**电脑和软件工作流应该再次变得可以理解、可以组合，也可以由使用者掌控。**
+
+```text
+Omacom / Omarchy
+-> 重新设计“开发者每天坐在什么样的电脑前”
+
+Superlogical
+-> 重新设计“人、Agent 和远程机器在哪里持续工作”
+
+这套 Linux 路线
+-> 先学会支撑这两种未来的文件、进程、网络、Shell、SSH 与 Session
+```
+
+明星阵容和真金白银不能证明产品一定成功，但它们至少说明：Linux 桌面、终端基础设施和 Agent 时代的工作现场，已经不只是少数人自娱自乐的支线。
+
+这是一套写给独立开发者的 Linux 路线。你不需要转职成全职运维，但要能独立把作品送上网，在凌晨页面打不开时找到第一条线索，也能把重复工作安全地交给 Agent。所谓“面向 Agent”，不是多列几款 AI 工具，而是先掌握机器、用户、权限、进程、网络、日志和 Session：Agent 可以替你执行命令，系统边界和验收证据仍然要由你看得懂。
+
+这套路线不要求你追随其中任何一个产品。你的 M1 Max MacBook Pro 依然不用让位；旅程从一个更有用也更好玩的目标开始：
 
 ```text
 从 Mac 打开终端
 -> 连进一台远程 Linux
 -> 看懂文件、进程、日志和端口
--> 让 Next.js、Express 和 PostgreSQL 跑起来
+-> 看懂 Next.js、Express 和 PostgreSQL 在线上怎样碰头
+-> Mini CMS 准备好后，用 1Panel 完成部署
 -> 最后从浏览器打开自己的 HTTPS 网站
 ```
 
@@ -20,7 +44,7 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 
 ## 00～10 是一条连续主线
 
-数字章节全部属于必读主线。它们按照“先认清环境，再操作系统，再进入服务器，最后部署应用”的依赖关系排列。
+数字章节全部属于必读主线。它们按照“先认清环境，再获得服务器，然后操作系统与网络，最后拼出部署地图”的依赖关系排列。
 
 ### 第一幕：先在 Mac 上拆开黑盒
 
@@ -48,27 +72,27 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 
 在安全目录里造文件、接管道，再用 Node.js 临时开一家 8000 号小店。关掉进程后，亲眼看到端口也随之消失。
 
-### 第二幕：进入没有桌面的 Linux
+### 第二幕：从 Mac 穿过互联网
 
-**04 · Linux 旅馆的门禁系统**
+**04 · 给服务器配一把只认你的钥匙**
 
-[文件住哪里，谁有钥匙，软件从哪来](./04-文件系统用户权限与软件安装.md)
+[创建短期 ECS，再用 SSH 与 `~/.ssh/config` 登录](./04-SSH-从Mac安全连接Linux.md)
+
+在 Mac 生成密钥，到云控制台创建短期 Ubuntu 服务器，第一次走完“公网 IP → 22 → sshd → 远程 Shell”，最后把连接收进 `ssh linux-learning`。
+
+### 第三幕：进入没有桌面的 Linux
+
+**05 · Linux 旅馆的门禁系统**
+
+[文件住哪里，谁有钥匙，软件从哪来](./05-文件系统用户权限与软件安装.md)
 
 沿着 `/home`、`/etc`、`/var` 逛一圈。下一次遇到 `Permission denied`，先查清谁在敲哪扇门，不再条件反射地加 `sudo`。
 
-**05 · 网页失踪案**
+**06 · 网页失踪案**
 
-[沿着进程、日志和端口找到它](./05-进程服务日志与端口.md)
+[沿着进程、日志和端口找到它](./06-进程服务日志与端口.md)
 
-把“网页打不开”当成一次侦探游戏：进程活着吗，监听谁，服务器自己能访问吗，又是哪道门把请求拦住了？
-
-### 第三幕：从 Mac 穿过互联网
-
-**06 · 给服务器配一把只认你的钥匙**
-
-[SSH、密钥与 `~/.ssh/config`](./06-SSH-从Mac安全连接Linux.md)
-
-把一长串 IP、用户名和私钥收进 `ssh linux-learning`。最后再开一条 SSH 隧道，访问没有暴露在公网的服务。
+在服务器启动一张真实网页，再亲手停掉它：进程活着吗，监听谁，服务器自己能访问吗，`Connection refused` 到底是谁留下的？
 
 **07 · SSH 断了，工作还在**
 
@@ -82,7 +106,7 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 
 一个请求要依次穿过云安全组、Linux 防火墙和应用监听。你会亲手决定哪些门对全世界开，哪些只对自己开。
 
-### 第四幕：把你的技术栈搬进去
+### 第四幕：拆开技术栈，再装上发射架
 
 **09 · 打开 Docker 套娃**
 
@@ -90,11 +114,11 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 
 拆开 Mac、Linux 虚拟机、容器、网络和卷。启动一个 Nginx 容器，追踪 `127.0.0.1:8080:80` 的请求到底去了哪里。
 
-**10 · 网站真的上线了**
+**10 · 把网站装上发射架**
 
 [Next.js、Express、Prisma 与 PostgreSQL 在线上怎样碰头](./10-Nodejs-Nextjs-PostgreSQL怎样运行在线上.md)
 
-把前面捡到的碎片拼成完整系统：443 入口、反向代理、应用端口、数据库、迁移、日志和备份。
+把前面捡到的碎片拼成完整系统：443 入口、反向代理、应用端口、数据库、迁移、日志和备份；然后从明确出口进入 Mini CMS 的 1Panel 实操。
 
 ---
 
@@ -106,13 +130,13 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 
 [Omakub、Omarchy，以及要不要离开 macOS](./附录A-DHH-Omarchy与Linux桌面选读.md)
 
-去碰 Arch、Hyprland、键盘工作流和 dotfiles。它讨论的是个人桌面选择，不是管理服务器的前置课程。
+去看 Omacom 的 1000 万美元要推动什么，再碰 Arch、Hyprland、键盘工作流和 dotfiles。它讨论的是个人桌面选择，不是管理服务器的前置课程。
 
 **附录 B · Superlogical 与未来的工作 Session**
 
 [为什么它从终端多路复用器开始](./附录B-Superlogical与持久工作会话.md)
 
-理解远程工作、Web、AI Agent 和长期 Session 为什么开始汇合。它目前尚未公开发布，只观察方向，不安排安装。
+先认识这支明星团队为什么从 terminal multiplexer 开始，再理解远程工作、Web、AI Agent 和长期 Session 为什么开始汇合。它目前尚未公开发布，只观察方向，不安排安装。
 
 ---
 
@@ -124,11 +148,11 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 
 **想管好第一台云服务器**
 
-继续走到 08。准备进入第 06 章时，再创建一台短期 Ubuntu 学习服务器；第 07 章会用它练习 tmux。
+进入第 04 章时创建一台短期 Ubuntu 学习服务器，再继续走到 08。04～08 的命令会在同一台服务器上连续完成，不再中途更换练习环境。
 
 **想把自己的 Web 应用送上网**
 
-走完 09～10。随后进入后端路线的 1Panel 部署实操，把概念落到 Mini CMS。
+走完 09～10。等 Mini CMS 主体完成后，依次进入[后端第 18 章](../backend/backend-system-learning/18-从开发环境到线上运行.md)和[第 18A 章 1Panel 实操](../backend/backend-system-learning/18A-用1Panel和Docker-Compose部署MiniCMS.md)，把概念落到真实项目。
 
 每次学习只做一站。命令跑出结果后，试着改变一个小地方：换个文件名、换个端口、停止一个进程，再猜结果会怎样。Linux 的乐趣大多藏在这种“我动了一下，它真的变了”里面。
 
@@ -164,7 +188,7 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 
 不是因为它们没意思，而是因为现在加入会把一条清楚的冒险路线炸成十几条支线。等真实需求出现，再回来解锁。
 
-## 旅途中反复问自己的六句话
+## 旅途中反复问自己的七句话
 
 ```text
 我现在在哪台机器？
@@ -173,9 +197,10 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 谁监听哪个地址和端口？
 请求走到了哪一层？
 我怎样证明刚才的改动真的生效？
+如果交给 Agent，它被允许改什么，我又怎样验收？
 ```
 
-能回答这六句，比背下一整张命令表更接近“会用 Linux”。
+能回答这七句，比背下一整张命令表更接近“会用 Linux”。
 
 ## 路边资料
 

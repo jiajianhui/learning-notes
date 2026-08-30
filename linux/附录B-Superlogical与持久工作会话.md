@@ -1,10 +1,35 @@
 # 附录 B：Superlogical 为什么从终端 Session 开始
 
-> 状态记录：2026 年 8 月。Superlogical 尚未公开发布首个 beta，当前不能把它当成已经可安装的 tmux 替代品。
+> 状态记录：2026 年 8 月 30 日。Superlogical 尚未公开发布首个 beta，当前不能把它当成已经可安装的 tmux 替代品。
 
-tmux 已经能让任务在 SSH 断开后继续运行，Zellij 又增加了布局、Session Resurrection 和 Web Client。
+Superlogical 一亮相就同时带来了两个钩子：一支夸张的开发者工具团队，以及一个听上去并不新鲜的起点——terminal multiplexer。先看是谁组了队，再看他们为什么从这里出发。
 
-为什么 Mitchell Hashimoto 还要成立一家公司，从头做新的终端多路复用器？
+## 先看这张组队截图
+
+Mitchell 一个人的履历已经很夸张：创建 Ghostty，联合创办 HashiCorp，并创建 Vagrant、Terraform、Vault 等开发者基础设施工具。这次不是他独自开新坑，而是一支同时懂工程底层与开发者体验的 4 人团队：
+
+| 成员 | 带来的经验 |
+|---|---|
+| Mitchell Hashimoto | Ghostty 作者；HashiCorp 联合创始人；Vagrant、Terraform、Vault 等工具的创建者 |
+| Jack Pearkes | HashiCorp 第一位员工，后来担任工程与研发副总裁；参与早期产品并组建原始工程团队 |
+| Alasdair Monk | 曾在 Poolside、Vercel、HashiCorp、Heroku 负责开发者产品体验与设计 |
+| Hector Simpson | 曾为 Poolside 设计应用、服务与 Agent 体验，也在 Heroku、HashiCorp、Clearbit、Vercel 做过开发者产品 |
+
+出资阵容同样很“开发者工具圈”。机构投资者是 Notable Capital 与 Amplify Partners；官网列出的个人支持者包括：
+
+```text
+Aaron Levie       Armon Dadgar       Dax Raad
+Greg Foster       Guillermo Rauch    Jacob Thornton
+Mario Zechner     Merrill Lutsky      Patrick Collison
+Paul Copplestone  Stephen Haney       Steve Ruiz
+Tobias Lütke      Tomas Reimers
+```
+
+其中有 Box、HashiCorp、Vercel、Stripe、Shopify 等公司的创始人，也有这一代开发者工具和 AI 产品的创造者。阵容本身不是产品评测，但它解释了为什么这个项目一公布就值得停下来看看：这群人押注的不是一套终端主题，而是软件工作的下一层基础设施。
+
+## 豪华阵容为什么从终端开始
+
+tmux 已经能让任务在 SSH 断开后继续运行，Zellij 又增加了布局、Session Resurrection 和 Web Client。为什么 Mitchell 还要成立一家公司，从头做新的终端多路复用器？
 
 因为今天的工作现场早已不只是一位开发者盯着一个 Shell：
 
@@ -124,5 +149,7 @@ SSH 断开后任务是否可靠保留？
 ## 继续观察
 
 - [Superlogical 官方说明](https://www.superlogical.com/)
+- [Mitchell Hashimoto 的创立公告](https://x.com/mitchellh/status/2093451043661316217)
+- [Amplify Partners：为什么投资 Superlogical](https://www.amplifypartners.com/blog-posts/announcing-our-investment-in-superlogical)
 - [Mitchell Hashimoto：Superlogical](https://mitchellh.com/writing/superlogical)
 - [Ghostty 官方文档](https://ghostty.org/docs)

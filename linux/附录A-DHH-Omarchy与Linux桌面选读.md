@@ -4,6 +4,51 @@
 
 DHH 带来的兴趣很重要。它让 Linux 不再只是服务器上的黑色窗口，而是一种可以自己塑造的日常空间。
 
+## 先认清新闻里的两个名字
+
+| 项目 | 基础 | 适合怎样理解 |
+|---|---|---|
+| Omakub | Ubuntu | 为从 Mac 或 Windows 迁移的开发者提供一套强默认 |
+| Omarchy | Arch Linux + Hyprland | DHH 的完整、键盘优先、可深度定制的桌面理想 |
+
+Hyprland 是 Omarchy 使用的 Wayland 合成器，负责窗口显示、布局和交互；它不是 Omarchy 的另一个名字。Omacom Foundation 则是承接 Omarchy 商标、基础设施与开源资助的非营利组织。
+
+它们最有价值的启发是：
+
+```text
+默认配置可以像产品一样被设计
+工具之间的组合体验很重要
+开源允许用户理解并改变自己的环境
+```
+
+## 八张一百万美元的票，三天后变成十张
+
+2026 年 8 月 21 日，DHH 宣布成立非营利的 Omacom Foundation。首批 8 位 Founding Patrons 每人承诺出资 100 万美元：
+
+- Shopify 的 Tobi Lütke。
+- Stripe 的 Patrick Collison。
+- Dell Technologies 的 Michael Dell。
+- Block 的 Jack Dorsey。
+- Cloudflare 的 Matthew Prince。
+- Sesame、Oculus 联合创始人 Brendan Iribe。
+- 37signals 的 Jason Fried。
+- DHH 自己。
+
+三天后，Dropbox 联合创始人 Drew Houston 与 OpenClaw 作者 Peter Steinberger 也各自加入 100 万美元。于是首期故事从“8 人、800 万美元”，很快变成了“10 人、1000 万美元”。
+
+比数字更重要的是钱要去哪里。基金会计划：
+
+```text
+持有 Omarchy 商标
+-> 维护基础设施与托管
+-> 推广项目
+-> 资助 Omarchy 依赖的开源项目与开发者
+```
+
+它宣布的第一个具体动作，是从 2026 年 10 月 10 日起成为 Hyprland 的独家赞助者：先签 3 年，并保留再延长 2 年的选择。这让 Hyprland 作者 Vaxry 可以全职开发，也让原本付费的 Hyprperks 功能转为免费。
+
+这是一张很强的信任票，却不是“Omarchy 已经赢了”的证明。对学习者更有价值的信号是：有人开始把大额、长期资金直接投向桌面 Linux 所依赖的上游开源组件，而不只是给某个发行版买流量。
+
 但桌面 Linux 同时会引入：
 
 - 硬件兼容。
@@ -13,21 +58,6 @@ DHH 带来的兴趣很重要。它让 Linux 不再只是服务器上的黑色窗
 - 软件分发和大量个人配置。
 
 这些与服务器运行 Web 应用不是同一条主线，所以放在附录。走完 00～10 后再来，不会打断前面的主线。
-
-## 两条入口：Omakub 与 Omarchy
-
-| 项目 | 基础 | 适合怎样理解 |
-|---|---|---|
-| Omakub | Ubuntu | 为从 Mac 或 Windows 迁移的开发者提供一套强默认 |
-| Omarchy | Arch Linux + Hyprland | DHH 的完整、键盘优先、可深度定制的桌面理想 |
-
-它们最有价值的启发是：
-
-```text
-默认配置可以像产品一样被设计
-工具之间的组合体验很重要
-开源允许用户理解并改变自己的环境
-```
 
 ---
 
@@ -41,12 +71,17 @@ DHH 带来的兴趣很重要。它让 Linux 不再只是服务器上的黑色窗
 
 学习 Linux 不需要先承担这些迁移成本。
 
-推荐顺序：
+走完主线时，你已经体验过前两种 Linux：
 
 ```text
 Docker Ubuntu 容器
--> UTM 中的 Ubuntu ARM64
 -> 云服务器 Ubuntu
+```
+
+如果现在还想看看 Linux 作为日常桌面是什么感觉，再继续：
+
+```text
+UTM 中的 Ubuntu Desktop ARM64
 -> 有兴趣时使用备用兼容设备体验 Linux 桌面
 -> 最后再判断是否值得迁移日常工作
 ```
@@ -93,6 +128,10 @@ Docker Ubuntu 容器
 
 ## DHH 留下的传送门
 
+- [Omacom Foundation 从 8 位赞助者、800 万美元起步](https://omarchy.org/news/2026/08/omacom-foundation-launches-with-8-million/)
+- [三天后的更新：10 位赞助者、1000 万美元](https://omarchy.org/news/2026/08/omacom-foundation-funding-hits-10m/)
+- [Omacom Foundation 成为 Hyprland 独家赞助者](https://omarchy.org/news/2026/08/omacom-foundation-to-be-exclusive-hyprland-sponsor/)
+- [丁一的中文导读](https://x.com/dingyi/status/2091041678757134353)
 - [Introducing Omakub](https://world.hey.com/dhh/introducing-omakub-354db366)
 - [The Year on Linux](https://world.hey.com/dhh/the-year-on-linux-7f30279e)
 - [Omarchy is out](https://world.hey.com/dhh/omarchy-is-out-4666dd31)

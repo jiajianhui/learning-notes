@@ -3,7 +3,7 @@
 打开 Ghostty，输入：
 
 ```bash
-ssh linux-learning
+git --version
 ```
 
 屏幕上只有一行字，背后却有好几个角色同时工作。
@@ -221,7 +221,7 @@ Mac Ghostty
 -> 日志、测试或交互式 Agent
 ```
 
-等第 06 章建立 SSH 连接后，[第 07 章](./07-SSH断了工作还在-tmux与Zellij.md) 会把最后两层真正跑起来。
+等第 04 章建立 SSH 连接后，[第 07 章](./07-SSH断了工作还在-tmux与Zellij.md) 会把最后两层真正跑起来。
 
 ## 选工具时只回答一个问题
 
