@@ -419,15 +419,15 @@ setArticles((current) =>
 
 ## 6. 第 14 章综合问答
 
-1. **`apiRequest<T>()` 中的 `T` 是什么？**<br>`T` 是类型参数，用来告诉 TypeScript 怎样看待本次成功返回的 `data`。例如传入 `Article` 后，TypeScript 会把返回类型看作 `Promise<Article>`；这不会验证服务器实际返回的 JSON。<br><br>
-2. **`Promise<void>` 为什么仍然需要 `await`？**<br>`void` 只表示成功后没有业务数据返回。`await` 仍要等待操作结束，并让 `catch` 接住失败。<br><br>
+1. **`apiRequest<T>(path: string, options?: RequestInit): Promise<T>` 中的 `T` 是什么？**<br>`T` 是类型参数，用来告诉 TypeScript 怎样看待本次成功返回的 `data`。例如传入 `Article` 后，TypeScript 会把返回类型看作 `Promise<Article>`；这不会验证服务器实际返回的 JSON。<br><br>
+2. **`Promise<void>` 为什么仍然需要 `await`？**<br>`void` 只表示成功后没有业务数据可拿，不代表这次调用一定成功。不 `await` 的话，函数会跳过等待直接往下走，这次调用是否真的执行完、有没有出错，都无法知道——出错了也没有 `catch` 能接住。<br><br>
 3. **`getArticles()` 没写 `async`，为什么仍然返回 Promise？**<br>因为它直接返回了 `apiRequest()` 产生的 Promise。普通函数也可以返回 Promise。<br><br>
 4. **`void loadArticles()` 会不会捕获错误？**<br>不会。这里的 `void` 只表示不使用返回的 Promise；当前错误由 `loadArticles()` 内部的 `try...catch` 捕获。<br><br>
 5. **完整 `Article` 为什么能放进 `ArticleListItem[]`？**<br>TypeScript 按对象结构判断兼容性。`Article` 已经包含 `ArticleListItem` 要求的全部字段，多出的字段不影响使用。<br><br>
 6. **`summary?: string`、`summary: string | null` 和 `summary ?? ""` 有什么区别？**<br>前者允许没有 `summary` 属性；中间写法要求属性存在，但值可以是 `null`；最后一个是运行时表达式，值为 `null` 或 `undefined` 时改用空字符串。<br><br>
 7. **`values` 和编辑文章的 `id` 分别从哪里来？**<br>`values` 是 Ant Design Form 校验通过后产生的表单数据；`id` 最初来自点击的 Table 行，加载详情后通过 `editingArticle.id` 传给更新函数。<br><br>
-8. **调用 `setDeletingId(id)` 后，为什么删除请求仍然使用函数参数 `id`？**<br>`setDeletingId(id)` 不会改变当前函数读取到的状态快照。函数参数 `id` 已经确定本次要删除的文章，`deletingId` 只负责控制对应按钮的 loading。<br><br>
-9. **TypeScript 已经定义 `ArticleStatus`，后端为什么还要使用 Zod？**<br>`ArticleStatus` 只在 TypeScript 检查代码时生效，不能检查真实 HTTP 请求。Zod 负责在运行时校验客户端传来的数据。<br><br>
+8. **调用 `setDeletingId(id)` 后，为什么 `filter()` 使用 `id`，而不是 `deletingId`？**<br>`handleDelete()` 开始执行时捕获的是当前渲染中的旧 `deletingId`，通常是 `null`。`setDeletingId(id)` 只会让下一次渲染得到新状态，不会修改这个函数已经捕获的值；函数参数 `id` 已经确定本次要删除的文章，所以 `filter()` 必须使用 `id`。`deletingId` 只负责控制对应按钮的 loading。<br><br>
+9. **TypeScript 已经定义 `ArticleStatus`，后端为什么还要使用 Zod？**<br>`ArticleStatus` 只在 TypeScript 编译检查时约束代码，转换成 JavaScript 后会被移除；浏览器、Apifox 或其他客户端仍然可以发送任意字符串。Zod 负责在后端运行时校验实际收到的请求数据。<br><br>
 10. **为什么创建可以直接传入 `handleCreate`，编辑却要使用箭头函数？**<br>`ArticleForm` 只会传入 `values`。`handleCreate()` 只需要这一个参数，`handleUpdate()` 还需要 `id`，所以编辑时要用箭头函数补上 `editingArticle.id`。<br><br>
 11. **新建或编辑失败后，错误为什么能回到 `ArticleForm`？**<br>`apiRequest()` 抛出的错误没有被 `createArticle()`、`handleCreate()` 等中间函数捕获，因此会沿 Promise 调用链向上传播，最后由 `handleFinish()` 中的 `catch` 处理。<br><br>
 12. **为什么更新文章列表时使用 `setArticles((current) => ...)`？**<br>React 会把执行更新时最新的文章数组传给 `current`，避免使用旧渲染中的状态快照。
