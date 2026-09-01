@@ -432,25 +432,35 @@ await fetch(`${API_BASE_URL}/api/articles`, {
 
 #### 泛型函数中的 `<T>`
 
-**`<T>` 是什么**：紧跟在函数名后面、用尖括号声明的**类型参数**。它的作用是给函数占一个"类型插槽"，具体填什么类型，由调用时决定。
+在项目的 `apiRequest<T>()` 声明中，`T` 是**类型参数**，用来记录 TypeScript 应该怎样理解本次请求返回的 `data`。
 
-**类比但不等于函数参数**：
+**调用时分别传入类型实参和函数实参**：
 
 ```typescript
-apiRequest<ArticleListItem[]>('/articles')
-//         ^^^^^^^^^^^^^^^^^   ^^^^^^^^^^
-//          类型参数      函数参数
+apiRequest<ArticleListItem[]>("/api/articles")
+//         ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^
+//             类型实参          函数实参
 ```
 
-两者逻辑相似（外部传入、内部使用），但活在不同世界：函数参数传的是"值"，运行时真实存在；类型参数传的是"类型"，只服务于编译期检查，代码一旦编译成 JS，T 就彻底消失，没有任何运行时痕迹。
+声明时的 `T` 是类型参数，调用时的 `ArticleListItem[]` 是填入 `T` 的类型实参。`"/api/articles"` 是传给 `path` 的函数实参。类型实参只用于 TypeScript 检查，转换成 JavaScript 后会消失；函数实参是程序运行时真正使用的值。
 
-**它不是什么**（对应前面聊到的几个容易混的概念）：
+先区分两件事：
 
-- 不是"返回类型"本身——`Promise<T>` 才是完整返回类型，T 只是嵌在里面的占位符
-- 不是"函数类型"——函数类型描述的是整个函数长什么样（如 `(req: Request) => void`），T 是另一回事
-- 不是"可变的类型"（跟 mutable/immutable 无关）——它是"每次调用可被替换成不同具体类型"的占位符
+- 后端实际返回什么数据，由 Express 和数据库决定。
+- `<ArticleListItem[]>` 不会改变响应，只是告诉 TypeScript：“后续代码把这次成功返回的 `data` 当作 `ArticleListItem[]` 使用。”
 
-**为什么在 apiRequest 里必须手动指定**：因为 T 只出现在返回类型 `Promise<T>` 里，参数 `path`、`options` 跟它没关系，TS 没有线索能反推，所以只能靠调用时显式传入，比如 `apiRequest<ArticleListItem[]>('/articles')`，TS 才会把签名里所有的 T 替换成 `ArticleListItem[]`，最终返回类型具体化为 `Promise<ArticleListItem[]>`。
+这次调用为什么必须显式写 `<ArticleListItem[]>`？因为在 `apiRequest()` 的函数签名中，`T` 只出现在返回类型 `Promise<T>` 里，`path: string` 和 `options?: RequestInit` 的类型都不包含 `T`。TypeScript 推断类型参数，靠的是拿函数实参的类型去匹配某个包含 `T` 的参数位置；但这里没有一个参数的类型含 `T`，没有位置可供匹配。TypeScript 也不会根据 `"/api/articles"` 去查后端接口，或者分析以后返回的 JSON 长什么样。因此，这次调用必须显式传入类型实参 `<ArticleListItem[]>`。
+
+显式传入类型实参，只是在类型检查时给占位符 `T` 填值：
+
+```text
+T = ArticleListItem[]
+Promise<T> = Promise<ArticleListItem[]>
+```
+
+类型实参确定的是 TypeScript 看到的返回类型，不是服务器真实返回的数据，也不会在运行时验证 JSON。
+
+`<T>` 还可以写在类型名等其他位置，位置不同表示确定类型的时机不同；这里不展开，参见 [14B 第 1.3 节](./14B-管理后台里的TypeScript-Promise和React状态.md#13-函数类型中的参数返回值和泛型)。
 
 #### 再确定函数内部的流程
 
@@ -1211,7 +1221,15 @@ export type ArticleFormValues = {
 };
 ```
 
-标题、slug 和正文必须由用户填写。状态不需要用户每次手动选择：新建表单会默认使用 `draft`，编辑表单会回填原状态，因此提交时 `status` 一定有值。摘要可以不填，所以只有 `summary` 是可选字段。
+标题、slug 和正文必须由用户填写。
+
+`ArticleFormValues` 描述的是 Form 校验通过后传给 `handleFinish()` 的最终表单值。`status` 写成 `ArticleStatus` 而不是 `status?: ArticleStatus`，因为表单保证提交时一定有状态：
+
+- 新建时，`initialValues={{ status: "draft", ...initialValues }}` 提供默认状态 `draft`。
+- 编辑时，文章列表页把 `editingArticle.status` 放进 `initialValues`，覆盖前面的默认状态 `draft`。
+- `status` 对应的 `Form.Item` 有 `required` 校验；没有状态时，Form 不会调用 `handleFinish()`。
+
+因此，`handleFinish(values)` 收到的 `values.status` 一定存在。`CreateArticleInput.status` 仍然是可选字段，因为它描述的是整个 API 允许的请求体：其他客户端可以不传，此时数据库使用默认值 `draft`。
 
 当前表单中的摘要只有两类值：
 
@@ -1903,7 +1921,7 @@ Drawer 使用 `loading` 显示详情加载状态，失败时显示 `Alert`，成
 
 在 `handleCreate()` 的 `setDrawerOpen(false)` 后面调用 `messageApi.success("文章已创建")`；`handleUpdate()` 的成功提示已经在上面的完整函数中加入。保存失败仍由第 11 节的 `ArticleForm` 显示错误并保留输入内容。这些状态和提示不负责完成 CRUD，只负责把已经跑通的页面补完整。
 
-这里同时存在两个方向：表单值通过 `onSubmit` 传给外层页面，请求错误又沿着 `handleCreate()` 或 `handleUpdate()` 返回的失败 Promise 传回 `ArticleForm`。本章先继续完成页面；全部跟练结束后，可以用第 14B 章进一步理解这段传递。
+这里同时存在两个方向：表单值通过 `onSubmit` 传给外层页面，请求错误又沿着 `handleCreate()` 或 `handleUpdate()` 返回的失败 Promise 传回 `ArticleForm`。本章先继续完成页面；全部跟练结束后，可以用第 14A 章串起完整流程，再用第 14B 章复习背后的 Promise 机制。
 
 ### 12.4 按需对照完整页面代码
 
@@ -2489,7 +2507,7 @@ npm run dev
 
 ## 16. 下一步继续完善同一个系统
 
-完成跟练后，先阅读[第 14A 章](./14A-从页面操作到数据库-一条线看懂管理后台CRUD.md)，把页面操作、`fetch`、Express、Prisma、数据库和 UI 更新收成一条完整主线；再阅读[第 14B 章](./14B-数据和错误怎样在页面与表单之间传递.md)，放大页面、表单、Promise、状态和错误之间的传递；最后阅读[第 14C 章](./14C-管理后台里的TypeScript-Promise和React状态.md)，集中复习泛型、Promise、Swift 与 TypeScript 的类型差异和 React 状态。这三章都是完成第 14 章后的扩展阅读，不需要在跟练中途跳出本章。
+完成跟练后，先阅读[第 14A 章](./14A-从页面操作到数据库-一条线看懂管理后台CRUD.md)，把页面操作、`fetch`、Express、Prisma、数据库和 UI 更新收成一条完整主线；再阅读[第 14B 章](./14B-管理后台里的TypeScript-Promise和React状态.md)，集中复习泛型、Promise、Swift 与 TypeScript 的类型差异和 React 状态。这两章都是完成第 14 章后的扩展阅读，不需要在跟练中途跳出本章。
 
 第 15～17 章继续修改同一套 Mini CMS：
 

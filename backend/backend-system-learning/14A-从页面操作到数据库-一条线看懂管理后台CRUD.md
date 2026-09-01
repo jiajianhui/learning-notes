@@ -1,17 +1,18 @@
 # 14A. 从页面操作到数据库：一条线看懂管理后台 CRUD
 
-完成第 14 章的 Ant Design 文章管理页面后，本章先建立整体地图。本章不增加新功能，也不重复搭建步骤，只把整个 CRUD 压缩成一条可以快速复习的全栈主线。
+## 0. 管理端的两条关键调用关系
 
-读完后，应该能回答四个问题：
+表单提交时，Ant Design Form 校验通过后会调用 `ArticleForm` 中的 `handleFinish(values)`。
 
-```text
-页面数据从哪里产生？
-请求经过哪些文件到达数据库？
-成功结果和错误怎样回到页面？
-类型与状态分别解决什么问题？
-```
+`handleFinish()` 里的 `onSubmit` 不是另一套提交逻辑，而是 `ArticlesPage` 传入的函数：新建时最终执行 `handleCreate(values)`，编辑时最终执行 `handleUpdate(id, values)`。
 
----
+因此，`ArticleForm` 负责在表单校验通过后调用外部传入的保存函数，`ArticlesPage` 负责提供具体的新建或编辑函数。
+
+从请求底层往上看，通用的 `apiRequest()` 调用 `fetch()` 并检查 HTTP 响应：成功时返回 `data`，失败时抛出 `Error`。
+
+`features/articles/api.ts` 在此基础上定义 `createArticle()` 等具体请求，补充路径、方法和请求体。`handleCreate()` 拿到新文章后更新列表。
+
+如果请求失败，因为 `createArticle()` 和 `handleCreate()` 都没有 `catch`，错误会继续传播到 `ArticleForm`，最后由 `handleFinish()` 的 `catch` 捕获。
 
 ## 1. 先把第 14 章压成三条线
 
@@ -53,30 +54,29 @@ PostgreSQL 执行结果
 
 ## 2. 每一层只负责一段
 
-先按职责看当前项目中的主要文件：
+一次文章请求会跨过 `admin-web-antd` 和 `server` 两个项目。先分清文件属于哪一端，再看它在请求中负责哪一步。
 
-| 位置 | 主要职责 | 不负责什么 |
-|---|---|---|
-| Ant Design `Form`、`Table`、`Drawer` | 收集输入、触发事件、显示数据和反馈 | 不直接读写数据库 |
-| `article-form.tsx` | 校验表单、产生 `values`、管理提交状态和保存错误 | 不决定发送 POST 还是 PATCH |
-| `page.tsx` | 决定列表、新建、编辑或删除；管理页面状态；更新 `articles` | 不重复处理通用 HTTP 细节 |
-| `features/articles/api.ts` | 用业务函数名对应接口路径、方法和请求体 | 不控制 Drawer 和 Table |
-| `lib/api-client.ts` | 拼接 API 地址、调用 `fetch()`、检查 `response.ok`、解析成功或失败响应 | 不知道请求是在新建还是编辑文章 |
-| Express `app.ts` | 让请求依次经过日志、CORS、JSON 解析、路由和错误处理 | 不直接编写每个文章操作 |
-| `article-router.ts` | 匹配 HTTP 方法和路径，组织校验、数据库调用与响应 | 不管理浏览器状态 |
-| `article-schema.ts` | 在运行时校验并转换请求参数 | 不执行数据库 CRUD |
-| `article-repository.ts` | 调用 Prisma Client 读写文章 | 不生成 HTTP 响应 |
-| Prisma 和 PostgreSQL | 把数据操作变成 SQL 并真正查询或保存数据 | 不关心页面怎样展示 |
+### `admin-web-antd`：管理端
 
-可以把这些职责再压缩成一句话：
+| 位置 | 主要职责 |
+|---|---|
+| Ant Design `Form`、`Table`、`Drawer` | 收集输入、触发事件、显示数据和反馈 |
+| `app/admin/articles/_components/article-form.tsx` | 校验表单、产生 `values`、管理提交状态和保存错误 |
+| `app/admin/articles/page.tsx` | 决定加载、新建、编辑或删除；管理页面状态；更新 `articles` |
+| `features/articles/api.ts` | 用业务函数名对应接口路径、方法和请求体 |
+| `lib/api-client.ts` | 拼接 API 地址、调用 `fetch()`、检查 `response.ok`，并解析成功或失败响应 |
 
-```text
-组件负责交互
--> 页面负责业务流程和状态
--> API 层负责 HTTP
--> Express 负责校验与调用
--> repository 和 Prisma 负责数据库
-```
+### `server`：服务端
+
+| 位置 | 主要职责 |
+|---|---|
+| `src/app.ts` | 让请求依次经过日志、CORS、JSON 解析、文章路由和错误处理 |
+| `src/modules/articles/article-router.ts` | 匹配 HTTP 方法和路径，组织校验、数据库调用与响应 |
+| `src/modules/articles/article-schema.ts` | 在运行时校验并转换请求参数 |
+| `src/modules/articles/article-repository.ts` | 调用 Prisma Client 读写文章 |
+| Prisma Client 和 PostgreSQL | 把数据操作转换成查询并真正读取或保存数据 |
+
+`admin-web-antd` 负责收集用户操作、发出 HTTP 请求和更新界面。请求到达 `server` 后，服务端负责校验数据、读写数据库并返回 HTTP 响应。
 
 ---
 
@@ -86,16 +86,16 @@ PostgreSQL 执行结果
 
 ### 3.1 从表单到页面
 
-第 14B 章会详细拆解这一段，这里只保留它在完整链路中的位置：
+这里先保留它在完整链路中的位置：
 
 ```text
 Form.Item 的 name 组成 values
 -> Form 校验通过后调用 handleFinish(values)
--> ArticleForm 执行 onSubmit(values)
--> ArticlesPage 的 handleCreate(values)
+-> handleFinish() 调用外部传入的 onSubmit(values)
+-> 新建模式实际执行 handleCreate(values)
 ```
 
-`ArticleForm` 负责收集、校验和提交，`ArticlesPage` 再决定调用新建接口，以及成功后怎样更新列表、关闭 Drawer 和显示提示。
+这里的 `onSubmit` 只是保存父组件传入的函数，不是额外的业务步骤。`ArticleForm` 负责收集、校验和提交，`ArticlesPage` 再决定调用新建接口，以及成功后怎样更新列表、关闭 Drawer 和显示提示。
 
 ### 3.2 从页面到 Express
 
@@ -113,7 +113,7 @@ createArticle(values)
 读取 NEXT_PUBLIC_API_BASE_URL
 -> 调用 fetch()
 -> 检查 response.ok
--> 成功时取出 response.data
+-> 成功时解析 JSON 并取出 data
 -> 失败时取出 error.message 并抛出 Error
 ```
 
@@ -153,16 +153,12 @@ app.ts
 
 ```text
 Express 返回 { data: 新文章 }
--> apiRequest<Article>() 解析 JSON 并取出 data
--> createArticle() 返回 Article
--> handleCreate() 得到 newArticle
--> setArticles() 生成新的文章数组
--> React 重新渲染 ArticlesPage
--> Table 读取新的 articles
--> 页面出现新文章
+-> apiRequest<Article>() 解析响应，handleCreate() 得到 newArticle
+-> setArticles() 把新文章加入 articles
+-> React 重新渲染，Table 显示新文章
 ```
 
-数据库不会主动刷新浏览器。真正让 Table 立刻变化的是 `setArticles()`；数据库负责保存数据，让刷新页面后重新 GET 时仍能查到它。
+数据库不会主动刷新浏览器。真正让 Table 立刻变化的是 `setArticles()`；数据库负责保存文章，因此刷新页面后重新 GET 时仍能查到这篇文章。
 
 ---
 
@@ -193,48 +189,9 @@ Express 返回 { data: 新文章 }
 
 ---
 
-## 5. 类型说明“数据应该长什么样”
+## 5. 状态说明“界面现在发生了什么”
 
-第 14 章不是只有请求函数，还为数据经过的不同边界补上了类型：
-
-| 类型 | 描述的数据 |
-|---|---|
-| `ArticleFormValues` | Ant Design Form 提交的字段 |
-| `CreateArticleInput` | POST 接口允许发送的请求体 |
-| `UpdateArticleInput` | PATCH 接口允许发送的请求体 |
-| `Article` | 详情、新建和更新接口返回的完整文章 |
-| `ArticleListItem` | 列表接口返回的精简文章，不包含正文 |
-
-新建和列表分别使用下面两条类型链路：
-
-```text
-新建：Form 产生 ArticleFormValues
--> createArticle() 接收 CreateArticleInput
--> apiRequest<Article>() 返回 Article
-
-列表：getArticles()
--> apiRequest<ArticleListItem[]>() 返回精简文章数组
--> Table 使用 ArticleListItem[]
-```
-
-当前 `ArticleFormValues` 的字段满足 `CreateArticleInput`，所以可以把 `values` 直接传给 `createArticle(values)`。它们的名字表示不同职责：一个描述表单结果，一个描述 API 输入。新建接口返回的完整 `Article` 也包含 `ArticleListItem` 需要的全部字段，因此可以直接插入当前列表。
-
-还要分清 TypeScript 类型和 Zod Schema：
-
-| 工具 | 什么时候工作 | 解决什么问题 |
-|---|---|---|
-| TypeScript 类型 | 编写和构建代码时 | 提示字段、发现代码中的类型错误 |
-| Zod Schema | Express 真正收到请求时 | 检查外部数据是否真的符合接口要求 |
-
-`apiRequest<Article>()` 告诉 TypeScript 这次成功数据按 `Article` 使用，但不会在浏览器运行时逐字段验证响应。后端仍然要用 Zod 检查请求，因为来自网络的数据不能只靠前端类型保证。
-
-泛型怎样把具体类型带进 `apiRequest<T>()`，以及完整 `Article` 为什么能作为 `ArticleListItem` 使用，留到第 14C 章集中解释。
-
----
-
-## 6. 状态说明“界面现在发生了什么”
-
-类型说明数据应该长什么样，状态说明界面现在显示什么。当前代码中的状态可以压缩成三类：
+当前代码中的 React 状态可以压缩成三类：
 
 | 状态类别 | 当前例子 | 解决什么问题 |
 |---|---|---|
@@ -242,66 +199,6 @@ Express 返回 { data: 新文章 }
 | 页面控制 | `drawerOpen`、`drawerMode` | Drawer 是否打开，以及用于新建还是编辑 |
 | 请求反馈 | 列表、详情、提交和删除对应的 loading / error | 请求正在进行、成功还是失败 |
 
-状态放在哪里，以及为什么不能让不同请求共用同一组 loading 和 error，会在第 14B 章详细解释。放回全栈主线时，只需要记住：HTTP 请求本身不会自动改变界面，页面必须把返回数据或错误写入 React 状态，React 才会重新渲染。
+列表、详情、提交和删除影响的界面不同，因此不能共用同一组 loading 和 error。`listError` 显示在 Table 上方，`detailError` 显示在编辑 Drawer 内，`submitError` 显示在 `ArticleForm` 中。删除失败没有单独的错误状态，直接调用 `messageApi.error()` 显示临时提示。
 
----
-
-## 7. 错误也沿调用链返回，但在不同位置展示
-
-Express 返回 4xx 或 5xx 时，`apiRequest()` 检查 `response.ok`，读取后端错误文案并抛出 `Error`。错误再沿 Promise 调用链向页面返回：
-
-```text
-Express 失败响应
--> apiRequest() 抛出 Error
--> 文章 API 函数和页面操作函数继续传递错误
--> 最接近当前操作的 catch 接住错误
--> React 显示 Alert 或 message
-```
-
-列表和详情错误由 `ArticlesPage` 显示，新建和编辑错误由 `ArticleForm` 显示，删除错误使用临时消息。具体为什么这样分，以及失败 Promise 怎样穿过 `handleCreate()` 回到表单，留到第 14B 章展开；本章只保留错误在全栈往返中的位置。
-
----
-
-## 8. 第 14 章真正学到的核心
-
-你前面总结的三个重点是对的，再补上一条“职责边界”，就形成了完整主线：
-
-```text
-封装 fetch
--> 统一“请求怎样发送、响应怎样解析”
-
-补全类型
--> 说明“每一步的数据应该长什么样”
-
-管理 UI 状态
--> 表达“请求和页面现在进行到哪一步”
-
-划分职责
--> 决定“哪一层处理哪一段，成功和失败交给谁”
-```
-
-把它们放回完整流程就是：
-
-```text
-Ant Design 产生事件和 values
--> ArticlesPage 组织业务操作与页面状态
--> features/articles/api.ts 表达具体接口
--> apiRequest() 处理通用 fetch 规则
--> Express 校验并调用 repository
--> Prisma 和 PostgreSQL 读写数据
--> 成功数据或错误沿调用链返回
--> React 状态变化让页面显示结果
-```
-
-以后面对其他管理功能，例如标签、用户或分类，字段和接口会变，但这套骨架仍然成立。
-
----
-
-## 下一步与回看导航
-
-- 想重新动手完成页面：回到[第 14 章](./14-Ant-Design管理后台跟练.md)。
-- 接下来阅读[第 14B 章](./14B-数据和错误怎样在页面与表单之间传递.md)，深入 `onSubmit`、`values`、Promise、状态和错误。
-- 完成第 14B 章后，阅读[第 14C 章](./14C-管理后台里的TypeScript-Promise和React状态.md)，复习泛型、异步返回、类型兼容和 React 状态快照。
-- 不清楚 `fetch`、HTTP 响应和前后端边界：回看[第 13 章](./13-前后端怎样通过HTTP协作.md)。
-- 不清楚 Express 怎样统一校验和处理错误：回看[第 11 章](./11-请求校验和统一错误处理.md)和[第 11A 章](./11A-错误处理中间件怎样接住不同错误.md)。
-- 完成第 14C 章后，再进入[第 15 章](./15-数据关系JOIN和事务.md)。
+React 状态怎样更新会在第 14B 章解释；放回全栈主线时，只需要记住：HTTP 请求本身不会自动改变界面，页面必须把返回数据或错误写入 React 状态，React 才会重新渲染。
