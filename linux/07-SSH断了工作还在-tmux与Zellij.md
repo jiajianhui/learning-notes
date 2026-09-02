@@ -48,13 +48,21 @@ tmux new -s playground
 
 tmux 会创建一个名为 `playground` 的 Session，并立刻连接进去。
 
-内部关系是：
+先认五个词，后面就不会像在背暗号。tmux 的内部关系是：
 
 ```text
 Session：一次工作现场
 └── Window：现场中的一个工作区
     └── Pane：真正运行 Shell 或程序的格子
 ```
+
+- **Session**：整个可长期保留的工作现场，里面可以有多个 Window。
+- **Window**：Session 里的一个工作区，很像标签页；一个 Window 又可以切成多个 Pane。
+- **Pane**：屏幕上真正运行一个 Shell 或前台程序的格子。
+- **Detach**：人暂时离开这个现场，但不结束 Session 和里面的程序。
+- **Attach**：以后重新连回同一个现场。
+
+这些不是 Linux 内核概念，而是 tmux、Zellij、Herdr 等工作区工具会反复使用的词，所以只在真正开始用 tmux 时加入。常说的“建立心智模型”，在这里也不是什么额外理论，只是脑中能画出“谁包含谁、离开和结束有什么区别”的这张地图。
 
 现在只有一个 Window、一个 Pane，里面运行着新的 Shell。
 
@@ -142,7 +150,7 @@ tmux ls
 SSH
 -> 管一次远程连接
 
-tmux / Zellij
+tmux / Zellij / Herdr
 -> 管一个可离开、可回来的交互式工作现场
 
 Docker Compose / systemd
@@ -171,7 +179,7 @@ tmux 能熬过 SSH 断线，但熬不过服务器关机、tmux 进程退出或�
 | 工具 | 更适合的场景 | 能否回来继续交互 |
 |---|---|---|
 | `nohup command &` | 简单、非交互的临时后台命令 | 不方便 |
-| tmux / Zellij | 人还会回来查看和输入的终端工作 | 可以 |
+| tmux / Zellij / Herdr | 人还会回来查看和输入的终端工作 | 可以 |
 | Docker Compose / systemd | 需要被系统长期监督的服务 | 通过日志和管理命令操作 |
 
 如果你想“回来看到原来的终端画面”，选 Session 管理器。如果你想“服务器重启后网站自动回来”，选服务管理。
@@ -194,20 +202,46 @@ Zellij 的 Session Resurrection 不等于让进程穿越服务器重启。它保
 
 Zellij 的 Web Client 也不是第一轮服务器练习的公网入口。它默认关闭，并涉及认证、HTTPS 和新的攻击面。现在继续通过 SSH 使用 tmux 即可。
 
+## Herdr：从 tmux 同一层起步，再向上多认一层
+
+[Herdr](https://herdr.dev/docs/) 是已经发布的终端工作区管理器。它同样把终端进程放在后台 Session 中，让客户端 Detach 后进程继续，再回来 Attach；但组织方式多了一层项目工作区：
+
+```text
+Herdr Session
+└── Workspace：一个项目或任务
+    └── Tab：项目中的一种布局
+        └── Pane：一个真实终端
+            └── Shell、命令或 Coding Agent
+```
+
+Herdr 还会识别 Pane 中常见的 Coding Agent，把 `working`、`blocked`、`done`、`idle` 等状态汇总到 Tab 和 Workspace。你同时跑几个 Agent 时，不必挨个终端查看谁正在做、谁需要决定、谁已经完成。
+
+| 角度 | tmux | Herdr |
+|---|---|---|
+| 基础能力 | 持久 Session、Window、Pane、Detach / Attach | 同样保留终端现场，并增加 Workspace 与 Tab |
+| 交互 | 以命令和前缀快捷键为主 | 鼠标优先，也保留前缀快捷键 |
+| 是否理解 Agent | 只知道 Pane 里有一个进程 | 能识别常见 Agent 并汇总状态 |
+| 自动化 | 命令与脚本生态成熟 | 还提供面向 Pane、Agent 的 CLI、本地 API 与插件 |
+| 现在怎样学 | 第一轮必做，概念简单且服务器普及 | 多 Agent 已经带来监督负担时再试 |
+
+所以 Herdr 不是“比 tmux 更底层一层”。更准确的说法是：**它从同一层的持久终端能力起步，再向上增加一层 Agent 语义和工作区管理。**
+
+日常选一个作为主要工作台即可，不要机械地在 Herdr Pane 里再启动 tmux。Herdr 官方说明它不会检查内层 tmux Session，届时外层可能只看见 `tmux`，看不见里面的 Agent 状态。
+
 ## 针对你的默认选择
 
 第一轮先学 tmux，理由很实际：
 
 - Ubuntu 上容易安装。
 - 与 SSH 服务器场景直接相关。
-- 四个动作就能建立 Session 心智模型。
-- 以后换 Zellij 或 Superlogical，仍然会继续使用 Attach、Detach、Session、Pane 这些概念。
+- 四个动作就能看懂 Session、Window、Pane、Detach 与 Attach 的关系。
+- 以后换 Zellij、Herdr 或将来的 Superlogical，这组基础概念仍然能复用。
 
-当你开始嫌 tmux 的默认交互难发现，或者真的需要可复用布局和 Session Resurrection，再单独试 Zellij。不要同时配置两套快捷键。
+“先学 tmux”不等于以后必须永远使用 tmux。开始同时监督多个 Agent，并且经常检查谁卡住、谁完成时，Herdr 就有实际价值；主要只是嫌快捷键难发现、需要可复用布局时，再试 Zellij。Superlogical 目前继续观察，不进入安装步骤。
 
 ## Agent 工作流：给未来的 Agent 留一张可接管的工作台
 
-这里的 Agent 工作流不是某个必须安装的新产品，而是一组可以被人看见、暂停和接管的运行关系：Agent 在哪台机器工作，用什么权限，修改了哪些文件，测试和日志在哪里，人怎样回来验收。
+这里的 Agent 工作流首先是一组可以被人看见、暂停和接管的运行关系：Agent 在哪台机器工作，用什么权限，修改了哪些文件，测试和日志在哪里，人怎样回来验收。tmux 可以承载它，Herdr 则进一步尝试自动看懂这些工作台的状态。
 
 以后可以把一个临时开发 Session 组织成：
 
@@ -236,3 +270,5 @@ tmux 解决的是“连接断了，交互现场还在”，并没有决定谁能
 - [tmux 官方安装说明](https://github.com/tmux/tmux/wiki/Installing)
 - [Zellij：Session Resurrection](https://zellij.dev/documentation/session-resurrection.html)
 - [Zellij：Web Client](https://zellij.dev/documentation/web-client.html)
+- [Herdr：核心概念](https://herdr.dev/docs/concepts/)
+- [Herdr：Agents](https://herdr.dev/docs/agents/)

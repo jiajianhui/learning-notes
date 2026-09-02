@@ -1,5 +1,7 @@
 # 从 Mac 出发，去 Linux 里跑一个网站
 
+> **第一次打开：**直接从第 00 章往下走，不需要先看懂下面出现的所有人名和新工具。DHH、Omacom、Herdr 与 Superlogical 是沿途的路标和彩蛋，不是入场考试；如果你已经能用 `ssh aliyun` 登录服务器，第 04 章就当作一次“拆开现有配置看看”的复习，不要重建或覆盖它。
+
 ## 导读：一边押注 Linux 桌面，一边押注未来工作现场
 
 2026 年 8 月，Linux 与终端这条看起来有点古早的赛道，忽然坐满了你会认识的人。
@@ -8,17 +10,22 @@ DHH 为自己基于 Arch 与 Hyprland 打造的 Linux 桌面 Omarchy 成立了�
 
 另一边，Ghostty 作者、HashiCorp 联合创始人 Mitchell Hashimoto 组建了 [Superlogical](https://www.superlogical.com/)。团队里有 HashiCorp 第一位员工和前工程负责人 Jack Pearkes，也有来自 Poolside、Vercel、HashiCorp、Heroku 的开发者工具设计者 Alasdair Monk 与 Hector Simpson；背后则站着 Notable Capital、Amplify Partners，以及 Aaron Levie、Armon Dadgar、Guillermo Rauch、Patrick Collison、Tobias Lütke 等一群做过开发者产品的人。
 
+与此同时，[Herdr](https://herdr.dev/docs/) 已经把其中一部分未来做成了可以安装的工具：它从 tmux 式的持久终端工作区起步，再识别多个 Coding Agent 谁在工作、谁卡住、谁已经完成。Herdr 与 Superlogical 没有从属关系，只是现在很适合放在同一张地图里理解。
+
 他们做的不是同一个产品，却在押注同一件更大的事：**电脑和软件工作流应该再次变得可以理解、可以组合，也可以由使用者掌控。**
 
 ```text
 Omacom / Omarchy
 -> 重新设计“开发者每天坐在什么样的电脑前”
 
+Herdr
+-> 把持久终端变成可以照看多个 Agent 的工作台
+
 Superlogical
--> 重新设计“人、Agent 和远程机器在哪里持续工作”
+-> 继续追问“人、Agent 和远程机器未来在哪里持续工作”
 
 这套 Linux 路线
--> 先学会支撑这两种未来的文件、进程、网络、Shell、SSH 与 Session
+-> 先学会支撑这些未来的文件、进程、网络、Shell、SSH 与 Session
 ```
 
 明星阵容和真金白银不能证明产品一定成功，但它们至少说明：Linux 桌面、终端基础设施和 Agent 时代的工作现场，已经不只是少数人自娱自乐的支线。
@@ -49,6 +56,20 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 ## 00～10 是一条连续主线
 
 数字章节全部属于必读主线。它们按照“先认清环境，再获得服务器，然后操作系统与网络，最后拼出部署地图”的依赖关系排列。
+
+整条主线仍然是：
+
+```text
+认识环境
+-> 终端与命令
+-> SSH
+-> 文件与权限
+-> 进程、日志、端口
+-> tmux
+-> 网络与防火墙
+-> Docker
+-> 完整部署
+```
 
 ### 第一幕：先在 Mac 上拆开黑盒
 
@@ -82,7 +103,7 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 
 [创建短期 ECS，再用 SSH 与 `~/.ssh/config` 登录](./04-SSH-从Mac安全连接Linux.md)
 
-在 Mac 生成密钥，到云控制台创建短期 Ubuntu 服务器，第一次走完“公网 IP → 22 → sshd → 远程 Shell”，最后把连接收进 `ssh linux-learning`。
+还没有服务器时，在 Mac 生成密钥并创建短期 Ubuntu ECS，第一次走完“公网 IP → 22 → sshd → 远程 Shell”；已经能 `ssh aliyun` 时，不重配，只拆开现有别名看看 IP、用户、端口和密钥怎样接上。
 
 ### 第三幕：进入没有桌面的 Linux
 
@@ -100,15 +121,16 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 
 **07 · SSH 断了，工作还在**
 
-[第一次使用 tmux，并认识 Zellij](./07-SSH断了工作还在-tmux与Zellij.md)
+[第一次使用 tmux，并认识 Zellij 与 Herdr](./07-SSH断了工作还在-tmux与Zellij.md)
 
-启动一只不断走动的秒针，Detach，关掉 SSH，再从新连接回到同一个现场。tmux 只练四个核心动作，Zellij 留作有真实需要时的替代方案。
+启动一只不断走动的秒针，Detach，关掉 SSH，再从新连接回到同一个现场。先用 tmux 认清 Session、Window、Pane、Detach 与 Attach，再判断 Zellij 或 Herdr 是否解决了自己的真实痛点。
 
 **08 · 穿过三道门**
 
 [公网 IP、安全组、防火墙与 HTTPS](./08-云服务器网络安全组与防火墙.md)
 
 一个请求要依次穿过云安全组、Linux 防火墙和应用监听。你会亲手决定哪些门对全世界开，哪些只对自己开。
+以前部署时见过的 80 与 443 也会在这里拆开：它们不是神秘开关，而是浏览器默认寻找 HTTP 与 HTTPS 的两扇门。
 
 ### 第四幕：拆开技术栈，再装上发射架
 
@@ -136,11 +158,11 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 
 去看 Omacom 的 1000 万美元要推动什么，再碰 Arch、Hyprland、键盘工作流和 dotfiles。它讨论的是个人桌面选择，不是管理服务器的前置课程。
 
-**附录 B · Superlogical 与未来的工作 Session**
+**附录 B · Herdr、Superlogical 与未来的工作 Session**
 
-[为什么它从终端多路复用器开始](./附录B-Superlogical与持久工作会话.md)
+[为什么它们都从持久终端开始](./附录B-Superlogical与持久工作会话.md)
 
-先认识这支明星团队为什么从 terminal multiplexer 开始，再理解远程工作、Web、AI Agent 和长期 Session 为什么开始汇合。它目前尚未公开发布，只观察方向，不安排安装。
+先用已经发布的 Herdr 看见“tmux + Agent 状态”是什么，再认识 Superlogical 的明星团队与更大愿景。Herdr 可以按需试玩；Superlogical 尚未公开首个 beta，只观察方向，不安排安装。
 
 ---
 
@@ -173,7 +195,7 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 | 终端 App | Terminal 起步，想换手感时试 Ghostty | App 可以换，Shell、SSH 和命令仍然相通 |
 | Shell | Mac 继续使用 zsh，Ubuntu 先使用 bash | 不为追新工具同时切换交互习惯 |
 | 远程连接 | 系统 `ssh` + `~/.ssh/config` | 配置透明、可迁移，也不依赖某个 App |
-| 远程 Session | tmux 起步，Zellij 按需选试 | 先掌握普及度更高的 Detach / Attach 模型 |
+| 远程工作现场 | tmux 起步；Herdr / Zellij 有真实痛点再试 | 先掌握通用的 Detach / Attach，再决定是否需要 Agent 状态或现代布局 |
 | 图形化传输 | Cyberduck，可选 | 用 GUI 辅助传文件，但不隐藏 SSH 基础 |
 | 应用运行 | Docker Compose | 把 Node.js、PostgreSQL 和应用关系留在代码里 |
 | 公网入口 | OpenResty / Caddy / Nginx 接住 80、443 | 应用和数据库端口不用直接暴露公网 |
@@ -212,5 +234,6 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 - [OpenSSH 手册](https://man.openbsd.org/ssh)
 - [Docker 文档](https://docs.docker.com/)
 - [阿里云 ECS 文档](https://help.aliyun.com/zh/ecs/)
+- [Herdr 官方文档](https://herdr.dev/docs/)
 - [DHH：Introducing Omakub](https://world.hey.com/dhh/introducing-omakub-354db366)
 - [DHH：Omarchy is out](https://world.hey.com/dhh/omarchy-is-out-4666dd31)

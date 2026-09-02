@@ -16,7 +16,7 @@ Mac 上：macOS -> Docker Desktop 的 Linux 虚拟机 -> 容器
 Linux 上：Ubuntu -> Docker Engine -> 容器
 ```
 
-这一章的第一轮练习回到 Mac，并使用已经熟悉的 Docker Desktop。原因很简单：现在要拆开容器心智模型，不顺便增加一套会随版本变化的 Docker Engine 安装流程。
+这一章的第一轮练习回到 Mac，并使用已经熟悉的 Docker Desktop。原因很简单：现在只需要看清 Mac、Docker Desktop 隐藏的 Linux 虚拟机与容器之间谁包着谁，不顺便增加一套会随版本变化的 Docker Engine 安装流程。
 
 先在 Mac 确认：
 

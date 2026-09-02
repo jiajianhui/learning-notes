@@ -8,6 +8,10 @@ ssh linux-learning
 
 IP、用户名、端口和私钥都藏到哪里去了？它们没有消失，只是被整齐地收进了 `~/.ssh/config`。
 
+如果你现在已经可以输入 `ssh aliyun` 进入服务器，这一站的最终结果其实已经有了。后文出现 `linux-learning` 时，直接换成你现有的 `aliyun` 即可，不需要为了跟文档同名而重配一次。
+
+`~/.ssh` 是 Mac 当前用户保存 SSH 配置、密钥和主机记录的目录；`~/.ssh/config` 才是其中通常用来保存 `aliyun` 这类主机别名的配置文件。先读懂现有内容，不覆盖它。
+
 SSH 也不是某个云厂商 App，而是一套安全远程连接协议：
 
 ```text
@@ -65,6 +69,16 @@ Mac 上的 ssh 客户端
 ls -la ~/.ssh
 ```
 
+如果 `ssh aliyun` 已经能用，再做一次只读检查：
+
+```bash
+ssh -G aliyun | grep -E '^(hostname|user|port|identityfile) '
+```
+
+`ssh -G` 只展开这条别名最终会采用的配置，不会真的连接服务器。能看到正确的 `hostname`、`user`、`port` 和 `identityfile`，就继续使用原来的密钥，跳过下面的 `ssh-keygen`。
+
+只有在没有可用密钥，或者明确想给这台学习服务器单独换一把钥匙时，才创建：
+
 在 Mac 创建一把兼容阿里云 ECS 公钥导入的 RSA 密钥：
 
 ```bash
@@ -110,6 +124,8 @@ id_rsa_linux_learning.pub   公钥
 
 ## 第一次先走一遍长路
 
+如果 `ssh aliyun` 已经可用，不必倒退重走长命令。直接登录并运行 `hostname`、`whoami`，确认别名确实指向预期服务器即可。
+
 在 Mac 执行，替换示例 IP；如果购买页显示的不是 `ecs-user`，也要替换用户名：
 
 ```bash
@@ -143,6 +159,16 @@ Mac 私钥
 ---
 
 ## 给一长串连接信息取个短名字
+
+已经有 `aliyun` 别名时，下面这条可以帮助你看配置文件本身：
+
+```bash
+sed -n '1,160p' ~/.ssh/config
+```
+
+如果文件里使用了 `Include`，别名也可能来自被引入的其他配置文件；这时以前面的 `ssh -G aliyun` 结果为准。不要复制一个同名 `Host aliyun` 去覆盖它。
+
+只有还没有 SSH 配置的读者，才需要执行：
 
 ```bash
 mkdir -p ~/.ssh
@@ -259,7 +285,7 @@ Mac localhost:8080
 
 离开前确认四件事：
 
-- 输入 `ssh linux-learning` 就能登录。
+- 输入 `ssh linux-learning`，或者你现有的 `ssh aliyun`，就能登录。
 - 你能解释客户端、`sshd`、用户、端口和密钥怎样接上。
 - 你知道 `authorized_keys` 是“谁能进来”，`known_hosts` 是“我来的是不是原来那台服务器”。
 - 连接失败时，你会打开 `ssh -v` 找线索。

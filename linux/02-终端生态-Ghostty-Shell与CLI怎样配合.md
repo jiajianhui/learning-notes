@@ -189,7 +189,7 @@ Linux Server
     └── bash：提供远程 Shell
         ├── journalctl
         ├── docker
-        └── tmux，可选
+        └── tmux / Herdr，可选，通常二选一
 ```
 
 SSH 以后输入的 `pwd`、`ls` 和 `docker` 在远程 Linux 执行，但输出仍沿着 SSH 回到 Mac，由 Ghostty 显示。
@@ -229,11 +229,14 @@ Mac Ghostty
 |---|---|
 | 想要更舒服的 Mac 终端窗口 | Ghostty、iTerm2 或 Terminal.app |
 | 想改变命令补全、语法和交互 | zsh、bash 或 fish |
-| 想让 SSH 断开后远端任务继续 | tmux 或 Zellij |
+| 想让 SSH 断开后远端任务继续 | tmux、Zellij，或兼顾 Agent 的 Herdr |
+| 想在持久终端里照看多个 Coding Agent 的状态 | Herdr |
 | 想编辑终端里的文件 | Vim、Neovim 或其他编辑器 |
 | 想管理长期线上服务 | Docker Compose 或 systemd |
 
 不同层的工具不要放进同一场比赛。Ghostty 不能替代 Shell，tmux 也不能替代生产服务管理。
+
+Herdr 也不是另一款 Ghostty。它运行在 Terminal、Ghostty 等终端 App 里面，先承担一部分 tmux 式的持久工作区职责，再向上识别 Agent 状态。这里先知道它站在哪一层即可，第 07 章才会解释什么时候值得使用。
 
 ## 关掉窗口前，讲清这段故事
 

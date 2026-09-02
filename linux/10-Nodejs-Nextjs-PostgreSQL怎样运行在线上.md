@@ -64,7 +64,7 @@ npm run dev
 
 - `DATABASE_URL`。
 - `PORT`。
-- Session、Cookie 或签名密钥。
+- Web 登录会话使用的 Cookie 或签名密钥。这里不是第 07 章的 tmux Session。
 - CORS 允许来源。
 - 日志级别和运行环境。
 
