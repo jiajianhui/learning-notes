@@ -21,7 +21,7 @@
 | 对象 | 作用 | 完成标志 |
 |---|---|---|
 | 第 09 章 CRUD demo | 跟着文档第一次集中练习 Docker、PostgreSQL、Prisma 和单表 CRUD | 能跑通 CRUD，并能用 09A 复述 Prisma 主线 |
-| `mini-cms` | 独立复现基础能力，并完成 Ant Design、shadcn/ui 两个并列的管理后台项目 | 两套后台都能独立完成核心管理链路 |
+| `mini-cms` | 独立复现基础能力，完成 Ant Design、shadcn/ui 两个并列的管理后台，再向个人网站提供已发布内容 | 两套后台都能完成核心管理链路，个人网站能读取和展示正式文章 |
 | 本目录的学习文档 | 讲清通用知识，并指导修改 Mini CMS | 不保存项目最终运行代码 |
 
 第 09 章 demo 和 `mini-cms` 不是两个并行发展的项目：前者完成第一次集中练习，后者沿着同一条主线继续完善。`mini-cms` 内部的 `admin-web-antd` 与 `admin-web-shadcn` 才是两个并列交付的前端项目。第 10 章负责总结 demo 已经完成的实操、它还存在的问题，以及 Mini CMS 如何继续解决这些问题：
@@ -158,8 +158,10 @@ TypeScript 类型和运行时校验
 阶段 5：回看 06 API 设计、08 筛选分页，阅读 15 多表关系和事务
 阶段 6：阅读 16 登录与安全、16A 登录实操
 阶段 7：阅读 17 测试分层、17A 接口测试实操
-阶段 8：回看 06 公开 API 设计，阅读 18 运行和部署，再用 18A 完成 1Panel 部署
+阶段 8：回看 06 公开 API 设计，阅读 18 连通公开内容、个人网站详情页和生产运行，再用 18A 完成 1Panel 部署
 ```
+
+阶段 8 开始前，先按第六部分完成 shadcn/ui 并列后台。这样两个管理后台、共享 API 和自动化测试都稳定后，再集中处理个人网站文章详情页和部署。
 
 `13A` 是 Next.js 架构对比选读，完成第一轮文章 CRUD 后再看，不影响任何实操阶段。
 
@@ -194,7 +196,7 @@ TypeScript 类型和运行时校验
 22 练习题
 ```
 
-第 18、18A 章已经对应 Mini CMS 可选阶段 8；第 19～22 章用于阅读、排错和复习，不要求第一次连续背完。
+第 18、18A 章对应 Mini CMS 必做阶段 8；第 19～22 章用于阅读、排错和复习，不要求第一次连续背完。
 
 ### 第六部分：完成 shadcn/ui 并列后台项目
 
@@ -273,7 +275,7 @@ shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等
 管理页面 B：Next.js + TypeScript + shadcn/ui + Axios + TanStack Table + React Hook Form
 接口检查：Apifox
 自动化测试：Vitest + Supertest
-自托管部署（阶段 8 可选）：1Panel + Docker Compose + OpenResty
+公开内容与自托管部署（阶段 8）：个人网站 + 公开 API + 1Panel + Docker Compose + OpenResty
 ```
 
 ---
@@ -288,7 +290,7 @@ shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等
 - 能读懂常见的单表 CRUD SQL，并知道 Prisma 模型方法对应什么操作。
 - 能用 Docker 启动 PostgreSQL，并用 Prisma 记录表结构变化和管理数据。
 
-读完第 09 章后，先用 09A 收口 Prisma 主线，再读第 10 章完成从 demo 到 Mini CMS 的过渡。阶段 3 先补上请求校验、统一错误处理和项目结构；阶段 4 用第 13 章完成前后端过渡，完整学完第 14 章并完成 Ant Design 后台后，再用 14A 建立完整 CRUD、数据返回和错误传播主线，用 14B 收口 TypeScript、Promise 和 React 状态机制；阶段 5～7 继续增加标签、登录和测试。共享 API 稳定后，再按第 23～27 章完成 shadcn/ui 后台；阶段 8 的部署仍然可选。两套前端都是学习目标，只是按顺序实现，避免同时学习两套组件体系。
+读完第 09 章后，先用 09A 收口 Prisma 主线，再读第 10 章完成从 demo 到 Mini CMS 的过渡。阶段 3 先补上请求校验、统一错误处理和项目结构；阶段 4 用第 13 章完成前后端过渡，完整学完第 14 章并完成 Ant Design 后台后，再用 14A 建立完整 CRUD、数据返回和错误传播主线，用 14B 收口 TypeScript、Promise 和 React 状态机制；阶段 5～7 继续增加标签、登录和测试。共享 API 稳定后，再按第 23～27 章完成 shadcn/ui 后台；最后完成阶段 8 的公开 API、个人网站文章详情页和真实部署。两套后台和个人网站公开阅读链路都是学习目标。
 
 ---
 
@@ -309,7 +311,8 @@ shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等
 -> 阶段 4 先理解前后端边界，再完成 Ant Design 后台
 -> 阶段 5～7 学习多表、登录和测试
 -> 完成 shadcn/ui 并列后台项目
--> 按需完成部署、阅读和排错
+-> 阶段 8 完成公开内容、文章详情页和部署
+-> 按需使用阅读、排错和复习章节
 ```
 
 按这条路线边学边做：第 09 章之后就进入项目，后续知识在对应实操阶段开始前补齐。

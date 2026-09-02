@@ -431,7 +431,7 @@ fieldState.error
         id={field.name}
         aria-invalid={fieldState.invalid}
         className="min-h-80 font-mono"
-        placeholder="使用 Markdown 编写正文"
+        placeholder="输入文章正文"
       />
       {fieldState.invalid && (
         <FieldError errors={[fieldState.error]} />
@@ -441,7 +441,7 @@ fieldState.error
 />
 ```
 
-当前项目正文仍然是普通多行文本或 Markdown，不增加富文本编辑器。
+当前后台只负责编辑和提交 `content` 字符串，不在这里解析正文，也不增加富文本编辑器。等阶段 8 接入个人网站时，再根据已有的 Markdown / MDX 能力选定渲染方案。
 
 ---
 

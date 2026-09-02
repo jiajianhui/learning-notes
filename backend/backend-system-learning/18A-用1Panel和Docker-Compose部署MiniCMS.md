@@ -1,10 +1,10 @@
 # 18A. 用 1Panel 和 Docker Compose 部署 Mini CMS
 
-> Mini CMS 阶段 8（可选）：阶段 7 完成后再使用。本章不使用宝塔，也不通过上传散文件的方式发布项目。
+> Mini CMS 阶段 8：第 18 章的公开文章 API、个人网站详情页和生产运行准备完成后再使用。本章不使用宝塔，也不通过上传散文件的方式发布项目。
 
 ## 这一章完成什么
 
-第 18 章已经建立了构建、环境变量、生产迁移、日志和备份的地图。本章把这些要求落到一台真实服务器：
+第 18 章已经完成公开文章 API、个人网站文章详情页，以及构建、环境变量、生产迁移、日志和备份地图。本章把 Mini CMS 的生产运行要求落到一台真实服务器：
 
 ```text
 1Panel
@@ -22,7 +22,7 @@ Mini CMS 仓库
 └── Prisma 迁移、构建和启动命令
 ```
 
-第一次只要求上线：
+第一次在这台服务器上部署：
 
 ```text
 admin-web-antd
@@ -30,11 +30,17 @@ server
 PostgreSQL
 ```
 
-`admin-web-shadcn` 完成后可以增加同类服务，但不要为了部署提前创建空项目。
+`admin-web-shadcn` 已经在阶段 8 前完成。第一次可以先让 Ant Design 后台、API 和数据库稳定上线，再用同类配置增加 shadcn/ui 后台服务。
+
+个人网站保留在它自己的项目和部署环境中，不要求搬进这份 Compose。阶段 8 验收时，它必须能通过正式 HTTPS API 读取文章，并展示第 18 章已经完成的列表和详情页。
 
 最终链路：
 
 ```text
+个人网站文章列表和详情页
+└── https://api.example.com/api/public/articles
+    或 https://api.example.com/api/public/articles/:slug
+
 浏览器
 ├── https://admin.example.com
 └── https://api.example.com
@@ -78,6 +84,8 @@ PostgreSQL
 - `npm run db:generate` 可以生成 Prisma Client。
 - `npm run db:migrate:deploy` 执行 `prisma migrate deploy`。
 - 有 `GET /api/articles/health`。
+- 有 `GET /api/public/articles` 和 `GET /api/public/articles/:slug`，并且只返回已发布内容。
+- 自动化测试能证明草稿和撤回文章不会从公开接口泄露。
 - CORS 和 CSRF 来源从 `ADMIN_WEB_ORIGINS` 读取，不再写死开发地址。
 - Cookie 在生产环境使用 `Secure`，并保持阶段 6 的认证和 CSRF 防护。
 
@@ -92,6 +100,13 @@ PostgreSQL
 - `prisma/migrations` 已提交。
 - 新数据库可以用 `prisma migrate deploy` 建立结构。
 - 已经知道怎样生成和恢复备份。
+
+### 个人网站
+
+- 文章列表和详情页已经在本地读取 Mini CMS 的真实公开 API。
+- API 地址可以从本地地址切换为正式 HTTPS 域名。
+- `content` 的 Markdown 或 MDX 解析方式已经确定，数据库字段仍保持 `String`。
+- 文章详情页布局和正文排版已经按第 18 章的两个参考链接完成本地验收。
 
 ### 整个仓库
 
@@ -644,6 +659,8 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml logs --tail=2
 - 80、443 对公网开放，SSH 和面板端口限制来源。
 - 3000、3001 和 5432 只绑定 `127.0.0.1`。
 - `admin.example.com` 和 `api.example.com` 通过 HTTPS 可用。
+- 正式公开 API 只返回已发布文章，草稿和撤回文章仍然不可见。
+- 个人网站可以通过正式 API 显示文章列表和详情，详情页布局与正文排版保持第 18 章已经验收的结果。
 - Compose 从仓库文件创建，真实 `.env` 不在 Git 中。
 - PostgreSQL 使用持久卷，迁移使用 `prisma migrate deploy`。
 - 重启 Compose 和服务器后，应用和数据仍然可用。

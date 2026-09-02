@@ -2,6 +2,8 @@
 
 > Mini CMS 阶段 5：先按第 14 章完成 `admin-web-antd` 的文章管理。现在继续修改同一个 `server` 和同一个 Ant Design 后台，为文章增加标签、筛选和发布规则，不创建新 demo。
 
+本阶段不处理公开文章详情页和正文排版。`Article.content` 继续保持 Prisma `String`；后端只校验、保存和返回字符串，等阶段 8 接入个人网站时再决定使用现有的 Markdown 还是 MDX 渲染能力。
+
 `JOIN` 是 SQL 中把多张表里有关的数据组合起来查询的操作。事务是把多步数据库修改当成一个整体：全部成功才保留，失败就撤销；这种撤销也叫“回滚”。
 
 ## 问题背景
@@ -63,7 +65,7 @@ article_tags
 
 Prisma 可以替你隐藏中间模型，这叫“隐式多对多”；也可以让代码明确写出 `ArticleTag`，这叫“显式多对多”。这套学习路线使用显式模型，让外键和联合主键仍然看得见。
 
-下面模型中的 `@relation` 表达外键关系，`@@id` 表达联合主键；`onDelete: Cascade` 表示删除文章或标签时，同时清理中间表中引用它的关系。第 4 节再具体说明删除结果。
+下面模型中的 `@relation` 表达外键关系，`@@id` 表达联合主键；`onDelete: Cascade` 表示删除文章或标签时，同时清理中间表中引用它的关系。第 6 节再具体说明删除结果。
 
 在 `prisma/schema.prisma` 中增加关系字段和两个模型：
 
@@ -75,6 +77,7 @@ model Article {
   summary     String?
   content     String
   status      ArticleStatus @default(draft)
+  publishedAt DateTime?     @map("published_at") @db.Timestamptz(3)
   createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
   articleTags ArticleTag[]
@@ -118,11 +121,11 @@ model ArticleTag {
 修改模型后继续执行：
 
 ```bash
-npm run db:migrate -- --name add_tags
+npm run db:migrate -- --name add_tags_and_publishing
 npm run db:generate
 ```
 
-然后打开新生成的 `migration.sql`，确认它创建了 `tags`、`article_tags`、外键和联合主键。
+然后打开新生成的 `migration.sql`，确认它创建了 `tags`、`article_tags`、外键和联合主键，并给 `articles` 增加了可为空的 `published_at`。
 
 ---
 
@@ -177,7 +180,119 @@ Prisma 会把关系查询转换成 SQL，再交给 PostgreSQL 执行。不要假
 
 ---
 
-## 4. 删除文章时怎样清理关系
+## 4. 用同一组条件完成筛选和分页
+
+阶段 5 的文章列表不再一次返回全部数据。页面提交标题、状态、标签、页码和每页数量，后端把它们转换成 Prisma 查询条件：
+
+```text
+title
+-> 标题包含指定文字
+
+status
+-> 只返回 draft 或 published
+
+tagId
+-> articleTags 中至少有一条关系使用这个标签
+
+page / pageSize
+-> 转换成 skip / take
+```
+
+查询当前页和统计总数必须使用同一份 `where`。下面是省略请求校验后的查询主线：
+
+```ts
+import type { Prisma } from "../../generated/prisma/client";
+
+const where: Prisma.ArticleWhereInput = {
+  title: title
+    ? {
+        contains: title,
+        mode: "insensitive",
+      }
+    : undefined,
+  status,
+  articleTags: tagId
+    ? {
+        some: {
+          tagId,
+        },
+      }
+    : undefined,
+};
+
+const [articles, total] = await Promise.all([
+  prisma.article.findMany({
+    where,
+    orderBy: {
+      createdAt: "desc",
+    },
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+  }),
+  prisma.article.count({ where }),
+]);
+```
+
+`some` 表示一篇文章的多条 `articleTags` 关系中，至少有一条符合条件。`findMany()` 决定本页返回哪些文章，`count()` 决定分页器中的总数；如果两处使用不同条件，页面显示的总数就会和实际列表不一致。
+
+列表响应继续使用第 06 章已经约定的结构：
+
+```json
+{
+  "data": [],
+  "pagination": {
+    "page": 1,
+    "pageSize": 20,
+    "total": 0
+  }
+}
+```
+
+---
+
+## 5. 让发布状态和发布时间一起变化
+
+`status` 表示文章现在是否公开，`publishedAt` 记录这一次发布发生的时间。两者必须由后端按同一条规则修改：
+
+```text
+新建草稿
+-> status = draft，publishedAt = null
+
+首次发布或重新发布
+-> status = published，publishedAt = 当前时间
+
+撤回文章
+-> status = draft，publishedAt = null
+
+只修改标题或正文
+-> 保留原来的 status 和 publishedAt
+```
+
+客户端只提交目标 `status`，不能自行指定 `publishedAt`。更新文章前先读取当前状态，再由后端计算要写入的数据：
+
+```ts
+let publishedAt = article.publishedAt;
+
+if (input.status !== undefined && input.status !== article.status) {
+  publishedAt = input.status === "published" ? new Date() : null;
+}
+
+await prisma.article.update({
+  where: {
+    id: article.id,
+  },
+  data: {
+    ...input,
+    publishedAt,
+  },
+});
+```
+
+这样撤回后不会留下仍像“已发布”的时间，重新发布也会得到新的发布时间。阶段 8 的公开接口只查询 `status = published` 且 `publishedAt` 不为 `null` 的文章，因此这里的数据规则会直接影响个人网站能否正确显示内容。
+
+---
+
+## 6. 删除文章时怎样清理关系
 
 `ArticleTag.article` 的关系使用了：
 
@@ -199,7 +314,7 @@ onDelete: Cascade
 
 ---
 
-## 5. 让一次关联写入整体成功或失败
+## 7. 让一次关联写入整体成功或失败
 
 Prisma 把“在一次调用中，同时写入主体和关联数据”叫作 nested write（嵌套写入）。例如创建文章时连接已有标签：
 
@@ -216,6 +331,7 @@ export async function createArticleWithTags(
   return prisma.article.create({
     data: {
       ...input,
+      publishedAt: input.status === "published" ? new Date() : null,
       articleTags: {
         create: tagIds.map((tagId) => ({
           tag: {
@@ -249,7 +365,7 @@ export async function createArticleWithTags(
 
 ---
 
-## 6. 多步自定义逻辑再使用事务函数
+## 8. 多步自定义逻辑再使用事务函数
 
 Prisma 提供的事务函数叫 `$transaction`。传给它的函数会收到参数 `tx`，即这次事务专用的 Prisma Client；事务中的所有数据库操作都要通过它执行。
 
@@ -261,7 +377,6 @@ export async function updateArticleWithTags(
   input: {
     title?: string;
     content?: string;
-    status?: "draft" | "published";
   },
   tagIds: number[],
 ) {
@@ -309,13 +424,15 @@ export async function updateArticleWithTags(
 
 ## 当前阶段学到什么程度
 
-练习文章标签时掌握下面五件事即可：
+阶段 5 掌握下面这些事情即可：
 
 ```text
 使用显式 ArticleTag 模型保留中间表
 使用关系和外键保证引用真实存在
 理解 SQL JOIN 解决什么问题
 使用 include 或 select 查询关联数据
+用同一份 where 完成筛选、分页和总数统计
+让 status 和 publishedAt 按发布规则一起变化
 使用 nested write 或 $transaction 保护多步修改
 ```
 
@@ -337,6 +454,12 @@ JOIN
 
 include / select
 -> Prisma 查询关联模型
+
+where / skip / take
+-> 使用同一组条件完成筛选、分页和总数统计
+
+status / publishedAt
+-> 由后端一起维护发布和撤回状态
 
 nested write
 -> 在一次 Prisma 调用中让关联修改整体成功或失败
