@@ -806,10 +806,12 @@ export function createArticle(input: CreateArticleInput) {
 
 **上面 `data.articleTags.create` 就是嵌套写入的位置**：外层 `prisma.article.create()` 创建文章，内层 `articleTags.create` 创建关系，再通过 `tag.connect` 连接已有标签。把关联写入放在主体写入的 `data` 中，就叫 nested write；它不是一个名为 `nestedWrite()` 的函数。后面的 `include` 用于读取返回数据，不负责写入。
 
+`tagIds` 是用来选择标签的请求数据，不是数据库列。`Article` 模型没有 `tagIds` 字段，所以不能把整个 `input` 直接作为 `data` 交给 Prisma。先单独取出 `tagIds`，其余字段用于创建文章，再根据 `tagIds` 为这篇文章创建对应的 `ArticleTag` 记录。
+
 沿着一次实际输入看这个函数。假设输入中有 `title`、`slug`、`content` 和 `tagIds: [3, 7]`，本次新文章生成的 id 为 42：
 
 1. `const { tagIds, ...articleInput } = input` 是对象解构加剩余收集：单独取出 `tagIds`，其余字段重新组成一个新的 `articleInput` 对象。原来的 `input` 不会被删除字段。
-2. `data` 中的 `...articleInput` 用来保存文章自身字段，`publishedAt` 继续按第 6 节计算。`tagIds` 是用来选择标签的请求数据，不是数据库列；真正保存选择结果的是下面的关系行。
+2. `data` 中的 `...articleInput` 用来保存文章自身字段，`publishedAt` 继续按第 6 节计算。
 3. `articleTags.create` 创建的是 `ArticleTag`。`map()` 把 `[3, 7]` 变成两份关系创建数据。每份里的 `tag.connect.id` 分别为 3、7，表示连接已经存在的 `Tag`。
 
 两个外键的来源是：
@@ -967,7 +969,9 @@ export async function updateArticle(
 
 第 14 章保存成功后，会用接口返回的新文章对象，替换前端 `articles` 数组中同 id 的旧对象，Table 因此显示最新内容。这一步只是更新页面内存中的数据，不会再次修改数据库。接入筛选分页后，文章可能不再符合当前条件，总数也可能变化，因此按第 10.3 节重新请求当前页，让列表和分页器一起更新。
 
-`deleteMany()` 删除所有匹配行，没有匹配行也不报错；`createMany()` 一次插入多行关系。最后的 `findUniqueOrThrow()` 与 `findUnique()` 的区别是：找不到文章时抛错，不返回 `null`。
+`deleteMany()` 删除所有匹配行，没有匹配行也不报错；`createMany()` 一次插入多行关系。
+
+最后重新查询文章和最新标签，作为更新结果返回。这里使用 `findUniqueOrThrow()`，保证成功时返回文章对象；如果没有找到文章，就抛出异常，使本次事务回滚，避免接口返回成功却得到 `data: null`。也可以用 `findUnique()`，但要再判断结果是否为 `null`，并在找不到文章时手动抛错。
 
 标签不存在时，插入关系会触发外键错误 `P2003`。事务先回滚文章和关系的修改，外面的 `catch` 再把错误转成 422。这里能写 `TAG_NOT_FOUND`，是因为已经在本次操作中确认文章存在，并且新增的是它到标签的关系；不要把整个项目的所有外键错误都翻译成“标签不存在”。
 
