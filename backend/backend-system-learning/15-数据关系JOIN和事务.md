@@ -132,7 +132,7 @@ model ArticleTag {
 上面的 `@relation` 和 `@@id` 会让数据库执行两条防错规则：
 
 - **外键**：`@relation(fields: [articleId], references: [id])` 要求关系行中的 `articleId` 能在 `Article.id` 中找到；`tag` 关系同样要求 `tagId` 能在 `Tag.id` 中找到。例如标签 9999 不存在，PostgreSQL 就会拒绝插入 `(42, 9999)`，不会保存“文章 42 使用标签 9999”这条关系。
-- **联合主键**：`@@id([articleId, tagId])` 把文章 id 和标签 id 合起来标识一行，因此 `(42, 3)` 只能出现一次，文章 42 不会重复关联标签 3。第 07 章用单列 `id` 标识一行；这里两个 id 的组合已经能唯一确定关系，不需要额外的 `id` 列。
+- **联合主键**：`@@id([articleId, tagId])` 把文章 id 和标签 id 合起来标识一行，因此 `(42, 3)` 只能出现一次，文章 42 不会重复关联标签 3。文章表用一个 `id` 唯一确定一篇文章；中间表用 `articleId` 和 `tagId` 的组合，唯一确定一条文章与标签的关系，因此不需要额外的 `id` 列。
 
 `Article` 和 `Tag` 中还有一行 `articleTags ArticleTag[]`：`articleTags` 是关系字段名，`ArticleTag[]` 表示它对应多条中间表记录。它不是数据库中的数组列，也不会创建名为 `articleTags` 的列。例如文章 42 对应 `(42, 3)`、`(42, 7)` 两行；查询时用 `include` 才把这些关系放进结果数组。
 
