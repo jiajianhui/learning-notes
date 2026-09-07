@@ -45,7 +45,7 @@ article-router.ts         列表路由读取 query，并返回 pagination
 
 例如，你本来想选“数据库”，却提交了 `"后端,数居库"`。普通文本列照样保存，它不会检查“数居库”是不是标签列表里的一个选项。以后把“后端”改名，也要找出每篇文章里的这段文字再修改。
 
-筛选也容易混淆：如果用“包含后端这段文字”的条件查找，`"后端工程化"` 也会命中。可以额外编写拆分和匹配规则，但本项目直接让标签拥有自己的 id，用 id 表示选择了哪个标签。
+筛选也容易混淆：如果用“包含后端这段文字”的条件查找，`"后端工程化"` 也会命中。本项目把标签单独保存在 `tags` 表中。文章选择标签时，保存对应的标签 id，例如用 `3` 表示“后端”。
 
 所以这里用三张表：
 
@@ -68,23 +68,7 @@ article_tags
 | 42 | 7 | 文章 42 使用标签 7 |
 | 43 | 3 | 文章 43 也使用标签 3 |
 
-`article_tags` 自己不保存标题和标签名，只保存两个 id。文章 42 有两个标签，标签 3 属于两篇文章，多对多关系就这样表示出来了。
-
-这张中间表需要两条约束：
-
-```text
-外键（foreign key）
--> article_tags.article_id 的值必须真实存在于 articles.id 中
--> article_tags.tag_id 的值必须真实存在于 tags.id 中
--> 例如 tags 中没有 id = 9999，就不能插入 (42, 9999)
--> PostgreSQL 会拒绝这次插入，不会保存一条“文章 42 使用标签 9999”的记录
-
-联合主键（composite primary key）
--> 把 article_id 和 tag_id 两列合起来当作主键
--> 因此 (42, 3) 只能出现一次，同一篇文章不会重复添加同一个标签
-```
-
-第 07 章的主键是单列的 `id`。这里的主键由两列组成，所以叫联合主键。它不需要额外的 `id` 列，因为“哪篇文章 + 哪个标签”本身就能唯一确定一行。
+文章标题保存在 `articles.title`，标签名称保存在 `tags.name`；`article_tags` 只保存文章 id 和标签 id。文章 42 有两个标签，标签 3 属于两篇文章，多对多关系就这样表示出来了。
 
 ---
 
@@ -144,6 +128,11 @@ model ArticleTag {
 | `@@id([articleId, tagId])` | 两列组成联合主键 |
 | `@@index([tagId])` | 为“按标签查文章”单独建索引，第 3.2 节说明原因 |
 | `@@map("article_tags")` | 模型叫 `ArticleTag`，数据库表叫 `article_tags` |
+
+上面的 `@relation` 和 `@@id` 会让数据库执行两条防错规则：
+
+- **外键**：`@relation(fields: [articleId], references: [id])` 要求关系行中的 `articleId` 能在 `Article.id` 中找到；`tag` 关系同样要求 `tagId` 能在 `Tag.id` 中找到。例如标签 9999 不存在，PostgreSQL 就会拒绝插入 `(42, 9999)`，不会保存“文章 42 使用标签 9999”这条关系。
+- **联合主键**：`@@id([articleId, tagId])` 把文章 id 和标签 id 合起来标识一行，因此 `(42, 3)` 只能出现一次，文章 42 不会重复关联标签 3。第 07 章用单列 `id` 标识一行；这里两个 id 的组合已经能唯一确定关系，不需要额外的 `id` 列。
 
 `Article` 和 `Tag` 中还有一行 `articleTags ArticleTag[]`：`articleTags` 是关系字段名，`ArticleTag[]` 表示它对应多条中间表记录。它不是数据库中的数组列，也不会创建名为 `articleTags` 的列。例如文章 42 对应 `(42, 3)`、`(42, 7)` 两行；查询时用 `include` 才把这些关系放进结果数组。
 
@@ -301,7 +290,7 @@ VALUES (42, 3);
 -> 报错信息包含 duplicate key value violates unique constraint
 ```
 
-两条都报错，说明第 1 节的两条约束真的由 PostgreSQL 执行，而不只是写在文档里。
+两条都报错，说明第 2.1 节的两条约束真的由 PostgreSQL 执行，而不只是写在文档里。
 
 ### 3.4 保留数据，继续用接口验证
 
@@ -746,7 +735,7 @@ export function createArticle(input: CreateArticleInput) {
 
 标签不是文章必填项，创建和更新请求中的 `tagIds` 都是可选的：创建时不传表示不关联标签，更新时不传表示保留原来的标签；更新时传 `[]` 才表示清空。
 
-当新建文章并选择标签时，需要新增一条 `Article` 和若干条 `ArticleTag`。例如选择 `[3, 7]`，但标签 7 已被删除：如果先保存文章，再写关系时失败，就会出现“接口报错，文章却已经创建”的结果。
+当新建文章并选择标签时，需要新增一条文章记录和若干条关系记录。假设页面加载时标签 3、7 都存在，用户选中了它们，但提交前，标签 7 被另一个窗口删除了。如果后端先单独保存文章，再尝试关联标签 7，第二步就会失败，造成“接口报错，文章却已经创建”的结果。
 
 nested write（嵌套写入）会把这些写入放在同一个事务里：文章和关系都写成功才保存；任一关系写失败，这次新增的文章和关系都撤销，原有标签不受影响。这就是这里所说的“整体成功或整体失败”。
 
@@ -778,7 +767,7 @@ export const createArticleSchema = z.strictObject({
 
 ### 8.3 第二步：用 nested write 创建文章和关系
 
-在 `server/src/modules/articles/article-repository.ts` 中替换第 6 节的 `createArticle()`。`tagIds` 表示客户端选中的标签 id；对应的 `Tag` 必须已经存在，第 3 节已准备好这批标签。`ArticleTag` 不必提前存在，本次调用会创建关系行。
+在 `server/src/modules/articles/article-repository.ts` 中替换第 6 节的 `createArticle()`。`tagIds` 表示客户端选中的标签 id。第 2 节已经建立 `ArticleTag` 模型及 `article_tags` 表，第 3 节已插入可供选择的标签记录。本次调用新增的是“这篇新文章使用了哪些标签”的关系行，不是创建中间表；被选择的标签记录必须已经存在。
 
 ```ts
 export function createArticle(input: CreateArticleInput) {
@@ -815,6 +804,8 @@ export function createArticle(input: CreateArticleInput) {
 }
 ```
 
+**上面 `data.articleTags.create` 就是嵌套写入的位置**：外层 `prisma.article.create()` 创建文章，内层 `articleTags.create` 创建关系，再通过 `tag.connect` 连接已有标签。把关联写入放在主体写入的 `data` 中，就叫 nested write；它不是一个名为 `nestedWrite()` 的函数。后面的 `include` 用于读取返回数据，不负责写入。
+
 沿着一次实际输入看这个函数。假设输入中有 `title`、`slug`、`content` 和 `tagIds: [3, 7]`，本次新文章生成的 id 为 42：
 
 1. `const { tagIds, ...articleInput } = input` 是对象解构加剩余收集：单独取出 `tagIds`，其余字段重新组成一个新的 `articleInput` 对象。原来的 `input` 不会被删除字段。
@@ -834,7 +825,9 @@ export function createArticle(input: CreateArticleInput) {
 
 没有提交 `tagIds` 时，`tagIds?.map(...)` 得到 `undefined`，不创建关系；传 `[]` 时也没有关系行可创建。文章仍可正常保存。
 
-最后的 `include` 负责读出刚保存的关系和标签，让成功响应带上 `articleTags`；`catch` 负责把找不到标签的异常转成业务错误。写入失败时 Prisma 已经回滚，这个错误转换不会把失败变成成功。
+当 `connect` 找不到要连接的标签时，**Prisma 在后端抛出异常**。这里的 `catch` 捕获 `P2025`，再抛出 `AppError`，最后由错误中间件返回 422 和错误 JSON。
+
+Apifox 和管理页面都请求同一个接口，所以都可能收到这个错误。例如第 8.1 节中，页面选中的标签在提交前被删除，后端仍会拒绝关联；前端请求函数检查 `response.ok` 后抛出错误，页面的 `catch` 再显示提示。Apifox 只是方便主动提交一个不存在的标签 id 来验证。
 
 ### 8.4 验证
 
@@ -850,7 +843,7 @@ export function createArticle(input: CreateArticleInput) {
 
 第二条最值得亲手试一次：请求失败后去数据库确认文章确实没有被创建，这就是“整体成功或整体失败”的实际含义。
 
-本次 `connect` 找不到标签会抛出 `P2025`，函数将它转成 422 `TAG_NOT_FOUND`。文章 slug 重复等其他错误仍交给原错误中间件；第 10.2 节汇总新增错误的处理位置。
+文章 slug 重复等其他错误仍交给原错误中间件；第 10.2 节汇总新增错误的处理位置。
 
 ---
 
@@ -866,7 +859,7 @@ export function createArticle(input: CreateArticleInput) {
 3. 按新的 tagIds 插入关系行
 ```
 
-Prisma 的 nested write 也支持嵌套删除和创建，可以表达这种关联替换。本节把它展开成三次操作，是为了看清多步写入为什么需要一个共同的事务，并练习 `prisma.$transaction()`；不是说更新标签只能这样写。
+本节把更新展开成多步，便于理解事务怎样保护这些修改。
 
 如果这三次操作各自执行，假设第 2 步成功、第 3 步失败：
 
@@ -970,7 +963,9 @@ export async function updateArticle(
 - 把 `tagIds` 单独取出，其他字段仍用于更新文章。
 - 查询旧状态、更新文章和替换关系都使用事务里的 `tx`。旧状态会参与后续写入，不能仅因为它是一次读取就认定它与事务无关。
 - 不传 `tagIds` 就保留标签；传 `[]` 就清空关系；传 `[3, 7]` 就替换成这两个标签。
-- 全部写完后重新查询文章和标签，让更新响应带上最终的 `articleTags`。第 14 章原来用更新响应替换列表旧行；接入分页后按第 10.3 节重新加载当前列表。
+- 全部写完后重新查询文章和标签，让更新响应带上最终的 `articleTags`。
+
+第 14 章保存成功后，会用接口返回的新文章对象，替换前端 `articles` 数组中同 id 的旧对象，Table 因此显示最新内容。这一步只是更新页面内存中的数据，不会再次修改数据库。接入筛选分页后，文章可能不再符合当前条件，总数也可能变化，因此按第 10.3 节重新请求当前页，让列表和分页器一起更新。
 
 `deleteMany()` 删除所有匹配行，没有匹配行也不报错；`createMany()` 一次插入多行关系。最后的 `findUniqueOrThrow()` 与 `findUnique()` 的区别是：找不到文章时抛错，不返回 `null`。
 

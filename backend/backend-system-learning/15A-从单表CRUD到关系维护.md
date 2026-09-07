@@ -62,7 +62,7 @@ articleTags: {
 - `articleTags.create` 新建关系行。因为它嵌在当前文章的创建操作里，Prisma 会自动提供新文章的 `articleId`。
 - `tag.connect.id` 连接已有标签，提供关系另一端的 `tagId`。它不会新建标签。
 
-因此要提前存在的是 `Tag`，不是 `ArticleTag`。选择的标签不存在时，Prisma 会撤销本次新建的文章和关系；原来的标签不受影响。这次 nested write 已经有事务保护。
+`ArticleTag` 模型和中间表已经在迁移时建立。创建文章前，被选择的 `Tag` 记录要存在；这篇新文章对应的 `ArticleTag` 关系记录则由本次调用新增。选择的标签不存在时，Prisma 会撤销本次新建的文章和关系；原来的标签不受影响。这次 nested write 已经有事务保护。
 
 标签不是必填项。不传 `tagIds` 或传 `[]`，都可以只创建文章。
 
