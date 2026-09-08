@@ -243,6 +243,8 @@ JOIN article_tags
 WHERE article_tags.article_id = 42;
 ```
 
+这里要返回的是标签的 id、名称和 slug，所以从保存这些信息的 `tags` 表取数据。连接 `article_tags` 后，就能用中间表里的 `article_id = 42` 筛选出这篇文章使用的标签。文章 id 已经知道了，这次也不需要文章标题或正文，因此不用再查询 `articles` 表。
+
 按关系读：
 
 ```text
@@ -252,7 +254,7 @@ WHERE article_tags.article_id = 42;
 -> 得到文章 42 的标签列表
 ```
 
-反过来查“标签 3 下面有哪些文章”，只是交换了两张表的位置：
+反过来，要查“标签 3 下面有哪些文章”，就从文章表出发，通过中间表筛选出使用标签 3 的文章：
 
 ```sql
 SELECT articles.id, articles.title
@@ -891,7 +893,7 @@ Apifox 和管理页面都请求同一个接口，所以都可能收到这个错�
 
 事务不会把失败变成成功，它保证的是“失败之后数据仍然完整可信”。
 
-Prisma 的事务写法是 `prisma.$transaction()`。给它传一个函数，这个函数会收到一个参数，惯例命名为 `tx`；`tx` 是这次事务专用的 Prisma Client，用法和 `prisma` 完全一样。只有通过 `tx` 执行的操作才属于这个事务：函数里如果误用了外面的 `prisma`，那一次操作在事务之外，失败时不会被回滚。
+Prisma 的事务写法是 `prisma.$transaction()`。给它传一个函数，这个函数会收到一个参数，惯例命名为 `tx`；`tx` 是这次事务专用的 Prisma Client，查询、创建、更新和删除的写法与 `prisma` 相同。只有通过 `tx` 执行的操作才属于这个事务：函数里如果误用了外面的 `prisma`，那一次操作在事务之外，失败时不会被回滚。
 
 ### 9.3 先改更新 Schema，再替换 updateArticle
 
@@ -1220,11 +1222,9 @@ try {
 }
 ```
 
-`tx.$executeRaw` 在当前事务中执行这条固定 SQL。`TRUNCATE ... RESTART IDENTITY` 清空三张表并重置序列；后面的 `tx.tag.create()`、`tx.article.create()` 再生成数据。清理和写入都属于同一个事务，中途抛错时一起回滚，不用另外在 TablePro 中清空。
+脚本已经包含清空数据的 SQL，不用另外在 TablePro 中清空。
 
-标签先创建，返回的 id 收集到 `tagIds` 中；文章循环里的 `articleTags.create` 沿用第 8 节的嵌套写入。`%` 取余数，用于分配草稿和标签，数组下标落在 0～4，对应前面创建的 5 个标签；`padStart(3, "0")` 把编号补成 `001`～`100`。
-
-脚本直接调用 Prisma，不经过文章接口，所以自行填写状态和发布时间；`updatedAt` 由 Prisma 的 `@updatedAt` 填写。`timeout: 30_000` 给批量写入最多 30 秒；执行结束后 `$disconnect()` 关闭种子进程的数据库连接。
+种子脚本直接用 `tx.article.create()` 写入数据库，不会调用第 8 节的 `createArticle()`，其中计算发布时间的代码也就不会执行。因此，脚本自己填写 `status` 和 `publishedAt`：草稿的发布时间为 `null`，已发布文章填一个测试时间。`updatedAt` 不用手动填写，Prisma 会根据模型中的 `@updatedAt` 自动设置。
 
 **最后执行种子。** 在 `mini-cms/server` 目录运行：
 
