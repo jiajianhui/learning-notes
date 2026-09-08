@@ -1103,7 +1103,157 @@ if (error instanceof AppError) {
 
 发布和撤回继续使用表单的状态下拉框，后端维护 `publishedAt`。先在 Apifox 验证接口，再到页面操作，可以分清问题发生在哪一层。
 
-### 10.4 完成阶段 5 前的检查
+### 10.4 一次生成 100 篇测试文章
+
+种子数据就是提前准备的一批测试记录。有了它，不用在页面上手动新建 100 次，就能测试翻页、筛选和标签显示。
+
+先完成第 2 节的模型迁移，再把种子脚本保存在 `mini-cms/server` 中，以后运行命令即可重建数据。脚本用 SQL 清空 `articles`、`tags`、`article_tags` 三张表并重置自增 id，再用 Prisma 创建标签、文章和关系。
+
+**先配置执行命令。** 在 `server/prisma.config.ts` 已有的 `migrations` 中增加 `seed`，其他配置保留：
+
+```ts
+migrations: {
+  path: "prisma/migrations",
+  // 运行 npx prisma db seed 时，通过 tsx 执行这个 TypeScript 文件。
+  seed: "tsx prisma/seed.ts",
+},
+```
+
+**再新建 `server/prisma/seed.ts`。** 复用项目现有的 `prisma` 实例。下面按 `src/db/client.ts` 导入；如果保留的是第 09 章的 `src/data/client.ts`，只需把导入路径改为 `../src/data/client`。
+
+```ts
+import { prisma } from "../src/db/client";
+
+async function main() {
+  // 先准备 5 个标签，后面的文章从中选择标签。
+  const tags = [
+    { name: "后端", slug: "backend" },
+    { name: "数据库", slug: "database" },
+    { name: "Prisma", slug: "prisma" },
+    { name: "Express", slug: "express" },
+    { name: "TypeScript", slug: "typescript" },
+  ];
+  // 用同一个当前时间作为基准，安排 100 篇文章的创建时间。
+  const now = Date.now();
+
+  // 清空和重新生成属于同一个事务；中途抛错时，全部回滚。
+  // 事务内统一通过 tx 操作数据库。
+  const counts = await prisma.$transaction(async (tx) => {
+    // 执行 SQL：清空这三张表的数据，保留表结构。
+    // RESTART IDENTITY 重置自增序列，文章和标签的新 id 都从 1 开始。
+    await tx.$executeRaw`
+      TRUNCATE TABLE article_tags, articles, tags RESTART IDENTITY
+    `;
+
+    // 先创建标签，收集数据库实际生成的 id，供文章建立关系时使用。
+    const tagIds: number[] = [];
+    for (const input of tags) {
+      const tag = await tx.tag.create({ data: input });
+      tagIds.push(tag.id);
+    }
+
+    for (let n = 1; n <= 100; n++) {
+      // 把编号补成 001～100，用于标题和唯一的 slug。
+      const number = String(n).padStart(3, "0");
+      // % 表示取余数：每 5 篇中有 2 篇草稿，共 40 篇草稿、60 篇已发布。
+      const isDraft = n % 5 === 0 || n % 5 === 1;
+      // 时间单位是毫秒；每篇比前一篇晚 1 小时，方便验证列表倒序排列。
+      const createdAt = new Date(now - (101 - n) * 60 * 60 * 1000);
+      const selectedTagIds: number[] = [];
+
+      // 每 5 篇中，第 5 篇不选标签，其余 4 篇先选一个标签。
+      // 数组下标 0～4 分别对应前面创建的 5 个标签。
+      if (n % 5 !== 0) {
+        selectedTagIds.push(tagIds[(n - 1) % 5]);
+      }
+      // 第 3、4 篇再选一个不同的标签，形成无标签、单标签、多标签三种情况。
+      if (n % 5 === 3 || n % 5 === 4) {
+        selectedTagIds.push(tagIds[n % 5]);
+      }
+
+      await tx.article.create({
+        data: {
+          title: `分页测试文章 ${number}`,
+          slug: `seed-article-${number}`,
+          summary: `这是第 ${n} 篇文章的摘要`,
+          content: `这是第 ${n} 篇文章的测试正文，用于练习列表、编辑和发布。`,
+          status: isDraft ? "draft" : "published",
+          createdAt,
+          // 草稿没有发布时间；已发布文章设为创建后 30 分钟发布。
+          publishedAt: isDraft
+            ? null
+            : new Date(createdAt.getTime() + 30 * 60 * 1000),
+          articleTags: {
+            // 嵌套写入：每个选中的标签生成一条 ArticleTag 关系记录。
+            // articleId 由当前创建的文章提供，tagId 来自下面 connect 的 id。
+            // selectedTagIds 为空数组时，不创建关系记录。
+            create: selectedTagIds.map((tagId) => ({
+              tag: { connect: { id: tagId } },
+            })),
+          },
+        },
+      });
+    }
+
+    // 查询实际写入的数量，返回后在终端打印，方便核对生成结果。
+    return {
+      articles: await tx.article.count(),
+      drafts: await tx.article.count({ where: { status: "draft" } }),
+      published: await tx.article.count({ where: { status: "published" } }),
+      tags: await tx.tag.count(),
+      relations: await tx.articleTag.count(),
+    };
+  }, { timeout: 30_000 }); // 整个事务最多执行 30 秒。
+
+  console.log("种子数据生成完成：", counts);
+}
+
+try {
+  await main();
+} catch (error) {
+  console.error("种子数据生成失败：", error);
+  // 用非零退出码告诉终端：本次脚本执行失败。
+  process.exitCode = 1;
+} finally {
+  // 无论成功还是失败，都关闭这个种子进程的数据库连接。
+  await prisma.$disconnect();
+}
+```
+
+`tx.$executeRaw` 在当前事务中执行这条固定 SQL。`TRUNCATE ... RESTART IDENTITY` 清空三张表并重置序列；后面的 `tx.tag.create()`、`tx.article.create()` 再生成数据。清理和写入都属于同一个事务，中途抛错时一起回滚，不用另外在 TablePro 中清空。
+
+标签先创建，返回的 id 收集到 `tagIds` 中；文章循环里的 `articleTags.create` 沿用第 8 节的嵌套写入。`%` 取余数，用于分配草稿和标签，数组下标落在 0～4，对应前面创建的 5 个标签；`padStart(3, "0")` 把编号补成 `001`～`100`。
+
+脚本直接调用 Prisma，不经过文章接口，所以自行填写状态和发布时间；`updatedAt` 由 Prisma 的 `@updatedAt` 填写。`timeout: 30_000` 给批量写入最多 30 秒；执行结束后 `$disconnect()` 关闭种子进程的数据库连接。
+
+**最后执行种子。** 在 `mini-cms/server` 目录运行：
+
+```bash
+# 先检查 TypeScript 类型，不生成编译文件；检查通过后再执行下一条。
+npx tsc --noEmit
+# 执行种子脚本：先清空三张表并重置 id，再生成测试数据。
+npx prisma db seed
+```
+
+`prisma db seed` 会按配置执行 `tsx prisma/seed.ts`。Prisma 7 不会在迁移后自动运行种子，需要主动执行这条命令。成功后终端会打印数量统计；本次文章 id 为 1～100、标签 id 为 1～5，下一篇新文章的 id 为 101。文章创建时间逐篇递增，所以倒序列表从 id 100 开始。
+
+执行后应有 **100 篇文章、40 篇草稿、60 篇已发布文章、5 个标签、120 条关系**。其中 20 篇没有标签、40 篇有一个标签、40 篇有两个标签。草稿没有发布时间，已发布文章有发布时间。
+
+刷新管理页面，再按下面的结果检查：
+
+| 操作 | 预期 |
+|---|---|
+| 不筛选，每页 10 条 | 共 100 条、10 页；第一页 id 为 100～91 |
+| 翻到第 2 页 | id 为 90～81，总数仍是 100 |
+| 每页改成 20 条 | 共 5 页，每页最多 20 条 |
+| 状态选择草稿，每页 10 条 | 共 40 条、4 页 |
+| 标签选择“数据库”（id 2） | 共 20 篇文章 |
+| 标题搜索 `001` | 只返回“分页测试文章 001” |
+| 打开 id 100、99 的编辑抽屉 | id 100 没选标签；id 99 选中 Express、TypeScript |
+
+再次运行 `npx prisma db seed`，会清掉你在这三张表中新建或修改的数据，重新生成同一批测试记录，不会累计成 200 篇。重置后刷新页面，重新加载列表和标签选项；第 3 节记录过的旧 id 不再代表原来的练习数据。
+
+### 10.5 完成阶段 5 前的检查
 
 - 标签可以新建、编辑和删除；重复 slug 返回 409，操作不存在的标签返回 404，提示指向标签。
 - 新建文章选择两个标签，重新打开编辑抽屉仍选中这两个；只改标签可以保存，清空后再次打开显示为空。
@@ -1111,7 +1261,7 @@ if (error instanceof AppError) {
 - 发布、重复发布、撤回的时间符合第 6 节规则；包含无效标签的更新返回 422，旧标题和关系都保留。
 - 删除带关系的文章后，标签仍在；删除仍被文章使用的标签后，文章仍在，详情里少了这个标签。
 
-最后再清理第 3 节的数据。以下 SQL 只按本章的练习 slug 删除，不要求整个 `article_tags` 表变成空表：
+如果执行了第 10.4 节，第 3 节的旧数据已经清空，不必再执行下面的清理。若没有生成种子数据，可以在练习结束后按原来的 slug 清理：
 
 ```sql
 DELETE FROM articles
@@ -1191,6 +1341,7 @@ WHERE slug IN ('ch15-backend', 'ch15-database');
 
 ## 官方参考
 
+- [Prisma 7 种子脚本](https://www.prisma.io/docs/orm/v7/prisma-migrate/workflows/seeding)
 - [Zod 对象校验](https://zod.dev/api#objects)
 - [Prisma 默认返回字段与 select](https://www.prisma.io/docs/orm/v7/prisma-client/queries/select-fields)
 
