@@ -35,7 +35,7 @@ article-repository.ts     改写列表、详情、创建和更新函数
 article-router.ts         列表路由读取 query，并返回 pagination
 ```
 
-这一章沿用第 09 章的 Prisma 7 方案，不切回手写 `pg` 查询。标签自己的模块和管理页面在第 10 节说明。
+这一章沿用第 09 章的 Prisma 7 方案，不切回手写 `pg` 查询。标签自己的模块和管理页面在 [15B-标签管理与页面联调](./15B-标签管理与页面联调.md) 中完成。
 
 ---
 
@@ -298,7 +298,7 @@ VALUES (42, 3);
 
 先保留这两篇文章、两个标签和三行关系。第 4～9 节会用它们验证详情、筛选、发布和标签更新，不必等标签 CRUD 接口写完才继续。
 
-如果后面验证失败，先在 TablePro 中查看当前数据：关系会随着你的 PATCH 请求变化，不一定还保持第 1 节的样子。全部练习结束后，再按第 10 节清理。
+如果后面验证失败，先在 TablePro 中查看当前数据：关系会随着你的 PATCH 请求变化，不一定还保持第 1 节的样子。全部练习结束后，再按 15B 第 5 节清理。
 
 ---
 
@@ -341,7 +341,7 @@ article
 
 保存后执行 `npx tsc --noEmit`，用 Apifox 请求 `GET /api/articles/42`。响应的 `data.articleTags` 应有两项，每项都有 `articleId`、`tagId` 和嵌套的 `tag` 对象；标签名分别为“后端”和“数据库”。没有标签的文章应返回 `articleTags: []`。
 
-这份详情响应会用于第 10 节的编辑回填：`article.articleTags.map((item) => item.tag.id)` 得到多选框需要的标签 id 数组。
+这份详情响应会用于15B 第 3 节的编辑回填：`article.articleTags.map((item) => item.tag.id)` 得到多选框需要的标签 id 数组。
 
 ---
 
@@ -576,7 +576,7 @@ articleRouter.get("/", async (request, response) => {
 | `GET /api/articles?page=2&pageSize=1` | 返回第 2 条，`total` 与不分页时相同 |
 | `GET /api/articles?page=0` | 422 `VALIDATION_ERROR` |
 
-`data` 仍然是文章数组，所以 `admin-web-antd` 的文章列表页现在还能正常显示第一页数据。把筛选表单和分页器接上去是页面任务，第 10 节说明。
+`data` 仍然是文章数组，所以 `admin-web-antd` 的文章列表页现在还能正常显示第一页数据。把筛选表单和分页器接上去是页面任务，15B 第 3 节说明。
 
 ---
 
@@ -847,7 +847,7 @@ Apifox 和管理页面都请求同一个接口，所以都可能收到这个错�
 
 第二条最值得亲手试一次：请求失败后去数据库确认文章确实没有被创建，这就是“整体成功或整体失败”的实际含义。
 
-文章 slug 重复等其他错误仍交给原错误中间件；第 10.2 节汇总新增错误的处理位置。
+文章 slug 重复等其他错误仍交给原错误中间件；15B 第 2 节汇总新增错误的处理位置。
 
 ---
 
@@ -969,7 +969,7 @@ export async function updateArticle(
 - 不传 `tagIds` 就保留标签；传 `[]` 就清空关系；传 `[3, 7]` 就替换成这两个标签。
 - 全部写完后重新查询文章和标签，让更新响应带上最终的 `articleTags`。
 
-第 14 章保存成功后，会用接口返回的新文章对象，替换前端 `articles` 数组中同 id 的旧对象，Table 因此显示最新内容。这一步只是更新页面内存中的数据，不会再次修改数据库。接入筛选分页后，文章可能不再符合当前条件，总数也可能变化，因此按第 10.3 节重新请求当前页，让列表和分页器一起更新。
+第 14 章保存成功后，会用接口返回的新文章对象，替换前端 `articles` 数组中同 id 的旧对象，Table 因此显示最新内容。这一步只是更新页面内存中的数据，不会再次修改数据库。接入筛选分页后，文章可能不再符合当前条件，总数也可能变化，因此按 15B 第 3 节重新请求当前页，让列表和分页器一起更新。
 
 `deleteMany()` 删除所有匹配行，没有匹配行也不报错；`createMany()` 一次插入多行关系。
 
@@ -994,284 +994,6 @@ export async function updateArticle(
 验证第四条前，先提交 `[3, 7]` 恢复两条旧关系，并记下原来的标题。失败后确认标题和两条关系都没变，这才看得出回滚生效了。如果这时发现标签被清空了，检查 `deleteMany` 是不是误写成了 `prisma.articleTag.deleteMany` 而不是 `tx.articleTag.deleteMany`。
 
 成功更新时还要检查响应：`data.articleTags` 应反映最终标签；再请求详情接口，结果应一致。
-
----
-
-## 10. 标签自己的 CRUD 和页面怎么办
-
-到这里，后端已经能处理关系、筛选和发布规则，但标签本身还不能被管理，页面上也还没有标签相关的操作入口。这两件事继续复用已学的 CRUD 和页面流程。下面给出修改位置与验收要求，作为本阶段的独立练习，不重复整套组件代码。
-
-### 10.1 标签接口
-
-标签 CRUD 与文章 CRUD 结构完全相同，按第 11、12 章的三层新建一个模块：
-
-```text
-src/modules/tags/
-├── tag-schema.ts       Zod 校验和推导类型
-├── tag-repository.ts   Prisma 查询
-└── tag-router.ts       四个路由
-```
-
-在 `src/app.ts` 中导入并注册，放在 404 和错误中间件之前：
-
-```ts
-import { tagRouter } from "./modules/tags/tag-router";
-
-app.use("/api/tags", tagRouter);
-```
-
-对应四个接口：
-
-```text
-GET    /api/tags
-POST   /api/tags
-PATCH  /api/tags/:id
-DELETE /api/tags/:id
-```
-
-与文章模块的差别只有几处：
-
-| 差别 | 说明 |
-|---|---|
-| 字段更少 | 只有 `name` 和 `slug`，没有状态、发布时间和正文 |
-| `slug` 唯一 | 和文章一样用 `@unique`，重复时返回 409，提示应写“标签 slug 已经存在” |
-| 不需要分页 | 标签数量少，列表全部返回；文章筛选下拉框也要用这份数据 |
-| 删除有连带影响 | 按第 7 节，删除标签会清掉相关关系行，但不会删掉文章 |
-
-创建 Schema 校验非空 `name` 和合法 `slug`；更新时字段可选，但拒绝空对象；路由 id 继续转数字并检查正整数。列表返回 `{ data: tags }`，创建、更新、删除返回 `{ data: tag }`，与文章接口结构一致。
-
-标签 repository 的创建、更新捕获 `P2002`，抛出 `new AppError(409, "TAG_SLUG_CONFLICT", "标签 slug 已经存在")`；更新、删除捕获 `P2025`，抛出 `new AppError(404, "TAG_NOT_FOUND", "标签不存在")`。写法沿用第 8 节的局部 `catch`，其余错误继续抛出。这样复用原错误中间件时，不会把标签错误提示成文章错误。
-
-### 10.2 新增错误怎样进入统一错误响应
-
-错误处理仍沿用第 11 章的 `AppError → errorHandler → JSON`。本章需要补的是“当前操作的数据库错误对应哪个业务错误”：
-
-| 场景 | 原始错误 | 映射位置 | 对外响应 |
-|---|---|---|---|
-| `tagIds` 类型错误或重复 | Zod 校验失败 | 原 `error-handler.ts` 的 Zod 分支 | 422 `VALIDATION_ERROR` |
-| 创建文章时连接了不存在的标签 | `P2025` | 第 8 节 `createArticle()` 的 `catch` | 422 `TAG_NOT_FOUND` |
-| 更新关系时标签不存在 | `P2003` | 第 9 节事务外的 `catch` | 422 `TAG_NOT_FOUND` |
-| 标签 slug 重复 | `P2002` | 标签 repository 的创建、更新函数 | 409 `TAG_SLUG_CONFLICT` |
-| 更新或删除的标签不存在 | `P2025` | 标签 repository 的更新、删除函数 | 404 `TAG_NOT_FOUND` |
-
-同一个 `P2025` 既可能表示“文章不存在”，也可能表示“连接的标签不存在”。因此在知道当前操作的 repository 中转成 `AppError`，不能直接把中间件原来的 `P2025 → ARTICLE_NOT_FOUND` 全局改成标签错误。
-
-检查 `server/src/middleware/error-handler.ts`，保留第 11 章已有的这个分支，并让它仍位于 Prisma 错误分支之前：
-
-```ts
-if (error instanceof AppError) {
-  response.status(error.statusCode).json({
-    error: {
-      code: error.code,
-      message: error.message,
-    },
-  });
-  return;
-}
-```
-
-它直接读取 `AppError` 的状态码、业务码和提示，所以新增 `TAG_NOT_FOUND` 后无需再为它写一个中间件分支。映射代码在第 8、9 节和标签 repository，统一输出仍在这个中间件；第 11 章的基础练习无需提前加入标签知识。
-
-### 10.3 管理页面
-
-本阶段没有独立的文章详情页，点击“编辑”仍打开第 14 章的 Drawer，并先请求文章详情。标签在不同位置使用不同 UI：
-
-| 位置 | UI | 数据怎样使用 |
-|---|---|---|
-| 文章列表或只读详情展示 | Ant Design 的 `Tag` 标签块，或用文字列出名称 | 读取 `articleTags` 中每项的 `tag.name`，不是下拉框 |
-| 新建、编辑文章的 Drawer 表单 | `Select` 设置 `mode="multiple"` | 全部选项来自 `GET /api/tags`；已选值来自文章详情里的标签 id |
-| 文章列表的标签筛选 | 可清空的单选 `Select` | 选一个 id 作为 URL 参数 `tagId`；清空后不发送该参数 |
-
-例如详情返回文章关联标签 3、7，编辑表单初始值就是 `tagIds: [3, 7]`。`GET /api/tags` 决定“有哪些可选项”，文章详情决定“这一篇选中了哪些”，两份数据用途不同。Ant Design 的 `Tag` 是显示组件，与 Prisma 的 `Tag` 模型名称相同，但职责不同。
-
-先同步 `admin-web-antd` 的数据，再连接组件。前端类型不会因为后端修改了 Zod 或 Prisma 就自动更新：
-
-| 修改位置（相对 admin-web-antd） | 要完成的改动 |
-|---|---|
-| `features/articles/types.ts` | 定义 `Tag = { id: number; name: string; slug: string }`。`Article` 增加 `publishedAt: string \| null`、`articleTags: { articleId: number; tagId: number; tag: Tag }[]`；`ArticleListItem` 的 `Pick` 同时包含这两个字段 |
-| 同一类型文件 | `CreateArticleInput`、`UpdateArticleInput` 增加 `tagIds?: number[]`；`ArticleFormValues` 增加 `tagIds: number[]`，新建表单默认 `[]`。删除接口只使用返回的 id 时，把其响应类型改为 `Pick<Article, "id">`，不假定删除响应也有标签 |
-| `lib/api-client.ts`、`features/articles/api.ts` | 列表请求接收查询参数，并保留响应里的 `pagination`；其他 CRUD 请求继续返回 `data` |
-| `app/admin/articles/_components/article-form.tsx` | 添加多选 `Select`，选项来自 `GET /api/tags`，选项的 value 使用数字 id；编辑时用详情里的 `articleTags` 回填 `tagIds` |
-| `app/admin/articles/page.tsx` | 管理标题、状态、标签、页码和每页条数；条件变化时重新请求，筛选变化时回到第 1 页。Table 的页码、每页条数、总数由接口结果提供 |
-| `app/admin/tags/page.tsx` 与标签请求、类型文件 | 复用第 14 章 Table + Drawer + Form 的流程实现标签管理，并在公共导航中加入入口 |
-
-**分页有一处容易遗漏：**第 14 章的 `apiRequest()` 只返回 `successBody.data`，即使后端已经返回 `pagination`，页面也拿不到它。可以在同一个请求文件中抽出“返回整个成功响应”的内部函数，继续让 `apiRequest<T>()` 取其中的 `data`，再提供 `apiListRequest<T>()` 返回 `{ data: T[], pagination }`。两者共享原来的 `response.ok` 和错误处理；不要只改类型却仍然返回 `data`。
-
-拼查询字符串时，不发送空标题或已清空的筛选项；页码和每页条数始终带上。页面拿到列表结果后，分别保存 `result.data` 和 `result.pagination`。这就是“受控分页”：页码由页面状态决定，翻页会请求后端相应的一页。
-
-新建、编辑和删除成功后，重新请求当前筛选条件下的列表，让行数据和总数同时更新；删除当前页最后一条后，必要时退到上一页。第 14 章原来直接插入、替换数组的做法适合未分页列表，现在还要考虑文章是否仍符合筛选条件。
-
-文章表单还要同步第 14 章的 `isUnchanged` 判断：把标签集合纳入比较，否则只改标签会被当作“没有修改”。标签没有顺序，比较数量相同且每个 id 都在原集合中即可。
-
-发布和撤回继续使用表单的状态下拉框，后端维护 `publishedAt`。先在 Apifox 验证接口，再到页面操作，可以分清问题发生在哪一层。
-
-### 10.4 一次生成 100 篇测试文章
-
-种子数据就是提前准备的一批测试记录。有了它，不用在页面上手动新建 100 次，就能测试翻页、筛选和标签显示。
-
-先完成第 2 节的模型迁移，再把种子脚本保存在 `mini-cms/server` 中，以后运行命令即可重建数据。脚本用 SQL 清空 `articles`、`tags`、`article_tags` 三张表并重置自增 id，再用 Prisma 创建标签、文章和关系。
-
-**先配置执行命令。** 在 `server/prisma.config.ts` 已有的 `migrations` 中增加 `seed`，其他配置保留：
-
-```ts
-migrations: {
-  path: "prisma/migrations",
-  // 运行 npx prisma db seed 时，通过 tsx 执行这个 TypeScript 文件。
-  seed: "tsx prisma/seed.ts",
-},
-```
-
-**再新建 `server/prisma/seed.ts`。** 复用项目现有的 `prisma` 实例。下面按 `src/db/client.ts` 导入；如果保留的是第 09 章的 `src/data/client.ts`，只需把导入路径改为 `../src/data/client`。
-
-```ts
-import { prisma } from "../src/db/client";
-
-async function main() {
-  // 先准备 5 个标签，后面的文章从中选择标签。
-  const tags = [
-    { name: "后端", slug: "backend" },
-    { name: "数据库", slug: "database" },
-    { name: "Prisma", slug: "prisma" },
-    { name: "Express", slug: "express" },
-    { name: "TypeScript", slug: "typescript" },
-  ];
-  // 用同一个当前时间作为基准，安排 100 篇文章的创建时间。
-  const now = Date.now();
-
-  // 清空和重新生成属于同一个事务；中途抛错时，全部回滚。
-  // 事务内统一通过 tx 操作数据库。
-  const counts = await prisma.$transaction(async (tx) => {
-    // 执行 SQL：清空这三张表的数据，保留表结构。
-    // RESTART IDENTITY 重置自增序列，文章和标签的新 id 都从 1 开始。
-    await tx.$executeRaw`
-      TRUNCATE TABLE article_tags, articles, tags RESTART IDENTITY
-    `;
-
-    // 先创建标签，收集数据库实际生成的 id，供文章建立关系时使用。
-    const tagIds: number[] = [];
-    for (const input of tags) {
-      const tag = await tx.tag.create({ data: input });
-      tagIds.push(tag.id);
-    }
-
-    for (let n = 1; n <= 100; n++) {
-      // 把编号补成 001～100，用于标题和唯一的 slug。
-      const number = String(n).padStart(3, "0");
-      // % 表示取余数：每 5 篇中有 2 篇草稿，共 40 篇草稿、60 篇已发布。
-      const isDraft = n % 5 === 0 || n % 5 === 1;
-      // 时间单位是毫秒；每篇比前一篇晚 1 小时，方便验证列表倒序排列。
-      const createdAt = new Date(now - (101 - n) * 60 * 60 * 1000);
-      const selectedTagIds: number[] = [];
-
-      // 每 5 篇中，第 5 篇不选标签，其余 4 篇先选一个标签。
-      // 数组下标 0～4 分别对应前面创建的 5 个标签。
-      if (n % 5 !== 0) {
-        selectedTagIds.push(tagIds[(n - 1) % 5]);
-      }
-      // 第 3、4 篇再选一个不同的标签，形成无标签、单标签、多标签三种情况。
-      if (n % 5 === 3 || n % 5 === 4) {
-        selectedTagIds.push(tagIds[n % 5]);
-      }
-
-      await tx.article.create({
-        data: {
-          title: `分页测试文章 ${number}`,
-          slug: `seed-article-${number}`,
-          summary: `这是第 ${n} 篇文章的摘要`,
-          content: `这是第 ${n} 篇文章的测试正文，用于练习列表、编辑和发布。`,
-          status: isDraft ? "draft" : "published",
-          createdAt,
-          // 草稿没有发布时间；已发布文章设为创建后 30 分钟发布。
-          publishedAt: isDraft
-            ? null
-            : new Date(createdAt.getTime() + 30 * 60 * 1000),
-          articleTags: {
-            // 嵌套写入：每个选中的标签生成一条 ArticleTag 关系记录。
-            // articleId 由当前创建的文章提供，tagId 来自下面 connect 的 id。
-            // selectedTagIds 为空数组时，不创建关系记录。
-            create: selectedTagIds.map((tagId) => ({
-              tag: { connect: { id: tagId } },
-            })),
-          },
-        },
-      });
-    }
-
-    // 查询实际写入的数量，返回后在终端打印，方便核对生成结果。
-    return {
-      articles: await tx.article.count(),
-      drafts: await tx.article.count({ where: { status: "draft" } }),
-      published: await tx.article.count({ where: { status: "published" } }),
-      tags: await tx.tag.count(),
-      relations: await tx.articleTag.count(),
-    };
-  }, { timeout: 30_000 }); // 整个事务最多执行 30 秒。
-
-  console.log("种子数据生成完成：", counts);
-}
-
-try {
-  await main();
-} catch (error) {
-  console.error("种子数据生成失败：", error);
-  // 用非零退出码告诉终端：本次脚本执行失败。
-  process.exitCode = 1;
-} finally {
-  // 无论成功还是失败，都关闭这个种子进程的数据库连接。
-  await prisma.$disconnect();
-}
-```
-
-脚本已经包含清空数据的 SQL，不用另外在 TablePro 中清空。
-
-种子脚本直接用 `tx.article.create()` 写入数据库，不会调用第 8 节的 `createArticle()`，其中计算发布时间的代码也就不会执行。因此，脚本自己填写 `status` 和 `publishedAt`：草稿的发布时间为 `null`，已发布文章填一个测试时间。`updatedAt` 不用手动填写，Prisma 会根据模型中的 `@updatedAt` 自动设置。
-
-**最后执行种子。** 在 `mini-cms/server` 目录运行：
-
-```bash
-# 先检查 TypeScript 类型，不生成编译文件；检查通过后再执行下一条。
-npx tsc --noEmit
-# 执行种子脚本：先清空三张表并重置 id，再生成测试数据。
-npx prisma db seed
-```
-
-`prisma db seed` 会按配置执行 `tsx prisma/seed.ts`。Prisma 7 不会在迁移后自动运行种子，需要主动执行这条命令。成功后终端会打印数量统计；本次文章 id 为 1～100、标签 id 为 1～5，下一篇新文章的 id 为 101。文章创建时间逐篇递增，所以倒序列表从 id 100 开始。
-
-执行后应有 **100 篇文章、40 篇草稿、60 篇已发布文章、5 个标签、120 条关系**。其中 20 篇没有标签、40 篇有一个标签、40 篇有两个标签。草稿没有发布时间，已发布文章有发布时间。
-
-刷新管理页面，再按下面的结果检查：
-
-| 操作 | 预期 |
-|---|---|
-| 不筛选，每页 10 条 | 共 100 条、10 页；第一页 id 为 100～91 |
-| 翻到第 2 页 | id 为 90～81，总数仍是 100 |
-| 每页改成 20 条 | 共 5 页，每页最多 20 条 |
-| 状态选择草稿，每页 10 条 | 共 40 条、4 页 |
-| 标签选择“数据库”（id 2） | 共 20 篇文章 |
-| 标题搜索 `001` | 只返回“分页测试文章 001” |
-| 打开 id 100、99 的编辑抽屉 | id 100 没选标签；id 99 选中 Express、TypeScript |
-
-再次运行 `npx prisma db seed`，会清掉你在这三张表中新建或修改的数据，重新生成同一批测试记录，不会累计成 200 篇。重置后刷新页面，重新加载列表和标签选项；第 3 节记录过的旧 id 不再代表原来的练习数据。
-
-### 10.5 完成阶段 5 前的检查
-
-- 标签可以新建、编辑和删除；重复 slug 返回 409，操作不存在的标签返回 404，提示指向标签。
-- 新建文章选择两个标签，重新打开编辑抽屉仍选中这两个；只改标签可以保存，清空后再次打开显示为空。
-- 标题、状态、标签筛选能组合使用；翻页后总数仍是符合筛选条件的总数；清空筛选恢复列表。
-- 发布、重复发布、撤回的时间符合第 6 节规则；包含无效标签的更新返回 422，旧标题和关系都保留。
-- 删除带关系的文章后，标签仍在；删除仍被文章使用的标签后，文章仍在，详情里少了这个标签。
-
-如果执行了第 10.4 节，第 3 节的旧数据已经清空，不必再执行下面的清理。若没有生成种子数据，可以在练习结束后按原来的 slug 清理：
-
-```sql
-DELETE FROM articles
-WHERE slug IN ('ch15-prisma-intro', 'ch15-express-middleware');
-
-DELETE FROM tags
-WHERE slug IN ('ch15-backend', 'ch15-database');
-```
-
-在 TablePro 中按记录过的文章、标签 id 查询 `article_tags`，对应关系应已消失。第 8 节通过 API 新建的练习文章按你记录的 id 单独删除；若练习中改过 slug，也按实际 id 清理。
 
 ---
 
@@ -1337,11 +1059,10 @@ WHERE slug IN ('ch15-backend', 'ch15-database');
 
 自动隐藏中间模型、复杂嵌套关系和更细的事务隔离级别暂时不展开。
 
-标签接口、文章关联、筛选分页和发布撤回都能在 Mini CMS 中走通后，回到[第 10 章项目总览](./10-MiniCMS项目总览.md)完成阶段 5 验收。先用 [15A-从单表 CRUD 到关系维护](./15A-从单表CRUD到关系维护.md)复习创建、更新和返回标签的完整流程，再读第 16、16A 章增加管理员登录和接口保护。
+先用 [15A-从单表 CRUD 到关系维护](./15A-从单表CRUD到关系维护.md)复习创建、更新和返回标签的完整流程，再到 [15B-标签管理与页面联调](./15B-标签管理与页面联调.md) 完成标签接口、管理页面和测试数据，最后回到第 10 章验收阶段 5。
 
 ## 官方参考
 
-- [Prisma 7 种子脚本](https://www.prisma.io/docs/orm/v7/prisma-migrate/workflows/seeding)
 - [Zod 对象校验](https://zod.dev/api#objects)
 - [Prisma 默认返回字段与 select](https://www.prisma.io/docs/orm/v7/prisma-client/queries/select-fields)
 
