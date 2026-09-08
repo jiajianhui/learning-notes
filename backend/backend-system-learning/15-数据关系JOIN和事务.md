@@ -748,7 +748,7 @@ nested write（嵌套写入）会把这些写入放在同一个事务里：文�
 ```ts
 const tagIdsSchema = z.array(z.number().int().positive()).max(20)
   .refine((ids) => new Set(ids).size === ids.length, {
-    message: "标签不能重复",
+    error: "标签不能重复",
   });
 
 export const createArticleSchema = z.strictObject({
@@ -765,7 +765,7 @@ export const createArticleSchema = z.strictObject({
 
 请求体里的 `tagIds` 要提交 JSON 数字数组，例如 `[3, 7]`。`z.number()` 会拒绝 `["3", "7"]`，这里不做自动转换；第 5 节的 `tagId` 来自 URL 查询字符串，才需要 `coerce`。
 
-`tagIdsSchema` 先要求输入是数组，每项都是正整数，最多 20 项。后面的 `.refine()` 是 Zod 的自定义校验方法，用来补上“标签不能重复”这条规则：传入的函数返回 `true` 就通过，返回 `false` 就校验失败，并使用 `message` 中的错误提示。
+`tagIdsSchema` 先要求输入是数组，每项都是正整数，最多 20 项。后面的 `.refine()` 是 Zod 的自定义校验方法，用来补上“标签不能重复”这条规则：传入的函数返回 `true` 就通过，返回 `false` 就校验失败，并使用 `error` 中的错误提示。
 
 `ids` 是 Zod 调用这个函数时传入的标签数组，例如 `[3, 3, 7]`，参数名可以自己取。上面的箭头函数省略了 `{}` 和 `return`，等价于下面的写法（用于理解，不用重复添加）：
 
@@ -776,12 +776,14 @@ export const createArticleSchema = z.strictObject({
     return uniqueIds.size === ids.length; // 2 === 3，返回 false
   },
   {
-    message: "标签不能重复",
+    error: "标签不能重复",
   },
 );
 ```
 
 `Set.size` 是集合中的元素数量，数组的 `length` 是原数组的元素数量。两者相同，说明没有重复；两者不同，说明同一个标签 id 提交了多次。这里仅借助 `Set` 检查重复，不会把原数组自动改成 `[3, 7]`。校验失败后，由已有的错误中间件返回 422 和“标签不能重复”的提示。
+
+Zod 4 用 `error` 配置错误提示，旧的 `message` 配置项仍可用，但已标记为弃用。配置和结果的字段名不同：这里写 `error: "标签不能重复"`；校验失败后，Zod 生成的错误项中则是 `message: "标签不能重复"`。所以错误中间件读取每个错误项的 `issue.message` 时，仍然能拿到这段文字，不需要改成 `issue.error`。
 
 提前拦住重复标签，是为了避免给同一篇文章创建两条相同的关系。例如文章 42 关联两次标签 3，就会重复插入 `(42, 3)`，违反中间表的联合主键约束。
 
