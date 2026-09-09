@@ -791,19 +791,26 @@ Zod 4 用 `error` 配置错误提示，旧的 `message` 配置项仍可用，但
 
 ### 8.3 第二步：用 nested write 创建文章和关系
 
-在 `server/src/modules/articles/article-repository.ts` 中替换第 6 节的 `createArticle()`。`tagIds` 表示客户端选中的标签 id。第 2 节已经建立 `ArticleTag` 模型及 `article_tags` 表，第 3 节已插入可供选择的标签记录。本次调用新增的是“这篇新文章使用了哪些标签”的关系行，不是创建中间表；被选择的标签记录必须已经存在。
+在 `server/src/modules/articles/article-repository.ts` 中替换第 6 节的 `createArticle()`，让它创建文章并关联已有标签。第 2 节已经建立中间表，第 3 节已插入可供选择的标签；本次新增的是文章记录和对应的关系记录。
 
 ```ts
 export function createArticle(input: CreateArticleInput) {
+  // 对象解构 + 剩余收集：取出 tagIds，其余字段组成新的 articleInput 对象。
+  // 原来的 input 不变；articleInput 中不包含 tagIds。
   const { tagIds, ...articleInput } = input;
 
   return prisma.article.create({
     data: {
+      // 展开文章自身字段，发布时间仍按第 6 节的规则填写。
       ...articleInput,
       publishedAt: input.status === "published" ? new Date() : null,
       articleTags: {
+        // 嵌套写入：为当前新建的文章创建 ArticleTag 关系记录。
+        // map 将每个标签 id 转成一份关系创建数据。
+        // 不传 tagIds 时得到 undefined，传 [] 时得到空数组，都不创建关系。
         create: tagIds?.map((tagId) => ({
           tag: {
+            // 连接 Tag 表中已有的标签，不会新建标签。
             connect: {
               id: tagId,
             },
@@ -811,6 +818,7 @@ export function createArticle(input: CreateArticleInput) {
         })),
       },
     },
+    // 创建成功后返回文章及其标签；include 负责读取，不负责写入。
     include: {
       articleTags: {
         include: {
@@ -819,26 +827,24 @@ export function createArticle(input: CreateArticleInput) {
       },
     },
   }).catch((error: unknown) => {
+    // 捕获上面整次 prisma.article.create() 操作的错误。
+    // 本次操作中，P2025 表示 tag.connect 找不到选中的标签。
     if (error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2025") {
+      // 转成业务错误，由错误中间件返回 422 和这条提示。
       throw new AppError(422, "TAG_NOT_FOUND", "部分标签不存在，请重新选择");
     }
+    // 这里只处理标签不存在的错误，其余错误抛出，由错误中间件处理。
     throw error;
   });
 }
 ```
 
-**上面 `data.articleTags.create` 就是嵌套写入的位置**：外层 `prisma.article.create()` 创建文章，内层 `articleTags.create` 创建关系，再通过 `tag.connect` 连接已有标签。把关联写入放在主体写入的 `data` 中，就叫 nested write；它不是一个名为 `nestedWrite()` 的函数。后面的 `include` 用于读取返回数据，不负责写入。
-
 `tagIds` 是用来选择标签的请求数据，不是数据库列。`Article` 模型没有 `tagIds` 字段，所以不能把整个 `input` 直接作为 `data` 交给 Prisma。先单独取出 `tagIds`，其余字段用于创建文章，再根据 `tagIds` 为这篇文章创建对应的 `ArticleTag` 记录。
 
-沿着一次实际输入看这个函数。假设输入中有 `title`、`slug`、`content` 和 `tagIds: [3, 7]`，本次新文章生成的 id 为 42：
+**`data.articleTags.create` 就是 nested write（嵌套写入）的位置**：外层创建文章，内层创建关系。文章和关系在同一个事务中保存；关联标签失败时，本次新增的文章和关系一起回滚。`catch` 负责把失败原因转成错误响应，回滚由 Prisma 的嵌套写入保证。
 
-1. `const { tagIds, ...articleInput } = input` 是对象解构加剩余收集：单独取出 `tagIds`，其余字段重新组成一个新的 `articleInput` 对象。原来的 `input` 不会被删除字段。
-2. `data` 中的 `...articleInput` 用来保存文章自身字段，`publishedAt` 继续按第 6 节计算。
-3. `articleTags.create` 创建的是 `ArticleTag`。`map()` 把 `[3, 7]` 变成两份关系创建数据。每份里的 `tag.connect.id` 分别为 3、7，表示连接已经存在的 `Tag`。
-
-两个外键的来源是：
+假设提交 `tagIds: [3, 7]`，新文章 id 为 42，两个外键的来源是：
 
 ```text
 外层 prisma.article.create：新建 Article，得到 id = 42
@@ -848,12 +854,6 @@ export function createArticle(input: CreateArticleInput) {
 ```
 
 **`articleId` 由当前新建的 Article 自动提供，`tagId` 由 `tag.connect.id` 指定的 Tag 提供，两者组成一条中间表记录。** 所以这里不用自己先拿文章 id 再填写 `articleId`；也不会创建两个新标签。
-
-没有提交 `tagIds` 时，`tagIds?.map(...)` 得到 `undefined`，不创建关系；传 `[]` 时也没有关系行可创建。文章仍可正常保存。
-
-当 `connect` 找不到要连接的标签时，**Prisma 在后端抛出异常**。这里的 `catch` 捕获 `P2025`，再抛出 `AppError`，最后由错误中间件返回 422 和错误 JSON。
-
-Apifox 和管理页面都请求同一个接口，所以都可能收到这个错误。例如第 8.1 节中，页面选中的标签在提交前被删除，后端仍会拒绝关联；前端请求函数检查 `response.ok` 后抛出错误，页面的 `catch` 再显示提示。Apifox 只是方便主动提交一个不存在的标签 id 来验证。
 
 ### 8.4 验证
 
@@ -869,7 +869,7 @@ Apifox 和管理页面都请求同一个接口，所以都可能收到这个错�
 
 第二条最值得亲手试一次：请求失败后去数据库确认文章确实没有被创建，这就是“整体成功或整体失败”的实际含义。
 
-文章 slug 重复等其他错误仍交给原错误中间件；15B 第 2 节汇总新增错误的处理位置。
+文章 slug 重复等其他错误仍交给原错误中间件；第 10 节汇总新增错误的处理位置。
 
 ---
 
@@ -932,9 +932,11 @@ export async function updateArticle(
   articleId: number,
   input: UpdateArticleInput,
 ) {
+  // 拆出标签数组，其余字段用于更新文章。
   const { tagIds, ...articleInput } = input;
 
   return prisma.$transaction(async (tx) => {
+    // 在事务中查询旧文章，确认存在，并用旧状态计算发布时间。
     const article = await tx.article.findUnique({
       where: { id: articleId },
     });
@@ -951,16 +953,20 @@ export async function updateArticle(
       publishedAt = input.status === "published" ? new Date() : null;
     }
 
+    // 先更新文章自身字段，下面再处理标签关系。
     await tx.article.update({
       where: { id: article.id },
       data: { ...articleInput, publishedAt },
     });
 
+    // 没传 tagIds 就保留旧关系；传了则按这份数组整体替换。
     if (tagIds !== undefined) {
+      // 删除这篇文章的全部旧关系，不删除标签本身；没有关系也不报错。
       await tx.articleTag.deleteMany({
         where: { articleId: article.id },
       });
 
+      // 传 [] 时只删除；数组非空时，createMany 一次插入多条新关系。
       if (tagIds.length > 0) {
         await tx.articleTag.createMany({
           data: tagIds.map((tagId) => ({
@@ -971,36 +977,36 @@ export async function updateArticle(
       }
     }
 
+    // 关系处理完后，重新查询文章及最终标签，作为更新结果返回。
+    // 1. 找到文章：返回文章及最新标签。
+    // 2. 找不到文章：findUniqueOrThrow 抛出 P2025，让事务回滚，
+    //    避免接口成功却返回 data: null。
+    // 3. 若用 findUnique：找不到时返回 null，需要自己判断并抛错。
     return tx.article.findUniqueOrThrow({
       where: { id: article.id },
       include: { articleTags: { include: { tag: true } } },
     });
   }).catch((error: unknown) => {
+    // 捕获整个事务的错误；失败的修改会回滚。错误可能来自：
+    // 1. 查询旧文章：查不到时手动抛出 AppError。
+    // 2. 更新文章：slug 重复，抛出 P2002。
+    // 3. 创建关系：标签不存在，抛出外键错误 P2003。
+    // 4. 最后查询：findUniqueOrThrow 找不到文章，抛出 P2025。
+
+    // 进入这个 P2003 分支时，文章此前已查询并更新成功，失败的是创建关系时引用的标签不存在。
     if (error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2003") {
       throw new AppError(422, "TAG_NOT_FOUND", "部分标签不存在，请重新选择");
     }
+    // 这里只处理标签不存在的错误，其余错误抛出，由错误中间件处理。
     throw error;
   });
 }
 ```
 
-和第 6 节相比，关键变化是：
+**查询旧文章、更新文章和替换关系都使用同一个事务里的 `tx`。** 任一步失败，文章字段和关系修改一起回滚；事务外的 `catch` 负责转换错误提示，不负责回滚。这里根据当前操作把 `P2003` 解释为标签不存在，不能把整个项目的所有外键错误都这样处理。事务中只做必要的数据库操作，不加入网络请求等慢操作；并发请求之间的隔离规则暂时不展开。
 
-- 把 `tagIds` 单独取出，其他字段仍用于更新文章。
-- 查询旧状态、更新文章和替换关系都使用事务里的 `tx`。旧状态会参与后续写入，不能仅因为它是一次读取就认定它与事务无关。
-- 不传 `tagIds` 就保留标签；传 `[]` 就清空关系；传 `[3, 7]` 就替换成这两个标签。
-- 全部写完后重新查询文章和标签，让更新响应带上最终的 `articleTags`。
-
-第 14 章保存成功后，会用接口返回的新文章对象，替换前端 `articles` 数组中同 id 的旧对象，Table 因此显示最新内容。这一步只是更新页面内存中的数据，不会再次修改数据库。接入筛选分页后，文章可能不再符合当前条件，总数也可能变化，因此按 15B 第 3 节重新请求当前页，让列表和分页器一起更新。
-
-`deleteMany()` 删除所有匹配行，没有匹配行也不报错；`createMany()` 一次插入多行关系。
-
-最后重新查询文章和最新标签，作为更新结果返回。这里使用 `findUniqueOrThrow()`，保证成功时返回文章对象；如果没有找到文章，就抛出异常，使本次事务回滚，避免接口返回成功却得到 `data: null`。也可以用 `findUnique()`，但要再判断结果是否为 `null`，并在找不到文章时手动抛错。
-
-标签不存在时，插入关系会触发外键错误 `P2003`。事务先回滚文章和关系的修改，外面的 `catch` 再把错误转成 422。这里能写 `TAG_NOT_FOUND`，是因为已经在本次操作中确认文章存在，并且新增的是它到标签的关系；不要把整个项目的所有外键错误都翻译成“标签不存在”。
-
-事务内的数据库操作全部使用 `tx`，也不要在里面加入网络请求等慢操作。本节验证的是多步写入共同成功或回滚；并发请求之间的隔离规则暂时不展开。
+**写完关系后再查询，更新响应才能带上最终的 `articleTags`。** 前面的 `tx.article.update()` 发生在关系替换之前，默认也不返回关系，不能直接用它的结果代表最新标签。接入筛选分页后，修改过的文章还可能不再符合当前条件，因此页面按 15B 第 3 节重新请求当前列表，让行数据和分页总数一起更新。
 
 ### 9.4 验证
 
@@ -1017,6 +1023,36 @@ export async function updateArticle(
 验证第四条前，先提交 `[3, 7]` 恢复两条旧关系，并记下原来的标题。失败后确认标题和两条关系都没变，这才看得出回滚生效了。如果这时发现标签被清空了，检查 `deleteMany` 是不是误写成了 `prisma.articleTag.deleteMany` 而不是 `tx.articleTag.deleteMany`。
 
 成功更新时还要检查响应：`data.articleTags` 应反映最终标签；再请求详情接口，结果应一致。
+
+---
+
+## 10. 新增错误怎样进入统一错误响应
+
+错误处理仍沿用第 11 章的 `AppError → errorHandler → JSON`。第 8、9 节的错误转换应在完成本章时一起实现。本节汇总“当前操作的数据库错误对应哪个业务错误”：
+
+| 场景 | 原始错误 | 映射位置 | 对外响应 |
+|---|---|---|---|
+| `tagIds` 类型错误或重复 | Zod 校验失败 | 原 `error-handler.ts` 的 Zod 分支 | 422 `VALIDATION_ERROR` |
+| 创建文章时连接了不存在的标签 | `P2025` | 第 8 节 `createArticle()` 的 `catch` | 422 `TAG_NOT_FOUND` |
+| 更新关系时标签不存在 | `P2003` | 第 9 节事务外的 `catch` | 422 `TAG_NOT_FOUND` |
+
+同一个 `P2025` 既可能表示“文章不存在”，也可能表示“连接的标签不存在”。因此在知道当前操作的 repository 中转成 `AppError`，不能直接把中间件原来的 `P2025 → ARTICLE_NOT_FOUND` 全局改成标签错误。
+
+检查 `server/src/middleware/error-handler.ts`，保留第 11 章已有的这个分支，并让它仍位于 Prisma 错误分支之前：
+
+```ts
+if (error instanceof AppError) {
+  response.status(error.statusCode).json({
+    error: {
+      code: error.code,
+      message: error.message,
+    },
+  });
+  return;
+}
+```
+
+它直接读取 `AppError` 的状态码、业务码和提示，所以新增 `TAG_NOT_FOUND` 后无需再为它写一个中间件分支。映射代码在第 8、9 节的文章 repository，统一输出仍在这个中间件；第 11 章的基础练习无需提前加入标签知识。
 
 ---
 
