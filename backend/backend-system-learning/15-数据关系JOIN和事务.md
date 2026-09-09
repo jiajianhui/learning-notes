@@ -1028,31 +1028,32 @@ export async function updateArticle(
 
 ## 10. 新增错误怎样进入统一错误响应
 
-错误处理仍沿用第 11 章的 `AppError → errorHandler → JSON`。第 8、9 节的错误转换应在完成本章时一起实现。本节汇总“当前操作的数据库错误对应哪个业务错误”：
+先分清错误从哪里来。目前项目主要有四种来源：
+
+| 来源 | 在哪里产生 | 例子 |
+|---|---|---|
+| 业务错误 | 代码主动 `throw new AppError(...)` | 查不到文章 |
+| 校验错误 | Zod 的 `.parse()` 校验失败，抛出 `ZodError` | `tagIds` 中有重复 id |
+| 数据库错误 | Prisma 操作失败，抛出数据库相关错误 | slug 重复、关联的标签不存在 |
+| JSON 解析错误 | `express.json()` 无法解析请求体 | JSON 少了引号或多了逗号 |
+
+**定义 Schema 只是写下规则，调用 `.parse(req.body)` 等方法才真正执行校验，包括 `.refine()` 中的检查。** 如果 `.parse()` 校验失败，就会抛出 `ZodError`，当前请求直接进入错误处理，不再执行下一行的 `createArticle(input)` 或 `updateArticle(id, input)`。
+
+抛错表示操作失败，捕获则是接住并处理错误。repository 的 `catch` 转换部分数据库错误，其余继续抛出；Express 5 将错误交给统一错误中间件，返回状态码和 JSON，无法识别的错误由 500 分支兜底。
+
+第 8、9 节已经在 repository 中把“标签不存在”转成 `AppError`。第 11 章的错误中间件只要保留了 `AppError` 分支，就能处理这些错误，无需新增标签专用分支。
+
+下面汇总哪些错误在 repository 中转换，哪些继续交给原错误中间件：
 
 | 场景 | 原始错误 | 映射位置 | 对外响应 |
 |---|---|---|---|
 | `tagIds` 类型错误或重复 | Zod 校验失败 | 原 `error-handler.ts` 的 Zod 分支 | 422 `VALIDATION_ERROR` |
 | 创建文章时连接了不存在的标签 | `P2025` | 第 8 节 `createArticle()` 的 `catch` | 422 `TAG_NOT_FOUND` |
 | 更新关系时标签不存在 | `P2003` | 第 9 节事务外的 `catch` | 422 `TAG_NOT_FOUND` |
+| 文章不存在 | 主动抛出的 `AppError`，或更新、删除及 `findUniqueOrThrow()` 产生的 `P2025` | 原 `error-handler.ts` 的 AppError 或 P2025 分支 | 404 `ARTICLE_NOT_FOUND` |
+| 文章 slug 重复 | `P2002` | repository 原样抛出，原 `error-handler.ts` 的 P2002 分支处理 | 409，沿用原文章 slug 冲突响应 |
 
 同一个 `P2025` 既可能表示“文章不存在”，也可能表示“连接的标签不存在”。因此在知道当前操作的 repository 中转成 `AppError`，不能直接把中间件原来的 `P2025 → ARTICLE_NOT_FOUND` 全局改成标签错误。
-
-检查 `server/src/middleware/error-handler.ts`，保留第 11 章已有的这个分支，并让它仍位于 Prisma 错误分支之前：
-
-```ts
-if (error instanceof AppError) {
-  response.status(error.statusCode).json({
-    error: {
-      code: error.code,
-      message: error.message,
-    },
-  });
-  return;
-}
-```
-
-它直接读取 `AppError` 的状态码、业务码和提示，所以新增 `TAG_NOT_FOUND` 后无需再为它写一个中间件分支。映射代码在第 8、9 节的文章 repository，统一输出仍在这个中间件；第 11 章的基础练习无需提前加入标签知识。
 
 ---
 
