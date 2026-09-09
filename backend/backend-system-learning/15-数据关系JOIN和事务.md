@@ -943,10 +943,11 @@ export async function updateArticle(
       throw new AppError(404, "ARTICLE_NOT_FOUND", "文章不存在");
     }
 
-    // 沿用第 6 节的规则；未提交 status 时不写发布时间。
+    // 未传 status：用 undefined，不修改发布时间；传了：先保留旧时间，下面再判断状态是否变化。
     let publishedAt = input.status === undefined ? undefined : article.publishedAt;
 
     if (input.status !== undefined && input.status !== article.status) {
+      // 发布时写入当前时间；撤回时用 null 清空时间。undefined 是“不改”，null 是“清空”。
       publishedAt = input.status === "published" ? new Date() : null;
     }
 
