@@ -108,12 +108,14 @@ updateArticleSchema 校验输入
 
 如果没有共同的事务，前两步可能已经保存，接口虽然报错，文章却变了、标签也丢了。
 
-第 15 章有两种写法，都使用数据库事务：
+第 15 章的创建和更新函数都使用数据库事务，只是写法不同：
 
-| 写法 | 本章用在哪里 | 谁把操作放在一起 |
+| 函数 | 写法 | 事务怎样产生 |
 |---|---|---|
-| nested write | 创建文章和关系 | Prisma 根据嵌套的 `create` / `connect` 组织写入 |
-| `$transaction(async (tx) => ...)` | 展开文章更新、关系删除和关系创建 | 我们把这些操作写在同一个函数里，并全部使用 `tx` |
+| `createArticle()` | `article.create()` 内嵌 `articleTags.create`，即 nested write | Prisma 自动把文章和关系的写入放进同一个事务 |
+| `updateArticle()` | `$transaction(async (tx) => ...)` | 我们明确把更新文章、删除旧关系、创建新关系放进同一个事务，内部使用 `tx` |
+
+涉及多张表，不代表操作自动属于同一个事务。分开调用 `prisma.article.create()` 和 `prisma.articleTag.create()`，第二次失败不会自动撤销第一次；需要使用嵌套写入或显式事务，才能保证这些写入一起成功或回滚。
 
 nested write 也能表达关联更新。本章把更新展开，是为了看清各步操作与回滚，不是把“创建”固定归给 nested write、“更新”固定归给 `$transaction`。
 

@@ -24,7 +24,7 @@
 更新文章标签需要多步修改数据库，中途失败时怎样不留下错误数据
 ```
 
-本章先用 SQL 验证关系，再把查询和写入接回已有接口；事务放在多步更新出现时讲。
+本章先用 SQL 验证关系，再把查询和写入接回已有接口；创建时认识嵌套写入的事务保护，更新时练习显式事务。
 
 先修改 Prisma 模型，再修改第 11、12 章已经建立的文章模块：
 
@@ -741,6 +741,8 @@ export function createArticle(input: CreateArticleInput) {
 
 nested write（嵌套写入）会把这些写入放在同一个事务里：文章和关系都写成功才保存；任一关系写失败，这次新增的文章和关系都撤销，原有标签不受影响。这就是这里所说的“整体成功或整体失败”。
 
+**这里已经是事务在起作用，只是由 Prisma 自动管理，不需要手写 `$transaction()`。** 第 8.3 节把 `articleTags.create` 嵌在 `prisma.article.create()` 里，就使用了这种事务保护。若把文章和关系拆成两个独立的 Prisma 调用，它们不会自动组成一个共同事务；第 9 节会用 `$transaction()` 明确把多步操作放在一起。
+
 ### 8.2 第一步：让创建接口接受 tagIds
 
 在 `article-schema.ts` 中先定义一个可复用的标签数组规则，再给 `createArticleSchema` 增加 `tagIds`：
@@ -827,8 +829,10 @@ export function createArticle(input: CreateArticleInput) {
       },
     },
   }).catch((error: unknown) => {
-    // 捕获上面整次 prisma.article.create() 操作的错误。
-    // 本次操作中，P2025 表示 tag.connect 找不到选中的标签。
+    // 捕获整次创建操作的所有错误，只转换标签不存在的 P2025，其余继续抛给错误中间件。
+    // 嵌套写入自带事务，失败时新增的文章和关系一起回滚。可能捕获的错误如下：
+    // 1. 创建文章：slug 已被其他文章占用，违反数据库的唯一约束，抛出 P2002 —— 由错误中间件处理
+    // 2. 创建关系：找不到 tag.connect.id 对应的标签，无法建立关系，抛出 P2025 —— 这里处理
     if (error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2025") {
       // 转成业务错误，由错误中间件返回 422 和这条提示。
@@ -839,6 +843,8 @@ export function createArticle(input: CreateArticleInput) {
   });
 }
 ```
+
+现有中间件把 `P2025` 解释为“文章不存在”，但 `tag.connect` 找不到对应的标签 id 也会报 `P2025`，所以这里单独转成 `TAG_NOT_FOUND`。
 
 `tagIds` 是用来选择标签的请求数据，不是数据库列。`Article` 模型没有 `tagIds` 字段，所以不能把整个 `input` 直接作为 `data` 交给 Prisma。先单独取出 `tagIds`，其余字段用于创建文章，再根据 `tagIds` 为这篇文章创建对应的 `ArticleTag` 记录。
 
@@ -915,7 +921,7 @@ export function createArticle(input: CreateArticleInput) {
 
 事务不会把失败变成成功，它保证的是“失败之后数据仍然完整可信”。
 
-Prisma 的事务写法是 `prisma.$transaction()`。给它传一个函数，这个函数会收到一个参数，惯例命名为 `tx`；`tx` 是这次事务专用的 Prisma Client，查询、创建、更新和删除的写法与 `prisma` 相同。只有通过 `tx` 执行的操作才属于这个事务：函数里如果误用了外面的 `prisma`，那一次操作在事务之外，失败时不会被回滚。
+本节用 `prisma.$transaction()` 显式组织多步操作；第 8 节的嵌套写入也自带事务。给 `$transaction()` 传一个函数，这个函数会收到一个参数，惯例命名为 `tx`；`tx` 是这次事务专用的 Prisma Client，查询、创建、更新和删除的写法与 `prisma` 相同。只有通过 `tx` 执行的操作才属于这个事务：函数里如果误用了外面的 `prisma`，那一次操作在事务之外，失败时不会被回滚。
 
 ### 9.3 先改更新 Schema，再替换 updateArticle
 
@@ -977,7 +983,7 @@ export async function updateArticle(
       }
     }
 
-    // 关系处理完后，重新查询文章及最终标签，作为更新结果返回。
+    // 文章和标签关系更新完成后，重新查询文章及其最新标签，返回给客户端。
     // 1. 找到文章：返回文章及最新标签。
     // 2. 找不到文章：findUniqueOrThrow 抛出 P2025，让事务回滚，
     //    避免接口成功却返回 data: null。
@@ -987,11 +993,14 @@ export async function updateArticle(
       include: { articleTags: { include: { tag: true } } },
     });
   }).catch((error: unknown) => {
-    // 捕获整个事务的错误；失败的修改会回滚。错误可能来自：
-    // 1. 查询旧文章：查不到时手动抛出 AppError。
-    // 2. 更新文章：slug 重复，抛出 P2002。
-    // 3. 创建关系：标签不存在，抛出外键错误 P2003。
-    // 4. 最后查询：findUniqueOrThrow 找不到文章，抛出 P2025。
+    // 捕获整个事务的所有错误，只转换标签不存在的 P2003，其余继续抛给错误中间件。
+    // $transaction 中任一步失败，修改一起回滚。可能捕获的错误如下：
+    // 1. 查询旧文章：查不到时手动抛出 AppError —— 由错误中间件处理
+    // 2. tx.article.update：以下都是 Prisma 执行更新时抛出的错误，由错误中间件处理：
+    //    P2002：slug 已被其他文章占用，违反数据库的唯一约束。
+    //    P2025：找不到 where.id 对应的文章，无法更新。
+    // 3. 创建关系：标签不存在，抛出外键错误 P2003 —— 这里处理
+    // 4. 最后查询：findUniqueOrThrow 找不到文章，抛出 P2025 —— 由错误中间件处理
 
     // 进入这个 P2003 分支时，文章此前已查询并更新成功，失败的是创建关系时引用的标签不存在。
     if (error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -1004,7 +1013,9 @@ export async function updateArticle(
 }
 ```
 
-**查询旧文章、更新文章和替换关系都使用同一个事务里的 `tx`。** 任一步失败，文章字段和关系修改一起回滚；事务外的 `catch` 负责转换错误提示，不负责回滚。这里根据当前操作把 `P2003` 解释为标签不存在，不能把整个项目的所有外键错误都这样处理。事务中只做必要的数据库操作，不加入网络请求等慢操作；并发请求之间的隔离规则暂时不展开。
+**同样是标签不存在，为什么这里报 `P2003`，第 8.3 节却报 `P2025`？** 第 8.3 节用 `tag.connect` 连接已有标签，找不到就报 `P2025`；这里直接向中间表插入 `tagId`，数据库发现它引用的标签不存在，违反外键约束，所以报 `P2003`。两处最后都转成 `TAG_NOT_FOUND`。业务上都是“标签不存在”，但底层报错原因不同。
+
+**查询旧文章、更新文章和替换关系都使用同一个事务里的 `tx`。** 任一步失败，文章字段和关系修改一起回滚；事务外的 `catch` 负责转换错误提示，不负责回滚。事务中只做必要的数据库操作，不加入网络请求等慢操作；并发请求之间的隔离规则暂时不展开。
 
 **写完关系后再查询，更新响应才能带上最终的 `articleTags`。** 前面的 `tx.article.update()` 发生在关系替换之前，默认也不返回关系，不能直接用它的结果代表最新标签。接入筛选分页后，修改过的文章还可能不再符合当前条件，因此页面按 15B 第 3 节重新请求当前列表，让行数据和分页总数一起更新。
 
@@ -1054,6 +1065,18 @@ export async function updateArticle(
 | 文章 slug 重复 | `P2002` | repository 原样抛出，原 `error-handler.ts` 的 P2002 分支处理 | 409，沿用原文章 slug 冲突响应 |
 
 同一个 `P2025` 既可能表示“文章不存在”，也可能表示“连接的标签不存在”。因此在知道当前操作的 repository 中转成 `AppError`，不能直接把中间件原来的 `P2025 → ARTICLE_NOT_FOUND` 全局改成标签错误。
+
+`P2025` 表示操作需要的记录不存在，具体要看哪个操作失败。特别注意 `findUnique()` 和 `findUniqueOrThrow()` 的区别：
+
+| 操作 | 找不到所需记录时 |
+|---|---|
+| 创建关系中的 `tag: { connect: { id } }` | 找不到要连接的标签，抛出 `P2025` |
+| `article.update({ where: { id }, data })` | 找不到要更新的文章，抛出 `P2025` |
+| `article.delete({ where: { id } })` | 找不到要删除的文章，抛出 `P2025` |
+| `article.findUniqueOrThrow({ where: { id } })` | 找不到文章，抛出 `P2025` |
+| `article.findUnique({ where: { id } })` | 返回 `null`，不抛错 |
+
+`P2003` 也可以在错误中间件统一处理，例如返回“关联的数据不存在”。但它表示外键约束失败，不专指标签；本章需要明确提示“标签不存在”，所以在知道操作背景的 repository 中转换，中间件继续负责统一输出。
 
 ---
 
