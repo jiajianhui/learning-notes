@@ -243,14 +243,68 @@ Herdr 还会识别 Pane 中常见的 Coding Agent，把 `working`、`blocked`、
 
 这里的 Agent 工作流首先是一组可以被人看见、暂停和接管的运行关系：Agent 在哪台机器工作，用什么权限，修改了哪些文件，测试和日志在哪里，人怎样回来验收。tmux 可以承载它，Herdr 则进一步尝试自动看懂这些工作台的状态。
 
-以后可以把一个临时开发 Session 组织成：
+这里也正好可以分清 CLI 与 TUI：
+
+- CLI 通常接收参数，输出结果，然后结束，例如 `git status` 和 `curl URL`。
+- TUI 在终端里持续显示和接收操作，例如 `top`、tmux、Zellij 和交互式 Coding Agent。
+- 一条 CLI 命令可以启动一个 TUI，它们描述的是两种交互方式，不是互相排斥的工具类别。
+
+### “快”不是每一次切换都更快
+
+如果只是切换 Codex 任务、浏览文件、审查 diff 或查看图片，GUI 往往更快，也更容易发现功能。TUI 的优势不在单次点击，而在持续保留同一个文本工作现场：
 
 ```text
-mini-cms-dev
-├── agent：Codex / Claude Code 等交互式 Agent
-├── tests：类型检查和测试
-└── logs：观察开发环境日志
+GUI
+-> 更快地寻找、浏览和切换对象
+
+CLI
+-> 更准确地重复和组合动作
+
+TUI
+-> 同时保留几个持续运行的文本现场
 ```
+
+### 一个真正占优势的现场
+
+以后 Mini CMS 已经用 Docker Compose 运行时，假设 API 偶尔请求失败。你已经进入 Compose 配置所在目录，可以把临时排错 Session 组织成：
+
+```text
+minicms-debug
+├── logs：持续观察 API 日志
+├── check：每两秒检查一次健康接口
+└── agent：交互式 Coding Agent 或普通 Shell
+```
+
+`logs` Pane 持续显示新日志：
+
+```bash
+docker compose logs -f --tail=100 api
+```
+
+`check` Pane 持续检查 Express 健康接口：
+
+```bash
+watch -n 2 'curl -fsS http://127.0.0.1:3001/api/articles/health || echo FAIL'
+```
+
+这里的 `curl -f` 会把 HTTP 错误状态当作失败，`-sS` 隐藏普通进度但保留错误；只有 `curl` 返回非零退出码时，Shell 才执行 `||` 后面的 `echo FAIL`。
+
+`agent` Pane 留给 Coding Agent 或人工排查。例如先收窄最近十分钟的错误：
+
+```bash
+docker compose logs --since=10m api | grep -E 'ERROR|ECONNREFUSED'
+```
+
+如果日志出现数据库连接失败，左边保留原始证据，右上仍在重复检查接口，右下则检查 Compose 状态和 `DATABASE_URL`。修复测试环境配置并重启服务后，不必重新打开三个页面：日志出现新的启动记录，健康检查也会从 `FAIL` 变回正常响应。
+
+这里真正节省的是恢复现场和搬运信息的时间：
+
+- SSH 断开后，日志、检查和 Agent 仍留在同一个 Session。
+- 命令输出可以通过管道直接筛选，不需要在几个界面之间复制粘贴。
+- 同一条检查命令可以由人、Agent 或脚本重复执行，退出码仍然表达相同结果。
+- 日志、检查与修改同时可见，修复是否生效能立刻得到反馈。
+
+线上 API 本身仍然应该交给 Docker Compose 或 systemd 管理；tmux 只保留人和 Agent 的临时观察、测试与排错现场。
 
 ```text
 人给出目标和边界
@@ -272,3 +326,4 @@ tmux 解决的是“连接断了，交互现场还在”，并没有决定谁能
 - [Zellij：Web Client](https://zellij.dev/documentation/web-client.html)
 - [Herdr：核心概念](https://herdr.dev/docs/concepts/)
 - [Herdr：Agents](https://herdr.dev/docs/agents/)
+- [OpenAI：创建可供 Codex 组合调用的 CLI](https://learn.chatgpt.com/use-cases/agent-friendly-clis)

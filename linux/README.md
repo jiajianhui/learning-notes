@@ -123,7 +123,7 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 
 [第一次使用 tmux，并认识 Zellij 与 Herdr](./07-SSH断了工作还在-tmux与Zellij.md)
 
-启动一只不断走动的秒针，Detach，关掉 SSH，再从新连接回到同一个现场。先用 tmux 认清 Session、Window、Pane、Detach 与 Attach，再判断 Zellij 或 Herdr 是否解决了自己的真实痛点。
+启动一只不断走动的秒针，Detach，关掉 SSH，再从新连接回到同一个现场。先用 tmux 认清 Session、Window、Pane、Detach 与 Attach，再用一次日志、健康检查和 Agent 同时运行的排错现场，看清 CLI、TUI 与 GUI 各自快在哪里。
 
 **08 · 穿过三道门**
 
