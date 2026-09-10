@@ -692,6 +692,41 @@ export function createArticle(input: CreateArticleInput) {
 
 第 8 节在这个函数上继续增加标签写入。
 
+**`undefined`、`null` 和空字符串，怎样从页面传到数据库？**
+
+上面的“不改”和“清空”也出现在表单更新中。以允许为空的摘要 `summary` 为例，数据经过：
+
+```text
+表单值 → JSON.stringify() → 请求体 → express.json() 解析为 req.body
+→ Schema.parse(req.body) 得到 input → Prisma 更新数据库 → 响应 JSON → UI 回填
+```
+
+JSON 没有 `undefined`：前端对象中值为 `undefined` 的字段会被 `JSON.stringify()` 省略，`null` 和 `""` 则会保留。下面只看摘要字段的处理：
+
+| 前端对象中的 summary | JSON 中的 summary | 校验后的 input.summary | 数据库结果 | 再次读取后回填输入框 |
+|---|---|---|---|---|
+| `undefined` 或不写该字段 | 不包含该字段 | `undefined` | 保留原摘要 | 显示原摘要 |
+| `null` | `"summary": null` | `null` | 保存为 SQL `NULL` | 显示空白 |
+| `""` | `"summary": ""` | `""` | 保存为空字符串 | 显示空白 |
+| `"新摘要"` | `"summary": "新摘要"` | `"新摘要"` | 保存新摘要 | 显示“新摘要” |
+
+**`null` 不是空字符串，UI 显示空白也不代表数据库存的是同一种值。** 第 14 章回填摘要时用了：
+
+```ts
+summary: editingArticle.summary ?? ""
+```
+
+`?? ""` 把 `null` 或 `undefined` 转成输入框需要的空字符串。因此清空输入框后，当前表单提交的是 `""`，不会自动变成 `null`。如果省略摘要后整个更新请求只剩 `{}`，第 11 章的校验仍会拒绝它（`updateArticleSchema` 中的 `.refine()`）。
+
+不同字段的清空方式不一样：
+
+- **摘要**：更新请求传 `summary: null`，把数据库中的摘要设为 `NULL`；传 `summary: ""`，则保存空字符串。
+- **标签**：更新请求不传 `tagIds`，保留原标签；传 `tagIds: []`，删除这篇文章的全部标签关系；传 `tagIds: null` 会校验失败。
+- **发布时间**：前端不能提交 `publishedAt`，由后端根据 `status` 计算：
+
+  1. **创建文章**：不传 `status` 或传 `draft` → `null`；传 `published` → 当前时间。
+  2. **更新文章**：不传 `status` 或状态没变 → 保留原时间；草稿改为已发布 → 当前时间；已发布改为草稿 → `null`。
+
 ### 6.4 验证
 
 先运行 `npx tsc --noEmit`，再在 Apifox 中依次操作第 3 节的草稿文章。表中的字段写进 JSON 请求体，例如 `{"status":"published"}`。迁移前已有的 published 练习文章先提交 `draft`，再提交 `published`，之后再检查时间；原地重复发布不会补写旧数据缺失的时间。
