@@ -4,15 +4,16 @@
 
 第 15 章已经给文章接上了标签。这里像第 09A 章一样，不重复跟练，串起一次创建、更新和读取到底动了哪些数据。
 
-以前，一个“创建文章”操作主要是在 `articles` 中插入一行。现在模型仍然分别对应表，但一个业务操作可能要同时修改文章和关系：
+以前，一个“创建文章”操作主要通过 `Article` 模型向 `articles` 表插入一行。增加标签关系后，Prisma 没有把文章、标签和关系合并到一张表中；三个模型仍通过各自的 `@@map` 对应三张数据库表：
 
 ```text
-Article     -> articles      -> 文章本身
-Tag         -> tags          -> 可以反复使用的标签
-ArticleTag  -> article_tags  -> 哪篇文章使用了哪个标签
+Prisma 模型  -> 数据库表       -> 每一行保存什么
+Article     -> articles      -> 一篇文章本身
+Tag         -> tags          -> 一个可以反复使用的标签
+ArticleTag  -> article_tags  -> 一篇文章使用一个标签的关系
 ```
 
-关键变化是：**除了保存文章字段，还要维护文章与标签的对应关系。**
+变化发生在一次业务操作涉及的数据上：创建文章时，除了向 `articles` 表写入文章，还可能向 `article_tags` 表写入多条关系；已经存在的标签继续保存在 `tags` 表中。**因此，现在不仅要保存文章字段，还要维护文章与标签的对应关系。**
 
 ## 1. 标签和“文章使用标签”是两件事
 
@@ -47,24 +48,78 @@ prisma.article.create({ data: input });
 -> 返回文章及其标签关系
 ```
 
-第 15 章 `createArticle()` 中负责关系写入的是这段局部代码：
+第 15 章 `createArticle()` 中负责关系写入的是下面这段局部代码。这里保留外层的 `article.create()`，用来表示 `articleTags.create` 正嵌在新文章的创建过程中：
 
 ```ts
-articleTags: {
-  create: tagIds?.map((tagId) => ({
-    tag: { connect: { id: tagId } },
-  })),
-},
+prisma.article.create({
+  data: {
+    ...articleInput,
+    articleTags: {
+      create: tagIds?.map((tagId) => ({
+        tag: { connect: { id: tagId } },
+      })),
+    },
+  },
+});
 ```
 
-这里有两种不同动作：
+这段嵌套写入要和 `ArticleTag` 模型一起看：
 
-- `articleTags.create` 新建关系行。因为它嵌在当前文章的创建操作里，Prisma 会自动提供新文章的 `articleId`。
-- `tag.connect.id` 连接已有标签，提供关系另一端的 `tagId`。它不会新建标签。
+```prisma
+model ArticleTag {
+  articleId Int @map("article_id")
+  tagId     Int @map("tag_id")
 
-`ArticleTag` 模型和中间表已经在迁移时建立。创建文章前，被选择的 `Tag` 记录要存在；这篇新文章对应的 `ArticleTag` 关系记录则由本次调用新增。选择的标签不存在时，Prisma 会撤销本次新建的文章和关系；原来的标签不受影响。这次 nested write 已经有事务保护。
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
-标签不是必填项。不传 `tagIds` 或传 `[]`，都可以只创建文章。
+  @@id([articleId, tagId])
+  @@index([tagId])
+  @@map("article_tags")
+}
+```
+
+`articleId` 和 `tagId` 保存外键值，是真正的数据字段；`article` 和 `tag` 是 Prisma 的关系字段。`@relation` 进一步说明当前模型使用哪个外键字段，以及这个外键指向目标模型的哪个字段。
+
+接下来只看一件事：**新建一条 `ArticleTag` 记录时，`articleId` 和 `tagId` 分别从哪里来？**
+
+假设外层刚创建的文章 id 为 42，客户端提交 `tagIds: [3, 7]`。`map()` 第一次处理 `tagId = 3` 时：
+
+```text
+articleTags.create 嵌在当前文章的创建过程中
+-> Prisma 知道这条关系属于刚创建的文章 42
+-> 自动填入 ArticleTag.articleId = 42
+
+tag.connect.id = 3
+-> 连接 tags 表中已经存在的 id = 3 的标签
+-> 填入 ArticleTag.tagId = 3
+
+两个外键都有值
+-> 新增 ArticleTag(articleId: 42, tagId: 3)
+-> article_tags 表新增一行 (article_id: 42, tag_id: 3)
+```
+
+`map()` 接着处理 `tagId = 7`，同样得到 `(42, 7)`。因此，外层只创建一篇文章，内层会根据两个 `tagId` 创建两条关系；`connect` 只连接已有标签，不会向 `tags` 表新建标签。
+
+关系记录写入后，模型中的两行 `@relation` 又规定了怎样从关系读回两端。以 `(42, 3)` 为例：
+
+```text
+查询 ArticleTag.article 关系
+-> fields: [articleId]：读取当前关系记录的 articleId，也就是 42
+-> references: [id]：到 Article 对应的 articles 表中查找 id = 42 的文章
+
+查询 ArticleTag.tag 关系
+-> fields: [tagId]：读取当前关系记录的 tagId，也就是 3
+-> references: [id]：到 Tag 对应的 tags 表中查找 id = 3 的标签
+```
+
+这里还要注意：
+
+- `ArticleTag` 模型已经定义在 Prisma Schema 中，`article_tags` 中间表也已经通过迁移创建。
+- 创建文章前，`tagIds` 对应的 `Tag` 记录必须已经存在。
+- 本次调用只新建 `Article` 记录和对应的 `ArticleTag` 关系记录，不会新建 `Tag`。
+- 这次 nested write 有事务保护。只要一个标签不存在，Prisma 就会撤销本次新建的文章和关系；数据库中已有的标签不受影响。
+- 标签不是必填项。不传 `tagIds` 或传 `[]`，都可以只创建文章。
 
 ## 3. 更新文章：先判断是否要修改关系
 
@@ -139,8 +194,29 @@ return tx.article.findUniqueOrThrow({
 ```text
 article
 -> articleTags：这篇文章的关系行
--> 每条关系中的 tag：对应标签的 id、name、slug
+-> 每条关系中的 tag：由 ArticleTag.tag 找到的 tags 表记录，包含 id、name、slug
 ```
+
+例如文章 42 关联标签 3，局部结果是：
+
+```ts
+{
+  id: 42,
+  articleTags: [
+    {
+      articleId: 42,
+      tagId: 3,
+      tag: {
+        id: 3,
+        name: "后端",
+        slug: "backend",
+      },
+    },
+  ],
+}
+```
+
+这里的 `tag` 对象对应 `tags` 表中 `id = 3` 的那一行。因为当前 `Tag` 模型只有 `id`、`name`、`slug` 三个普通字段，`tag: true` 会把这三个字段读进结果。
 
 同一份结果在 UI 中有两种用途：
 
