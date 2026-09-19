@@ -1,4 +1,4 @@
-# 27. 用同一套 API 比较 Ant Design 和 shadcn/ui
+# 28. 用同一套 API 比较 Ant Design 和 shadcn/ui
 
 ## 这一章要完成什么
 
@@ -32,7 +32,7 @@ mini-cms/
 进入本章前先确认：
 
 - Ant Design 后台已经完成文章、标签、登录和主要状态。
-- 已完成第 23～26A 章。
+- 已完成第 24～27A 章。
 - `server` 的文章和标签 contract 已经稳定。
 - `admin-web-shadcn` 能登录、查看文章列表、新建和编辑文章。
 
@@ -85,7 +85,7 @@ TagFormValues
 
 ### 列表
 
-标签列表继续使用第 25 章的数据流：
+标签列表继续使用第 26 章的数据流：
 
 ```text
 页面请求标签
@@ -99,7 +99,7 @@ TagFormValues
 
 ### 表单
 
-标签表单继续使用第 26 章的职责划分：
+标签表单继续使用第 27 章的职责划分：
 
 ```text
 Field
@@ -343,7 +343,7 @@ npm run build
 
 ## 回看导航
 
-- 不清楚 shadcn/ui 为什么不是传统组件库：回看 [第 23 章](./23-shadcn-ui为什么不是传统组件库.md)。
-- 后台骨架和登录没有跑通：回看 [第 24 章](./24-用shadcn-ui建立管理后台骨架.md)。
-- 表格数据流混乱：回看 [第 25 章](./25-shadcn-ui和TanStack-Table怎样完成文章列表.md) 和 [25A](./25A-TanStack-Table从数据到表格实例.md)。
-- 表单错误或回填混乱：回看 [第 26 章](./26-shadcn-ui怎样完成文章新建和编辑表单.md) 和 [26A](./26A-React-Hook-Form和两次Zod校验怎样配合.md)。
+- 不清楚 shadcn/ui 为什么不是传统组件库：回看 [第 24 章](./24-shadcn-ui为什么不是传统组件库.md)。
+- 后台骨架和登录没有跑通：回看 [第 25 章](./25-用shadcn-ui建立管理后台骨架.md)。
+- 表格数据流混乱：回看 [第 26 章](./26-shadcn-ui和TanStack-Table怎样完成文章列表.md) 和 [26A](./26A-TanStack-Table从数据到表格实例.md)。
+- 表单错误或回填混乱：回看 [第 27 章](./27-shadcn-ui怎样完成文章新建和编辑表单.md) 和 [27A](./27A-React-Hook-Form和两次Zod校验怎样配合.md)。

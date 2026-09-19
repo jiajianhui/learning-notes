@@ -25,7 +25,7 @@ docker version
 docker compose version
 ```
 
-等 Mini CMS 进入真实部署阶段，后端第 18A 章会让 1Panel 在 Ubuntu 上管理 Docker 与 Compose。届时可以在服务器重复本章的 Nginx 实验；容器、镜像和端口映射的含义不会改变，只是少了一层 Docker Desktop 维护的隐藏 Linux 虚拟机。
+等 Mini CMS 进入真实部署阶段，后端第 19A 章会让 1Panel 在 Ubuntu 上管理 Docker 与 Compose。届时可以在服务器重复本章的 Nginx 实验；容器、镜像和端口映射的含义不会改变，只是少了一层 Docker Desktop 维护的隐藏 Linux 虚拟机。
 
 ## 套娃里还有五件道具
 

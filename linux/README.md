@@ -178,7 +178,7 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 
 **想把自己的 Web 应用送上网**
 
-走完 09～10。等 Mini CMS 主体完成后，依次进入[后端第 18 章](../backend/backend-system-learning/18-从开发环境到线上运行.md)和[第 18A 章 1Panel 实操](../backend/backend-system-learning/18A-用1Panel和Docker-Compose部署MiniCMS.md)，把概念落到真实项目。
+走完 09～10。等 Mini CMS 主体完成后，依次进入[后端第 19 章](../backend/backend-system-learning/19-从开发环境到线上运行.md)和[第 19A 章 1Panel 实操](../backend/backend-system-learning/19A-用1Panel和Docker-Compose部署MiniCMS.md)，把概念落到真实项目。
 
 每次学习只做一站。命令跑出结果后，试着改变一个小地方：换个文件名、换个端口、停止一个进程，再猜结果会怎样。Linux 的乐趣大多藏在这种“我动了一下，它真的变了”里面。
 

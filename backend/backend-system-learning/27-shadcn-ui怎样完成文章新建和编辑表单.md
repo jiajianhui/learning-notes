@@ -1,8 +1,8 @@
-# 26. shadcn/ui 怎样完成文章新建和编辑表单
+# 27. shadcn/ui 怎样完成文章新建和编辑表单
 
 ## 这一章要完成什么
 
-第 25 章已经完成文章列表。本章用同一个 `ArticleForm` 完成：
+第 26 章已经完成文章列表。本章用同一个 `ArticleForm` 完成：
 
 ```text
 新建页
@@ -17,7 +17,7 @@
 
 shadcn `Field` 负责表单结构，React Hook Form 管理字段和提交状态，前端 Zod 提供即时校验。Express 中已经存在的 Zod 继续保护真正的数据入口。
 
-第一次实现时按本章完成结果。完成后再阅读 [26A](./26A-React-Hook-Form和两次Zod校验怎样配合.md)，复习表单内部数据流。
+第一次实现时按本章完成结果。完成后再阅读 [27A](./27A-React-Hook-Form和两次Zod校验怎样配合.md)，复习表单内部数据流。
 
 ---
 
@@ -153,7 +153,7 @@ export type ArticleDetail = {
 };
 ```
 
-继续在 `api.ts` 中增加。先把第 25 章的请求函数导入补成：
+继续在 `api.ts` 中增加。先把第 26 章的请求函数导入补成：
 
 ```ts
 import {
@@ -611,7 +611,7 @@ export default function NewArticlePage() {
 }
 ```
 
-完整实现时，把标签的 loading 和 error 换成第 25 章已经用过的 Skeleton、Alert 和重试按钮，不要只保留文字占位。
+完整实现时，把标签的 loading 和 error 换成第 26 章已经用过的 Skeleton、Alert 和重试按钮，不要只保留文字占位。
 
 ---
 
@@ -727,13 +727,13 @@ export default function EditArticlePage() {
 - 404：明确显示文章不存在。
 - 其他失败：显示 Alert 和重试。
 
-这些状态在第 13、16A 和 25 章已经练过，这里只换成文章详情请求。
+这些状态在第 13、17A 和 26 章已经练过，这里只换成文章详情请求。
 
 ---
 
 ## 11. 后端错误怎样落到字段
 
-Axios 遇到非 2xx 响应时，会进入第 24 章配置的响应拦截器，再统一转换成 `ApiError`。
+Axios 遇到非 2xx 响应时，会进入第 25 章配置的响应拦截器，再统一转换成 `ApiError`。
 
 建议映射：
 
@@ -783,7 +783,7 @@ npx tsc --noEmit
 npm run build
 ```
 
-三个检查通过后，阅读 [26A](./26A-React-Hook-Form和两次Zod校验怎样配合.md)，再进入第 27 章独立完成标签管理。
+三个检查通过后，阅读 [27A](./27A-React-Hook-Form和两次Zod校验怎样配合.md)，再进入第 28 章独立完成标签管理。
 
 ## 官方参考
 

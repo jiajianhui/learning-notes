@@ -204,7 +204,7 @@ app.use(notFound);
 app.use(errorHandler);
 ```
 
-阶段 4 只允许 Ant Design 后台的 3000 端口。第 16、16A 章增加 Cookie 登录时，再补 `credentials`；第 24 章创建第二套后台时，再允许 3002。
+阶段 4 只允许 Ant Design 后台的 3000 端口。第 17、17A 章增加 Cookie 登录时，再补 `credentials`；第 25 章创建第二套后台时，再允许 3002。
 
 ---
 
@@ -2476,7 +2476,7 @@ npm run dev
 
 不要只把 `listError` 或 `submitError` 的初始值临时改成一段文字。这样只能看到提示组件的外观，不能证明请求失败后对应的 `catch`、状态更新和页面展示已经连通。
 
-第 17、17A 章会使用 Vitest 和 Supertest 自动验证后端 API 的状态码与错误结构，但不会打开浏览器检查这里的 `Alert`、Drawer 和按钮 loading。当前学习路线暂时不增加浏览器端 E2E 测试，因此本节仍是前端页面反馈的手动验收。
+第 18、18A 章会使用 Vitest 和 Supertest 自动验证后端 API 的状态码与错误结构，但不会打开浏览器检查这里的 `Alert`、Drawer 和按钮 loading。当前学习路线暂时不增加浏览器端 E2E 测试，因此本节仍是前端页面反馈的手动验收。
 
 ---
 
@@ -2509,22 +2509,25 @@ npm run dev
 
 完成跟练后，先阅读[第 14A 章](./14A-从页面操作到数据库-一条线看懂管理后台CRUD.md)，把页面操作、`fetch`、Express、Prisma、数据库和 UI 更新收成一条完整主线；再阅读[第 14B 章](./14B-管理后台里的TypeScript-Promise和React状态.md)，集中复习泛型、Promise、Swift 与 TypeScript 的类型差异和 React 状态。这两章都是完成第 14 章后的扩展阅读，不需要在跟练中途跳出本章。
 
-第 15～17 章继续修改同一套 Mini CMS：
+第 15～18 章继续修改同一套 Mini CMS：
 
 ```text
 第 15 章
--> server 增加标签、多表关系、筛选和发布规则
--> admin-web-antd 增加对应管理页面
+-> server 增加多表关系、筛选和发布规则
 
-第 16、16A 章
+第 16 章
+-> server 完成标签 CRUD 接口
+-> admin-web-antd 接入标签管理、文章标签选择、筛选和分页
+
+第 17、17A 章
 -> server 增加认证 API 和中间件
 -> admin-web-antd 增加登录页和登录状态
 
-第 17、17A 章
+第 18、18A 章
 -> 用测试固定共享 API 的核心行为
 ```
 
-下一步进入[第 15 章](./15-数据关系JOIN和事务.md)，给文章增加标签和发布规则。共享 API 稳定以后，再按第 23～27 章用 Axios 完成并列的 `admin-web-shadcn`。
+下一步进入[第 15 章](./15-数据关系JOIN和事务.md)，给文章增加标签和发布规则。共享 API 稳定以后，再按第 24～28 章用 Axios 完成并列的 `admin-web-shadcn`。
 
 ## 官方参考
 

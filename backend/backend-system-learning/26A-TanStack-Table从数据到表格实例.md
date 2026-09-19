@@ -1,8 +1,8 @@
-# 25A. TanStack Table：从数据到表格实例
+# 26A. TanStack Table：从数据到表格实例
 
 ## 问题背景
 
-第 25 章已经完成文章列表。这一章不再增加功能，只把 TanStack Table 的几个对象串成一条短主线：
+第 26 章已经完成文章列表。这一章不再增加功能，只把 TanStack Table 的几个对象串成一条短主线：
 
 ```text
 data + columns
@@ -13,7 +13,7 @@ data + columns
 -> shadcn Table
 ```
 
-如果第 25 章能运行，但看不清 `ColumnDef`、`table` 和 `row model` 怎样配合，就从这里重新理解。
+如果第 26 章能运行，但看不清 `ColumnDef`、`table` 和 `row model` 怎样配合，就从这里重新理解。
 
 ---
 
@@ -194,7 +194,7 @@ const pagination = {
 - 不清楚 `table` 从哪里来：回看第 4 节。
 - 翻页出现偏移：回看第 7 节。
 
-能说清下面这条线，就可以进入第 26 章：
+能说清下面这条线，就可以进入第 27 章：
 
 ```text
 Express 当前页数据

@@ -206,15 +206,15 @@ Express 为什么用 postgres:5432，而不是 localhost？
 
 真实上线属于 Mini CMS 项目的最终阶段，按这个顺序继续：
 
-1. 阅读[后端第 18 章：从开发环境到线上运行](../backend/backend-system-learning/18-从开发环境到线上运行.md)，确认构建、启动、环境变量、迁移、健康检查与备份已经准备好。
-2. 使用[后端第 18A 章：用 1Panel 和 Docker Compose 部署 Mini CMS](../backend/backend-system-learning/18A-用1Panel和Docker-Compose部署MiniCMS.md)，在真实服务器配置 Compose、OpenResty、HTTPS 和备份。
+1. 阅读[后端第 19 章：从开发环境到线上运行](../backend/backend-system-learning/19-从开发环境到线上运行.md)，确认构建、启动、环境变量、迁移、健康检查与备份已经准备好。
+2. 使用[后端第 19A 章：用 1Panel 和 Docker Compose 部署 Mini CMS](../backend/backend-system-learning/19A-用1Panel和Docker-Compose部署MiniCMS.md)，在真实服务器配置 Compose、OpenResty、HTTPS 和备份。
 3. 从外部浏览器打开正式域名，再故意检查一次容器状态、日志和健康接口，证明网站不是“碰巧能开”。
 
 ```text
 Linux 00～10
 -> 看懂和掌控运行环境
 
-后端 18 / 18A
+后端 19 / 19A
 -> 把已经完成的 Mini CMS 真正部署上去
 ```
 
