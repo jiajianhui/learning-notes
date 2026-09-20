@@ -155,7 +155,7 @@ TypeScript 类型和运行时校验
 阶段 2：接入 Docker、Prisma 7 和 PostgreSQL，完成基础文章 CRUD
 阶段 3：阅读 11 请求校验、11A 错误处理拆解、12 项目结构
 阶段 4：阅读 13 前后端衔接和 fetch，用 14 完成 admin-web-antd 跟练，再用 14A、14B 依次复习完整 CRUD 和语言机制
-阶段 5：回看 06 API 设计、08 筛选分页，阅读 15 多表关系和事务，用 15A 复习关系维护，按 16 完成页面联调，再用 16A 梳理数据流、16B 理解组件与状态的拆分
+阶段 5：回看 06 API 设计、08 筛选分页，阅读 15 多表关系和事务，用 15A 复习关系维护，按 16 完成页面联调，再用 16A 梳理数据流、16B 理解组件拆分，按 16C 用 ProComponents 简化后台
 阶段 6：阅读 17 登录与安全、17A 登录实操
 阶段 7：阅读 18 测试分层、18A 接口测试实操
 阶段 8：回看 06 公开 API 设计，阅读 19 连通公开内容、个人网站详情页和生产运行，再用 19A 完成 1Panel 部署
@@ -172,6 +172,8 @@ TypeScript 类型和运行时校验
 完成第 15 章后，阅读 [15A-从单表 CRUD 到关系维护](./15A-从单表CRUD到关系维护.md)，串起 Article、Tag、ArticleTag 在创建、更新和返回数据时分别承担什么。随后按 [16-标签管理与页面联调](./16-标签管理与页面联调.md) 完成标签接口、管理页面和种子数据，再用 [16A-从表单到数据库再回到页面](./16A-从表单到数据库再回到页面.md) 梳理值、类型和字段在前后端之间的变化，最后验收阶段 5。第 15、16 章共同完成阶段 5；15A、16A 分别是两章的配套巩固，不增加新的实操任务。
 
 读完 16A，再用 [16B-页面变大后怎样拆组件](./16B-页面变大后怎样拆组件.md) 理解组件边界、状态归属和请求逻辑怎样组织。16B 以现有工程分析整理思路，不增加功能，也不要求完成重构后才能验收阶段 5。
+
+随后按 [16C-用 ProComponents 简化管理后台](./16C-用ProComponents简化管理后台.md) 在同一个 `admin-web-antd` 中改造列表和表单，按需调整布局。普通组件版通过 Git 保留，后续登录、测试和部署沿用改造后的工程；不新增第三套后台，也不要求先实践 16B 的全部拆分方案。
 
 两章新增的动手收口：
 
@@ -224,7 +226,7 @@ Ant Design 和 shadcn/ui 是 Mini CMS 中两个并列的前端项目，两套都
 
 请求工具也按同一条渐进路线练习：第 13 章认识原生 `fetch`，Ant Design 项目用它完成 CRUD；shadcn/ui 项目再用 Axios 请求同一套 API。这个组合只服务于学习，不代表 Ant Design 必须用 `fetch`，或 shadcn/ui 必须用 Axios。
 
-`admin-web-antd` 和 `admin-web-shadcn` 继续使用同一个 Express API 和 PostgreSQL。第 28 章再用相同功能比较两种方案。
+`admin-web-antd` 和 `admin-web-shadcn` 继续使用同一个 Express API 和 PostgreSQL。第 28 章用相同功能比较 Ant Design + ProComponents 与 shadcn/ui 组合方案。
 
 shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等新概念需要分别解释，不代表学习重心高于 Ant Design。
 

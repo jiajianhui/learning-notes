@@ -25,6 +25,8 @@ GET  /api/auth/me
 
 所有代码都继续写在真实 `mini-cms` 中：后端增加认证模块和中间件，`admin-web-antd` 增加登录页和登录状态，不创建新的登录 demo。
 
+前端沿用第 16C 章改造后的 ProComponents 后台。ProTable、DrawerForm 继续调用已有 API 函数；登录请求与认证状态独立接入，不把文章、标签页面改回普通 Table、Form。
+
 ---
 
 ## 1. 先确定本章方案
@@ -465,6 +467,8 @@ app.use(errorHandler);
 ---
 
 ## 10. Next.js 请求必须携带 Cookie
+
+在第 16 章 `lib/api-client.ts` 的公共 `requestJson()` 中为 `fetch` 增加 `credentials: "include"`，让 `apiRequest()` 和 `apiListRequest()` 都携带 Cookie。若本地仍有两处独立 `fetch`，两处都要同步；ProTable 的 `request` 继续调用 `getArticles()`，不另写绕过封装的请求。登录页可以沿用普通 Ant Design Form，后台菜单与退出入口继续放在现有布局中。
 
 封装请求函数时增加：
 

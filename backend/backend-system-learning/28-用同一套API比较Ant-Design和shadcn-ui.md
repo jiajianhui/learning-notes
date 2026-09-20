@@ -5,8 +5,8 @@
 前面已经按顺序完成两个并列项目：
 
 ```text
-Ant Design 管理后台
--> 第一套前端实现，使用 fetch
+Ant Design + ProComponents 管理后台
+-> 普通组件版完成基础学习后，经第 16C 章改造，继续使用 fetch
 
 shadcn/ui 管理后台
 -> 第二套前端实现，使用 Axios
@@ -188,7 +188,7 @@ Express Zod
 
 逐项填写：
 
-| 比较项 | Ant Design | shadcn/ui |
+| 比较项 | Ant Design + ProComponents | shadcn/ui 组合方案 |
 |---|---|---|
 | 第一版完成速度 |  |  |
 | 需要自己维护的代码 |  |  |
@@ -211,21 +211,23 @@ Express Zod
 
 不要先写“哪个更先进”。先记录代码，再形成结论。
 
+比较基础 Table 与 ProTable 的代码量时，从 Git 回看第 16C 章改造前的版本，区分哪些逻辑由普通 Ant Design 提供、哪些由 ProComponents 接管。
+
 ---
 
 ## 6. 两套方案的核心差别
 
 做到这里，应该能够用自己的代码验证下面的差别。
 
-### Ant Design
+### Ant Design + ProComponents
 
 ```text
-安装组件库
--> 直接使用功能较完整的 Table、Form、Modal
+安装 Ant Design 和 ProComponents
+-> 使用 ProTable、DrawerForm 组织列表和表单，按需使用 ProLayout
 -> 主要通过 props 和主题配置调整
 ```
 
-它更像一套已经组装好的管理后台工具箱。常见业务组件齐全，第一版通常更快。
+ProComponents 在 Ant Design 基础上封装了更多请求、搜索和表单交互。接口适配、业务规则与错误文案仍由项目负责，具体减少了多少代码，以本次改造为证据。
 
 ### shadcn/ui
 
@@ -240,7 +242,7 @@ Express Zod
 因此，两种方案不是简单的“组件数量比较”：
 
 ```text
-Ant Design
+Ant Design + ProComponents
 -> 更快获得统一、完整的后台能力
 
 shadcn/ui
