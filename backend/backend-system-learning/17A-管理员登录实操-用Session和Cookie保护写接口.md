@@ -25,7 +25,7 @@ GET  /api/auth/me
 
 所有代码都继续写在真实 `mini-cms` 中：后端增加认证模块和中间件，`admin-web-antd` 增加登录页和登录状态，不创建新的登录 demo。
 
-前端沿用第 16C 章改造后的 ProComponents 后台。ProTable、DrawerForm 继续调用已有 API 函数；登录请求与认证状态独立接入，不把文章、标签页面改回普通 Table、Form。
+前端沿用第 16D 章改造后的 ProComponents 后台。ProTable、DrawerForm 继续调用已有 API 函数；登录请求与认证状态独立接入，不把文章、标签页面改回普通 Table、Form。
 
 ---
 

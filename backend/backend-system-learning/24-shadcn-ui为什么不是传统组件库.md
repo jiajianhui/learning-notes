@@ -13,7 +13,7 @@ mini-cms/
 
 实现时先完成 Ant Design，再进入 shadcn/ui。这个顺序是为了先稳定 API 和业务流程，再集中学习 shadcn/ui、TanStack Table 与 React Hook Form，不代表两个项目有主次。最终目标是两套后台都能独立完成核心管理链路。
 
-其中 `admin-web-antd` 已按第 16C 章用 ProComponents 简化列表和表单。下面学习另一种组件组合方式，仍然复用同一套业务接口。
+其中 `admin-web-antd` 已按第 16D 章用 ProComponents 简化列表和表单。下面学习另一种组件组合方式，仍然复用同一套业务接口。
 
 本章先解决一个容易误解的问题：
 
