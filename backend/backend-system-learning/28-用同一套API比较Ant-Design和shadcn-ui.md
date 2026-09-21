@@ -6,7 +6,7 @@
 
 ```text
 Ant Design + ProComponents 管理后台
--> 普通组件版完成基础学习后，经第 16D 章改造，继续使用 fetch
+-> 普通组件版完成基础学习后，经第 16C 章改造，继续使用 fetch
 
 shadcn/ui 管理后台
 -> 第二套前端实现，使用 Axios
@@ -211,7 +211,7 @@ Express Zod
 
 不要先写“哪个更先进”。先记录代码，再形成结论。
 
-比较基础 Table 与 ProTable 的代码量时，从 Git 回看第 16D 章改造前的版本，区分哪些逻辑由普通 Ant Design 提供、哪些由 ProComponents 接管。
+比较基础 Table 与 ProTable 的代码量时，从 Git 回看第 16C 章改造前的版本，区分哪些逻辑由普通 Ant Design 提供、哪些由 ProComponents 接管。
 
 ---
 

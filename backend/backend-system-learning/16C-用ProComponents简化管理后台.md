@@ -1,8 +1,8 @@
-# 16D. 用 ProComponents 简化管理后台
+# 16C. 用 ProComponents 简化管理后台
 
-第 14～16 章用普通 Ant Design 组件跑通了后台，16A 解释数据流，16B 解释组件怎样拆分，[16C](./16C-用AntDesign完善后台UI.md) 完成 UI 理解与自主还原。本章在同一个 `admin-web-antd` 中，用 ProComponents 简化文章和标签管理，保留已经整理好的布局、视觉风格和操作流程。
+第 14～16 章用普通 Ant Design 组件跑通了后台，16A 解释数据流，[16B](./16B-用AntDesign完善后台UI.md) 完成 UI 理解与自主还原。本章在同一个 `admin-web-antd` 中，用 ProComponents 简化文章和标签管理，保留已经整理好的布局、视觉风格和操作流程。
 
-先通过 Git 保留基础版，方便比较。这里不新建第三套后台；后面的 `admin-web-shadcn` 仍是独立项目。16B 的拆分方案不必全部实施后再来本章。
+先通过 Git 保留基础版，方便比较。这里不新建第三套后台；后面的 `admin-web-shadcn` 仍是独立项目。
 
 ## 1. 先知道它接管什么
 
@@ -130,7 +130,7 @@ DrawerForm 根据异步提交管理提交按钮的加载，可以移除手写 `s
 
 布局最后处理。用 ProLayout 替换已有后台 Layout、Menu，保留文章与标签入口，菜单通过 Next.js Link 跳转，用当前 pathname 控制选中项。ProLayout 不会自动接管 Next.js 路由，也不需要另建一套 Umi 工程。
 
-对照 16C 保存的截图，保持固定顶栏、左侧导航、内容分区和抽屉体验。先核对所安装版本的布局配置与主题能力，再补少量局部样式，包括顶栏的半透明背景和模糊效果。仍然使用 Next.js、Ant Design Provider 和原来的请求封装。
+对照 16B 保存的截图，保持固定顶栏、左侧导航、内容分区和抽屉体验。先核对所安装版本的布局配置与主题能力，再补少量局部样式，包括顶栏的半透明背景和模糊效果。仍然使用 Next.js、Ant Design Provider 和原来的请求封装。
 
 ## 5. 用同一组操作比较改造前后
 
@@ -140,7 +140,7 @@ DrawerForm 根据异步提交管理提交按钮的加载，可以移除手写 `s
 - 文章筛选、分页、标签回填、发布与撤回行为一致。
 - 操作后重新获取数据，慢速网络下有加载提示；没有新旧两套请求同时执行。
 - 文章列表代码减少的部分，能明确对应到 ProTable 的请求、搜索或分页能力。
-- 对照 16C 的截图，页面层级和滚动行为保持一致，普通组件版与 ProComponents 版都接近同一个目标 UI。
+- 对照 16B 的截图，页面层级和滚动行为保持一致，普通组件版与 ProComponents 版都接近同一个目标 UI。
 
 本章完成后，继续在这个 `admin-web-antd` 上接第 17、17A 章的登录。第 24～28 章另建 shadcn/ui 后台，最终比较的是“Ant Design + ProComponents”与“shadcn/ui + TanStack Table + React Hook Form”；基础 Ant Design 版本通过 Git 回看。
 
