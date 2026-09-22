@@ -1,69 +1,21 @@
 # 26. shadcn/ui 和 TanStack Table 怎样完成文章列表
 
-## 这一章要完成什么
+第 25 章已经完成登录和请求层。现在沿着“显示真实文章 → 翻页 → 筛选 → 删除”完成列表。每一步都在上一步的页面上增加可操作的行为；第 26A 章用于完成后复习表格内部的数据流。
 
-第 25 章已经完成项目骨架、登录状态和统一请求函数。本章使用同一套 Express API 完成：
+## 1. 先把真实文章显示出来
 
-```text
-请求当前页文章
--> 显示筛选条件
--> 用 TanStack Table 组织列和行
--> 用 shadcn Table 渲染
--> 编辑、删除和翻页
-```
-
-开始前，Ant Design 后台的文章列表、筛选和分页应该已经可用。本项目继续使用同一个 Express API contract，不增加另一套接口。
-
-TanStack Table 的概念较多。先按本章跑通结果，完成后再用 [26A](./26A-TanStack-Table从数据到表格实例.md) 串一次内部主线。
-
----
-
-## 1. 安装表格和行操作需要的组件
-
-在 `admin-web-shadcn` 中执行：
+在 `admin-web-shadcn` 安装：
 
 ```bash
 npm install @tanstack/react-table
-
-npx shadcn@latest add \
-  alert-dialog \
-  badge \
-  dropdown-menu \
-  empty \
-  select \
-  skeleton \
-  table
+npx shadcn@latest add table badge skeleton select alert-dialog
 ```
 
-第 25 章已经用 Axios 建立统一请求层。本章继续使用这套请求函数和 React 页面状态，不安装 TanStack Query，先把学习重点放在 UI 组合与 TanStack Table。
+本步共同修改三个位置：`features/articles` 保存类型和请求，`app/(admin)/admin/articles` 组织页面与列，shadcn 的 `components/ui/table.tsx` 提供表格外观。
 
----
+### 1.1 沿用已有响应，取得第一页
 
-## 2. 先确定目录和职责
-
-```text
-app/(admin)/admin/articles/
-├── page.tsx                  组合筛选、列表和页面状态
-├── article-columns.tsx       定义每一列怎样读取和显示数据
-├── article-data-table.tsx    创建 table 实例并渲染行
-└── delete-article-button.tsx 删除确认和删除请求
-
-features/articles/
-├── api.ts                    请求 Express
-└── types.ts                  文章列表和查询类型
-```
-
-`components/ui/table.tsx` 是 shadcn 加入项目的基础 UI 文件，不要把 Mini CMS 文章业务写进去。文章列和删除逻辑放在功能目录中。
-
----
-
-## 3. 使用两个后台共同的 API contract
-
-阶段 5 完成后，文章列表已经支持标题、状态、标签和分页。两个后台使用相同的字段名、查询参数、响应结构和错误 code，不重新设计接口。
-
-下面用这一组名称表示共同 contract；如果项目已经使用其他名称，以 Express 的真实实现为准，并同时调整两个前端：
-
-`features/articles/types.ts`：
+在 `features/articles/types.ts` 定义下面的类型。第 15、16 章返回的是 `articleTags[].tag`，这里继续使用这个结构，不把类型声明写成接口没有返回的 `tags`：
 
 ```ts
 export type ArticleStatus = "draft" | "published";
@@ -79,7 +31,7 @@ export type ArticleListItem = {
   title: string;
   slug: string;
   status: ArticleStatus;
-  tags: TagSummary[];
+  articleTags: { tag: TagSummary }[];
   createdAt: string;
   publishedAt: string | null;
 };
@@ -100,15 +52,10 @@ export type ArticleListPage = {
 };
 ```
 
-这里的 `page` 从 1 开始，和页面以及 Express 查询参数保持一致。TanStack Table 内部的 `pageIndex` 从 0 开始，第 6 节只在一个位置转换。
-
-`features/articles/api.ts`：
+新建 `features/articles/api.ts`。分页响应原本是 `{ data, pagination }`；请求函数把它整理成页面使用的 `{ items, total, page, pageSize }`，文章对象内部的字段保持原样。
 
 ```ts
-import {
-  apiRequestNoContent,
-  apiRequestResult,
-} from "@/lib/api";
+import { apiRequestResult } from "@/lib/api";
 import type {
   ArticleListItem,
   ArticleListPage,
@@ -142,491 +89,302 @@ export async function getArticles(
     ...response.pagination,
   } satisfies ArticleListPage;
 }
-
-export function deleteArticle(articleId: number) {
-  return apiRequestNoContent(`/api/articles/${articleId}`, {
-    method: "DELETE",
-  });
-}
 ```
 
-列表只传查询条件，筛选和分页仍由 Express 和 PostgreSQL 完成。
+### 1.2 定义列，再把单元格渲染出来
 
----
+新建 `app/(admin)/admin/articles/article-columns.tsx`：
 
-## 4. 先写一个只负责渲染的 DataTable
+```tsx
+import type { ColumnDef } from "@tanstack/react-table";
+import { Badge } from "@/components/ui/badge";
+import type { ArticleListItem } from "@/features/articles/types";
 
-新建 `article-data-table.tsx`：
+export const articleColumns: ColumnDef<ArticleListItem>[] = [
+  { accessorKey: "title", header: "标题" },
+  { accessorKey: "slug", header: "slug" },
+  {
+    accessorKey: "status",
+    header: "状态",
+    cell: ({ row }) => row.original.status === "published" ? "已发布" : "草稿",
+  },
+  {
+    id: "tags",
+    header: "标签",
+    cell: ({ row }) => (
+      <div className="flex flex-wrap gap-1">
+        {row.original.articleTags.map(({ tag }) => (
+          <Badge key={tag.id} variant="outline">{tag.name}</Badge>
+        ))}
+      </div>
+    ),
+  },
+];
+```
+
+`accessorKey` 对应文章字段；标签列用 `cell` 读取嵌套数据。`row.original` 就是本行的原始文章。
+
+在同目录新建 `article-data-table.tsx`：
 
 ```tsx
 "use client";
 
 import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  type ColumnDef,
-  type OnChangeFn,
-  type PaginationState,
+  flexRender, getCoreRowModel, useReactTable, type ColumnDef,
 } from "@tanstack/react-table";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import type { ArticleListItem } from "@/features/articles/types";
 
-type ArticleDataTableProps<TData, TValue> = {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
-  pagination: PaginationState;
-  onPaginationChange: OnChangeFn<PaginationState>;
-  total: number;
-  loading: boolean;
+type ArticleDataTableProps = {
+  data: ArticleListItem[];
+  columns: ColumnDef<ArticleListItem>[];
 };
 
-export function ArticleDataTable<TData, TValue>({
-  columns,
-  data,
-  pagination,
-  onPaginationChange,
-  total,
-  loading,
-}: ArticleDataTableProps<TData, TValue>) {
+export function ArticleDataTable({ data, columns }: ArticleDataTableProps) {
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
-    rowCount: total,
-    state: {
-      pagination,
-    },
-    onPaginationChange,
   });
 
   return (
-    <div className="overflow-hidden rounded-lg border">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-
-        <TableBody>
-          {table.getRowModel().rows.length > 0 ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(
-                      cell.column.columnDef.cell,
-                      cell.getContext(),
-                    )}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell
-                colSpan={columns.length}
-                className="h-32 text-center text-muted-foreground"
-              >
-                暂无文章
+    <Table>
+      <TableHeader>
+        {table.getHeaderGroups().map((group) => (
+          <TableRow key={group.id}>
+            {group.headers.map((header) => (
+              <TableHead key={header.id}>
+                {header.isPlaceholder ? null : flexRender(
+                  header.column.columnDef.header, header.getContext(),
+                )}
+              </TableHead>
+            ))}
+          </TableRow>
+        ))}
+      </TableHeader>
+      <TableBody>
+        {table.getRowModel().rows.length ? table.getRowModel().rows.map((row) => (
+          <TableRow key={row.id}>
+            {row.getVisibleCells().map((cell) => (
+              <TableCell key={cell.id}>
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-
-      <div className="flex items-center justify-end gap-2 border-t p-3">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={loading || !table.getCanPreviousPage()}
-          onClick={() => table.previousPage()}
-        >
-          上一页
-        </Button>
-        <span className="text-sm text-muted-foreground">
-          第 {pagination.pageIndex + 1} 页
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={loading || !table.getCanNextPage()}
-          onClick={() => table.nextPage()}
-        >
-          下一页
-        </Button>
-      </div>
-    </div>
+            ))}
+          </TableRow>
+        )) : (
+          <TableRow>
+            <TableCell colSpan={columns.length}>暂无文章</TableCell>
+          </TableRow>
+        )}
+      </TableBody>
+    </Table>
   );
 }
 ```
 
-这段代码不认识文章字段。它只接收：
+这里完成一条新的渲染链：`data + columns` 交给 `useReactTable()`，表格实例组织行和单元格，`flexRender()` 执行列的显示定义，shadcn 组件负责最终 HTML。当前只显示后端返回的第一页。
 
-```text
-columns
--> 每一列怎样显示
+### 1.3 接到页面并验证
 
-data
--> 当前页已经由 Express 筛选好的数据
-
-pagination
--> 当前页码和每页数量
-```
-
-`manualPagination: true` 表示浏览器不再对当前数组做第二次分页。
-
----
-
-## 5. 定义文章列
-
-新建 `article-columns.tsx`：
+同目录的 `page.tsx` 写入：
 
 ```tsx
 "use client";
 
-import Link from "next/link";
-import type { ColumnDef } from "@tanstack/react-table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import type { ArticleListItem } from "@/features/articles/types";
-import { DeleteArticleButton } from "./delete-article-button";
-
-export function getArticleColumns(
-  onDeleted: () => void,
-): ColumnDef<ArticleListItem>[] {
-  return [
-    {
-      accessorKey: "title",
-      header: "标题",
-      cell: ({ row }) => (
-        <div>
-          <div className="font-medium">{row.original.title}</div>
-          <div className="text-sm text-muted-foreground">
-            {row.original.slug}
-          </div>
-        </div>
-      ),
-    },
-    {
-      accessorKey: "status",
-      header: "状态",
-      cell: ({ row }) => (
-        <Badge
-          variant={
-            row.original.status === "published"
-              ? "default"
-              : "secondary"
-          }
-        >
-          {row.original.status === "published" ? "已发布" : "草稿"}
-        </Badge>
-      ),
-    },
-    {
-      id: "tags",
-      header: "标签",
-      cell: ({ row }) => (
-        <div className="flex flex-wrap gap-1">
-          {row.original.tags.map((tag) => (
-            <Badge key={tag.id} variant="outline">
-              {tag.name}
-            </Badge>
-          ))}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "createdAt",
-      header: "创建时间",
-      cell: ({ row }) =>
-        new Intl.DateTimeFormat("zh-CN", {
-          dateStyle: "medium",
-        }).format(new Date(row.original.createdAt)),
-    },
-    {
-      id: "actions",
-      header: "操作",
-      cell: ({ row }) => (
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            render={
-              <Link
-                href={`/admin/articles/${row.original.id}/edit`}
-              />
-            }
-          >
-            编辑
-          </Button>
-          <DeleteArticleButton
-            article={row.original}
-            onDeleted={onDeleted}
-          />
-        </div>
-      ),
-    },
-  ];
-}
-```
-
-`accessorKey` 表示直接读取某个字段；`id` 适合标签和操作这类自定义列。列定义只处理当前行怎样显示，不发送列表请求。
-
----
-
-## 6. 让页面拥有查询和分页状态
-
-`page.tsx` 需要使用 `useEffect` 和点击事件，因此是 Client Component：
-
-```tsx
-"use client";
-
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { FormEvent } from "react";
-import Link from "next/link";
-import type {
-  PaginationState,
-  Updater,
-} from "@tanstack/react-table";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  getArticles,
-} from "@/features/articles/api";
-import type {
-  ArticleListPage,
-  ArticleListQuery,
-} from "@/features/articles/types";
 import { ApiError, isRequestCanceled } from "@/lib/api";
+import { getArticles } from "@/features/articles/api";
+import type { ArticleListPage, ArticleListQuery } from "@/features/articles/types";
 import { ArticleDataTable } from "./article-data-table";
-import { getArticleColumns } from "./article-columns";
-
-const initialQuery: ArticleListQuery = {
-  page: 1,
-  pageSize: 10,
-};
+import { articleColumns } from "./article-columns";
 
 export default function ArticlesPage() {
   const router = useRouter();
-  const [draftTitle, setDraftTitle] = useState("");
-  const [query, setQuery] = useState(initialQuery);
+  const [query, setQuery] = useState<ArticleListQuery>({ page: 1, pageSize: 10 });
   const [result, setResult] = useState<ArticleListPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const loadArticles = useCallback(
-    async (signal?: AbortSignal) => {
-      setLoading(true);
-      setError("");
-
-      try {
-        const nextResult = await getArticles(query, signal);
-        setResult(nextResult);
-      } catch (requestError) {
-        if (isRequestCanceled(requestError)) {
-          return;
-        }
-
-        if (
-          requestError instanceof ApiError &&
-          requestError.status === 401
-        ) {
-          router.replace("/login");
-          return;
-        }
-
-        setError(
-          requestError instanceof ApiError
-            ? requestError.message
-            : "网络异常，请稍后重试",
-        );
-      } finally {
-        if (!signal?.aborted) {
-          setLoading(false);
-        }
-      }
-    },
-    [query, router],
-  );
+  const [refreshVersion, setRefreshVersion] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
-    void loadArticles(controller.signal);
+    setLoading(true);
+    setError("");
+
+    getArticles(query, controller.signal)
+      .then((nextResult) => {
+        if (!controller.signal.aborted) setResult(nextResult);
+      })
+      .catch((requestError) => {
+        if (controller.signal.aborted || isRequestCanceled(requestError)) return;
+        if (requestError instanceof ApiError && requestError.status === 401) {
+          router.replace("/login");
+          return;
+        }
+        setError(requestError instanceof Error ? requestError.message : "请求失败");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+
     return () => controller.abort();
-  }, [loadArticles]);
+  }, [query, refreshVersion, router]);
 
-  const handleDeleted = useCallback(() => {
-    if (result && result.items.length === 1 && query.page > 1) {
-      setQuery((current) => ({
-        ...current,
-        page: current.page - 1,
-      }));
-      return;
-    }
+  function reload() {
+    setRefreshVersion((current) => current + 1);
+  }
 
-    void loadArticles();
-  }, [loadArticles, query.page, result]);
-
-  const columns = useMemo(
-    () => getArticleColumns(handleDeleted),
-    [handleDeleted],
+  return (
+    <div className="space-y-4">
+      <h1 className="text-2xl font-semibold">文章管理</h1>
+      {loading && <p role="status">正在加载文章…</p>}
+      {error && (
+        <div role="alert">
+          <p>{error}</p>
+          <Button onClick={reload} disabled={loading}>重试</Button>
+        </div>
+      )}
+      {result && <ArticleDataTable data={result.items} columns={articleColumns} />}
+    </div>
   );
-
-  const pagination: PaginationState = {
-    pageIndex: query.page - 1,
-    pageSize: query.pageSize,
-  };
-
-  function handlePaginationChange(
-    updater: Updater<PaginationState>,
-  ) {
-    const next =
-      typeof updater === "function"
-        ? updater(pagination)
-        : updater;
-
-    setQuery((current) => ({
-      ...current,
-      page: next.pageIndex + 1,
-      pageSize: next.pageSize,
-    }));
-  }
-
-  function handleSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setQuery((current) => ({
-      ...current,
-      title: draftTitle.trim() || undefined,
-      page: 1,
-    }));
-  }
-
-  // JSX 放在下一节。
 }
 ```
 
-这里把输入中的 `draftTitle` 和真正发送给 API 的 `query.title` 分开。用户点击查询后才发送请求，也能在筛选变化时把页码重置为 1。
+请求和错误处理沿用上一套后台的思路。这里把重试也交回同一个 Effect；后续翻页、筛选和删除刷新继续走这条链，旧请求在清理时取消。
 
----
+**验证：** 登录后看到真实文章和标签；空列表显示“暂无文章”；关闭 Express 后出现错误，恢复服务并点击重试能重新获取。此时还没有分页按钮，只显示第一页。
 
-## 7. 组合筛选、状态和翻页按钮
+## 2. 让翻页改变后端查询
 
-继续在 `page.tsx` 返回：
+页码同时影响 API 和表格，因此仍由页面的 `query` 保存。TanStack 使用从 0 开始的 `pageIndex`，接口使用从 1 开始的 `page`，只在页面边界转换。
+
+在 `page.tsx` 导入 `PaginationState`、`Updater` 类型，并在组件中加入：
 
 ```tsx
-return (
-  <div className="space-y-6">
-    <div className="flex flex-col justify-between gap-4 sm:flex-row">
-      <div>
-        <h1 className="text-2xl font-semibold">文章管理</h1>
-        <p className="text-sm text-muted-foreground">
-          管理草稿、标签和发布状态
-        </p>
-      </div>
+const pagination: PaginationState = {
+  pageIndex: query.page - 1,
+  pageSize: query.pageSize,
+};
 
-      <Button render={<Link href="/admin/articles/new" />}>
-        新建文章
-      </Button>
-    </div>
-
-    <form
-      onSubmit={handleSearch}
-      className="flex flex-col gap-3 sm:flex-row"
-    >
-      <Input
-        value={draftTitle}
-        onChange={(event) => setDraftTitle(event.target.value)}
-        placeholder="按标题筛选"
-        className="sm:max-w-xs"
-      />
-      <Button type="submit" variant="outline">
-        查询
-      </Button>
-    </form>
-
-    {error && (
-      <Alert variant="destructive">
-        <AlertTitle>文章加载失败</AlertTitle>
-        <AlertDescription className="flex items-center justify-between">
-          <span>{error}</span>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => void loadArticles()}
-          >
-            重试
-          </Button>
-        </AlertDescription>
-      </Alert>
-    )}
-
-    {loading && !result ? (
-      <div className="space-y-3">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-48 w-full" />
-      </div>
-    ) : result ? (
-      <ArticleDataTable
-        columns={columns}
-        data={result.items}
-        total={result.total}
-        loading={loading}
-        pagination={pagination}
-        onPaginationChange={handlePaginationChange}
-      />
-    ) : null}
-  </div>
-);
+function handlePaginationChange(updater: Updater<PaginationState>) {
+  const next = typeof updater === "function" ? updater(pagination) : updater;
+  setQuery((current) => ({
+    ...current,
+    page: next.pageIndex + 1,
+    pageSize: next.pageSize,
+  }));
+}
 ```
 
-状态优先级是：
+将页面中的表格调用补成：
 
-```text
-第一次请求且没有旧数据
--> Skeleton
-
-请求失败
--> Alert 和重试
-
-请求成功但 items 为空
--> DataTable 内显示空状态
-
-请求成功且有数据
--> 表格
+```tsx
+<ArticleDataTable
+  data={result.items}
+  columns={articleColumns}
+  total={result.total}
+  loading={loading}
+  pagination={pagination}
+  onPaginationChange={handlePaginationChange}
+/>
 ```
 
-筛选页面还要按共同 contract 增加状态和标签 `Select`。它们和标题筛选使用相同规则：更新查询条件时把 `page` 重置为 1。
+表格文件从 `@tanstack/react-table` 增加导入 `PaginationState`、`OnChangeFn` 类型，从 `@/components/ui/button` 导入 `Button`。给 `ArticleDataTableProps` 增加以下属性，组件参数也一起解构：
 
----
+```ts
+total: number;
+loading: boolean;
+pagination: PaginationState;
+onPaginationChange: OnChangeFn<PaginationState>;
+```
 
-## 8. 增加删除确认
+在原 `useReactTable()` 配置中增加：
 
-新建 `delete-article-button.tsx`：
+```ts
+manualPagination: true,
+rowCount: total,
+state: { pagination },
+onPaginationChange,
+```
+
+保留原有 Table，用一个 `<div>` 包住它，在 Table 后面加入分页区：
+
+```tsx
+<div className="flex items-center justify-end gap-3 py-3">
+  <Button disabled={loading || !table.getCanPreviousPage()} onClick={() => table.previousPage()}>
+    上一页
+  </Button>
+  <span>第 {pagination.pageIndex + 1} 页，共 {total} 条</span>
+  <Button disabled={loading || !table.getCanNextPage()} onClick={() => table.nextPage()}>
+    下一页
+  </Button>
+</div>
+```
+
+按钮通过表格的分页方法调用 `onPaginationChange`，页面更新 `query`，Effect 才真正向后端请求。`manualPagination` 表示传入的数据已经由后端分页，不再对这 10 条做一次浏览器分页。
+
+**验证：** 使用第 16 章的测试文章翻到第二页，Network 中是 `page=2`；总条数保持不变，第一、最后一页的按钮不会越界。
+
+## 3. 筛选与分页使用同一份 query
+
+先接标题查询：页面从 React 导入 `FormEvent` 类型，从 `@/components/ui/input` 导入 `Input`，增加输入状态和提交函数：
+
+```tsx
+const [draftTitle, setDraftTitle] = useState("");
+
+function handleSearch(event: FormEvent<HTMLFormElement>) {
+  event.preventDefault();
+  setQuery((current) => ({ ...current, title: draftTitle.trim() || undefined, page: 1 }));
+}
+```
+
+在页面标题下方加入：
+
+```tsx
+<form onSubmit={handleSearch} className="flex gap-3">
+  <Input value={draftTitle} onChange={(event) => setDraftTitle(event.target.value)} placeholder="按标题筛选" />
+  <Button type="submit">查询</Button>
+</form>
+```
+
+`draftTitle` 是正在填写的值，`query.title` 是已提交的查询条件。点击查询后才发送请求，翻页继续使用已提交条件。
+
+状态和标签筛选作为本步的自主练习，使用已经安装的 Base UI Select，按以下契约接入：
+
+| 控件 | 值与处理 |
+|---|---|
+| 状态 | “全部”移除 `query.status`；其他值为 `draft`、`published` |
+| 标签 | 请求 `GET /api/tags` 得到选项；“全部”移除 `query.tagId`；选中值保持数字 id |
+| 两个控件共同规则 | 更新对应查询条件时将 `page` 设为 1，保留其他条件 |
+| 重置 | 清空输入与筛选，将 query 恢复为 `{ page: 1, pageSize: 10 }` |
+
+在 `features/articles/api.ts` 增加 `apiRequest` 和 `TagSummary` 导入，再增加 `getTags()`，第 27 章表单继续复用它：
+
+```ts
+export function getTags() {
+  return apiRequest<TagSummary[]>("/api/tags");
+}
+```
+
+标签选项只需在页面加载时获取，失败时在筛选区显示错误并允许重试；不要把这次请求混入文章列表错误。Base UI Select 用 `value`、`onValueChange` 连接值，并用 `items` 提供值与显示文案的对应关系；实际组合参照下方官方 Select 文档。
+
+**验证：** 在第二页选择草稿和一个标签，回到第一页且请求带上两个条件；翻页保留筛选；清空条件恢复全部文章。自行补齐这组控件后再进入删除。
+
+## 4. 删除成功后重新获取列表
+
+在 `features/articles/api.ts` 增加 `apiRequestNoContent` 导入和删除函数。这里不使用删除响应的数据：
+
+```ts
+export function deleteArticle(articleId: number) {
+  return apiRequestNoContent(`/api/articles/${articleId}`, { method: "DELETE" });
+}
+```
+
+在文章页面同目录新建 `delete-article-button.tsx`：
 
 ```tsx
 "use client";
@@ -653,9 +411,11 @@ import { ApiError } from "@/lib/api";
 export function DeleteArticleButton({
   article,
   onDeleted,
+  disabled,
 }: {
   article: ArticleListItem;
   onDeleted: () => void;
+  disabled: boolean;
 }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
@@ -693,7 +453,7 @@ export function DeleteArticleButton({
     <AlertDialog>
       <AlertDialogTrigger
         render={
-          <Button variant="destructive" size="sm" />
+          <Button variant="destructive" size="sm" disabled={disabled || deleting} />
         }
       >
         删除
@@ -723,26 +483,48 @@ export function DeleteArticleButton({
 }
 ```
 
-删除成功后重新请求当前页，不要只在浏览器数组中移除一行。这样页面会重新使用 Express 返回的总数和当前页数据。
+`onDeleted` 在删除成功后通知页面刷新；失败时保留列表。`disabled` 用于列表正在刷新时暂时关闭新的删除入口。
 
-`handleDeleted` 还会检查当前页是否只剩一条数据。删除最后一条后先退回上一页，再由查询状态触发新请求，避免停在已经不存在的空页。
+接下来修改 `article-columns.tsx`：增加 `DeleteArticleButton` 导入，把 `export const articleColumns = [...]` 改成返回同一数组的函数，原来的列保留，并在数组末尾增加操作列：
 
----
+```tsx
+export function getArticleColumns(onDeleted: () => void, loading: boolean): ColumnDef<ArticleListItem>[] {
+  return [
+    // 保留已有的标题、slug、状态、标签列。
+    {
+      id: "actions",
+      header: "操作",
+      cell: ({ row }) => (
+        <DeleteArticleButton article={row.original} onDeleted={onDeleted} disabled={loading} />
+      ),
+    },
+  ];
+}
+```
 
-## 9. 本章检查点
+在 `page.tsx` 将 `articleColumns` 导入改为 `getArticleColumns`，增加：
 
-1. 首次进入文章页时显示 loading，成功后显示真实数据。
-2. 没有文章时显示 empty，不是空白页面。
-3. Express 停止或返回错误时显示 Alert，并可以重试。
-4. 标题、状态、标签筛选都由 API 执行。
-5. 修改筛选条件后回到第一页。
-6. 上一页和下一页不会越界。
-7. 行操作使用当前文章的真实 id。
-8. 删除前必须确认，失败时页面不会错误移除数据。
-9. 401 会回到登录页。
-10. Ant Design 后台仍能看到同一批数据。
+```tsx
+function handleDeleted() {
+  if (result?.items.length === 1 && query.page > 1) {
+    setQuery((current) => ({ ...current, page: current.page - 1 }));
+  } else {
+    reload();
+  }
+}
 
-最后执行：
+const columns = getArticleColumns(handleDeleted, loading);
+```
+
+表格调用中的 `columns={articleColumns}` 改为 `columns={columns}`。删除最后一页唯一一条记录时，先退页再请求；其他删除只触发刷新。最终行数据和总数都以接口返回为准。
+
+**验证：** 取消确认不请求 API；确认删除后列表与总数更新；删除末页唯一记录能退页；删除失败不会假装移除数据。
+
+## 5. 完善反馈并进入表单章
+
+按已有页面经验，把加载文字完善为 Skeleton 或表格上方的刷新提示，把错误区换成 Alert，保留重试。空数据和请求失败使用不同反馈。详情编辑与新建入口在第 27 章对应页面建立后再接入。
+
+检查标题、状态、标签组合查询，翻页、删除、会话失效和网络失败；再运行：
 
 ```bash
 npm run lint
@@ -750,11 +532,11 @@ npx tsc --noEmit
 npm run build
 ```
 
-三个检查通过后，阅读 [26A](./26A-TanStack-Table从数据到表格实例.md)，用短主线复习这一章。
+通过后用 [26A](./26A-TanStack-Table从数据到表格实例.md) 复习 `data → columns → table → 单元格`，再进入第 27 章。
 
 ## 官方参考
 
 - [shadcn/ui Data Table](https://ui.shadcn.com/docs/components/base/data-table)
+- [shadcn/ui Select](https://ui.shadcn.com/docs/components/base/select)
 - [shadcn/ui Alert Dialog](https://ui.shadcn.com/docs/components/base/alert-dialog)
-- [TanStack Table React 文档](https://tanstack.com/table/latest/docs/framework/react)
-- [TanStack Table Pagination](https://tanstack.com/table/latest/docs/api/features/pagination)
+- [TanStack Table Pagination](https://tanstack.com/table/v8/docs/guide/pagination)

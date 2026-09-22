@@ -303,7 +303,7 @@ npm run lint
 npm run build
 ```
 
-如果某个工程还没有 `test` script，就不要照抄不存在的命令。以各自 `package.json` 为准，并在 README 中记录真实可用的命令。
+`server` 的测试在第 18A 章已经建立。第 25 章修改过来源配置，本轮必须确认测试环境也使用 `ADMIN_WEB_ORIGINS`，使原有测试继续通过。
 
 再检查：
 
@@ -342,6 +342,8 @@ npm run build
 - 两个后台共享 API contract，但不共享 UI 组件源码。
 - `fetch` 和 Axios 是本轮分别练习的请求工具，不是两个 UI 方案的固定依赖。
 - 不为了维持两套页面而复制后端和数据库。
+
+两套后台验收后，进入 [第 19 章](./19-从开发环境到线上运行.md)完成公开文章与个人网站，再按 [19A](./19A-用1Panel和Docker-Compose部署MiniCMS.md)部署，收口阶段 8。
 
 ## 回看导航
 

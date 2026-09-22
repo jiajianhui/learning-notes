@@ -1,78 +1,23 @@
 # 27. shadcn/ui 怎样完成文章新建和编辑表单
 
-## 这一章要完成什么
+文章列表已经可用。本章按“创建草稿 → 选择状态与标签 → 编辑回填 → 显示字段错误”推进，始终使用同一个 `ArticleForm`。
 
-第 26 章已经完成文章列表。本章用同一个 `ArticleForm` 完成：
+请求和跳转沿用已有能力。重点是 `useForm` 怎样管理值、`Controller` 怎样连接控件，以及 `handleSubmit` 怎样先校验再保存。
 
-```text
-新建页
--> 输入并校验文章
--> POST /api/articles
+## 1. 先创建并保存一篇草稿
 
-编辑页
--> GET /api/articles/:id
--> 回填同一张表单
--> PATCH /api/articles/:id
-```
-
-shadcn `Field` 负责表单结构，React Hook Form 管理字段和提交状态，前端 Zod 提供即时校验。Express 中已经存在的 Zod 继续保护真正的数据入口。
-
-第一次实现时按本章完成结果。完成后再阅读 [27A](./27A-React-Hook-Form和两次Zod校验怎样配合.md)，复习表单内部数据流。
-
----
-
-## 1. 安装依赖和组件
-
-在 `admin-web-shadcn` 中执行：
+在 `admin-web-shadcn` 安装：
 
 ```bash
 npm install react-hook-form @hookform/resolvers zod
-
-npx shadcn@latest add \
-  checkbox \
-  textarea
+npx shadcn@latest add textarea checkbox
 ```
 
-`select`、`field`、`input`、`button` 和 `toast` 已经在前面章节加入，不重复安装。
+Field、Input、Button、Select、Toast 已由前面章节加入。下面先完成标题、slug、摘要、正文四个字段；状态暂时使用后端已有的默认草稿，标签在下一步接入。
 
----
+### 1.1 定义表单值和保存请求
 
-## 2. 确定目录和复用边界
-
-```text
-app/(admin)/admin/articles/
-├── new/
-│   └── page.tsx
-└── [id]/
-    └── edit/
-        └── page.tsx
-
-features/articles/
-├── api.ts
-├── article-form-schema.ts
-├── article-form.tsx
-└── types.ts
-```
-
-复用的是：
-
-- 字段结构。
-- 前端校验。
-- 标签选择。
-- 字段错误展示。
-- 提交按钮和提交状态。
-
-不复用的是：
-
-- 新建调用 POST。
-- 编辑先加载详情，再调用 PATCH。
-- 成功后的提示文案。
-
----
-
-## 3. 定义前端表单 Schema
-
-新建 `article-form-schema.ts`：
+新建 `features/articles/article-form-schema.ts`：
 
 ```ts
 import { z } from "zod";
@@ -102,8 +47,6 @@ export const articleFormSchema = z.object({
     .trim()
     .min(1, "正文不能为空")
     .max(100_000, "正文内容过长"),
-  status: z.enum(["draft", "published"]),
-  tagIds: z.array(z.number().int().positive()),
 });
 
 export type ArticleFormValues = z.infer<
@@ -115,170 +58,55 @@ export const emptyArticleFormValues: ArticleFormValues = {
   slug: "",
   summary: "",
   content: "",
-  status: "draft",
-  tagIds: [],
 };
 ```
 
-这些规则和 Express 当前 contract 保持一致，但不是把后端 Schema 导入浏览器。两个工程分别在不同运行环境中校验。
+这是浏览器里的填写规则。字段名和限制继续对应已有 Express Schema，服务端校验照常执行。
 
-前端 Schema 解决的是填写体验：
-
-```text
-明显错误
--> 不必等待网络
--> 直接显示在字段旁边
-```
-
-后端 Schema 仍然是最终边界。
-
----
-
-## 4. 补齐文章详情和请求函数
-
-继续在 `types.ts` 中增加：
+在 `features/articles/api.ts` 中增加 `ArticleFormValues` 类型导入和 `createArticle()`；保留第 26 章的请求函数及导入：
 
 ```ts
-export type ArticleDetail = {
-  id: number;
-  title: string;
-  slug: string;
-  summary: string | null;
-  content: string;
-  status: ArticleStatus;
-  tags: TagSummary[];
-  createdAt: string;
-  updatedAt: string;
-  publishedAt: string | null;
-};
-```
-
-继续在 `api.ts` 中增加。先把第 26 章的请求函数导入补成：
-
-```ts
-import {
-  apiRequest,
-  apiRequestNoContent,
-  apiRequestResult,
-} from "@/lib/api";
 import type { ArticleFormValues } from "./article-form-schema";
-import type {
-  ArticleDetail,
-  TagSummary,
-} from "./types";
-
-export function getArticle(articleId: number) {
-  return apiRequest<ArticleDetail>(
-    `/api/articles/${articleId}`,
-  );
-}
-
-export function getTags() {
-  return apiRequest<TagSummary[]>("/api/tags");
-}
 
 export function createArticle(values: ArticleFormValues) {
   const { summary, ...input } = values;
   const normalizedSummary = summary.trim();
-
-  return apiRequest<ArticleDetail>("/api/articles", {
+  return apiRequest<{ id: number }>("/api/articles", {
     method: "POST",
     data: {
       ...input,
-      ...(normalizedSummary
-        ? { summary: normalizedSummary }
-        : {}),
+      ...(normalizedSummary ? { summary: normalizedSummary } : {}),
     },
   });
 }
-
-export function updateArticle(
-  articleId: number,
-  values: ArticleFormValues,
-) {
-  return apiRequest<ArticleDetail>(
-    `/api/articles/${articleId}`,
-    {
-      method: "PATCH",
-      data: {
-        ...values,
-        summary: values.summary.trim() || null,
-      },
-    },
-  );
-}
 ```
 
-新建时，空摘要不进入请求；编辑时，清空摘要会提交 `null`。这和前面为创建、更新接口定义的字段规则一致。
+空摘要不进入创建请求；返回类型只声明当前需要的 id，不改变后端实际返回的文章数据。
 
-如果 Ant Design 项目已经把标签请求和类型放在 `features/tags/`，shadcn/ui 项目也可以采用相同的功能目录规则，但两边仍各自维护前端代码。
+### 1.2 让字段值通过校验后交给页面
 
----
-
-## 5. 创建可复用 ArticleForm
-
-新建 `article-form.tsx`：
+新建 `features/articles/article-form.tsx`：
 
 ```tsx
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Controller,
-  type FieldPath,
-  useForm,
-} from "react-hook-form";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { TagSummary } from "./types";
-import {
-  articleFormSchema,
-  type ArticleFormValues,
-} from "./article-form-schema";
 import { ApiError } from "@/lib/api";
+import { articleFormSchema, type ArticleFormValues } from "./article-form-schema";
 
 type ArticleFormProps = {
   initialValues: ArticleFormValues;
-  tags: TagSummary[];
   submitLabel: string;
   onSubmit: (values: ArticleFormValues) => Promise<void>;
 };
 
-const articleFieldNames = new Set([
-  "title",
-  "slug",
-  "summary",
-  "content",
-  "status",
-  "tagIds",
-]);
-
-export function ArticleForm({
-  initialValues,
-  tags,
-  submitLabel,
-  onSubmit,
-}: ArticleFormProps) {
+export function ArticleForm({ initialValues, submitLabel, onSubmit }: ArticleFormProps) {
   const router = useRouter();
   const form = useForm<ArticleFormValues>({
     resolver: zodResolver(articleFormSchema),
@@ -286,168 +114,165 @@ export function ArticleForm({
     mode: "onSubmit",
   });
 
-  useEffect(() => {
-    form.reset(initialValues);
-  }, [form, initialValues]);
-
-  async function handleValidSubmit(
-    values: ArticleFormValues,
-  ) {
+  async function handleValidSubmit(values: ArticleFormValues) {
     form.clearErrors("root");
-
     try {
       await onSubmit(values);
     } catch (error) {
-      if (!(error instanceof ApiError)) {
-        form.setError("root.server", {
-          message: "网络异常，请稍后重试",
-        });
-        return;
-      }
-
-      if (error.status === 401) {
+      if (error instanceof ApiError && error.status === 401) {
         router.replace("/login");
         return;
       }
-
-      if (error.code === "SLUG_CONFLICT") {
-        form.setError("slug", {
-          message: error.message,
-        });
-        return;
-      }
-
-      let hasFieldError = false;
-
-      for (const detail of error.details ?? []) {
-        const fieldName = detail.field?.split(".")[0];
-
-        if (
-          fieldName &&
-          articleFieldNames.has(fieldName)
-        ) {
-          form.setError(
-            fieldName as FieldPath<ArticleFormValues>,
-            { message: detail.message },
-          );
-          hasFieldError = true;
-        }
-      }
-
-      if (!hasFieldError) {
-        form.setError("root.server", {
-          message: error.message,
-        });
-      }
+      form.setError("root.server", {
+        message: error instanceof Error ? error.message : "保存失败，请稍后重试",
+      });
     }
   }
 
   return (
-    <form
-      onSubmit={form.handleSubmit(handleValidSubmit)}
-      className="space-y-6"
-    >
+    <form onSubmit={form.handleSubmit(handleValidSubmit)} className="space-y-6">
       {form.formState.errors.root?.server && (
-        <Alert variant="destructive">
-          <AlertTitle>保存失败</AlertTitle>
-          <AlertDescription>
-            {form.formState.errors.root.server.message}
-          </AlertDescription>
-        </Alert>
+        <p role="alert">{form.formState.errors.root.server.message}</p>
       )}
-
       <FieldGroup>
-        {/* 字段控件放在下面各节。 */}
+        {([
+          { name: "title", label: "标题" },
+          { name: "slug", label: "slug" },
+          { name: "summary", label: "摘要" },
+        ] as const).map(({ name, label }) => (
+          <Controller
+            key={name}
+            name={name}
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+                <Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+        ))}
+        <Controller
+          name="content"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={field.name}>正文</FieldLabel>
+              <Textarea {...field} id={field.name} aria-invalid={fieldState.invalid} className="min-h-80" />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
       </FieldGroup>
-
-      <div className="flex justify-end">
-        <Button
-          type="submit"
-          disabled={form.formState.isSubmitting}
-        >
-          {form.formState.isSubmitting
-            ? "保存中…"
-            : submitLabel}
-        </Button>
-      </div>
+      <Button type="submit" disabled={form.formState.isSubmitting}>
+        {form.formState.isSubmitting ? "保存中…" : submitLabel}
+      </Button>
     </form>
   );
 }
 ```
 
-`form.reset(initialValues)` 很重要：编辑页的文章详情是异步加载的，第一次渲染时还没有真实文章，加载成功后需要用 `reset` 更新整张表单。
+三个 Input 使用相同结构，所以按字段名生成；`as const` 保留这些具体字段名，让 Controller 能匹配 Schema。正文仍独立使用 Textarea。
 
----
+沿一次输入理解新机制：`field.value` 是当前值，`field.onChange` 把输入交回 React Hook Form；提交时 `handleSubmit` 先通过 `zodResolver` 校验，成功才调用 `handleValidSubmit(values)`。失败先显示到字段，不会请求 API。
 
-## 6. 输入框、正文和错误怎样连接
+表单等待父页面的 `onSubmit`。请求失败留在本页并保留输入；`isSubmitting` 管理等待期间的按钮状态。后端字段错误在第 4 节细化，目前先显示整表错误。
 
-在 `FieldGroup` 中先加入标题：
+### 1.3 从新建页保存到列表
 
-```tsx
-<Controller
-  name="title"
-  control={form.control}
-  render={({ field, fieldState }) => (
-    <Field data-invalid={fieldState.invalid}>
-      <FieldLabel htmlFor={field.name}>标题</FieldLabel>
-      <Input
-        {...field}
-        id={field.name}
-        aria-invalid={fieldState.invalid}
-        placeholder="请输入文章标题"
-      />
-      {fieldState.invalid && (
-        <FieldError errors={[fieldState.error]} />
-      )}
-    </Field>
-  )}
-/>
-```
-
-`Controller` 把 React Hook Form 的字段状态交给 `Input`：
-
-```text
-field.value
--> 当前字段值
-
-field.onChange
--> 输入变化时更新表单
-
-fieldState.error
--> 当前字段错误
-```
-
-`slug` 和 `summary` 使用同样结构。正文改用 `Textarea`：
+新建 `app/(admin)/admin/articles/new/page.tsx`：
 
 ```tsx
-<Controller
-  name="content"
-  control={form.control}
-  render={({ field, fieldState }) => (
-    <Field data-invalid={fieldState.invalid}>
-      <FieldLabel htmlFor={field.name}>正文</FieldLabel>
-      <Textarea
-        {...field}
-        id={field.name}
-        aria-invalid={fieldState.invalid}
-        className="min-h-80 font-mono"
-        placeholder="输入文章正文"
-      />
-      {fieldState.invalid && (
-        <FieldError errors={[fieldState.error]} />
-      )}
-    </Field>
-  )}
-/>
+"use client";
+
+import { useRouter } from "next/navigation";
+import { toast } from "@/components/ui/toast";
+import { ArticleForm } from "@/features/articles/article-form";
+import { createArticle } from "@/features/articles/api";
+import { emptyArticleFormValues, type ArticleFormValues } from "@/features/articles/article-form-schema";
+
+export default function NewArticlePage() {
+  const router = useRouter();
+
+  async function handleSubmit(values: ArticleFormValues) {
+    await createArticle(values);
+    toast.add({ type: "success", title: "文章创建成功" });
+    router.push("/admin/articles");
+  }
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-semibold">新建文章</h1>
+      <ArticleForm initialValues={emptyArticleFormValues} submitLabel="创建文章" onSubmit={handleSubmit} />
+    </div>
+  );
+}
 ```
 
-当前后台只负责编辑和提交 `content` 字符串，不在这里解析正文，也不增加富文本编辑器。等阶段 8 接入个人网站时，再根据已有的 Markdown / MDX 能力选定渲染方案。
+在列表页导入 Next.js `Link`，在标题旁加入 `<Button render={<Link href="/admin/articles/new" />}>新建文章</Button>`。
 
----
+**验证：** 空标题不发请求；填好内容后返回列表并看到新草稿；重复 slug 会保留输入并显示后端错误。第一次保存链路到这里已经完成。
 
-## 7. 用 Select 连接文章状态
+## 2. 接入状态和标签
 
-`Select` 不是原生 input，需要显式连接 `value` 和 `onValueChange`：
+### 2.1 扩展同一份 Schema 和初始值
+
+在原 `articleFormSchema` 的 `z.object()` 中增加：
+
+```ts
+status: z.enum(["draft", "published"]),
+tagIds: z.array(z.number().int().positive()),
+```
+
+在 `emptyArticleFormValues` 中增加 `status: "draft"`、`tagIds: []`。类型由 Schema 推导，请求函数的 `...input` 会把这两个新字段一并提交。
+
+### 2.2 新建页先取得标签选项
+
+在新建页从 `@/features/articles/api` 补充导入 `getTags`，从 React 导入 `useEffect`、`useState`，从 `@/features/articles/types` 导入 `TagSummary` 类型，并从已有请求层和 UI 目录导入 `ApiError`、`Button`。在 `NewArticlePage` 中加入以下状态和 Effect：
+
+```tsx
+const [tags, setTags] = useState<TagSummary[]>([]);
+const [loading, setLoading] = useState(true);
+const [loadError, setLoadError] = useState("");
+const [loadVersion, setLoadVersion] = useState(0);
+
+useEffect(() => {
+  let active = true;
+  setLoading(true);
+  setLoadError("");
+  getTags()
+    .then((nextTags) => { if (active) setTags(nextTags); })
+    .catch((error) => {
+      if (!active) return;
+      if (error instanceof ApiError && error.status === 401) {
+        router.replace("/login");
+        return;
+      }
+      setLoadError("标签加载失败");
+    })
+    .finally(() => { if (active) setLoading(false); });
+  return () => { active = false; };
+}, [loadVersion, router]);
+```
+
+在原页面 `return` 之前增加加载与重试分支：
+
+```tsx
+if (loading) return <p role="status">正在加载标签…</p>;
+if (loadError) return (
+  <div role="alert">
+    <p>{loadError}</p>
+    <Button onClick={() => setLoadVersion((current) => current + 1)}>重试</Button>
+  </div>
+);
+```
+
+给表单调用增加 `tags={tags}`。同时在 `ArticleFormProps` 增加 `tags: TagSummary[]`，组件参数中解构 `tags`；`TagSummary` 从已有 `./types` 导入。
+
+### 2.3 将 Select 和 Checkbox 连接到表单
+
+在表单文件导入 `@/components/ui/select` 中的 `Select`、`SelectContent`、`SelectItem`、`SelectTrigger`、`SelectValue`。在已有 FieldGroup 中加入状态控件：
 
 ```tsx
 <Controller
@@ -461,6 +286,7 @@ fieldState.error
       <Select
         name={field.name}
         value={field.value}
+        items={[{ label: "草稿", value: "draft" }, { label: "已发布", value: "published" }]}
         onValueChange={field.onChange}
       >
         <SelectTrigger
@@ -484,13 +310,9 @@ fieldState.error
 />
 ```
 
-选择 `published` 只提交状态。`publishedAt` 什么时候写入仍由 Express 的发布规则决定，前端不自己生成发布时间。
+`value` 和 `onValueChange` 将 Select 的值交给 React Hook Form，`items` 对应值与显示文案。前端只提交状态，发布时间仍由 Express 决定。
 
----
-
-## 8. 用 Checkbox 管理标签 id 数组
-
-文章与标签是多对多，表单只提交选中的 `tagIds`：
+再导入 `Checkbox`，并从 `@/components/ui/field` 补充导入 `FieldSet`、`FieldLegend`。在同一 FieldGroup 中加入标签控件：
 
 ```tsx
 <Controller
@@ -539,85 +361,44 @@ fieldState.error
 />
 ```
 
-浏览器只管理数字 id 数组；Express 再检查标签是否真实存在，并在事务中更新文章与标签关系。
+勾选时把数字 id 加入数组，取消时移除。`tags` 是全部可选项，`tagIds` 是本次提交的选择；保存后的关联仍由后端维护。
 
----
+**验证：** 新建草稿和已发布文章各一篇；选择两个标签，列表正确显示名称；不选标签也能保存。正文继续作为字符串编辑，解析和排版留到第 19 章。
 
-## 9. 新建页怎样使用 ArticleForm
+## 3. 编辑时先加载详情，再挂载同一张表单
 
-`new/page.tsx` 是 Client Component。它先加载标签，再显示表单：
+### 3.1 取得详情并提交修改
 
-```tsx
-"use client";
+在 `features/articles/types.ts` 增加详情类型。它保留列表已有的 `articleTags` 结构，再补完整正文和摘要：
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "@/components/ui/toast";
-import { ArticleForm } from "@/features/articles/article-form";
-import {
-  emptyArticleFormValues,
-  type ArticleFormValues,
-} from "@/features/articles/article-form-schema";
-import {
-  createArticle,
-  getTags,
-} from "@/features/articles/api";
-import type { TagSummary } from "@/features/articles/types";
-import { ApiError } from "@/lib/api";
+```ts
+export type ArticleDetail = ArticleListItem & {
+  summary: string | null;
+  content: string;
+  updatedAt: string;
+};
+```
 
-export default function NewArticlePage() {
-  const router = useRouter();
-  const [tags, setTags] = useState<TagSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
+在 `api.ts` 增加 `ArticleDetail` 类型导入，追加两个函数，已有 `getTags()`、`createArticle()` 保留：
 
-  useEffect(() => {
-    getTags()
-      .then(setTags)
-      .catch((error) => {
-        if (error instanceof ApiError && error.status === 401) {
-          router.replace("/login");
-          return;
-        }
+```ts
+export function getArticle(articleId: number) {
+  return apiRequest<ArticleDetail>(`/api/articles/${articleId}`);
+}
 
-        setLoadError("标签加载失败");
-      })
-      .finally(() => setLoading(false));
-  }, [router]);
-
-  async function handleSubmit(values: ArticleFormValues) {
-    await createArticle(values);
-    toast.add({
-      type: "success",
-      title: "文章创建成功",
-    });
-    router.push("/admin/articles");
-  }
-
-  if (loading) return <p>正在加载标签…</p>;
-  if (loadError) return <p>{loadError}</p>;
-
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">新建文章</h1>
-      <ArticleForm
-        initialValues={emptyArticleFormValues}
-        tags={tags}
-        submitLabel="创建文章"
-        onSubmit={handleSubmit}
-      />
-    </div>
-  );
+export function updateArticle(articleId: number, values: ArticleFormValues) {
+  return apiRequest<ArticleDetail>(`/api/articles/${articleId}`, {
+    method: "PATCH",
+    data: { ...values, summary: values.summary.trim() || null },
+  });
 }
 ```
 
-完整实现时，把标签的 loading 和 error 换成第 26 章已经用过的 Skeleton、Alert 和重试按钮，不要只保留文字占位。
+创建时空摘要省略，编辑时清空摘要提交 `null`，沿用后端已有语义。
 
----
+### 3.2 将详情转换为 initialValues
 
-## 10. 编辑页怎样回填同一张表单
-
-`[id]/edit/page.tsx` 需要同时加载文章详情和标签：
+新建 `app/(admin)/admin/articles/[id]/edit/page.tsx`：
 
 ```tsx
 "use client";
@@ -637,6 +418,7 @@ import type {
   TagSummary,
 } from "@/features/articles/types";
 import { ApiError } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 
 export default function EditArticlePage() {
   const params = useParams<{ id: string }>();
@@ -646,8 +428,12 @@ export default function EditArticlePage() {
   const [tags, setTags] = useState<TagSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [loadVersion, setLoadVersion] = useState(0);
 
   useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setLoadError("");
     if (!Number.isInteger(articleId) || articleId <= 0) {
       setLoadError("文章 id 不合法");
       setLoading(false);
@@ -659,10 +445,12 @@ export default function EditArticlePage() {
       getTags(),
     ])
       .then(([nextArticle, nextTags]) => {
+        if (!active) return;
         setArticle(nextArticle);
         setTags(nextTags);
       })
       .catch((error) => {
+        if (!active) return;
         if (error instanceof ApiError && error.status === 401) {
           router.replace("/login");
           return;
@@ -675,8 +463,10 @@ export default function EditArticlePage() {
 
         setLoadError("文章加载失败");
       })
-      .finally(() => setLoading(false));
-  }, [articleId, router]);
+      .finally(() => { if (active) setLoading(false); });
+
+    return () => { active = false; };
+  }, [articleId, loadVersion, router]);
 
   const initialValues = useMemo<ArticleFormValues | null>(
     () =>
@@ -687,7 +477,7 @@ export default function EditArticlePage() {
             summary: article.summary ?? "",
             content: article.content,
             status: article.status,
-            tagIds: article.tags.map((tag) => tag.id),
+            tagIds: article.articleTags.map(({ tag }) => tag.id),
           }
         : null,
     [article],
@@ -704,13 +494,19 @@ export default function EditArticlePage() {
 
   if (loading) return <p>正在加载文章…</p>;
   if (loadError || !initialValues) {
-    return <p>{loadError || "文章不存在"}</p>;
+    return (
+      <div role="alert">
+        <p>{loadError || "文章不存在"}</p>
+        <Button onClick={() => setLoadVersion((current) => current + 1)}>重试</Button>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">编辑文章</h1>
       <ArticleForm
+        key={articleId}
         initialValues={initialValues}
         tags={tags}
         submitLabel="保存修改"
@@ -721,61 +517,73 @@ export default function EditArticlePage() {
 }
 ```
 
-完整实现还要区分：
+这里等待文章与标签都加载完成，才挂载 `ArticleForm`。`initialValues` 在表单首次创建时已经是真实数据，因此使用 `defaultValues` 即可，不需要为这次加载再加 `reset()` Effect。`key={articleId}` 让同一路由切换文章时也有明确的表单身份；第 27A 章再解释哪些场景需要 `reset()`。
 
-- 401：跳转登录页。
-- 404：明确显示文章不存在。
-- 其他失败：显示 Alert 和重试。
+回填时把 `summary: null` 转成空字符串，把 `articleTags[].tag.id` 转成 `tagIds`；请求响应的形状和第 16A 章一致。
 
-这些状态在第 13、17A 和 26 章已经练过，这里只换成文章详情请求。
+在第 26 章的操作列中，用 `<div className="flex gap-2">` 包住编辑和删除按钮。导入 `Link` 和 `Button`，在原删除按钮旁增加：
 
----
+```tsx
+<Button variant="outline" render={<Link href={`/admin/articles/${row.original.id}/edit`} />}>
+  编辑
+</Button>
+```
 
-## 11. 后端错误怎样落到字段
+**验证：** 打开带标签的文章，字段与已选标签正确；修改正文、清空摘要和标签后保存，再次打开确认结果；不存在的 id 显示明确提示。
 
-Axios 遇到非 2xx 响应时，会进入第 25 章配置的响应拦截器，再统一转换成 `ApiError`。
+## 4. 把后端错误显示到对应位置
 
-建议映射：
+正常保存与编辑已经可用，现在细化 `ArticleForm` 中的提交失败处理。Axios 拦截器已经把响应转换成 `ApiError`，不再重新解析 HTTP。
 
-| 后端结果 | 表单处理 |
-|---|---|
-| 422 且 details 指向 `title` 等字段 | `form.setError(fieldName)` |
-| 409 slug 冲突 | `form.setError("slug")` |
-| 401 | 跳转登录页 |
-| 404 | 编辑页显示文章不存在 |
-| 500 或网络失败 | `root.server` 显示整表错误 |
+从 `react-hook-form` 增加导入 `FieldPath` 类型，并在组件外定义允许映射的字段：
 
-提交失败时不要调用 `form.reset()`，这样用户已经输入的正文不会丢失。
+```ts
+const articleFieldNames = new Set(["title", "slug", "summary", "content", "status", "tagIds"]);
+```
 
-当前项目第 11 章已经把重复 slug 约定为 `SLUG_CONFLICT`。后续如果 Express contract 调整，两个后台都要同步使用同一个 code，不要各自创造名字。
+只替换 `handleValidSubmit()` 的 `catch` 内容，原来的 `try`、`onSubmit` 和控件保留：
 
----
+```ts
+if (!(error instanceof ApiError)) {
+  form.setError("root.server", { message: "网络异常，请稍后重试" });
+  return;
+}
 
-## 12. 本章检查点
+if (error.status === 401) {
+  router.replace("/login");
+  return;
+}
 
-### 新建
+if (error.code === "SLUG_CONFLICT") {
+  form.setError("slug", { message: error.message });
+  return;
+}
 
-- 空标题和错误 slug 不发送请求。
-- 正确内容能创建文章并回到列表。
-- 空摘要不会被错误保存成无意义的空字符串。
-- 标签 id 由复选框数组产生。
+let hasFieldError = false;
+for (const detail of error.details ?? []) {
+  const fieldName = detail.field?.split(".")[0];
+  if (fieldName && articleFieldNames.has(fieldName)) {
+    form.setError(fieldName as FieldPath<ArticleFormValues>, {
+      message: detail.message,
+    });
+    hasFieldError = true;
+  }
+}
 
-### 编辑
+if (!hasFieldError) {
+  form.setError("root.server", { message: error.message });
+}
+```
 
-- 文章详情和标签加载完成后正确回填。
-- 清空摘要后保存为 `null`。
-- 文章不存在时显示 404 状态。
-- 更新失败时保留用户输入。
+三类结果现在有不同去处：前端校验自动进入字段错误；后端 422 的 `details` 和 409 的 `SLUG_CONFLICT` 映射到字段；网络或其他业务失败进入 `root.server`。不属于当前字段的错误仍作为整表提示。
 
-### 共同状态
+**验证：** 重复 slug 显示在 slug 旁；后端返回带 `details` 的 422 时，对应字段显示错误；断开后端再保存，正文仍保留；会话失效时跳转登录。失败时不调用 `reset()`。
 
-- 提交期间按钮禁用，避免重复请求。
-- 422 显示到对应字段。
-- slug 冲突显示在 slug 字段旁。
-- 401 回到登录页。
-- 成功提示只在 Express 真正返回成功后出现。
+## 5. 完成页面反馈与回看
 
-最后执行：
+将新建、编辑页的加载文字完善为 Skeleton，将错误区和整表错误改为 Alert，保留重试；这些视觉组合沿用第 26 章，不另写一套状态逻辑。
+
+完整操作一次“新建 → 选择标签 → 编辑 → 清空摘要 → 发布 → 返回列表”，再执行：
 
 ```bash
 npm run lint
@@ -783,7 +591,7 @@ npx tsc --noEmit
 npm run build
 ```
 
-三个检查通过后，阅读 [27A](./27A-React-Hook-Form和两次Zod校验怎样配合.md)，再进入第 28 章独立完成标签管理。
+通过后阅读 [27A](./27A-React-Hook-Form和两次Zod校验怎样配合.md)，复习字段值、校验和错误如何流动，再进入第 28 章独立完成标签管理。
 
 ## 官方参考
 
@@ -791,4 +599,3 @@ npm run build
 - [shadcn/ui Field](https://ui.shadcn.com/docs/components/base/field)
 - [shadcn/ui Select](https://ui.shadcn.com/docs/components/base/select)
 - [React Hook Form](https://react-hook-form.com/docs)
-- [Zod](https://zod.dev/)

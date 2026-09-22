@@ -82,8 +82,9 @@ PostgreSQL
 - `npm run start` 运行生产构建，不使用 `tsx watch`。
 - `npm run test` 可以验证核心 API。
 - `npm run db:generate` 可以生成 Prisma Client。
+- 第 17A 章的 `scripts/create-admin.ts` 和 `npm run admin:create` 可用，用于初始化生产管理员。
 - `npm run db:migrate:deploy` 执行 `prisma migrate deploy`。
-- 有 `GET /api/articles/health`。
+- 有 `GET /api/health`。
 - 有 `GET /api/public/articles` 和 `GET /api/public/articles/:slug`，并且只返回已发布内容。
 - 自动化测试能证明草稿和撤回文章不会从公开接口泄露。
 - CORS 和 CSRF 来源从 `ADMIN_WEB_ORIGINS` 读取，不再写死开发地址。
@@ -239,6 +240,7 @@ RUN npm ci
 COPY prisma ./prisma
 COPY prisma.config.ts tsconfig.json ./
 COPY src ./src
+COPY scripts ./scripts
 
 RUN DATABASE_URL=postgresql://build:build@postgres:5432/build npm run db:generate
 RUN npm run build
@@ -401,7 +403,7 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml logs -f api
 验证：
 
 ```bash
-curl http://127.0.0.1:3001/api/articles/health
+curl http://127.0.0.1:3001/api/health
 curl -I http://127.0.0.1:3000
 ```
 
@@ -488,11 +490,28 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml config
 ```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml ps
 ss -lntp
-curl http://127.0.0.1:3001/api/articles/health
+curl http://127.0.0.1:3001/api/health
 curl -I http://127.0.0.1:3000
 ```
 
 1Panel 页面和 CLI 看到的是同一组 Docker 对象。页面异常时仍然可以用 CLI 和日志判断真实状态。
+
+---
+
+### 在新数据库中创建首个管理员
+
+迁移只建立表，不会复制本地管理员。确认 API 日志中的 migration 已成功，再在服务器的 Bash 中、`/opt/mini-cms` 目录执行一次初始化。镜像已复制第 17A 章的 `scripts/`，并保留运行 `admin:create` 所需的 `tsx`：
+
+```bash
+read -r -p "管理员用户名: " ADMIN_USERNAME
+read -r -s -p "管理员密码（至少 12 位）: " ADMIN_PASSWORD
+printf '\n'
+export ADMIN_USERNAME ADMIN_PASSWORD
+docker compose --env-file deploy/.env -f deploy/docker-compose.yml run --rm --no-deps -e ADMIN_USERNAME -e ADMIN_PASSWORD api npm run admin:create
+unset ADMIN_USERNAME ADMIN_PASSWORD
+```
+
+`run` 复用 API 服务的生产数据库配置，用 `admin:create` 替换默认启动命令，结束后删除这次运行的容器。密码通过隐藏输入传入环境，不写进命令历史或仓库。看到创建成功后再配置域名；HTTPS 就绪后，用这个账号登录验证。该脚本对同名账号会更新密码，不要作为每次部署的自动启动步骤。
 
 ---
 
@@ -537,13 +556,14 @@ curl -I http://127.0.0.1:3000
 
 ```bash
 curl -I https://admin.example.com
-curl https://api.example.com/api/articles/health
+curl https://api.example.com/api/health
 ```
 
 再从 Mac 浏览器检查：
 
 - 证书域名和有效期正确。
 - 管理后台请求正式 API 域名。
+- 首次初始化的管理员可以登录，退出后不能访问管理接口。
 - 登录 Cookie 带 `Secure`。
 - CORS 只允许正式后台来源。
 - 页面刷新和 API 错误仍然有正确反馈。
@@ -599,7 +619,7 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml ps
 然后检查：
 
 ```bash
-curl https://api.example.com/api/articles/health
+curl https://api.example.com/api/health
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml logs --tail=200 api
 ```
 
@@ -681,4 +701,5 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml logs --tail=2
 - [1Panel 计划任务与备份](https://1panel.cn/docs/v2/user_manual/cronjobs/)
 - [1Panel 面板设置](https://1panel.cn/docs/v2/user_manual/settings/)
 - [Docker Compose](https://docs.docker.com/compose/)
+- [Compose run](https://docs.docker.com/reference/cli/docker/compose/run/)：运行一次性管理员初始化命令。
 - [PostgreSQL 官方镜像](https://hub.docker.com/_/postgres)

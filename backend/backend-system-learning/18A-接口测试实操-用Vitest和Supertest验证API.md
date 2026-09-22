@@ -28,46 +28,11 @@ route
 
 ---
 
-## 1. 先把 `app` 和端口监听分开
+## 1. 确认已有应用可以直接被测试
 
-测试不应该导入一个文件后立刻占用 3001 端口。
+第 12 章已经让 `src/app.ts` 导出 `app`，由 `src/server.ts` 监听端口。本章直接复用，不再拆一遍文件。确认导入 `app` 不会自动监听 3001，且第 17A 章的公开健康检查是 `GET /api/health`。
 
-`src/app.ts` 只负责组装并导出 Express app：
-
-```ts
-import express from "express";
-
-export const app = express();
-
-app.use(express.json());
-
-// 在这里继续注册 CORS、Cookie、路由、404 和错误中间件。
-```
-
-新建 `src/server.ts`，只负责真正启动服务：
-
-```ts
-import "dotenv/config";
-import { app } from "./app";
-
-const port = Number(process.env.PORT ?? 3001);
-
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
-});
-```
-
-把开发命令改为：
-
-```json
-{
-  "scripts": {
-    "dev": "tsx watch src/server.ts"
-  }
-}
-```
-
-Supertest 可以直接接收 `app`，自动使用临时端口，所以运行测试前不需要先启动 `npm run dev`。
+本章按“准备测试库 → 跑通健康检查 → 登录后创建文章 → 独立补错误场景”推进。Supertest 会为 `app` 使用临时端口，测试前不需要运行 `npm run dev`。
 
 ---
 
@@ -289,7 +254,7 @@ export const resetDatabase = async () => {
 
 删除顺序要遵守外键关系：先删依赖别人的 Session 和中间表，再删 Admin、Article 和 Tag。
 
-如果当前项目还没有 `ArticleTag` 或 `Tag` 模型，就先删除对应两行；测试代码必须和当前阶段已经存在的 Schema 一致。
+阶段 5 已建立 `ArticleTag`、`Tag`，阶段 6 已建立 `Admin`、`Session`。清理函数使用这些已有模型；若缺表，先检查测试库是否执行了全部迁移。
 
 ---
 
@@ -324,7 +289,7 @@ agent 会保存登录响应中的 Cookie，并在后面的请求中自动携带�
 
 ## 10. 写文章接口集成测试
 
-新建 `tests/articles.test.ts`：
+新建 `tests/articles.test.ts`。先保留公共准备函数、hooks 和“登录后创建文章”这一个 `it`，运行 `npm test -- tests/articles.test.ts`，确认返回 201 且数据库能查到文章。再加入下面的未登录和重复 slug 用例；它们复用相同的隔离方式，完整文件如下：
 
 ```ts
 import argon2 from "argon2";
@@ -372,21 +337,6 @@ afterAll(async () => {
 });
 
 describe("POST /api/articles", () => {
-  it("未登录时返回 401", async () => {
-    const response = await request(app)
-      .post("/api/articles")
-      .set("Origin", origin)
-      .send({
-        title: "未登录文章",
-        slug: "unauthorized-article",
-        content: "正文",
-        status: "draft",
-      });
-
-    expect(response.status).toBe(401);
-    expect(response.body.error.code).toBe("UNAUTHORIZED");
-  });
-
   it("登录后创建文章并返回 201", async () => {
     const agent = await createLoggedInAgent();
     const response = await agent
@@ -406,6 +356,21 @@ describe("POST /api/articles", () => {
       where: { slug: "first-test-article" },
     });
     expect(article).not.toBeNull();
+  });
+
+  it("未登录时返回 401", async () => {
+    const response = await request(app)
+      .post("/api/articles")
+      .set("Origin", origin)
+      .send({
+        title: "未登录文章",
+        slug: "unauthorized-article",
+        content: "正文",
+        status: "draft",
+      });
+
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe("UNAUTHORIZED");
   });
 
   it("slug 重复时返回 409", async () => {
@@ -556,7 +521,7 @@ request.agent(app)
 
 测试的价值不是“证明现在写完了”，而是让以后修改代码时，旧行为一旦被破坏就能尽早发现。
 
-核心测试和项目 README 都完成后，回到[第 10 章项目总览](./10-MiniCMS项目总览.md)完成阶段 7 验收。下一步进入必做阶段 8：用第 19 章增加公开文章 API、接入个人网站文章详情页并准备生产运行，再用第 19A 章完成真实部署。
+核心测试和项目 README 都完成后，回到[第 10 章项目总览](./10-MiniCMS项目总览.md)完成阶段 7 验收。下一步按 [第 24～28 章](./24-shadcn-ui为什么不是传统组件库.md)完成并列的 shadcn/ui 后台，再进入阶段 8：用第 19 章连通公开文章与个人网站，用第 19A 章部署。
 
 ## 官方参考
 

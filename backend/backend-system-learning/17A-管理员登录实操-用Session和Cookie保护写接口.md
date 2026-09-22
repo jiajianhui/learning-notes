@@ -409,7 +409,7 @@ authRouter.post("/logout", async (request, response) => {
 ADMIN_WEB_ORIGIN=http://localhost:3000
 ```
 
-在 `app.ts` 中，顺序应该是：
+第 12 章把健康检查放在 `articleRouter` 中。现在把该 `/health` handler 移到 `app.ts`，作为公开的 `GET /api/health`，返回 `{ server: "server is running" }`；删除原来的文章健康检查，避免两套路径并存。随后按下面顺序接入认证；保留已有的 `express`、`app` 和 404 处理：
 
 ```ts
 import cookieParser from "cookie-parser";
@@ -417,9 +417,9 @@ import cors from "cors";
 import { AppError } from "./errors/app-error";
 import { errorHandler } from "./middleware/error-handler";
 import { requireAuth } from "./middleware/require-auth";
-import { articleRouter } from "./modules/articles/article.routes";
+import { articleRouter } from "./modules/articles/article-router";
 import { authRouter } from "./modules/auth/auth.routes";
-import { tagRouter } from "./modules/tags/tag.routes";
+import { tagRouter } from "./modules/tags/tag-router";
 
 const adminWebOrigin = process.env.ADMIN_WEB_ORIGIN;
 
@@ -448,6 +448,10 @@ app.use((request, _response, next) => {
   next();
 });
 
+app.get("/api/health", (_request, response) => {
+  response.json({ server: "server is running" });
+});
+
 app.use("/api/auth", authRouter);
 app.use("/api/articles", requireAuth, articleRouter);
 app.use("/api/tags", requireAuth, tagRouter);
@@ -458,7 +462,7 @@ app.use(errorHandler);
 
 这里把 `/api/articles` 和 `/api/tags` 当作管理后台接口，整个 router 都受到保护。这样创建、修改、删除和读取草稿都会先验证登录。以后进入 Mini CMS 阶段 8 时再增加只返回已发布文章的公开 router，例如 `/api/public/articles`，不要让公开接口复用“返回全部管理数据”的查询。
 
-如果某个 router 同时包含公开和后台接口，就逐条声明 `requireAuth`。controller 继续使用第 11 章的 Zod Schema 解析输入；如果把解析提取成独立校验中间件，就放在 `requireAuth` 之后。关键不是写法，而是后端真正拦截所有敏感接口。
+如果某个 router 同时包含公开和后台接口，就逐条声明 `requireAuth`。路由处理函数继续使用第 11 章的 Zod Schema 解析输入；如果把解析提取成独立校验中间件，就放在 `requireAuth` 之后。关键不是写法，而是后端真正拦截所有敏感接口。
 
 `SameSite=Lax` 能降低一部分 CSRF 风险，但不是所有部署方式下的完整答案。本项目又增加了写请求的 `Origin` 精确检查。CORS 仍然不能代替认证或 CSRF 防护。
 
@@ -466,30 +470,83 @@ app.use(errorHandler);
 
 ---
 
-## 10. Next.js 请求必须携带 Cookie
+## 10. 接通前端登录、刷新和退出
 
-在第 16 章 `lib/api-client.ts` 的公共 `requestJson()` 中为 `fetch` 增加 `credentials: "include"`，让 `apiRequest()` 和 `apiListRequest()` 都携带 Cookie。若本地仍有两处独立 `fetch`，两处都要同步；ProTable 的 `request` 继续调用 `getArticles()`，不另写绕过封装的请求。登录页可以沿用普通 Ant Design Form，后台菜单与退出入口继续放在现有布局中。
+后端已经能验证身份。前端沿用第 16C 章的后台，在 `/login` 和现有 `app/admin/layout.tsx` 接上下面的流程。
 
-封装请求函数时增加：
+### 10.1 请求层保留状态码并携带 Cookie
 
-```ts
-const response = await fetch(`${API_URL}/api/auth/me`, {
-  credentials: "include",
-});
-```
-
-登录、退出和所有受保护请求都要使用 `credentials: "include"`。登录请求示例：
+第 16 章的 `lib/api-client.ts` 只抛出普通 `Error`，页面无法区分 401 和其他失败。在同一文件新增 `ApiError`，并替换公共的 `requestJson()`；原来的 `ApiFailure`、`API_BASE_URL`、`apiRequest()` 和 `apiListRequest()` 保留：
 
 ```ts
-await fetch(`${API_URL}/api/auth/login`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  credentials: "include",
-  body: JSON.stringify({ username, password }),
-});
+export class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+async function requestJson<S>(path: string, options?: RequestInit): Promise<S> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const errorBody: ApiFailure = await response.json();
+    throw new ApiError(response.status, errorBody.error.message);
+  }
+
+  if (response.status === 204) return undefined as S;
+  return response.json();
+}
+
+export function apiRequestNoContent(path: string, options?: RequestInit) {
+  return requestJson<void>(path, options);
+}
 ```
 
-不要把 Session Token 保存到 `localStorage`，也不要尝试从前端 JavaScript 读取 HttpOnly Cookie。浏览器会按 Cookie 规则自动保存和发送它。
+`credentials` 由这一处统一设置。退出接口返回 204，没有 JSON；用 `apiRequestNoContent()` 等待成功即可，不经过读取 `body.data` 的 `apiRequest()`。
+
+新建 `features/auth/api.ts`：
+
+```ts
+import { apiRequest, apiRequestNoContent } from "@/lib/api-client";
+
+export type Admin = { id: number; username: string };
+
+export function login(input: { username: string; password: string }) {
+  return apiRequest<Admin>("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+}
+
+export function getCurrentAdmin() {
+  return apiRequest<Admin>("/api/auth/me");
+}
+
+export function logout() {
+  return apiRequestNoContent("/api/auth/logout", { method: "POST" });
+}
+```
+
+### 10.2 按三个操作独立完成页面
+
+Ant Design Form、异步提交和页面反馈已经练过，这里由你组合现有能力。按以下顺序实现，每完成一行就操作验证：
+
+| 位置 | 要实现的行为 | 验证 |
+|---|---|---|
+| `app/login/page.tsx` | Form 收集用户名和密码，等待 `login()` 成功后用 `router.replace("/admin/articles")` 跳转；失败留在登录页显示错误 | 错误密码有提示，正确密码进入后台 |
+| `app/admin/layout.tsx` 中的客户端登录检查 | 挂载后调用 `getCurrentAdmin()`；等待期间不渲染后台内容；成功才显示布局和子页面 | 刷新后台仍能进入；无 Cookie 时回到 `/login` |
+| 现有后台布局的退出按钮 | 等待 `logout()` 成功后清空当前管理员状态并跳转 `/login`；失败保留页面并提示 | 退出后再访问后台会回到登录页 |
+
+登录检查遇到 `ApiError` 且 `status === 401` 时跳转；网络或服务器错误要显示“无法验证登录状态”和重试入口，不能一律当作未登录。`/login` 位于受保护布局之外，避免检查身份时反复跳转。
+
+登录页以外的文章、标签请求也可能在会话过期后返回 401。列表的 `onRequestError`、表单提交和删除的 `catch` 先识别 401，再处理其他业务错误。可以复用一个判断函数，不在每处重复文案；保存失败时仍保留输入。
+
+前端只保存用于显示的管理员信息，不保存 Session Token。身份恢复始终以 `/me` 的结果为准，浏览器自动管理 HttpOnly Cookie。
 
 ---
 
@@ -516,6 +573,8 @@ await fetch(`${API_URL}/api/auth/login`, {
 ```
 
 本地 HTTP 环境下 `Secure` 为 false；正式 HTTPS 环境必须为 true。
+
+先匿名请求 `GET /api/health`，应返回 200 和 `{ server: "server is running" }`。随后验证受保护接口：
 
 ### 检查点三：接口保护
 

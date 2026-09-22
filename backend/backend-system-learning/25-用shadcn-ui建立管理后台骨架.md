@@ -305,7 +305,7 @@ export function isRequestCanceled(error: unknown) {
 ADMIN_WEB_ORIGINS=http://localhost:3000,http://localhost:3002
 ```
 
-`server/.env.example` 只保留同样的开发示例，不写任何密钥。
+`server/.env.example` 同步更新。第 18A 章已经建立测试环境，还要把 `.env.test` 和 `.env.test.example` 中的 `ADMIN_WEB_ORIGIN` 改为 `ADMIN_WEB_ORIGINS=http://localhost:3000,http://localhost:3002`，测试数据库地址保持不变。否则测试导入新 `app.ts` 时会因缺少配置而失败。
 
 在 `app.ts` 中把来源解析成集合：
 
@@ -360,7 +360,7 @@ app.use((request, _response, next) => {
 
 不要把 `origin` 改成 `*`。携带 Cookie 时需要准确返回受信任来源，CORS 也不能代替认证和写请求 Origin 检查。
 
-以后用 Apifox 检查写请求时，仍然要手动传入允许列表中的 Origin。
+以后用 Apifox 检查写请求时，仍然要手动传入允许列表中的 Origin。修改后在 `server` 中运行 `npm test`，确认第 18A 章的登录和文章测试仍通过。
 
 ---
 
