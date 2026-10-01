@@ -1,83 +1,27 @@
 # 17A. 登录实操：用数据库 Session 和 HttpOnly Cookie 保护写接口
 
-## 这一章要完成什么
+沿着[第 17 章的流程图](./17-登录Cookie和基本安全.md)，先在 Apifox 中跑通登录、身份验证和退出，再接入浏览器页面。每个阶段完成后立即验证，再继续下一步。
 
-第 17 章已经讲清 Session、Token 和 Cookie 的关系。这一章把它们接到现有 Mini CMS 中：
+所有实现都放在真实 `mini-cms` 中。下文后端路径相对 `mini-cms/server`，前端路径相对 `mini-cms/admin-web-antd`。开始前确认文章、标签接口和第 16C 章的 ProComponents 后台能正常使用；登录继续接到现有请求封装与布局中。
 
-```text
-管理员提交用户名和密码
--> Express 验证密码哈希
--> 创建一条数据库 Session
--> 浏览器保存 HttpOnly Cookie
--> 认证中间件验证后续请求
--> 未登录不能创建、修改和删除内容
-```
+本章只做一个管理员，由脚本创建账号；公开注册、多角色和第三方登录留在本次范围之外。
 
-完成后，Mini CMS 应该有下面三个接口：
+## 1. 准备管理员：让数据库里有可验证的账号
 
-```text
-POST /api/auth/login
-POST /api/auth/logout
-GET  /api/auth/me
-```
+这一步准备图中登录接口要查询的 `admins`，以及登录成功后要写入的 `sessions`。
 
-第一版只有一个管理员，不做公开注册、找回密码、多角色和第三方登录。
+### 1.1 安装依赖
 
-所有代码都继续写在真实 `mini-cms` 中：后端增加认证模块和中间件，`admin-web-antd` 增加登录页和登录状态，不创建新的登录 demo。
-
-前端沿用第 16C 章改造后的 ProComponents 后台。ProTable、DrawerForm 继续调用已有 API 函数；登录请求与认证状态独立接入，不把文章、标签页面改回普通 Table、Form。
-
-先按第 1～4 节准备表和管理员；第 5～6 节完成登录，并用 Apifox 看到 Cookie 和数据库记录；第 7～9 节验证身份、退出和接口保护；最后在第 10 节接入浏览器页面。每条链路跑通后再继续。
-
-下面后端文件路径均相对 `mini-cms/server`，前端文件路径相对 `mini-cms/admin-web-antd`。开始前确认现有文章、标签接口和后台页面能正常使用。
-
----
-
-## 1. 先确定本章方案
-
-本章使用：
-
-```text
-密码
--> 使用 Argon2id 生成和验证密码哈希
-
-登录状态
--> 服务器生成随机 Session Token
--> Cookie 保存原始 Token
--> 数据库只保存 Token 的 SHA-256 哈希和过期时间
-```
-
-为什么两种哈希用途不同：
-
-- 密码通常不够随机，必须使用专门的慢速密码哈希算法，例如 Argon2id。
-- Session Token 由服务器随机生成，本身具有足够高的随机性，可以使用 SHA-256 后再存进数据库。
-- 数据库泄露时，攻击者不能直接拿数据库中的 `tokenHash` 当作 Cookie 使用。
-
-第 17 章已经比较过 JWT 和数据库 Session。这里直接复用项目的 PostgreSQL、Prisma 和 Express 中间件，逐步完成登录记录的创建、查询和删除。
-
----
-
-## 2. 安装依赖
-
-在 `mini-cms/server` 中执行：
+在 `server` 中执行：
 
 ```bash
 npm install argon2 cookie-parser
 npm install -D @types/cookie-parser
 ```
 
-它们分别负责：
+`argon2` 负责密码哈希，`cookie-parser` 把请求 Cookie 解析到 `request.cookies`。随机 Token 和 SHA-256 使用 Node.js 自带的 `node:crypto`。
 
-| 包 | 用途 |
-|---|---|
-| `argon2` | 生成和验证密码哈希 |
-| `cookie-parser` | 把请求 Cookie 解析到 `request.cookies` |
-
-随机 Token 和 SHA-256 使用 Node.js 自带的 `node:crypto`，不需要额外安装包。
-
----
-
-## 3. 建立管理员和 Session 表
+### 1.2 建表并检查迁移
 
 在 `prisma/schema.prisma` 中增加：
 
@@ -106,19 +50,9 @@ model Session {
 }
 ```
 
-这里的关系表示：
+`Admin` 保存账号，`Session` 保存登录记录；`adminId` 把两者关联起来。一个管理员可以有多个 Session，`onDelete: Cascade` 表示删除管理员时一起删除对应 Session。
 
-```text
-一个 Admin
--> 可以有多个 Session，例如分别登录电脑和手机
-
-删除 Admin
--> 由 onDelete: Cascade 一起删除它的 Session
-```
-
-`admins` 保存账号，`sessions` 保存每次登录产生的记录。`tokenHash` 用于查找凭证，`adminId` 指向管理员，`expiresAt` 决定记录何时失效。创建管理员时还没有 Session，只有登录成功才会创建它。
-
-生成并检查迁移：
+执行：
 
 ```bash
 npx prisma migrate dev --name add_admin_sessions
@@ -126,20 +60,11 @@ npx prisma generate
 npx tsc --noEmit
 ```
 
-检查迁移 SQL 中是否真的创建了：
+查看迁移 SQL，确认创建了两张表、用户名唯一约束、Session 到 Admin 的外键，以及 `token_hash` 主键和声明的索引。
 
-- `admins` 和 `sessions` 表。
-- `admins.username` 唯一约束。
-- Session 到 Admin 的外键。
-- `token_hash` 主键和过期时间索引。
+### 1.3 创建初始管理员
 
----
-
-## 4. 只通过环境变量创建初始管理员
-
-不要把明文密码写进 migration、Git 或共享的 seed 文件。
-
-先在本地 `.env` 临时增加：
+在后端 `.env` 临时设置你自己选择的用户名和至少 12 位密码。下面是占位示例，执行脚本前要替换：
 
 ```dotenv
 ADMIN_USERNAME=admin
@@ -177,7 +102,9 @@ try {
 }
 ```
 
-在 `package.json` 增加：
+密码通常不够随机，这里使用专门的慢速密码哈希算法 Argon2id。`upsert()` 按用户名查找：账号不存在就创建，已存在就更新密码哈希。
+
+在 `package.json` 已有的 `scripts` 中增加：
 
 ```json
 {
@@ -187,21 +114,15 @@ try {
 }
 ```
 
-执行：
+执行 `npm run admin:create`，然后用 TablePro 查看 `admins`：应能看到用户名和 `password_hash`，看不到原始密码。此时还没有登录，也就没有新 Session。
 
-```bash
-npm run admin:create
-```
+创建成功后自己保管密码，并从 `.env` 删除 `ADMIN_PASSWORD`。以后需要重设密码时，用同一用户名和新密码重新运行脚本。真实 `.env` 不提交，`.env.example` 只保留变量名和说明；密码也不写进 migration 或共享的 seed 文件。
 
-然后用 TablePro 检查 `admins` 表。应该只能看到 `password_hash`，不能看到原始密码。
+## 2. 跑通登录：创建 Session，让客户端拿到 Cookie
 
-> `.env` 不能提交到 Git；`.env.example` 只保留变量名和说明，不放真实密码。
+对应图中 **① 登录**。这一阶段完成 `POST /api/auth/login`，直到 Apifox 能看到响应，TablePro 能看到登录记录。
 
-管理员创建完成后，从本地 `.env` 删除 `ADMIN_PASSWORD`。以后需要重置密码时再临时设置并重新运行脚本。
-
----
-
-## 5. 封装 Session Token 和 Cookie 配置
+### 2.1 准备 Token 和 Cookie 配置
 
 新建 `src/modules/auth/session.ts`：
 
@@ -233,36 +154,22 @@ export const createSessionExpiresAt = () => {
 };
 ```
 
-这里要区分两个值：
+这里的函数和配置直接对应图中的数据变化：
 
-```text
-token
--> 只发送给浏览器，放在 Cookie 中
+| 代码 | 作用 |
+|---|---|
+| `createSessionToken()` | 生成 32 字节随机数据，转成可放入 Cookie 的字符串 |
+| `hashSessionToken(token)` | 计算 Token 的 SHA-256 哈希；登录存记录和后续查询用同一种方法 |
+| `createSessionExpiresAt()` | 计算本次登录 7 天后的过期时间 |
+| `sessionCookieOptions` | 设置 Cookie 的使用规则和保存时长 |
 
-tokenHash
--> 只保存到数据库，用来查询 Session
-```
+随机 Token 已有足够高的随机性，因此使用 SHA-256；密码继续使用上一节的 Argon2id。数据库保存 `hashSessionToken(token)` 的结果，Cookie 保存原始 `token`。
 
-例如用 `T` 表示随机 Token、`H` 表示它的哈希，完整对应关系是：
+`maxAge` 是 Cookie 的保存时长，`expiresAt` 是服务器检查的过期时间。本章都设为登录后的 7 天，访问接口时不自动续期；即使客户端继续发送旧 Cookie，后端仍会检查过期时间。`path: "/"` 覆盖本站接口路径，本地 HTTP 下 `secure` 为 false，生产 HTTPS 环境为 true。
 
-```text
-登录时：生成 T → 计算 SHA-256(T) 得到 H → 数据库存 H，Cookie 存 T
-请求时：Cookie 带回 T → 再计算得到 H → 用 H 查询同一条 Session
-```
+### 2.2 验证密码并返回登录结果
 
-服务器每次都对收到的 Token 计算哈希，不需要从数据库里的哈希还原 Token。
-
-`randomBytes(32)` 会产生 32 字节，也就是 256 位随机数据。不要用用户名、当前时间或自增 id 拼 Session Token。
-
-`maxAge` 是浏览器 Cookie 的保存时长，`expiresAt` 是服务器检查的过期时间。本章都设为登录后的 7 天，访问接口时不自动续期；即使客户端继续发送旧 Cookie，后端仍会检查 `expiresAt`。`path: "/"` 让 Cookie 能覆盖本站的接口路径；其他安全属性见第 17 章。
-
----
-
-## 6. 实现登录接口
-
-### 6.1 验证密码，创建 Session，再设置 Cookie
-
-先定义运行时校验规则。新建 `src/modules/auth/auth.schema.ts`：
+新建 `src/modules/auth/auth.schema.ts`：
 
 ```ts
 import { z } from "zod";
@@ -319,29 +226,19 @@ authRouter.post("/login", async (request, response) => {
 });
 ```
 
-无论用户名不存在还是密码错误，都返回同一个 401 信息。这样不会主动告诉请求者某个管理员账号是否存在。
+`argon2.verify()` 验证输入的密码，`prisma.session.create()` 写入图中的登录记录。最后两行响应调用分工不同：`response.cookie()` 设置 `Set-Cookie` 响应头，`response.json()` 返回管理员信息，JSON 中不包含 Token。
 
-密码验证成功后，这段代码产生三份结果：
+用户名不存在和密码错误都返回 401 `INVALID_CREDENTIALS`。本章先完成认证主链路，更完整的登录系统还需要登录频率限制等措施。
 
-| 位置 | 得到什么 | 谁使用 |
-|---|---|---|
-| PostgreSQL | `tokenHash`、`adminId`、`expiresAt` 等字段 | 后端在下次认证时查询 |
-| 响应头 `Set-Cookie` | 原始 Token 和 Cookie 属性 | 浏览器保存凭证 |
-| 响应 JSON 的 `data` | 管理员 ID 和用户名 | 前端显示用户信息 |
+### 2.3 把登录路由接到 app
 
-`response.cookie()` 设置响应头，`response.json()` 返回页面可读的数据。JSON 中没有 Token，前端也不需要从响应头中取出它。
-
-更完整的系统还会增加登录频率限制和安全日志；当前先把认证主链路跑通。
-
-### 6.2 注册解析、来源检查和登录路由
-
-先让 `/login` 真正能被调用。在后端 `.env` 中增加下面的配置，并在 `.env.example` 中保留对应示例：
+在后端 `.env` 中增加后台来源，并在 `.env.example` 中保留对应示例：
 
 ```dotenv
 ADMIN_WEB_ORIGIN=http://localhost:3000
 ```
 
-在 `src/app.ts` 顶部补齐以下导入，已有的不要重复导入：
+在 `src/app.ts` 顶部补齐下面的导入，已有导入合并使用：
 
 ```ts
 import cookieParser from "cookie-parser";
@@ -387,37 +284,50 @@ app.get("/api/health", (_request, response) => {
 app.use("/api/auth", authRouter);
 ```
 
-第 12 章原来把健康检查放在 `articleRouter` 的 `/health` 中。这里移成公开的 `/api/health`，同时删除旧 handler。原有文章、标签路由继续放在上面代码之后，第 9 节再为它们接入认证；404 处理和错误中间件仍在所有路由之后，错误中间件放最后。
+第 12 章原来的 `articleRouter` 中有一个 `/health` handler，现在删除它，使用上面的公开 `/api/health`。原有文章、标签路由继续放在这段代码之后，第 3 节再接入认证；404 处理和错误中间件仍在所有路由之后，错误中间件放最后。
 
-当前请求按以下顺序进入登录接口：
+理解这几个注册位置即可：
 
-```text
-CORS 允许配置的后台来源和凭证
-→ express.json() 把 JSON 请求体放到 request.body
-→ cookieParser() 把已有 Cookie 放到 request.cookies
-→ 写请求的 Origin 与后台来源一致才继续
-→ /api/auth/login 验证密码并创建 Session
+- `express.json()` 先解析登录请求的 JSON，handler 才能读取 `request.body`。
+- `cookieParser()` 先解析 Cookie，后面的认证中间件才能读取 `request.cookies`；它本身不判断是否登录。
+- 写请求先检查 `Origin`，与配置的后台来源一致才继续；CORS 负责浏览器的跨来源响应访问。
+- `app.use("/api/auth", authRouter)` 把 Router 内的 `/login` 接成 `/api/auth/login`。
+
+### 2.4 验证登录，观察两边保存的数据
+
+在 `server` 中执行 `npx tsc --noEmit`，再运行 `npm run dev`。先请求 `GET http://localhost:3001/api/health`，应返回 200 和 `{ server: "server is running" }`。
+
+在 Apifox 创建 `POST http://localhost:3001/api/auth/login` 请求：
+
+```http
+Content-Type: application/json
+Origin: http://localhost:3000
 ```
 
-登录时可以还没有 Cookie。`cookie-parser` 只解析 Cookie，不会判断用户是否已经登录。`Origin` 检查用于降低跨站请求伪造（CSRF）风险，也不能替代下一节的身份认证。
+JSON 请求体填入第 1.3 节创建的账号密码：
 
-### 6.3 先用 Apifox 观察登录结果
+```json
+{
+  "username": "你的管理员名",
+  "password": "创建管理员时的密码"
+}
+```
 
-在 `server` 中执行 `npx tsc --noEmit`，然后运行 `npm run dev`。先请求 `GET http://localhost:3001/api/health`，应得到 200 和 `{ server: "server is running" }`。
+先用错误密码确认返回 401，再用正确密码登录，检查：
 
-再创建 `POST http://localhost:3001/api/auth/login` 请求：
+| 观察位置 | 成功时应该看到什么 |
+|---|---|
+| 响应 JSON | 200，`data` 中有管理员 ID、用户名 |
+| 响应头与 Apifox Cookie 管理 | `mini_cms_session` 被设置并保存，包含 HttpOnly 和 SameSite=Lax |
+| TablePro 的 `sessions` 表 | 新记录的 `admin_id` 指向管理员，`expires_at` 约为 7 天后；`token_hash` 与 Cookie 的原始 Token 不同 |
 
-- 请求头设置 `Content-Type: application/json` 和 `Origin: http://localhost:3000`。
-- JSON 请求体使用 `{ "username": "你的管理员名", "password": "创建管理员时的密码" }`，替换为第 4 节创建的账号。
-- 先使用错误密码，确认返回 401；再使用正确密码，确认返回 200。
+确认 Apifox 允许后续请求携带这条 Cookie。之后所有 `POST`、`PATCH`、`DELETE` 请求都继续设置准确的 `Origin`，否则会先返回 403，尚未进入认证。浏览器页面接入后，`Origin` 由浏览器设置。
 
-成功后同时检查三处：响应 JSON 有管理员信息；响应头有 `Set-Cookie: mini_cms_session=...`；TablePro 的 `sessions` 表新增了对应记录，`admin_id` 指向管理员，`expires_at` 约为 7 天后。数据库里保存的是哈希，它与 Cookie 中的 Token 不相同。
+## 3. 验证身份：让管理接口只接受有效凭证
 
-在 Apifox 的 Cookie 管理中确认当前地址的 Cookie 已保存，并允许后续请求携带。后面每次发送 `POST`、`PATCH`、`DELETE` 都保留准确的 `Origin`，否则会先收到 403，尚未进入账号或 Session 验证。浏览器页面接入后，这个请求头由浏览器设置。
+对应图中 **② 后续请求**。先用 `/me` 验证同一份 Cookie 能找到管理员，再把这段检查接到文章、标签接口。
 
----
-
-## 7. 写认证中间件
+### 3.1 实现 requireAuth
 
 新建 `src/middleware/require-auth.ts`：
 
@@ -460,28 +370,13 @@ export const requireAuth: RequestHandler = async (request, response, next) => {
 };
 ```
 
-中间件不是只检查“有没有 Cookie”，而是继续检查：
+`findUnique()` 用收到的 Token 哈希查 Session，`include.admin.select` 沿关联取出管理员 ID 和用户名。没有 Token、没有记录或已过期，都返回 401；全部通过才执行 `next()`。
 
-```text
-Cookie 中是否有 Token
--> 数据库中是否存在对应 Session
--> Session 是否过期
--> 全部通过才调用 next()
-```
+`response.locals.admin` 保存**当前这次请求**已经验证的管理员，后面的 handler 可以直接读取。它不会跨请求保留，也不会自动发送给前端。过期记录用 `deleteMany()` 清理，即使另一条请求已删除它，也能继续正常返回 401。
 
-`include.admin.select` 沿 `adminId` 关系取出管理员的 ID 和用户名，不把密码哈希带给后续路由。`response.locals.admin` 是**当前这次请求**里供后续处理函数读取的数据；它不会自动保存到浏览器，也不会跨请求保留。下一节的 `/me` 会使用它。
+### 3.2 用 /me 读取已经验证的管理员
 
-过期记录使用 `deleteMany()` 清理，即使另一条请求已经删除了它，本次认证仍能正常返回 401。
-
-这一步先完成中间件定义；接上 `/me` 后，就能立即验证它是否放行。
-
----
-
-## 8. 完成当前管理员和退出接口
-
-### 8.1 用 /me 验证当前身份
-
-在 `auth.routes.ts` 顶部增加 `requireAuth` 导入，再在已有登录路由后增加 `/me`：
+在 `auth.routes.ts` 顶部增加 `requireAuth` 导入，在已有登录路由后增加 `/me`：
 
 ```ts
 import { requireAuth } from "../../middleware/require-auth";
@@ -498,13 +393,44 @@ authRouter.get("/me", requireAuth, (_request, response) => {
 });
 ```
 
-`requireAuth` 先验证 Cookie，并把查到的管理员放进 `response.locals.admin`；后面的 handler 只负责返回这份信息。因此 `/me` 不需要提交用户名和密码。
+`requireAuth` 先查出身份，后面的 handler 把 `response.locals.admin` 转成响应 JSON。现在用 Apifox 请求 `GET http://localhost:3001/api/auth/me`：
 
-现在用 Apifox 请求 `GET http://localhost:3001/api/auth/me`：携带第 6 节保存的 Cookie，应返回 200 和管理员信息；关闭该请求的 Cookie 携带后，应返回 401。只移除手写的 `Cookie` 请求头还不够，要确认 Cookie 管理没有自动补上它。验证后恢复携带，再继续退出流程。
+- 携带第 2 节保存的 Cookie，应返回 200 和管理员信息。
+- 关闭该请求的 Cookie 携带，应返回 401；确认 Cookie 管理没有自动补上它。
 
-### 8.2 删除当前 Session，并清除 Cookie
+完成这两个请求后，恢复 Cookie 携带，继续保护业务接口。
 
-继续在同一文件的路由定义后增加：
+### 3.3 接到文章和标签路由
+
+在 `src/app.ts` 顶部增加：
+
+```ts
+import { requireAuth } from "./middleware/require-auth";
+```
+
+把原有文章、标签路由注册替换为：
+
+```ts
+app.use("/api/articles", requireAuth, articleRouter);
+app.use("/api/tags", requireAuth, tagRouter);
+```
+
+删除旧的未保护注册，避免它们提前接走请求。这样整个 router 的列表、详情、创建、修改和删除都会先验证身份，再进入已有的参数校验和业务处理。
+
+`app.use("/api/auth", authRouter)` 保持原样，其中 `/me` 已单独接入认证，登录和稍后增加的退出接口允许匿名调用。健康检查仍公开，阶段 8 再增加读取已发布内容的公开接口。
+
+立即用 Apifox 验证：
+
+| 请求 | 不带 Cookie | 携带有效 Cookie |
+|---|---|---|
+| `GET /api/articles`、`GET /api/tags` | 401 | 200 和列表 |
+| `POST /api/articles`，使用已有合法请求体和准确的 `Origin` | 401 | 201 和新文章 |
+
+这一步成功，说明同一个认证中间件已经同时用于查询身份和保护业务接口。
+
+## 4. 跑通退出：让当前凭证失效
+
+对应图中 **③ 退出**。在 `auth.routes.ts` 已有路由后增加：
 
 ```ts
 authRouter.post("/logout", async (request, response) => {
@@ -526,44 +452,19 @@ authRouter.post("/logout", async (request, response) => {
 });
 ```
 
-退出接口使用 `deleteMany()`，即使 Session 已经不存在也能安全返回 204。清除 Cookie 时，`path` 等关键选项要和设置 Cookie 时保持一致。
+`deleteMany()` 删除当前 Token 对应的记录，即使记录已不存在也允许继续。`response.clearCookie()` 设置让 Cookie 过期的响应头，`path` 等选项与创建 Cookie 时保持一致；204 响应不带 JSON。
 
-退出接口不挂 `requireAuth`：即使凭证已过期或已被删除，也应允许客户端完成 Cookie 清理。带上 Cookie 和 `Origin` 请求 `POST /api/auth/logout`，确认返回 204、数据库中当前 Session 被删除；随后再请求 `/me`，应返回 401。再次退出仍应返回 204。
+退出接口不挂 `requireAuth`，这样过期或已被删除的凭证也能完成 Cookie 清理。写请求的 `Origin` 检查仍然执行。
 
----
+带上 Cookie 和准确的 `Origin` 调用 `POST /api/auth/logout`，确认返回 204、当前 Session 从数据库删除、Apifox 中该 Cookie 被清除；随后请求 `/me` 和文章列表，都应返回 401。再次调用退出接口仍应返回 204。
 
-## 9. 用认证中间件保护管理接口
+## 5. 接入前端：把三条请求连到页面操作
 
-第 6 节已经注册解析、来源检查和登录路由。现在在 `src/app.ts` 顶部增加认证中间件导入：
+后端三条链路已用 Apifox 验证。现在继续修改 `admin-web-antd`，沿用第 16C 章的 ProLayout、ProTable、DrawerForm 和 API 函数。
 
-```ts
-import { requireAuth } from "./middleware/require-auth";
-```
+### 5.1 统一携带 Cookie，并保留错误状态码
 
-把原有的文章、标签路由注册替换为：
-
-```ts
-app.use("/api/articles", requireAuth, articleRouter);
-app.use("/api/tags", requireAuth, tagRouter);
-```
-
-只保留加上 `requireAuth` 后的这两条注册，避免旧的未保护路由提前接走请求。整个 router 都受到保护，因此列表、详情、创建、修改和删除都会先验证身份。阶段 8 再增加只返回已发布文章的公开 router，例如 `/api/public/articles`。
-
-认证路由仍注册为 `app.use("/api/auth", authRouter)`。其中 `/login`、`/logout` 可以匿名调用，`/me` 已在路由内部单独接入 `requireAuth`，不用给整个 `authRouter` 加认证。
-
-路由处理函数继续使用第 11 章的 Zod Schema 解析输入；如果提取成独立校验中间件，就放在 `requireAuth` 之后。写请求依次经过来源检查、身份认证和业务参数校验。
-
-立即验证：退出状态下请求 `GET /api/articles` 和 `GET /api/tags`，都应返回 401；重新登录后，携带 Cookie 读取列表应成功，再用已有的合法文章请求体创建文章，应返回 201。写请求继续设置准确的 `Origin`。完成后再接前端，这样页面出现问题时，可以先确认后端链路已经通过。
-
----
-
-## 10. 接通前端登录、刷新和退出
-
-后端已经能验证身份。前端沿用第 16C 章的后台，在 `/login` 和现有 `app/admin/layout.tsx` 接上下面的流程。
-
-### 10.1 请求层保留状态码并携带 Cookie
-
-第 16 章的 `lib/api-client.ts` 只抛出普通 `Error`，页面无法区分 401 和其他失败。在同一文件新增 `ApiError`，并替换公共的 `requestJson()`；原来的 `ApiFailure`、`API_BASE_URL`、`apiRequest()` 和 `apiListRequest()` 保留：
+第 16 章的 `lib/api-client.ts` 只抛出普通 `Error`，页面无法区分 401 和其他失败。在同一文件新增 `ApiError`，替换公共 `requestJson()`，并增加 `apiRequestNoContent()`；原来的 `ApiFailure`、`API_BASE_URL`、`apiRequest()` 和 `apiListRequest()` 保留：
 
 ```ts
 export class ApiError extends Error {
@@ -593,9 +494,9 @@ export function apiRequestNoContent(path: string, options?: RequestInit) {
 }
 ```
 
-`credentials` 由这一处统一设置。退出接口返回 204，没有 JSON；用 `apiRequestNoContent()` 等待成功即可，不经过读取 `body.data` 的 `apiRequest()`。
+所有请求从这里统一设置 `credentials`，包括第一次登录。退出返回 204，`apiRequestNoContent()` 只等待请求完成，避免交给读取 `body.data` 的 `apiRequest()`。
 
-新建 `features/auth/api.ts`：
+新建 `features/auth/api.ts`，把三个接口封装成页面可调用的函数：
 
 ```ts
 import { apiRequest, apiRequestNoContent } from "@/lib/api-client";
@@ -619,26 +520,24 @@ export function logout() {
 }
 ```
 
-### 10.2 登录页只提交账号密码
+### 5.2 登录页：提交账号密码
 
-新建客户端页面 `app/login/page.tsx`，顶部使用 `"use client"`。Form、异步提交和页面反馈沿用第 14 章已经练过的做法：
+新建客户端页面 `app/login/page.tsx`，顶部使用 `"use client"`。Form、异步提交和反馈沿用第 14 章的写法：
 
-- 用 `Form` 收集 `username`、`password`，密码输入使用 `Input.Password`。
+- 用 `Form` 收集 `username`、`password`，密码字段使用 `Input.Password`。
 - 从 `@/features/auth/api` 导入 `login`，从 `next/navigation` 导入并调用 `useRouter()`。
 - 提交时等待 `login(values)` 成功，再执行 `router.replace("/admin/articles")`。
-- 提交期间显示加载状态；失败时留在登录页显示错误，并在 `finally` 中结束加载状态。
+- 提交期间显示加载状态；失败时留在登录页显示错误，并在 `finally` 中结束加载。
 
-`replace()` 用后台地址替换当前登录页的历史记录。这里不需要读取或保存 Token；`login()` 内部已经通过统一请求层设置了 `credentials: "include"`。
+`replace()` 用后台地址替换当前登录页的历史记录。登录函数内部已经允许浏览器接收 Cookie，页面只需要处理成功或失败。
 
-现在在浏览器中先试错误密码，再试正确密码。开发者工具的 Network 中，登录成功响应应同时有管理员 JSON 和 `Set-Cookie`；Cookie 存储中应看到 `mini_cms_session`，并标记 `HttpOnly`。随后文章请求会携带 Cookie。
+在浏览器先试错误密码，再试正确密码。Network 中应能看到成功响应的管理员 JSON 和 `Set-Cookie`，Cookie 存储中能看到标记 HttpOnly 的 `mini_cms_session`，随后文章请求携带 Cookie。
 
-Apifox 和浏览器各自保存 Cookie，前面在 Apifox 登录成功后，仍需要在浏览器登录。如果浏览器登录返回 200，但下一次请求是 401，先检查登录和后续请求是否都经过这份请求封装，以及前后端是否统一使用 `localhost`。
+Apifox 和浏览器各自保存 Cookie，因此需要在浏览器重新登录。如果登录是 200、下一次请求却是 401，先检查两次请求是否都经过统一封装，以及前后端是否都使用 `localhost`。
 
-### 10.3 在现有布局中恢复登录身份
+### 5.3 后台布局：查询身份，再显示页面
 
-刷新后台时，React 的状态会重新初始化，因此先请求 `/me`。这次请求用已有 Cookie 查询 Session，成功后才能显示后台内容。
-
-在现有客户端布局 `app/admin/layout.tsx` 中补齐导入，已有导入合并使用：
+这里实现图中“刷新后调用 `/me`”。修改现有客户端布局 `app/admin/layout.tsx`，先补齐导入，已有导入合并使用：
 
 ```tsx
 import { Button } from "antd";
@@ -659,9 +558,9 @@ type AuthState =
   | { status: "error"; message: string };
 ```
 
-`status` 决定现在能显示什么；只有 `authenticated` 状态带有管理员信息，`error` 状态带有错误文案。这样可以明确区分“尚未查完”和“已经确认未登录”。
+`status` 区分检查中、已登录、未登录和检查失败。只有已登录状态带 `admin`，检查失败状态带错误文案。
 
-下面是加进现有 `AdminLayout` 函数体的代码。复用已有的 `router`，所有 Hook 都放在任何提前 `return` 之前：
+下面代码放在现有 `AdminLayout` 函数体内。`router` 若已声明就复用；这些 Hook 和原有 Hook 都放在任何提前 `return` 之前：
 
 ```tsx
 const router = useRouter();
@@ -699,9 +598,9 @@ useEffect(() => {
 }, [router, checkVersion]);
 ```
 
-初次挂载会执行检查；点击重试时增加 `checkVersion`，就会重新检查。`active` 的作用与第 16 章列表请求相同：组件卸载或开始下一次检查后，旧请求的结果不再更新页面，也不再触发跳转。
+初次挂载会检查身份，`checkVersion` 变化时重新检查。`active` 与第 16 章的请求清理用法相同：组件卸载或开始下一次检查后，旧请求不再更新状态或触发跳转。
 
-接着在**原有布局 JSX 的 `return` 之前**增加下面的分支，原来的 ProLayout、菜单和 `{children}` 继续保留在它们之后：
+在原有布局 JSX 的 `return` 之前加入以下分支，ProLayout、菜单和 `{children}` 继续放在它们之后：
 
 ```tsx
 if (auth.status === "checking") {
@@ -729,15 +628,15 @@ if (auth.status === "error") {
 const admin = auth.admin;
 ```
 
-执行到原来的布局 `return` 时，状态一定是 `authenticated`，可以用 `admin.username` 显示当前管理员。检查期间没有返回后台的 `{children}`，文章、标签客户端页面也就暂时不会挂载并发起业务请求。
+只有 `authenticated` 状态会执行到原有布局，可以用 `admin.username` 显示管理员。检查期间不返回后台的 `{children}`，文章、标签客户端页面暂时不会挂载并请求数据。
 
-`/login` 位于 `app/admin` 之外，不会套用这个受保护布局。`unauthenticated` 返回 `null` 是等待前面的跳转完成；网络错误则保留错误和重试入口，因为请求失败尚不能证明用户未登录。
+`unauthenticated` 返回 `null`，等待前面的跳转完成。网络或服务器错误则显示重试，因为请求失败还不能证明用户未登录。`/login` 在 `app/admin` 之外，不会套用这段后台检查。
 
-验证三次：正常刷新后台，`/me` 返回 200 后显示页面；删除浏览器 Cookie 再刷新，返回 401 并进入登录页；重新登录后停止后端再刷新，应显示重试入口，启动后端并重试应恢复后台。
+现在验证：正常刷新时 `/me` 返回 200 后显示后台；删除浏览器 Cookie 再刷新，应跳转登录页；重新登录后停止后端再刷新，应看到重试入口，启动后端并重试应恢复页面。
 
-### 10.4 在后台布局中接通退出
+### 5.4 退出按钮：等待退出成功再跳转
 
-在同一个布局中，从 `antd` 增加 `App` 导入，从 `@/features/auth/api` 增加 `logout` 导入。将下面代码放在组件体内、前面所有提前 `return` 之前：
+在同一个布局文件中，从 `antd` 增加 `App` 导入，从 `@/features/auth/api` 增加 `logout` 导入。下面代码放在组件体内、5.3 的所有提前 `return` 之前：
 
 ```tsx
 const { message: messageApi } = App.useApp();
@@ -757,7 +656,7 @@ async function handleLogout() {
 }
 ```
 
-第 14 章的根布局已经通过 `AntdProvider` 提供了 `<App>`，因此这里可以用 `App.useApp()` 显示消息。在现有布局的用户区域加入下面的按钮；如果已经有退出按钮，就给它接上这两个属性：
+第 14 章的根布局已经通过 `AntdProvider` 提供 `<App>`，因此能用 `App.useApp()` 显示消息。在 ProLayout 的用户区域加入退出按钮；已有按钮则接上这两个属性：
 
 ```tsx
 <Button onClick={handleLogout} loading={signingOut}>
@@ -765,126 +664,55 @@ async function handleLogout() {
 </Button>
 ```
 
-等待后端删除 Session、清除 Cookie 后再跳转。请求失败时保留当前页面并显示错误。
+成功后清空管理员状态并跳转，失败时保留页面并提示。点击退出后，再直接打开 `/admin/articles`，应经过 `/me` 检查回到登录页。
 
-点击退出，确认 `/logout` 返回 204；再次直接打开 `/admin/articles`，应经过 `/me` 检查回到登录页。
+完成后，布局文件中的新增内容应按下面的顺序排列。这是位置示意，不是替换现有布局的代码：
 
-### 10.5 处理使用过程中的登录失效
+```text
+app/admin/layout.tsx
+├─ "use client" 与导入
+├─ AuthState 类型（组件外）
+└─ AdminLayout 函数
+   ├─ 原有 Hook，以及 auth、checkVersion、signingOut 等状态
+   ├─ App.useApp() 与登录检查 Effect
+   ├─ handleLogout()
+   ├─ checking / unauthenticated / error 的提前返回
+   ├─ const admin = auth.admin
+   └─ 原有 ProLayout 的 return
+      ├─ 显示 admin.username、退出按钮
+      └─ 原来的菜单和 children
+```
 
-布局挂载时检查一次身份，浏览器打开期间 Session 仍可能过期。因此文章、标签请求也要识别 `error instanceof ApiError && error.status === 401`：
+### 5.5 处理后台使用过程中的登录失效
+
+布局挂载时检查一次，使用期间 Session 仍可能过期。文章、标签请求也要识别 `error instanceof ApiError && error.status === 401`：
 
 - 列表的 `onRequestError` 遇到 401，提示登录已失效并跳转 `/login`。
-- 表单提交遇到 401，显示“登录已失效，请先保留输入并重新登录”，保持抽屉和输入，不立即跳转导致内容丢失；DrawerForm 的 `onFinish` 返回 `false`。
-- 删除遇到 401，提示登录已失效；不能显示删除成功或从列表移除数据。
-- 其他网络、服务器或业务错误继续使用原来的错误反馈。
+- 表单提交遇到 401，提示“登录已失效，请先保留输入并重新登录”，保留抽屉和输入，`onFinish` 返回 `false`。先保留内容，再由用户重新登录，避免直接跳转丢失编辑内容。
+- 删除遇到 401，提示登录已失效，不显示删除成功，也不移除列表数据。
+- 其他网络、服务器或业务错误继续使用原来的反馈。
 
-前端检查负责页面反馈，后端 `requireAuth` 仍负责每次请求的身份验证。前端状态里只保存用于显示的管理员信息，浏览器负责管理 HttpOnly Cookie。
+可以在浏览器登录后，用 TablePro 按 `admin_id` 和 `created_at` 找到本次登录产生的 Session，删除这条记录后再操作页面，观察失效反馈。前端 Cookie 此时仍可能存在，但后端已经不会认可它；验证后重新登录。
 
----
+## 6. 走完完整流程，再进入测试章节
 
-## 11. 按四个检查点验证
+使用浏览器完成一轮：登录 → 新建草稿 → 刷新后台 → 编辑或删除文章 → 退出 → 再访问后台回到登录页。检查 Network 中的请求顺序，并在 TablePro 对照 Session 的创建和删除。
 
-前面已经逐步验证接口和页面，这里用同一套浏览器操作收尾。写请求的来源检查保持开启；用 Apifox 复查时仍要设置准确的 `Origin`。
+再用 Apifox 不带 Cookie 请求文章、标签接口，应返回 401；写请求仍带准确的 `Origin`，以便真正验证身份检查。匿名请求 `/api/health` 应返回 200。
 
-### 检查点一：密码保存
-
-```text
-运行 admin:create
--> TablePro 查看 admins
--> 只有 password_hash，没有明文密码
-```
-
-### 检查点二：登录和 Cookie
-
-```text
-错误密码登录
--> 401 INVALID_CREDENTIALS
-
-正确密码登录
--> 200
--> 响应包含 Set-Cookie
--> Cookie 包含 HttpOnly 和 SameSite=Lax
-```
-
-本地 HTTP 环境下 `Secure` 为 false；正式 HTTPS 环境必须为 true。
-
-先匿名请求 `GET /api/health`，应返回 200 和 `{ server: "server is running" }`。随后验证受保护接口：
-
-### 检查点三：接口保护
-
-```text
-不带 Cookie 读取草稿或创建文章
--> 401
-
-登录后用同一 Cookie 创建文章
--> 201
-
-刷新管理页面并调用 /api/auth/me
--> 仍能返回当前管理员
-```
-
-### 检查点四：退出
-
-```text
-调用 /api/auth/logout
--> 204
--> 数据库 Session 被删除
--> 再访问受保护接口返回 401
-```
-
-最后分别在 `server` 和 `admin-web-antd` 中执行：
+分别在 `server` 和 `admin-web-antd` 中执行：
 
 ```bash
 npx tsc --noEmit
 ```
 
-再在 `admin-web-antd` 中执行 `npm run build`，检查新增页面和布局能否完成构建。
-
----
-
-## 暂时不做什么
-
-本章故意不加入：
-
-- 公开注册和邮箱验证。
-- 找回密码和修改密码流程。
-- 管理员、编辑者等多角色权限矩阵。
-- 多因素认证。
-- OAuth 或第三方身份提供商。
-- 自动清理全部过期 Session 的定时任务。
-
-它们不是不重要，而是应该建立在当前登录闭环已经可靠的基础上。
-
----
-
-## 小结
-
-```text
-Argon2id
--> 保护数据库中的密码哈希
-
-随机 Session Token
--> 作为浏览器的登录凭证
-
-数据库 Session
--> 记录凭证属于谁、何时过期，并允许主动撤销
-
-HttpOnly Cookie
--> 让浏览器自动携带凭证，同时禁止前端脚本直接读取
-
-认证中间件
--> 在每个敏感请求进入业务代码前验证身份
-```
-
-做到这里，登录才从“有一个登录页面”变成“服务器能够持续验证管理员身份”。
-
-登录、退出、刷新恢复身份和写接口保护都能走通后，回到[第 10 章项目总览](./10-MiniCMS项目总览.md)完成阶段 6 验收。下一步再读第 18、18A 章，为核心 API 增加自动化测试。
+再在 `admin-web-antd` 中执行 `npm run build`。接口、页面和检查都通过后，回到[第 10 章项目总览](./10-MiniCMS项目总览.md)验收阶段 6，再进入[第 18 章](./18-后端测试怎么分层.md)和[第 18A 章](./18A-接口测试实操-用Vitest和Supertest验证API.md)，把这些行为写成自动化测试。
 
 ## 官方参考
 
 - [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
 - [OWASP Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)
 - [OWASP CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
-- [Node.js `crypto.randomBytes`](https://nodejs.org/docs/latest/api/crypto.html#cryptorandombytessize-callback)
+- [Node.js crypto.randomBytes](https://nodejs.org/docs/latest/api/crypto.html#cryptorandombytessize-callback)
 - [MDN：Set-Cookie 与 HttpOnly](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie)
 - [React：Effect 中的数据请求与清理](https://react.dev/reference/react/useEffect#fetching-data-with-effects)
