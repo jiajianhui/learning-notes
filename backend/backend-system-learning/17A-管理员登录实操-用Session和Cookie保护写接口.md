@@ -23,7 +23,14 @@ npm install -D @types/cookie-parser
 
 ### 1.2 建表并检查迁移
 
-在 `prisma/schema.prisma` 中增加：
+先为登录流程准备两张表：
+
+- `admins` 保存**管理员账号**：下一节用脚本创建，登录时查询它来验证用户名和密码。
+- `sessions` 保存**每次登录的记录**：登录成功后创建，后续请求用它确认身份，退出时删除对应记录。
+
+例如，管理员 `id = 1` 在电脑和手机分别登录，会产生两条 `adminId = 1` 的 Session。退出电脑上的登录，只删除其中一条，账号和手机上的登录仍然保留。这就是一个管理员对应多条 Session 的一对多关系。
+
+在 `prisma/schema.prisma` 中增加下面两个模型，保留已有模型：
 
 ```prisma
 model Admin {
@@ -50,9 +57,26 @@ model Session {
 }
 ```
 
-`Admin` 保存账号，`Session` 保存登录记录；`adminId` 把两者关联起来。一个管理员可以有多个 Session，`onDelete: Cascade` 表示删除管理员时一起删除对应 Session。
+关键字段对应登录流程中的这些用途：
 
-执行：
+| 字段 | 用途 |
+|---|---|
+| `Admin.id`、`username` | `id` 是自增主键；用户名用于查找账号，`@unique` 保证不能重名 |
+| `Admin.passwordHash` | 保存密码哈希，登录时验证输入的密码 |
+| `Session.tokenHash` | 保存 Token 的哈希，后续请求凭它查找 Session；直接用作主键 `@id`，不再另设数字 ID |
+| `Session.adminId` | 保存所属管理员的 ID，对应 `Admin.id` |
+| `Session.expiresAt` | 后端用它判断登录是否过期；到时间不会自动删除记录 |
+
+两边的 `createdAt` 记录创建时间，`Admin.updatedAt` 记录通过 Prisma 更新账号的时间。
+
+再看两张表怎样关联：
+
+- `adminId` 是数据库实际保存的外键列；`admin` 和 `sessions` 是 Prisma 的关系字段，分别用于查询所属管理员和该管理员的登录记录，不会额外存成对象列或数组列。
+- `@relation(fields: [adminId], references: [id])` 声明外键指向 `Admin.id`；`onDelete: Cascade` 表示删除管理员时，一起删除他的 Session。
+
+`@map`、`@@map` 沿用前面的命名方式，把字段、模型映射为数据库列名和表名，例如 `passwordHash → password_hash`、`Admin → admins`。两个 `@@index` 分别为按管理员和过期时间查找记录建立索引，不会自动执行查询或清理。
+
+保存模型后执行迁移，才会真正创建数据库表；随后生成包含新模型的 Prisma Client，并检查类型：
 
 ```bash
 npx prisma migrate dev --name add_admin_sessions
@@ -63,6 +87,8 @@ npx tsc --noEmit
 查看迁移 SQL，确认创建了两张表、用户名唯一约束、Session 到 Admin 的外键，以及 `token_hash` 主键和声明的索引。
 
 ### 1.3 创建初始管理员
+
+项目没有注册入口，所以先用脚本创建可登录的账号。脚本依次读取用户名和密码、生成密码哈希、写入 `admins`；它由你手动运行，不随每次后端启动执行。
 
 在后端 `.env` 临时设置你自己选择的用户名和至少 12 位密码。下面是占位示例，执行脚本前要替换：
 
@@ -102,7 +128,7 @@ try {
 }
 ```
 
-密码通常不够随机，这里使用专门的慢速密码哈希算法 Argon2id。`upsert()` 按用户名查找：账号不存在就创建，已存在就更新密码哈希。
+密码通常不够随机，这里使用专门的慢速密码哈希算法 Argon2id。`upsert()` 按用户名查找：账号不存在就创建，已存在就更新密码哈希，因此重复运行脚本不会创建同名账号。
 
 在 `package.json` 已有的 `scripts` 中增加：
 
@@ -123,6 +149,15 @@ try {
 对应图中 **① 登录**。这一阶段完成 `POST /api/auth/login`，直到 Apifox 能看到响应，TablePro 能看到登录记录。
 
 ### 2.1 准备 Token 和 Cookie 配置
+
+登录时生成 Token、把哈希写入数据库，再把原始 Token 放进 Cookie。后续认证和退出也要使用同一种哈希方法、同一个 Cookie 名称，因此把这些函数和配置集中放在一个文件中：
+
+| 代码 | 作用 |
+|---|---|
+| `createSessionToken()` | 生成 32 字节随机数据，转成可放入 Cookie 的字符串 |
+| `hashSessionToken(token)` | 计算 Token 的 SHA-256 哈希；登录存记录和后续查询用同一种方法 |
+| `createSessionExpiresAt()` | 计算本次登录 7 天后的过期时间 |
+| `sessionCookieOptions` | 设置 Cookie 的使用规则和保存时长 |
 
 新建 `src/modules/auth/session.ts`：
 
@@ -154,22 +189,15 @@ export const createSessionExpiresAt = () => {
 };
 ```
 
-这里的函数和配置直接对应图中的数据变化：
-
-| 代码 | 作用 |
-|---|---|
-| `createSessionToken()` | 生成 32 字节随机数据，转成可放入 Cookie 的字符串 |
-| `hashSessionToken(token)` | 计算 Token 的 SHA-256 哈希；登录存记录和后续查询用同一种方法 |
-| `createSessionExpiresAt()` | 计算本次登录 7 天后的过期时间 |
-| `sessionCookieOptions` | 设置 Cookie 的使用规则和保存时长 |
-
-随机 Token 已有足够高的随机性，因此使用 SHA-256；密码继续使用上一节的 Argon2id。数据库保存 `hashSessionToken(token)` 的结果，Cookie 保存原始 `token`。
+随机 Token 已有足够高的随机性，因此使用 SHA-256；密码继续使用上一节的 Argon2id。
 
 `maxAge` 是 Cookie 的保存时长，`expiresAt` 是服务器检查的过期时间。本章都设为登录后的 7 天，访问接口时不自动续期；即使客户端继续发送旧 Cookie，后端仍会检查过期时间。`path: "/"` 覆盖本站接口路径，本地 HTTP 下 `secure` 为 false，生产 HTTPS 环境为 true。
 
 ### 2.2 验证密码并返回登录结果
 
-新建 `src/modules/auth/auth.schema.ts`：
+登录先经过两道检查：Zod 检查用户名、密码的格式；格式通过后，再查数据库并验证密码是否正确。格式合法并不代表能登录。
+
+先新建 `src/modules/auth/auth.schema.ts`，定义输入规则。密码保留用户原始输入，不做 `trim()`，避免改变密码中的空格：
 
 ```ts
 import { z } from "zod";
@@ -180,7 +208,9 @@ export const loginSchema = z.object({
 });
 ```
 
-再新建 `src/modules/auth/auth.routes.ts`：
+接着实现这条流程：**校验输入 → 查找账号 → 验证密码 → 创建 Session → 返回 Cookie 和管理员信息**。
+
+新建 `src/modules/auth/auth.routes.ts`：
 
 ```ts
 import { Router } from "express";
@@ -226,11 +256,19 @@ authRouter.post("/login", async (request, response) => {
 });
 ```
 
-`argon2.verify()` 验证输入的密码，`prisma.session.create()` 写入图中的登录记录。最后两行响应调用分工不同：`response.cookie()` 设置 `Set-Cookie` 响应头，`response.json()` 返回管理员信息，JSON 中不包含 Token。
+`argon2.verify()` 接收数据库中的密码哈希和用户输入的密码，返回是否匹配。验证成功后，先 `await prisma.session.create()` 确认登录记录保存成功，再设置 Cookie，避免发出一份数据库尚未认可的凭证。
+
+最后的 `response.cookie()` 设置 `Set-Cookie` 响应头，`response.json()` 返回管理员信息；一次响应同时完成两件事，JSON 中不包含 Token。
 
 用户名不存在和密码错误都返回 401 `INVALID_CREDENTIALS`。本章先完成认证主链路，更完整的登录系统还需要登录频率限制等措施。
 
 ### 2.3 把登录路由接到 app
+
+路由写好后，要先让请求经过下面的配置，再交给它处理：
+
+- **CORS**：允许指定后台读取带凭证的跨来源响应。
+- **请求解析**：`express.json()` 得到 `request.body`，`cookieParser()` 得到 `request.cookies`，供后续路由和认证中间件使用。
+- **来源检查**：CORS 不能保证跨站写请求不会到达服务器，因此在执行业务前检查 `Origin`，拒绝来自其他来源的写请求。
 
 在后端 `.env` 中增加后台来源，并在 `.env.example` 中保留对应示例：
 
@@ -286,12 +324,9 @@ app.use("/api/auth", authRouter);
 
 第 12 章原来的 `articleRouter` 中有一个 `/health` handler，现在删除它，使用上面的公开 `/api/health`。原有文章、标签路由继续放在这段代码之后，第 3 节再接入认证；404 处理和错误中间件仍在所有路由之后，错误中间件放最后。
 
-理解这几个注册位置即可：
+`safeMethods` 中的 GET、HEAD 用于读取，OPTIONS 用于预检，这三种请求跳过写入来源检查；其余请求的 `Origin` 必须与配置一致。解析 Cookie 和检查来源都不能确认管理员身份，第 3 节再实现认证。
 
-- `express.json()` 先解析登录请求的 JSON，handler 才能读取 `request.body`。
-- `cookieParser()` 先解析 Cookie，后面的认证中间件才能读取 `request.cookies`；它本身不判断是否登录。
-- 写请求先检查 `Origin`，与配置的后台来源一致才继续；CORS 负责浏览器的跨来源响应访问。
-- `app.use("/api/auth", authRouter)` 把 Router 内的 `/login` 接成 `/api/auth/login`。
+`app.use("/api/auth", authRouter)` 把 Router 内的 `/login` 接成 `/api/auth/login`。
 
 ### 2.4 验证登录，观察两边保存的数据
 
@@ -328,6 +363,8 @@ JSON 请求体填入第 1.3 节创建的账号密码：
 对应图中 **② 后续请求**。先用 `/me` 验证同一份 Cookie 能找到管理员，再把这段检查接到文章、标签接口。
 
 ### 3.1 实现 requireAuth
+
+查询身份、管理文章和管理标签，都需要相同的登录检查，因此把它提取为可复用的中间件。每次请求依次经过：**读取 Cookie 中的 Token → 计算哈希并查 Session → 检查是否过期 → 保存管理员身份 → 调用 `next()` 放行**。没有有效凭证就返回 401。
 
 新建 `src/middleware/require-auth.ts`：
 
@@ -370,7 +407,7 @@ export const requireAuth: RequestHandler = async (request, response, next) => {
 };
 ```
 
-`findUnique()` 用收到的 Token 哈希查 Session，`include.admin.select` 沿关联取出管理员 ID 和用户名。没有 Token、没有记录或已过期，都返回 401；全部通过才执行 `next()`。
+`include.admin.select` 在查 Session 时沿关联取出管理员 ID 和用户名，供后续路由使用；这里不再验证密码，因此不需要取出 `passwordHash`。
 
 `response.locals.admin` 保存**当前这次请求**已经验证的管理员，后面的 handler 可以直接读取。它不会跨请求保留，也不会自动发送给前端。过期记录用 `deleteMany()` 清理，即使另一条请求已删除它，也能继续正常返回 401。
 
@@ -537,7 +574,16 @@ Apifox 和浏览器各自保存 Cookie，因此需要在浏览器重新登录。
 
 ### 5.3 后台布局：查询身份，再显示页面
 
-这里实现图中“刷新后调用 `/me`”。修改现有客户端布局 `app/admin/layout.tsx`，先补齐导入，已有导入合并使用：
+这里实现图中“刷新后调用 `/me`”。把检查放在共用的后台布局中，文章、标签页面就能统一等待身份确认后再显示。请求需要等待，也可能失败，因此页面要区分四种状态：
+
+| 状态 | 页面怎样响应 |
+|---|---|
+| `checking` | 身份尚未确认，显示检查提示 |
+| `authenticated` | `/me` 成功，显示管理员信息和后台内容 |
+| `unauthenticated` | `/me` 返回 401，跳转登录页，等待跳转时不显示后台 |
+| `error` | 网络或服务器出错，显示重试入口；请求失败尚不能证明用户未登录 |
+
+修改现有客户端布局 `app/admin/layout.tsx`，先补齐导入，已有导入合并使用：
 
 ```tsx
 import { Button } from "antd";
@@ -548,7 +594,7 @@ import type { Admin } from "@/features/auth/api";
 import { ApiError } from "@/lib/api-client";
 ```
 
-在组件外增加状态类型：
+在组件外增加状态类型，让已登录状态携带 `admin`，检查失败状态携带错误文案：
 
 ```ts
 type AuthState =
@@ -557,8 +603,6 @@ type AuthState =
   | { status: "unauthenticated" }
   | { status: "error"; message: string };
 ```
-
-`status` 区分检查中、已登录、未登录和检查失败。只有已登录状态带 `admin`，检查失败状态带错误文案。
 
 下面代码放在现有 `AdminLayout` 函数体内。`router` 若已声明就复用；这些 Hook 和原有 Hook 都放在任何提前 `return` 之前：
 
@@ -598,9 +642,9 @@ useEffect(() => {
 }, [router, checkVersion]);
 ```
 
-初次挂载会检查身份，`checkVersion` 变化时重新检查。`active` 与第 16 章的请求清理用法相同：组件卸载或开始下一次检查后，旧请求不再更新状态或触发跳转。
+初次挂载时 Effect 发起检查；重试按钮增加 `checkVersion`，依赖变化会让 Effect 再执行一次。`active` 沿用第 16 章的请求清理方式：组件卸载或开始下一次检查后，忽略旧请求的结果，避免它覆盖当前状态或触发跳转。
 
-在原有布局 JSX 的 `return` 之前加入以下分支，ProLayout、菜单和 `{children}` 继续放在它们之后：
+接着按上表的状态决定显示什么。在原有布局 JSX 的 `return` 之前加入以下分支，ProLayout、菜单和 `{children}` 继续放在它们之后：
 
 ```tsx
 if (auth.status === "checking") {
@@ -630,7 +674,7 @@ const admin = auth.admin;
 
 只有 `authenticated` 状态会执行到原有布局，可以用 `admin.username` 显示管理员。检查期间不返回后台的 `{children}`，文章、标签客户端页面暂时不会挂载并请求数据。
 
-`unauthenticated` 返回 `null`，等待前面的跳转完成。网络或服务器错误则显示重试，因为请求失败还不能证明用户未登录。`/login` 在 `app/admin` 之外，不会套用这段后台检查。
+`/login` 在 `app/admin` 之外，不会套用这段后台检查。
 
 现在验证：正常刷新时 `/me` 返回 200 后显示后台；删除浏览器 Cookie 再刷新，应跳转登录页；重新登录后停止后端再刷新，应看到重试入口，启动后端并重试应恢复页面。
 
