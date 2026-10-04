@@ -12,14 +12,14 @@
 
 ### 1.1 安装依赖
 
-在 `server` 中执行：
+先安装两个后端依赖：`argon2` 用来生成和验证密码哈希；`cookie-parser` 把请求中的 Cookie 整理成 `request.cookies` 对象，供后端读取。在 `server` 中执行：
 
 ```bash
 npm install argon2 cookie-parser
 npm install -D @types/cookie-parser
 ```
 
-`argon2` 负责密码哈希，`cookie-parser` 把请求 Cookie 解析到 `request.cookies`。随机 Token 和 SHA-256 使用 Node.js 自带的 `node:crypto`。
+随机 Token 和 SHA-256 使用 Node.js 自带的 `node:crypto`，不用额外安装。
 
 ### 1.2 建表并检查迁移
 
@@ -51,8 +51,6 @@ model Session {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   admin     Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
 
-  @@index([adminId])
-  @@index([expiresAt])
   @@map("sessions")
 }
 ```
@@ -74,7 +72,7 @@ model Session {
 - `adminId` 是数据库实际保存的外键列；`admin` 和 `sessions` 是 Prisma 的关系字段，分别用于查询所属管理员和该管理员的登录记录，不会额外存成对象列或数组列。
 - `@relation(fields: [adminId], references: [id])` 声明外键指向 `Admin.id`；`onDelete: Cascade` 表示删除管理员时，一起删除他的 Session。
 
-`@map`、`@@map` 沿用前面的命名方式，把字段、模型映射为数据库列名和表名，例如 `passwordHash → password_hash`、`Admin → admins`。两个 `@@index` 分别为按管理员和过期时间查找记录建立索引，不会自动执行查询或清理。
+`@map`、`@@map` 沿用前面的命名方式，把字段、模型映射为数据库列名和表名，例如 `passwordHash → password_hash`、`Admin → admins`。
 
 保存模型后执行迁移，才会真正创建数据库表；随后生成包含新模型的 Prisma Client，并检查类型：
 
@@ -84,13 +82,13 @@ npx prisma generate
 npx tsc --noEmit
 ```
 
-查看迁移 SQL，确认创建了两张表、用户名唯一约束、Session 到 Admin 的外键，以及 `token_hash` 主键和声明的索引。
+查看迁移 SQL，确认创建了两张表、用户名唯一约束、Session 到 Admin 的外键，以及 `token_hash` 主键。
 
 ### 1.3 创建初始管理员
 
 项目没有注册入口，所以先用脚本创建可登录的账号。脚本依次读取用户名和密码、生成密码哈希、写入 `admins`；它由你手动运行，不随每次后端启动执行。
 
-在后端 `.env` 临时设置你自己选择的用户名和至少 12 位密码。下面是占位示例，执行脚本前要替换：
+在后端 `.env` 临时设置你自己选择的用户名和至少 12 个字符的密码。12 是本教程选择的长度下限，不是 Argon2 的技术要求。下面是占位示例，执行脚本前要替换：
 
 ```dotenv
 ADMIN_USERNAME=admin
@@ -108,7 +106,7 @@ const username = process.env.ADMIN_USERNAME;
 const password = process.env.ADMIN_PASSWORD;
 
 if (!username || !password || password.length < 12) {
-  throw new Error("请提供 ADMIN_USERNAME 和至少 12 位的 ADMIN_PASSWORD");
+  throw new Error("请提供 ADMIN_USERNAME 和至少 12 个字符的 ADMIN_PASSWORD");
 }
 
 try {
@@ -128,7 +126,9 @@ try {
 }
 ```
 
-密码通常不够随机，这里使用专门的慢速密码哈希算法 Argon2id。`upsert()` 按用户名查找：账号不存在就创建，已存在就更新密码哈希，因此重复运行脚本不会创建同名账号。
+密码可能被猜测，因此使用专门的慢速密码哈希算法 Argon2id，增加逐个尝试密码的成本。`argon2.hash()` 会生成随机盐（一段随机数据），把盐、计算参数和哈希结果一起编码为 `passwordHash` 字符串，后面验证密码时还会用到这些信息。
+
+`upsert()` 按用户名查找：账号不存在就创建，已存在就更新密码哈希，因此重复运行脚本不会创建同名账号。
 
 在 `package.json` 已有的 `scripts` 中增加：
 
@@ -150,16 +150,35 @@ try {
 
 ### 2.1 准备 Token 和 Cookie 配置
 
-登录时生成 Token、把哈希写入数据库，再把原始 Token 放进 Cookie。后续认证和退出也要使用同一种哈希方法、同一个 Cookie 名称，因此把这些函数和配置集中放在一个文件中：
+**先看谁生成、谁保存**
 
-| 代码 | 作用 |
-|---|---|
-| `createSessionToken()` | 生成 32 字节随机数据，转成可放入 Cookie 的字符串 |
-| `hashSessionToken(token)` | 计算 Token 的 SHA-256 哈希；登录存记录和后续查询用同一种方法 |
-| `createSessionExpiresAt()` | 计算本次登录 7 天后的过期时间 |
-| `sessionCookieOptions` | 设置 Cookie 的使用规则和保存时长 |
+这里的后端就是 `mini-cms/server` 中由 Node.js 运行的 Express 程序。密码验证成功后，**后端生成一串随机字符串，叫 Session Token**，作为后续请求的登录凭证。前端页面不生成它，数据库也不生成它。
 
-新建 `src/modules/auth/session.ts`：
+后端生成的同一个 Token 有两个去向：
+
+```text
+Node.js 后端生成原始 Token
+├─ 后端计算 tokenHash → 通过 Prisma 写入 PostgreSQL 的 Session
+└─ 后端通过 Set-Cookie 响应头发送原始 Token → 浏览器保存到 Cookie
+```
+
+**哈希与 SHA-256 的关系**
+
+哈希是把原始数据按算法计算成一个结果，称为哈希值或摘要；**SHA-256 是一种具体的哈希算法，输出固定为 256 位**。本项目把它对 Token 的计算结果命名为 `tokenHash`。同一个 Token 用 SHA-256 计算，总会得到相同结果，后续请求才能用它找到登录记录，无需还原原始 Token。
+
+这里处理的是后端生成的高随机 Token，使用 SHA-256；用户密码继续使用上一节的慢速密码哈希算法 Argon2id。数据库只存 `tokenHash`，避免其中的值被直接当作原始 Token 使用。
+
+**Cookie 是什么，怎样带回 Token**
+
+Cookie 是浏览器保存的一小段带名称的数据，浏览器会在符合规则的请求中把它发回服务器。本项目的 Cookie 名称是 `mini_cms_session`，值是原始 Token。
+
+登录时，后端通过 `Set-Cookie` 响应头让浏览器保存它；以后请求接口时，浏览器通过 `Cookie` 请求头把它带回来。配置为 HttpOnly 后，页面 JavaScript 不能直接读取这条 Cookie，但浏览器仍能保存和发送，所以页面不用把 Token 存进 `localStorage`。这些规则由下面的 `sessionCookieOptions` 指定。[MDN：Set-Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie)
+
+**把后端要用的函数和配置放在一起**
+
+登录、认证和退出需要共用 Cookie 名称与哈希方法，因此集中定义在 `src/modules/auth/session.ts`。下面只准备这些函数和配置，下一节的登录路由才会调用它们，写入数据库并设置 Cookie 响应头。
+
+新建这个文件：
 
 ```ts
 import { createHash, randomBytes } from "node:crypto";
@@ -189,9 +208,22 @@ export const createSessionExpiresAt = () => {
 };
 ```
 
-随机 Token 已有足够高的随机性，因此使用 SHA-256；密码继续使用上一节的 Argon2id。
+代码中的两个计算都发生在 Node.js 后端：
 
-`maxAge` 是 Cookie 的保存时长，`expiresAt` 是服务器检查的过期时间。本章都设为登录后的 7 天，访问接口时不自动续期；即使客户端继续发送旧 Cookie，后端仍会检查过期时间。`path: "/"` 覆盖本站接口路径，本地 HTTP 下 `secure` 为 false，生产 HTTPS 环境为 true。
+- `randomBytes(32)` 生成 32 字节随机数据，`toString("base64url")` 把它转成适合放入 Cookie 的文本，这就是原始 Token。
+- `createHash("sha256")` 选择哈希算法，`update(token)` 传入原始 Token，`digest("hex")` 把结果输出为十六进制字符串，这就是 `tokenHash`。[Node.js：哈希 API](https://nodejs.org/api/crypto.html#class-hash)
+
+`sessionCookieOptions` 的属性分别控制：
+
+| 配置 | 本项目中的作用 |
+|---|---|
+| `httpOnly: true` | 禁止页面 JavaScript 直接读取这条 Cookie；浏览器仍可自动发送 |
+| `sameSite: "lax"` | 限制从其他网站发起的请求携带这条 Cookie，减少其他网站借用登录状态的机会 |
+| `secure` | 生产环境设为 true，仅通过 HTTPS 发送；本地 HTTP 开发时设为 false |
+| `path: "/"` | 让 `/api/auth`、`/api/articles` 等路径都在这条 Cookie 的适用范围内 |
+| `maxAge` | 指定浏览器保存多久，Express 这里按毫秒计；本章设置为 7 天 |
+
+`createSessionExpiresAt()` 用同一段时长计算数据库的 `expiresAt`：当前时间加 7 天。`maxAge` 约束浏览器保存 Cookie 的时间，`expiresAt` 供后端判断 Session 是否有效；后端仍要检查它，不能只依赖浏览器。本章访问接口时不自动续期。
 
 ### 2.2 验证密码并返回登录结果
 
@@ -256,19 +288,25 @@ authRouter.post("/login", async (request, response) => {
 });
 ```
 
-`argon2.verify()` 接收数据库中的密码哈希和用户输入的密码，返回是否匹配。验证成功后，先 `await prisma.session.create()` 确认登录记录保存成功，再设置 Cookie，避免发出一份数据库尚未认可的凭证。
+`argon2.verify(admin.passwordHash, password)` 在后端验证：读取已保存的盐和参数，计算本次输入密码的哈希，再与 `passwordHash` 中保存的哈希结果比较，返回 `true` 或 `false`。这是按相同规则重新计算，不是还原密码，也不用自己再调用 `hash()` 生成一份新盐来比较。
+
+验证成功后，先 `await prisma.session.create()` 确认登录记录保存成功，再设置 Cookie，避免发出一份数据库尚未认可的凭证。
 
 最后的 `response.cookie()` 设置 `Set-Cookie` 响应头，`response.json()` 返回管理员信息；一次响应同时完成两件事，JSON 中不包含 Token。
 
-用户名不存在和密码错误都返回 401 `INVALID_CREDENTIALS`。本章先完成认证主链路，更完整的登录系统还需要登录频率限制等措施。
+用户名不存在和密码错误都返回 401 `INVALID_CREDENTIALS`，表示这次请求没有通过身份验证。本章先完成认证主链路，更完整的登录系统还需要登录频率限制等措施。
 
 ### 2.3 把登录路由接到 app
 
+本地前端是 `http://localhost:3000`，后端是 `http://localhost:3001`。**来源（origin）由协议、主机和端口组成**，这里端口不同，浏览器会把它们之间的请求视为跨来源请求。CORS 就是后端通过响应头，告诉浏览器哪些来源可以读取跨来源响应的机制。
+
 路由写好后，要先让请求经过下面的配置，再交给它处理：
 
-- **CORS**：允许指定后台读取带凭证的跨来源响应。
+- **CORS**：`origin` 指定允许的前端来源，`credentials: true` 允许该前端读取带凭证的响应。这里的凭证主要指 Cookie 中的登录 Token。
 - **请求解析**：`express.json()` 得到 `request.body`，`cookieParser()` 得到 `request.cookies`，供后续路由和认证中间件使用。
-- **来源检查**：CORS 不能保证跨站写请求不会到达服务器，因此在执行业务前检查 `Origin`，拒绝来自其他来源的写请求。
+- **来源检查**：浏览器会用 `Origin` 请求头标明请求来自哪个来源。CORS 不能保证其他网站的写请求不会到达服务器，因此在执行业务前检查这个值，来源不符就返回 403。
+
+第 5.1 节接浏览器时，前端还会设置 `credentials: "include"`，允许请求接收和携带 Cookie；前后端两处需要配合。虽然上面的 localhost 地址跨来源，但仍属于同站，端口不同不会让 `SameSite=Lax` 阻止这里的 Cookie。
 
 在后端 `.env` 中增加后台来源，并在 `.env.example` 中保留对应示例：
 
@@ -324,7 +362,7 @@ app.use("/api/auth", authRouter);
 
 第 12 章原来的 `articleRouter` 中有一个 `/health` handler，现在删除它，使用上面的公开 `/api/health`。原有文章、标签路由继续放在这段代码之后，第 3 节再接入认证；404 处理和错误中间件仍在所有路由之后，错误中间件放最后。
 
-`safeMethods` 中的 GET、HEAD 用于读取，OPTIONS 用于预检，这三种请求跳过写入来源检查；其余请求的 `Origin` 必须与配置一致。解析 Cookie 和检查来源都不能确认管理员身份，第 3 节再实现认证。
+`safeMethods` 中的 GET、HEAD 用于读取；OPTIONS 是浏览器在部分跨来源请求前，询问服务器是否允许该请求的“预检”。这三种请求跳过写入来源检查，其余请求的 `Origin` 必须与配置一致。解析 Cookie 和检查来源都不能确认管理员身份，第 3 节再实现认证。
 
 `app.use("/api/auth", authRouter)` 把 Router 内的 `/login` 接成 `/api/auth/login`。
 
@@ -364,7 +402,15 @@ JSON 请求体填入第 1.3 节创建的账号密码：
 
 ### 3.1 实现 requireAuth
 
-查询身份、管理文章和管理标签，都需要相同的登录检查，因此把它提取为可复用的中间件。每次请求依次经过：**读取 Cookie 中的 Token → 计算哈希并查 Session → 检查是否过期 → 保存管理员身份 → 调用 `next()` 放行**。没有有效凭证就返回 401。
+查询身份、管理文章和管理标签，都需要相同的登录检查，因此把它提取为可复用的中间件。每次请求依次经过：**读取 Cookie 中的 Token → 计算哈希并查 Session → 检查是否过期 → 把管理员身份交给后续路由 → 调用 `next()` 放行**。没有有效凭证就返回 401。
+
+前面注册的 `cookieParser()` 会先完成这一步转换。下面的 `example-token` 仅用于示意：
+
+```text
+浏览器发送：Cookie: mini_cms_session=example-token
+后端解析为：request.cookies = { mini_cms_session: "example-token" }
+中间件读取：request.cookies[sessionCookieName] → "example-token"
+```
 
 新建 `src/middleware/require-auth.ts`：
 
@@ -407,11 +453,13 @@ export const requireAuth: RequestHandler = async (request, response, next) => {
 };
 ```
 
-`include.admin.select` 在查 Session 时沿关联取出管理员 ID 和用户名，供后续路由使用；这里不再验证密码，因此不需要取出 `passwordHash`。
+查询先按 `tokenHash` 定位 Session。假设记录中的 `adminId` 是 `1`，`include.admin.select` 就会关联 `Admin.id = 1` 的账号，把选出的字段放进查询结果，例如 `session.admin = { id: 1, username: "admin" }`。后续路由只需要这份身份信息，不需要重新验证密码或读取 `passwordHash`。
 
 `response.locals.admin` 保存**当前这次请求**已经验证的管理员，后面的 handler 可以直接读取。它不会跨请求保留，也不会自动发送给前端。过期记录用 `deleteMany()` 清理，即使另一条请求已删除它，也能继续正常返回 401。
 
 ### 3.2 用 /me 读取已经验证的管理员
+
+`/me` 表示“当前请求对应的管理员”。前端带着已有 Cookie 请求它，后端返回管理员 ID 和用户名，供页面显示。这个接口只查询已有登录记录，不要求再次提交密码，也不创建新的 Session。
 
 在 `auth.routes.ts` 顶部增加 `requireAuth` 导入，在已有登录路由后增加 `/me`：
 
@@ -467,7 +515,9 @@ app.use("/api/tags", requireAuth, tagRouter);
 
 ## 4. 跑通退出：让当前凭证失效
 
-对应图中 **③ 退出**。在 `auth.routes.ts` 已有路由后增加：
+对应图中 **③ 退出**。退出要同时处理服务器和浏览器：**先删除 Session，让旧 Token 失效；再清除 Cookie，让浏览器不再携带它。** 如果只清除 Cookie，旧 Token 对应的数据库记录仍然有效，再次发来仍可能通过认证。
+
+在 `auth.routes.ts` 已有路由后增加：
 
 ```ts
 authRouter.post("/logout", async (request, response) => {
@@ -501,6 +551,8 @@ authRouter.post("/logout", async (request, response) => {
 
 ### 5.1 统一携带 Cookie，并保留错误状态码
 
+浏览器接入后，请求层要做两件事：让 Cookie 随请求往返，以及把后端返回的 401 交给页面识别。`fetch` 默认只为同来源请求处理凭证；这里前后端端口不同，需要显式设置 `credentials: "include"`。
+
 第 16 章的 `lib/api-client.ts` 只抛出普通 `Error`，页面无法区分 401 和其他失败。在同一文件新增 `ApiError`，替换公共 `requestJson()`，并增加 `apiRequestNoContent()`；原来的 `ApiFailure`、`API_BASE_URL`、`apiRequest()` 和 `apiListRequest()` 保留：
 
 ```ts
@@ -531,7 +583,9 @@ export function apiRequestNoContent(path: string, options?: RequestInit) {
 }
 ```
 
-所有请求从这里统一设置 `credentials`，包括第一次登录。退出返回 204，`apiRequestNoContent()` 只等待请求完成，避免交给读取 `body.data` 的 `apiRequest()`。
+`credentials: "include"` 让浏览器在跨来源请求中接收响应设置的 Cookie，并携带符合规则的已有 Cookie。因此第一次登录也要设置它，后续请求才有凭证可带；第 2.3 节后端的 `credentials: true` 则允许浏览器把带凭证的跨来源响应交给页面读取。[MDN：credentials](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials)
+
+后端返回 401 时，`requestJson()` 抛出带有 `status` 的 `ApiError`，页面在 `catch` 中就能区分登录失效和其他错误。退出返回 204，没有 JSON；`apiRequestNoContent()` 只等待请求完成，避免交给读取 `body.data` 的 `apiRequest()`。
 
 新建 `features/auth/api.ts`，把三个接口封装成页面可调用的函数：
 
@@ -574,7 +628,9 @@ Apifox 和浏览器各自保存 Cookie，因此需要在浏览器重新登录。
 
 ### 5.3 后台布局：查询身份，再显示页面
 
-这里实现图中“刷新后调用 `/me`”。把检查放在共用的后台布局中，文章、标签页面就能统一等待身份确认后再显示。请求需要等待，也可能失败，因此页面要区分四种状态：
+刷新页面后，React 中的管理员状态会重新初始化，但浏览器仍可能保存着未过期的 Cookie。因此布局挂载时调用 `/me`，让后端检查这份 Cookie 是否仍有效，再返回管理员信息，重新填入页面状态。
+
+把检查放在共用的后台布局中，文章、标签页面就能统一等待身份确认后再显示。请求需要等待，也可能失败，因此页面要区分四种状态：
 
 | 状态 | 页面怎样响应 |
 |---|---|
@@ -736,6 +792,17 @@ app/admin/layout.tsx
 - 删除遇到 401，提示登录已失效，不显示删除成功，也不移除列表数据。
 - 其他网络、服务器或业务错误继续使用原来的反馈。
 
+以保留表单输入为例：从 `@/lib/api-client` 导入 `ApiError`，在现有 DrawerForm 的 `onFinish` 回调中，把下面的分支放到 **`catch (error)` 内最前面**，后面的普通错误处理保留：
+
+```ts
+if (error instanceof ApiError && error.status === 401) {
+  setSubmitError("登录已失效，请先保留输入并重新登录");
+  return false;
+}
+```
+
+`setSubmitError` 沿用现有表单的 Alert 显示错误；`return false` 让 DrawerForm 保留抽屉和输入。这个分支不执行跳转，用户先保留内容，再重新登录。
+
 可以在浏览器登录后，用 TablePro 按 `admin_id` 和 `created_at` 找到本次登录产生的 Session，删除这条记录后再操作页面，观察失效反馈。前端 Cookie 此时仍可能存在，但后端已经不会认可它；验证后重新登录。
 
 ## 6. 走完完整流程，再进入测试章节
@@ -755,6 +822,7 @@ npx tsc --noEmit
 ## 官方参考
 
 - [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
+- [node-argon2：生成与验证密码哈希](https://github.com/ranisalt/node-argon2#usage)
 - [OWASP Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)
 - [OWASP CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
 - [Node.js crypto.randomBytes](https://nodejs.org/docs/latest/api/crypto.html#cryptorandombytessize-callback)
