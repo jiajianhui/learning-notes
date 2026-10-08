@@ -417,17 +417,45 @@ Cookie 标签可能没有展示 `SameSite`；是否设置了 `SameSite=Lax`，�
 
 ### 3.1 实现 requireAuth
 
-查询身份、管理文章和管理标签，都需要相同的登录检查，因此把它提取为可复用的中间件。每次请求依次经过：**读取 Cookie 中的 Token → 计算哈希并查 Session → 检查是否过期 → 把管理员身份交给后续路由 → 调用 `next()` 放行**。没有有效凭证就返回 401。
+登录成功后，客户端已保存 Cookie 中的 Token。现在要处理的是下一次请求：**后端收到这个 Token，怎样确认它仍然对应一次有效登录？** 查询身份、管理文章和管理标签都需要这段检查，所以把它写成共用的 `requireAuth` 中间件，放在业务处理之前。
 
-前面注册的 `cookieParser()` 会先完成这一步转换。下面的 `example-token` 仅用于示意：
+**先从 Cookie 找到登录记录**
+
+前面注册的 `cookieParser()` 把 Cookie 请求头整理成对象，`requireAuth` 再按名称取出 Token。下面的 `example-token` 仅用于示意：
 
 ```text
-浏览器发送：Cookie: mini_cms_session=example-token
+客户端发送：Cookie: mini_cms_session=example-token
 后端解析为：request.cookies = { mini_cms_session: "example-token" }
 中间件读取：request.cookies[sessionCookieName] → "example-token"
 ```
 
-新建 `src/middleware/require-auth.ts`：
+拿到 Token 后，用第 2.1 节的 `hashSessionToken()` 重新计算哈希，再用 `findUnique({ where: { tokenHash } })` 查找登录时保存的 Session。查不到时，结果是 `null`。
+
+查到 Session 后，还需要知道它属于哪个管理员。因此查询中用 `include.admin` 带出关联的管理员，再用 `select` 只取 `id` 和 `username`。例如 Session 的 `adminId` 为 `1`，就关联 `Admin.id = 1` 的账号，查询结果会包含：
+
+```text
+session（只列出后面要用的字段）
+├─ adminId: 1
+├─ expiresAt: 登录时设定的过期时间（Date 对象）
+└─ admin: { id: 1, username: "admin" }
+```
+
+这里的 `session.admin` 是 Prisma 根据表关系查出的管理员对象；本次请求用 Token 验证身份，不需要再读取密码哈希。
+
+**再判断这次登录是否仍有效**
+
+有记录不代表还有效：数据库不会在 `expiresAt` 到期时自动删除它，所以还要比较 `session.expiresAt <= new Date()`，判断是否已经到期。
+
+- 没有字符串形式的 Token、查不到 Session 或 Session 已过期，都抛出 `AppError(401, ...)`。当前函数在这里结束，由已有错误中间件返回 401，业务处理不会继续执行。
+- 如果查到了过期记录，顺便用 `deleteMany()` 清理。这里按唯一的 `tokenHash` 删除，最多影响一条记录；记录已不存在时也不会因此报错。
+
+**通过后，把管理员身份交给后续路由**
+
+将查出的 `session.admin` 放进 `response.locals.admin`，后续处理函数就能使用这份身份信息。`locals` 是 Express 提供的对象，只在**当前这次请求**中共享数据；赋值不会写入数据库，也不会自动发送 JSON。
+
+然后调用 `next()`，让 Express 继续执行后面注册的处理函数。下一节会把 `requireAuth` 放在 `/me` 的响应函数前面，由那个函数读取管理员信息并返回 JSON。
+
+理解这三步后，新建 `src/middleware/require-auth.ts`，写入完整实现。`RequestHandler` 是 Express 提供的函数类型，用于标注这里的中间件：
 
 ```ts
 import type { RequestHandler } from "express";
@@ -468,15 +496,13 @@ export const requireAuth: RequestHandler = async (request, response, next) => {
 };
 ```
 
-查询先按 `tokenHash` 定位 Session。假设记录中的 `adminId` 是 `1`，`include.admin.select` 就会关联 `Admin.id = 1` 的账号，把选出的字段放进查询结果，例如 `session.admin = { id: 1, username: "admin" }`。后续路由只需要这份身份信息，不需要重新验证密码或读取 `passwordHash`。
-
-`response.locals.admin` 保存**当前这次请求**已经验证的管理员，后面的 handler 可以直接读取。它不会跨请求保留，也不会自动发送给前端。过期记录用 `deleteMany()` 清理，即使另一条请求已删除它，也能继续正常返回 401。
+现在只是定义好了检查函数，下一节把它接到 `/me`，通过真实请求验证。
 
 ### 3.2 用 /me 读取已经验证的管理员
 
 `/me` 表示“当前请求对应的管理员”。前端带着已有 Cookie 请求它，后端返回管理员 ID 和用户名，供页面显示。这个接口只查询已有登录记录，不要求再次提交密码，也不创建新的 Session。
 
-在 `auth.routes.ts` 顶部增加 `requireAuth` 导入，在已有登录路由后增加 `/me`：
+在 `auth.routes.ts` 顶部增加 `requireAuth` 导入，在已有登录路由后增加 `/me`。下面的处理按注册顺序执行：`requireAuth` 检查身份并调用 `next()` 后，才会进入后面的响应函数，读取 `response.locals.admin` 并返回 JSON。
 
 ```ts
 import { requireAuth } from "../../middleware/require-auth";
@@ -493,7 +519,7 @@ authRouter.get("/me", requireAuth, (_request, response) => {
 });
 ```
 
-`requireAuth` 先查出身份，后面的 handler 把 `response.locals.admin` 转成响应 JSON。现在用 Apifox 请求 `GET http://localhost:3001/api/auth/me`：
+现在用 Apifox 请求 `GET http://localhost:3001/api/auth/me`：
 
 - 携带第 2 节保存的 Cookie，应返回 200 和管理员信息。
 - 关闭该请求的 Cookie 携带，应返回 401；确认 Cookie 管理没有自动补上它。
@@ -508,7 +534,7 @@ authRouter.get("/me", requireAuth, (_request, response) => {
 import { requireAuth } from "./middleware/require-auth";
 ```
 
-把原有文章、标签路由注册替换为：
+这次把 `requireAuth` 放在整个业务 Router 前面：验证通过并调用 `next()` 后，才进入 `articleRouter` 或 `tagRouter`。把原有文章、标签路由注册替换为：
 
 ```ts
 app.use("/api/articles", requireAuth, articleRouter);
@@ -532,6 +558,8 @@ app.use("/api/tags", requireAuth, tagRouter);
 
 对应图中 **③ 退出**。退出要同时处理服务器和浏览器：**先删除 Session，让旧 Token 失效；再清除 Cookie，让浏览器不再携带它。** 如果只清除 Cookie，旧 Token 对应的数据库记录仍然有效，再次发来仍可能通过认证。
 
+清除 Cookie 使用 `response.clearCookie()`：它发送一个 `Set-Cookie` 响应头，把过期时间设到过去，让浏览器删除 Cookie。名称、`path` 等配置沿用登录时的设置；这里不传保存 7 天的 `maxAge`，过期时间由 `clearCookie()` 设置。[Express：clearCookie](https://expressjs.com/en/5x/api/response/#res.clearCookie)
+
 在 `auth.routes.ts` 已有路由后增加：
 
 ```ts
@@ -554,7 +582,7 @@ authRouter.post("/logout", async (request, response) => {
 });
 ```
 
-`deleteMany()` 删除当前 Token 对应的记录，即使记录已不存在也允许继续。`response.clearCookie()` 设置让 Cookie 过期的响应头，`path` 等选项与创建 Cookie 时保持一致；204 响应不带 JSON。
+`deleteMany()` 只删除当前 Token 对应的记录，其他设备的登录不受影响；记录不存在也允许继续。最后返回 204，表示退出处理完成，没有响应体。
 
 退出接口不挂 `requireAuth`，这样过期或已被删除的凭证也能完成 Cookie 清理。写请求的 `Origin` 检查仍然执行。
 
@@ -566,9 +594,11 @@ authRouter.post("/logout", async (request, response) => {
 
 ### 5.1 统一携带 Cookie，并保留错误状态码
 
-浏览器接入后，请求层要做两件事：让 Cookie 随请求往返，以及把后端返回的 401 交给页面识别。`fetch` 默认只为同来源请求处理凭证；这里前后端端口不同，需要显式设置 `credentials: "include"`。
+第 16 章已经把请求集中到 `lib/api-client.ts`。现在继续修改这个文件，让它支持登录需要的 Cookie、401 错误和退出接口的 204 响应。原来的 `ApiFailure`、`API_BASE_URL`、`apiRequest()` 和 `apiListRequest()` 保留，下面依次调整三个位置。
 
-第 16 章的 `lib/api-client.ts` 只抛出普通 `Error`，页面无法区分 401 和其他失败。在同一文件新增 `ApiError`，替换公共 `requestJson()`，并增加 `apiRequestNoContent()`；原来的 `ApiFailure`、`API_BASE_URL`、`apiRequest()` 和 `apiListRequest()` 保留：
+**让错误同时携带状态码和提示文字**
+
+原来只抛出 `Error(message)`，页面只能拿到文字。现在页面需要知道失败是否由登录失效引起，所以新增 `ApiError`：沿用 `Error` 的 `message`，再通过 `public status` 把传入的 HTTP 状态码保存成对象属性。
 
 ```ts
 export class ApiError extends Error {
@@ -577,7 +607,25 @@ export class ApiError extends Error {
     this.name = "ApiError";
   }
 }
+```
 
+例如后端返回 401，请求层就抛出带有 `status: 401` 的 `ApiError`。页面先用 `error instanceof ApiError` 确认错误类型，再读 `error.status`，就能判断是否需要重新登录。
+
+**让公共请求函数携带 Cookie，并分别处理响应**
+
+`fetch` 默认只为同来源请求处理凭证。这里前后端端口不同，要设置 `credentials: "include"`，让浏览器接收登录响应中的 Cookie，并在后续请求中携带它。第一次登录也必须使用这个配置；后端的 `credentials: true` 则允许页面读取带凭证的跨来源响应。[MDN：credentials](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials)
+
+收到响应后，按下面三种情况处理：
+
+| 响应 | 请求函数怎样处理 |
+|---|---|
+| 失败，例如 401 | 读取后端错误文案，连同状态码一起放入 `ApiError` 抛出 |
+| 成功且为 204 | 没有响应体，直接结束，不调用 `response.json()` |
+| 其他成功响应 | 沿用原来的方式解析并返回 JSON |
+
+用下面代码替换原来的 `requestJson()`：
+
+```ts
 async function requestJson<S>(path: string, options?: RequestInit): Promise<S> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -592,17 +640,23 @@ async function requestJson<S>(path: string, options?: RequestInit): Promise<S> {
   if (response.status === 204) return undefined as S;
   return response.json();
 }
+```
 
+`S` 沿用原来“整个成功响应”的类型参数。204 分支中的 `as S` 是类型断言，运行时返回的值仍然是 `undefined`。
+
+**给退出接口准备一个不读取 data 的入口**
+
+原来的 `apiRequest()` 会从 JSON 中取出 `body.data`，而退出接口没有 JSON，所以新增下面的函数。`requestJson<void>` 表示成功后没有业务数据返回，调用方仍然需要 `await` 等待请求完成。
+
+```ts
 export function apiRequestNoContent(path: string, options?: RequestInit) {
   return requestJson<void>(path, options);
 }
 ```
 
-`credentials: "include"` 让浏览器在跨来源请求中接收响应设置的 Cookie，并携带符合规则的已有 Cookie。因此第一次登录也要设置它，后续请求才有凭证可带；第 2.3 节后端的 `credentials: true` 则允许浏览器把带凭证的跨来源响应交给页面读取。[MDN：credentials](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials)
+**把三个后端接口封装成页面函数**
 
-后端返回 401 时，`requestJson()` 抛出带有 `status` 的 `ApiError`，页面在 `catch` 中就能区分登录失效和其他错误。退出返回 204，没有 JSON；`apiRequestNoContent()` 只等待请求完成，避免交给读取 `body.data` 的 `apiRequest()`。
-
-新建 `features/auth/api.ts`，把三个接口封装成页面可调用的函数：
+`login()` 和 `getCurrentAdmin()` 都通过 `apiRequest<Admin>()` 取得管理员对象；`logout()` 使用刚增加的 `apiRequestNoContent()`，只等待退出完成。新建 `features/auth/api.ts`：
 
 ```ts
 import { apiRequest, apiRequestNoContent } from "@/lib/api-client";
@@ -665,7 +719,9 @@ import type { Admin } from "@/features/auth/api";
 import { ApiError } from "@/lib/api-client";
 ```
 
-在组件外增加状态类型，让已登录状态携带 `admin`，检查失败状态携带错误文案：
+**用状态记录检查结果**
+
+在组件外增加状态类型。`status` 标记当前处于哪一种情况：确认登录后才有 `admin`，检查出错时才有错误文案 `message`。
 
 ```ts
 type AuthState =
@@ -675,13 +731,21 @@ type AuthState =
   | { status: "error"; message: string };
 ```
 
-下面代码放在现有 `AdminLayout` 函数体内。`router` 若已声明就复用；这些 Hook 和原有 Hook 都放在任何提前 `return` 之前：
+在现有 `AdminLayout` 函数体内增加下面的状态：`auth` 保存当前检查结果，初始值为 `checking`；`checkVersion` 是重试计数，后面的 Effect 监听它，数值增加时就重新请求 `/me`。`router` 若已声明就复用；这些 Hook 和原有 Hook 都放在任何提前 `return` 之前：
 
 ```tsx
 const router = useRouter();
 const [auth, setAuth] = useState<AuthState>({ status: "checking" });
 const [checkVersion, setCheckVersion] = useState(0);
+```
 
+**请求 /me，把结果写入状态**
+
+紧接着加入下面的 Effect。布局初次挂载或 `checkVersion` 变化时，它调用 `getCurrentAdmin()`：成功就把返回的管理员放入 `auth.admin`；401 就转到登录页；其他失败保留重试入口。
+
+这里的 `active` 表示“这次检查的结果是否还需要处理”。组件卸载或开始下一次检查时，清理函数将它设为 `false`，旧请求即使稍后完成，也不再更新状态或触发跳转。它只负责忽略旧结果，不会取消已经发出的请求。
+
+```tsx
 useEffect(() => {
   let active = true;
 
@@ -713,9 +777,11 @@ useEffect(() => {
 }, [router, checkVersion]);
 ```
 
-初次挂载时 Effect 发起检查；重试按钮增加 `checkVersion`，依赖变化会让 Effect 再执行一次。`active` 沿用第 16 章的请求清理方式：组件卸载或开始下一次检查后，忽略旧请求的结果，避免它覆盖当前状态或触发跳转。
+**按状态决定显示什么**
 
-接着按上表的状态决定显示什么。在原有布局 JSX 的 `return` 之前加入以下分支，ProLayout、菜单和 `{children}` 继续放在它们之后：
+请求完成后，`setAuth()` 会让组件重新渲染。下面先处理检查中、等待跳转、检查出错三种情况，剩下的已登录状态再显示后台。在原有布局 JSX 的 `return` 之前加入这些分支，ProLayout、菜单和 `{children}` 继续放在它们之后：
+
+重试按钮做两件事：把 `auth` 改回 `checking`，显示检查提示；把 `checkVersion` 加一，触发 Effect 再次请求。只改 `auth` 不会重新执行上面的 Effect，因为它的依赖中没有 `auth`。
 
 ```tsx
 if (auth.status === "checking") {
@@ -751,6 +817,8 @@ const admin = auth.admin;
 
 ### 5.4 退出按钮：等待退出成功再跳转
 
+退出按钮先调用 `logout()`，等后端完成 Session 删除和 Cookie 清理，再清空页面中的管理员状态并跳转。请求失败时保留页面、提示重试，避免页面已经显示退出，服务器却仍保留登录记录。
+
 在同一个布局文件中，从 `antd` 增加 `App` 导入，从 `@/features/auth/api` 增加 `logout` 导入。下面代码放在组件体内、5.3 的所有提前 `return` 之前：
 
 ```tsx
@@ -779,7 +847,7 @@ async function handleLogout() {
 </Button>
 ```
 
-成功后清空管理员状态并跳转，失败时保留页面并提示。点击退出后，再直接打开 `/admin/articles`，应经过 `/me` 检查回到登录页。
+点击退出后，再直接打开 `/admin/articles`，应经过 `/me` 检查回到登录页。
 
 完成后，布局文件中的新增内容应按下面的顺序排列。这是位置示意，不是替换现有布局的代码：
 
@@ -800,7 +868,15 @@ app/admin/layout.tsx
 
 ### 5.5 处理后台使用过程中的登录失效
 
-布局挂载时检查一次，使用期间 Session 仍可能过期。文章、标签请求也要识别 `error instanceof ApiError && error.status === 401`：
+布局完成登录检查后，使用期间 Session 仍可能过期。此时页面里的管理员状态不会自动变化，下一次文章或标签请求才会从后端得知凭证已失效。错误会沿着这条路径传到页面：
+
+```text
+后端 requireAuth 检查失败 → 返回 401 和错误 JSON
+→ 前端 requestJson() 抛出带有 status: 401 的 ApiError
+→ 列表的 onRequestError 或提交、删除操作的 catch 收到错误
+```
+
+所以这些位置也要判断 `error instanceof ApiError && error.status === 401`，再按当前操作给出反馈：
 
 - 列表的 `onRequestError` 遇到 401，提示登录已失效并跳转 `/login`。
 - 表单提交遇到 401，提示“登录已失效，请先保留输入并重新登录”，保留抽屉和输入，`onFinish` 返回 `false`。先保留内容，再由用户重新登录，避免直接跳转丢失编辑内容。
@@ -832,7 +908,7 @@ if (error instanceof ApiError && error.status === 401) {
 npx tsc --noEmit
 ```
 
-再在 `admin-web-antd` 中执行 `npm run build`。接口、页面和检查都通过后，回到[第 10 章项目总览](./10-MiniCMS项目总览.md)验收阶段 6，再进入[第 18 章](./18-后端测试怎么分层.md)和[第 18A 章](./18A-接口测试实操-用Vitest和Supertest验证API.md)，把这些行为写成自动化测试。
+再在 `admin-web-antd` 中执行 `npm run build`。接口、页面和检查都通过后，回看[第 17 章的流程图](./17-登录Cookie和基本安全.md)，把登录路由、认证中间件、退出路由和前端操作对应起来。然后回到[第 10 章项目总览](./10-MiniCMS项目总览.md)验收阶段 6，再进入[第 18 章](./18-后端测试怎么分层.md)和[第 18A 章](./18A-接口测试实操-用Vitest和Supertest验证API.md)，把这些行为写成自动化测试。
 
 ## 官方参考
 
