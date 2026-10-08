@@ -166,7 +166,12 @@ Node.js 后端生成原始 Token
 
 哈希是把原始数据按算法计算成一个结果，称为哈希值或摘要；**SHA-256 是一种具体的哈希算法，输出固定为 256 位**。本项目把它对 Token 的计算结果命名为 `tokenHash`。同一个 Token 用 SHA-256 计算，总会得到相同结果，后续请求才能用它找到登录记录，无需还原原始 Token。
 
-这里处理的是后端生成的高随机 Token，使用 SHA-256；用户密码继续使用上一节的慢速密码哈希算法 Argon2id。数据库只存 `tokenHash`，避免其中的值被直接当作原始 Token 使用。
+密码和 Token 都要做哈希，但选择算法的原因不同：
+
+- **密码用 Argon2id**：人设置的密码可能被猜中，较慢的计算能增加反复尝试密码的成本。
+- **Token 用 SHA-256**：本章的 Token 由后端生成 32 字节随机数据得到，难以猜中，使用 SHA-256 计算用于查询的哈希即可。
+
+原始 Token 是登录凭证，别人拿到它，就可能冒用你的登录状态。因此数据库只保存它的哈希 `tokenHash`；即使 Session 表的数据泄露，也不会直接暴露原始 Token。
 
 **Cookie 是什么，怎样带回 Token**
 
@@ -265,7 +270,7 @@ authRouter.post("/login", async (request, response) => {
   const admin = await prisma.admin.findUnique({ where: { username } });
 
   if (!admin || !(await argon2.verify(admin.passwordHash, password))) {
-    throw new AppError(401, "INVALID_CREDENTIALS", "用户名或密码错误");
+    throw new AppError(401, "INVALID_CREDENTIALS", "账户不存在或密码错误");
   }
 
   const token = createSessionToken();
@@ -288,13 +293,20 @@ authRouter.post("/login", async (request, response) => {
 });
 ```
 
-`argon2.verify(admin.passwordHash, password)` 在后端验证：读取已保存的盐和参数，计算本次输入密码的哈希，再与 `passwordHash` 中保存的哈希结果比较，返回 `true` 或 `false`。这是按相同规则重新计算，不是还原密码，也不用自己再调用 `hash()` 生成一份新盐来比较。
+`argon2.verify(admin.passwordHash, password)` 接收数据库中的 `passwordHash` 和请求体中的原始密码 `password`。**验证的核心就是：重新计算输入密码的哈希，与已保存的哈希结果比较，匹配返回 `true`，不匹配返回 `false`。**
+
+`passwordHash` 这串文本除了哈希结果，还包含算法、盐和计算参数：
+
+- **盐**：创建账号时生成的一段随机数据，会和密码一起参与哈希计算。不同的盐能让相同密码得到不同的哈希结果。
+- **计算参数**：内存用量、计算轮数等设置，决定当时怎样计算哈希。
+
+`verify()` 会从 `passwordHash` 中取出原来的盐和参数，让这次计算与创建账号时使用相同规则。若自己再调用 `argon2.hash(password)`，默认会生成新的随机盐，即使输入同一个密码，得到的字符串通常也不同，不能直接与数据库中的整串 `passwordHash` 比较。因此验证时直接使用 `verify()`，由它完成重新计算和比较。[node-argon2：hash 与 verify 的实现](https://github.com/ranisalt/node-argon2/blob/master/argon2.cjs)
 
 验证成功后，先 `await prisma.session.create()` 确认登录记录保存成功，再设置 Cookie，避免发出一份数据库尚未认可的凭证。
 
 最后的 `response.cookie()` 设置 `Set-Cookie` 响应头，`response.json()` 返回管理员信息；一次响应同时完成两件事，JSON 中不包含 Token。
 
-用户名不存在和密码错误都返回 401 `INVALID_CREDENTIALS`，表示这次请求没有通过身份验证。本章先完成认证主链路，更完整的登录系统还需要登录频率限制等措施。
+找不到账号或密码验证失败，都返回 401 `INVALID_CREDENTIALS`，提示“账户不存在或密码错误”，表示这次请求没有通过身份验证。本章先完成认证主链路，更完整的登录系统还需要登录频率限制等措施。
 
 ### 2.3 把登录路由接到 app
 
@@ -391,8 +403,11 @@ JSON 请求体填入第 1.3 节创建的账号密码：
 | 观察位置 | 成功时应该看到什么 |
 |---|---|
 | 响应 JSON | 200，`data` 中有管理员 ID、用户名 |
-| 响应头与 Apifox Cookie 管理 | `mini_cms_session` 被设置并保存，包含 HttpOnly 和 SameSite=Lax |
+| 响应区的 Header 标签 | `Set-Cookie` 设置了 `mini_cms_session`，其中包含 `HttpOnly` 和 `SameSite=Lax` |
+| Apifox Cookie 管理 | 已保存 `mini_cms_session`，值为登录时生成的原始 Token |
 | TablePro 的 `sessions` 表 | 新记录的 `admin_id` 指向管理员，`expires_at` 约为 7 天后；`token_hash` 与 Cookie 的原始 Token 不同 |
+
+Cookie 标签可能没有展示 `SameSite`；是否设置了 `SameSite=Lax`，以 Header 标签中的 `Set-Cookie` 为准。
 
 确认 Apifox 允许后续请求携带这条 Cookie。之后所有 `POST`、`PATCH`、`DELETE` 请求都继续设置准确的 `Origin`，否则会先返回 403，尚未进入认证。浏览器页面接入后，`Origin` 由浏览器设置。
 
