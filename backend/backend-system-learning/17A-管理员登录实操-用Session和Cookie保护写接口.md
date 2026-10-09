@@ -409,7 +409,9 @@ JSON 请求体填入第 1.3 节创建的账号密码：
 
 Cookie 标签可能没有展示 `SameSite`；是否设置了 `SameSite=Lax`，以 Header 标签中的 `Set-Cookie` 为准。
 
-确认 Apifox 允许后续请求携带这条 Cookie。之后所有 `POST`、`PATCH`、`DELETE` 请求都继续设置准确的 `Origin`，否则会先返回 403，尚未进入认证。浏览器页面接入后，`Origin` 由浏览器设置。
+Apifox 会自动保存登录响应中的 Cookie，并在后续符合域名和路径的请求中自动携带，无需手动复制 Token。[Apifox：登录态如何处理](https://docs.apifox.com/5802184m0)
+
+之后所有 `POST`、`PATCH`、`DELETE` 请求都继续设置准确的 `Origin`，否则会先返回 403，尚未进入认证。浏览器页面接入后，`Origin` 由浏览器设置。
 
 ## 3. 验证身份：让管理接口只接受有效凭证
 
@@ -429,6 +431,8 @@ Cookie 标签可能没有展示 `SameSite`；是否设置了 `SameSite=Lax`，�
 中间件读取：request.cookies[sessionCookieName] → "example-token"
 ```
 
+如果请求没带这条 Cookie，读到的 `token` 就是 `undefined`。因此先用 `typeof token !== "string"` 拦住缺少或类型不对的凭证，返回 401「请先登录」。拿到字符串也不代表登录有效，还要继续查询和检查 Session。
+
 拿到 Token 后，用第 2.1 节的 `hashSessionToken()` 重新计算哈希，再用 `findUnique({ where: { tokenHash } })` 查找登录时保存的 Session。查不到时，结果是 `null`。
 
 查到 Session 后，还需要知道它属于哪个管理员。因此查询中用 `include.admin` 带出关联的管理员，再用 `select` 只取 `id` 和 `username`。例如 Session 的 `adminId` 为 `1`，就关联 `Admin.id = 1` 的账号，查询结果会包含：
@@ -446,16 +450,16 @@ session（只列出后面要用的字段）
 
 有记录不代表还有效：数据库不会在 `expiresAt` 到期时自动删除它，所以还要比较 `session.expiresAt <= new Date()`，判断是否已经到期。
 
-- 没有字符串形式的 Token、查不到 Session 或 Session 已过期，都抛出 `AppError(401, ...)`。当前函数在这里结束，由已有错误中间件返回 401，业务处理不会继续执行。
+- 查不到 Session 或 Session 已过期，都抛出 `AppError(401, ...)`，提示「登录已失效，请重新登录」。Session 是登录记录，查不到它不代表管理员账号不存在。当前函数在这里结束，由已有错误中间件返回 401，业务处理不会继续执行。
 - 如果查到了过期记录，顺便用 `deleteMany()` 清理。这里按唯一的 `tokenHash` 删除，最多影响一条记录；记录已不存在时也不会因此报错。
 
 **通过后，把管理员身份交给后续路由**
 
-将查出的 `session.admin` 放进 `response.locals.admin`，后续处理函数就能使用这份身份信息。`locals` 是 Express 提供的对象，只在**当前这次请求**中共享数据；赋值不会写入数据库，也不会自动发送 JSON。
+将查出的 `session.admin` 放进 `response.locals.admin`，后续处理函数就能直接使用这份身份信息，不必再次查询管理员。`locals` 是 Express 提供的对象，只在**当前这次请求**中共享数据；赋值不会写入数据库，也不会自动发送 JSON。
 
 然后调用 `next()`，让 Express 继续执行后面注册的处理函数。下一节会把 `requireAuth` 放在 `/me` 的响应函数前面，由那个函数读取管理员信息并返回 JSON。
 
-理解这三步后，新建 `src/middleware/require-auth.ts`，写入完整实现。`RequestHandler` 是 Express 提供的函数类型，用于标注这里的中间件：
+理解这三步后，新建 `src/middleware/require-auth.ts`，写入完整实现。`RequestHandler` 为 `request`、`response`、`next` 提供类型信息，不会生成 `cookies`；`request.cookies` 的实际数据由前面的 `cookieParser()` 填入，类型声明由 `@types/cookie-parser` 补充：
 
 ```ts
 import type { RequestHandler } from "express";
@@ -502,7 +506,9 @@ export const requireAuth: RequestHandler = async (request, response, next) => {
 
 `/me` 表示“当前请求对应的管理员”。前端带着已有 Cookie 请求它，后端返回管理员 ID 和用户名，供页面显示。这个接口只查询已有登录记录，不要求再次提交密码，也不创建新的 Session。
 
-在 `auth.routes.ts` 顶部增加 `requireAuth` 导入，在已有登录路由后增加 `/me`。下面的处理按注册顺序执行：`requireAuth` 检查身份并调用 `next()` 后，才会进入后面的响应函数，读取 `response.locals.admin` 并返回 JSON。
+在 `auth.routes.ts` 顶部增加 `requireAuth` 导入，在已有登录路由后增加 `/me`。
+
+请求先经过 `requireAuth` 检查 Token 和 Session。检查失败时，由统一错误处理中间件返回 401 和提示；检查通过并调用 `next()` 后，才执行后面的响应函数，读取 `response.locals.admin` 并返回管理员 JSON。
 
 ```ts
 import { requireAuth } from "../../middleware/require-auth";
@@ -519,12 +525,13 @@ authRouter.get("/me", requireAuth, (_request, response) => {
 });
 ```
 
-现在用 Apifox 请求 `GET http://localhost:3001/api/auth/me`：
+Apifox 会自动保存登录时的 Cookie，后续请求 `/me` 时自动携带其中的 Token，无需手动设置。
 
-- 携带第 2 节保存的 Cookie，应返回 200 和管理员信息。
-- 关闭该请求的 Cookie 携带，应返回 401；确认 Cookie 管理没有自动补上它。
+用 `GET http://localhost:3001/api/auth/me` 验证：
 
-完成这两个请求后，恢复 Cookie 携带，继续保护业务接口。
+1. 登录后直接请求，应返回 200 和管理员信息。
+2. 在「Cookie 管理」中删除 `localhost` 下的 `mini_cms_session`，再次请求，应返回 401「请先登录」。
+3. 重新调用 `/login` 恢复 Cookie，再请求 `/me` 确认返回 200，然后继续后面的练习。
 
 ### 3.3 接到文章和标签路由
 
@@ -534,14 +541,12 @@ authRouter.get("/me", requireAuth, (_request, response) => {
 import { requireAuth } from "./middleware/require-auth";
 ```
 
-这次把 `requireAuth` 放在整个业务 Router 前面：验证通过并调用 `next()` 后，才进入 `articleRouter` 或 `tagRouter`。把原有文章、标签路由注册替换为：
+将原来的文章、标签路由注册替换为下面两行，让这些接口先检查登录凭证：
 
 ```ts
 app.use("/api/articles", requireAuth, articleRouter);
 app.use("/api/tags", requireAuth, tagRouter);
 ```
-
-删除旧的未保护注册，避免它们提前接走请求。这样整个 router 的列表、详情、创建、修改和删除都会先验证身份，再进入已有的参数校验和业务处理。
 
 `app.use("/api/auth", authRouter)` 保持原样，其中 `/me` 已单独接入认证，登录和稍后增加的退出接口允许匿名调用。健康检查仍公开，阶段 8 再增加读取已发布内容的公开接口。
 
