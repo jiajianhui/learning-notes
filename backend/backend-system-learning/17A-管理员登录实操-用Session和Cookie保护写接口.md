@@ -563,7 +563,9 @@ app.use("/api/tags", requireAuth, tagRouter);
 
 对应图中 **③ 退出**。退出要同时处理服务器和浏览器：**先删除 Session，让旧 Token 失效；再清除 Cookie，让浏览器不再携带它。** 如果只清除 Cookie，旧 Token 对应的数据库记录仍然有效，再次发来仍可能通过认证。
 
-清除 Cookie 使用 `response.clearCookie()`：它发送一个 `Set-Cookie` 响应头，把过期时间设到过去，让浏览器删除 Cookie。名称、`path` 等配置沿用登录时的设置；这里不传保存 7 天的 `maxAge`，过期时间由 `clearCookie()` 设置。[Express：clearCookie](https://expressjs.com/en/5x/api/response/#res.clearCookie)
+这里用 `deleteMany()` 删除当前 Token 对应的 Session。记录不存在时返回 `{ count: 0 }`，仍可继续退出；数据库连接失败等异常则通过 `await` 传给统一错误处理中间件，返回 500。
+
+`response.clearCookie()` 通过 `Set-Cookie` 把 Cookie 的过期时间设到过去，让浏览器删除它。名称、`path` 等配置沿用登录时的设置，不再传保存 7 天的 `maxAge`。[Express：clearCookie](https://expressjs.com/en/5x/api/response/#res.clearCookie)
 
 在 `auth.routes.ts` 已有路由后增加：
 
@@ -587,11 +589,15 @@ authRouter.post("/logout", async (request, response) => {
 });
 ```
 
-`deleteMany()` 只删除当前 Token 对应的记录，其他设备的登录不受影响；记录不存在也允许继续。最后返回 204，表示退出处理完成，没有响应体。
+204 表示退出成功，没有响应体；“退出成功”的提示文字可以由前端显示。
 
-退出接口不挂 `requireAuth`，这样过期或已被删除的凭证也能完成 Cookie 清理。写请求的 `Origin` 检查仍然执行。
+退出接口不挂 `requireAuth`，允许登录已失效的请求继续清除 Cookie。例如退出时 Session 已删除，但网络中断，浏览器没收到清除 Cookie 的响应；再次退出时，就不应因查不到 Session 而提前返回 401。调用退出接口时，`Origin` 请求头必须与配置的前端地址一致，否则返回 403。
 
-带上 Cookie 和准确的 `Origin` 调用 `POST /api/auth/logout`，确认返回 204、当前 Session 从数据库删除、Apifox 中该 Cookie 被清除；随后请求 `/me` 和文章列表，都应返回 401。再次调用退出接口仍应返回 204。
+在 Apifox 中验证：
+
+1. 登录后，设置准确的 `Origin`，调用 `POST /api/auth/logout`。应返回 204，当前 Session 和保存的登录 Cookie 都被删除。
+2. 再请求 `/me` 和文章列表，都应返回 401。
+3. 再次调用退出接口，仍应返回 204。
 
 ## 5. 接入前端：把三条请求连到页面操作
 
