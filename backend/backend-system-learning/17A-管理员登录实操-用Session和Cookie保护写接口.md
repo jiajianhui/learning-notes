@@ -704,33 +704,48 @@ export function logout() {
 }
 ```
 
-### 5.2 登录页：提交账号密码
+### 5.2 实现登录页：登录成功后进入后台
 
-新建客户端页面 `app/login/page.tsx`，顶部使用 `"use client"`。Form、异步提交和反馈沿用第 14 章的写法：
+新建客户端页面 `app/login/page.tsx`，顶部使用 `"use client"`。这页完成一件事：收集账号密码，调用 `login()`；成功进入后台，失败留在登录页显示提示。
 
-- 用 `Form` 收集 `username`、`password`，密码字段使用 `Input.Password`。
-- 从 `@/features/auth/api` 导入 `login`，从 `next/navigation` 导入并调用 `useRouter()`。
-- 提交时等待 `login(values)` 成功，再执行 `router.replace("/admin/articles")`。
-- 提交期间显示加载状态；失败时留在登录页显示错误，并在 `finally` 中结束加载。
+从 `@/features/auth/api` 导入 `login`，从 `react` 导入 `useState`，从 `next/navigation` 导入 `useRouter`。下面代码放在页面组件函数内：
 
-`replace()` 用后台地址替换当前登录页的历史记录。登录函数内部已经允许浏览器接收 Cookie，页面只需要处理成功或失败。
+```tsx
+const router = useRouter();
+const [submitting, setSubmitting] = useState(false);
+const [submitError, setSubmitError] = useState<string | null>(null);
+
+async function handleFinish(values: { username: string; password: string }) {
+  setSubmitting(true);
+  setSubmitError(null);
+  try {
+    await login(values);
+    router.replace("/admin/articles");
+  } catch (error) {
+    setSubmitError(error instanceof Error ? error.message : "登录失败，请重试");
+  } finally {
+    setSubmitting(false);
+  }
+}
+```
+
+页面使用已学过的 Ant Design 表单组件，按下面方式连接：
+
+- `Form` 设置 `onFinish={handleFinish}`；两个 `Form.Item` 的 `name` 分别为 `username`、`password`，输入框使用 `Input`、`Input.Password`，都设为必填。
+- 登录按钮设置 `htmlType="submit"`、`loading={submitting}`。
+- `submitError` 有值时，用 `Alert` 显示错误文字。
+
+`replace()` 用后台地址替换当前登录页的历史记录。Cookie 由浏览器保存和携带，页面不需要手动读取 Token。
 
 在浏览器先试错误密码，再试正确密码。Network 中应能看到成功响应的管理员 JSON 和 `Set-Cookie`，Cookie 存储中能看到标记 HttpOnly 的 `mini_cms_session`，随后文章请求携带 Cookie。
 
 Apifox 和浏览器各自保存 Cookie，因此需要在浏览器重新登录。如果登录是 200、下一次请求却是 401，先检查两次请求是否都经过统一封装，以及前后端是否都使用 `localhost`。
 
-### 5.3 后台布局：查询身份，再显示页面
+### 5.3 进入后台时检查登录状态，未登录则跳转登录页
 
-刷新页面后，React 中的管理员状态会重新初始化，但浏览器仍可能保存着未过期的 Cookie。因此布局挂载时调用 `/me`，让后端检查这份 Cookie 是否仍有效，再返回管理员信息，重新填入页面状态。
+进入后台或刷新页面时，浏览器可能已有 Cookie，但前端还不知道登录是否有效。因此在共用的后台布局中请求 `/me`，确认身份后再显示文章、标签页面。
 
-把检查放在共用的后台布局中，文章、标签页面就能统一等待身份确认后再显示。请求需要等待，也可能失败，因此页面要区分四种状态：
-
-| 状态 | 页面怎样响应 |
-|---|---|
-| `checking` | 身份尚未确认，显示检查提示 |
-| `authenticated` | `/me` 成功，显示管理员信息和后台内容 |
-| `unauthenticated` | `/me` 返回 401，跳转登录页，等待跳转时不显示后台 |
-| `error` | 网络或服务器出错，显示重试入口；请求失败尚不能证明用户未登录 |
+主线是：**请求 `/me` → 把结果存入 `auth` → 显示后台或跳转登录页**。网络或服务器出错时显示重试入口，不能直接当作未登录。
 
 修改现有客户端布局 `app/admin/layout.tsx`，先补齐导入，已有导入合并使用：
 
@@ -745,17 +760,17 @@ import { ApiError } from "@/lib/api-client";
 
 **用状态记录检查结果**
 
-在组件外增加状态类型。`status` 标记当前处于哪一种情况：确认登录后才有 `admin`，检查出错时才有错误文案 `message`。
+在组件外定义四种检查结果。已登录时保存管理员信息，检查出错时保存提示文字：
 
 ```ts
 type AuthState =
-  | { status: "checking" }
-  | { status: "authenticated"; admin: Admin }
-  | { status: "unauthenticated" }
-  | { status: "error"; message: string };
+  | { status: "checking" } // 检查中
+  | { status: "authenticated"; admin: Admin } // 已登录
+  | { status: "unauthenticated" } // 未登录
+  | { status: "error"; message: string }; // 检查失败
 ```
 
-在现有 `AdminLayout` 函数体内增加下面的状态：`auth` 保存当前检查结果，初始值为 `checking`；`checkVersion` 是重试计数，后面的 Effect 监听它，数值增加时就重新请求 `/me`。`router` 若已声明就复用；这些 Hook 和原有 Hook 都放在任何提前 `return` 之前：
+在 `AdminLayout` 函数体内增加状态：`auth` 保存检查结果，`checkVersion` 用于稍后的重试。已有的 `router` 直接复用，所有 Hook 都放在提前 `return` 之前：
 
 ```tsx
 const router = useRouter();
@@ -765,13 +780,11 @@ const [checkVersion, setCheckVersion] = useState(0);
 
 **请求 /me，把结果写入状态**
 
-紧接着加入下面的 Effect。布局初次挂载或 `checkVersion` 变化时，它调用 `getCurrentAdmin()`：成功就把返回的管理员放入 `auth.admin`；401 就转到登录页；其他失败保留重试入口。
-
-这里的 `active` 表示“这次检查的结果是否还需要处理”。组件卸载或开始下一次检查时，清理函数将它设为 `false`，旧请求即使稍后完成，也不再更新状态或触发跳转。它只负责忽略旧结果，不会取消已经发出的请求。
+紧接着加入 Effect。它通过 `getCurrentAdmin()` 请求 `/me`：成功保存管理员信息，401 跳转登录页，其他错误交给页面显示。
 
 ```tsx
 useEffect(() => {
-  let active = true;
+  let active = true; // 本次检查的结果是否还需要处理
 
   async function checkSession() {
     try {
@@ -796,16 +809,14 @@ useEffect(() => {
 
   void checkSession();
   return () => {
-    active = false;
+    active = false; // 卸载或重新检查时，忽略旧请求的结果
   };
 }, [router, checkVersion]);
 ```
 
 **按状态决定显示什么**
 
-请求完成后，`setAuth()` 会让组件重新渲染。在原有布局 JSX 的 `return` 之前加入下面的分支：检查中显示提示，未登录等待跳转，检查失败显示重试按钮。已登录时继续显示原有 Layout、菜单和 `{children}`。
-
-重试按钮做两件事：把 `auth` 改回 `checking`，显示检查提示；把 `checkVersion` 加一，触发 Effect 再次请求。只改 `auth` 不会重新执行上面的 Effect，因为它的依赖中没有 `auth`。
+`setAuth()` 更新状态后，组件会重新渲染。在原有布局的 `return` 之前加入下面的判断，让检查中、未登录和检查失败先返回对应内容：
 
 ```tsx
 if (auth.status === "checking") {
@@ -833,7 +844,9 @@ if (auth.status === "error") {
 const admin = auth.admin;
 ```
 
-只有 `authenticated` 状态会执行到原有布局。在现有 `Header` 的用户位置显示 `<span>{admin.username}</span>`，下一节再接上退出按钮。检查期间不返回后台的 `{children}`，文章、标签客户端页面暂时不会挂载并请求数据。
+重试时，把 `auth` 改回 `checking` 显示检查提示，再把 `checkVersion` 加一。Effect 监听这个计数，变化后就重新请求 `/me`。
+
+只有已登录才继续显示原有 Layout 和 `{children}`。在现有 `Header` 的用户位置显示 `<span>{admin.username}</span>`，下一节再接上退出按钮。
 
 `/login` 在 `app/admin` 之外，不会套用这段后台检查。
 
@@ -968,7 +981,7 @@ async function requestJson<S>(path: string, options?: RequestInit): Promise<S> {
 
 **再替换三个原有函数**
 
-`ApiError`、API 地址配置和原有响应类型保留。用下面代码替换 5.1 中的三个请求函数，让它们只决定怎样返回结果：
+保留 `ApiError`、API 地址配置和原有响应类型。下面沿用你现有的文章分页类型 `ApiListSuccess`，只替换三个请求函数的实现：
 
 ```ts
 export async function apiRequest<T>(
@@ -979,11 +992,11 @@ export async function apiRequest<T>(
   return body.data;
 }
 
-export function apiListRequest<T>(
+export function apiListRequest(
   path: string,
   options?: RequestInit,
-): Promise<ApiListSuccess<T>> {
-  return requestJson<ApiListSuccess<T>>(path, options);
+): Promise<ApiListSuccess> {
+  return requestJson<ApiListSuccess>(path, options);
 }
 
 export function apiRequestNoContent(path: string, options?: RequestInit) {
@@ -991,7 +1004,7 @@ export function apiRequestNoContent(path: string, options?: RequestInit) {
 }
 ```
 
-`apiRequest()` 仍只返回 `data`，`apiListRequest()` 仍返回包含分页信息的完整 JSON，`apiRequestNoContent()` 仍只等待退出完成。`ApiListSuccess<T>` 和原来调用时的类型参数不变，页面及 `features/auth/api.ts` 无需修改。
+`apiRequest()` 仍只返回 `data`，`apiListRequest()` 仍返回包含分页信息的完整 JSON，`apiRequestNoContent()` 仍只等待退出完成。页面及 `features/auth/api.ts` 的调用方式无需修改。
 
 整理后再验证登录、分页列表、退出及 401 提示，确认行为与 5.1～5.5 一致。
 
