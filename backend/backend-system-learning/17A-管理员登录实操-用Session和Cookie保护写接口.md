@@ -2,7 +2,7 @@
 
 沿着[第 17 章的流程图](./17-登录Cookie和基本安全.md)，先在 Apifox 中跑通登录、身份验证和退出，再接入浏览器页面。每个阶段完成后立即验证，再继续下一步。
 
-所有实现都放在真实 `mini-cms` 中。下文后端路径相对 `mini-cms/server`，前端路径相对 `mini-cms/admin-web-antd`。开始前确认文章、标签接口和第 16C 章的 ProComponents 后台能正常使用；登录继续接到现有请求封装与布局中。
+所有实现都放在真实 `mini-cms` 中。下文后端路径相对 `mini-cms/server`，前端路径相对 `mini-cms/admin-web-antd`。开始前确认第 14、16 章的文章、标签接口和普通 Ant Design 后台能正常使用，无需先完成 16C；登录继续接到现有请求封装与布局中。
 
 本章只做一个管理员，由脚本创建账号；公开注册、多角色和第三方登录留在本次范围之外。
 
@@ -601,15 +601,22 @@ authRouter.post("/logout", async (request, response) => {
 
 ## 5. 接入前端：把三条请求连到页面操作
 
-后端三条链路已用 Apifox 验证。现在继续修改 `admin-web-antd`，沿用第 16C 章的 ProLayout、ProTable、DrawerForm 和 API 函数。
+后端三条链路已用 Apifox 验证。现在继续修改 `admin-web-antd`，沿用已有的 Layout、Table、Drawer、Form 和 API 函数，接入登录页、后台身份检查和退出按钮。
 
 ### 5.1 统一携带 Cookie，并保留错误状态码
 
-第 16 章已经把请求集中到 `lib/api-client.ts`。现在继续修改这个文件，让它支持登录需要的 Cookie、401 错误和退出接口的 204 响应。原来的 `ApiFailure`、`API_BASE_URL`、`apiRequest()` 和 `apiListRequest()` 保留，下面依次调整三个位置。
+继续修改 `lib/api-client.ts`，先沿用 `apiRequest()` 和 `apiListRequest()` 各自发送请求的写法，补上 Cookie 和错误状态码处理。等登录流程跑通后，再到 5.6 整理重复代码。
+
+保留原来的响应类型、分页类型和 API 地址配置。下文用 `API_BASE_URL` 表示后端地址；如果你的变量叫 `BASE_URL`，代码中沿用原名即可。两个对外请求函数的名称和调用方式保持不变。
 
 **让错误同时携带状态码和提示文字**
 
-原来只抛出 `Error(message)`，页面只能拿到文字。现在页面需要知道失败是否由登录失效引起，所以新增 `ApiError`：沿用 `Error` 的 `message`，再通过 `public status` 把传入的 HTTP 状态码保存成对象属性。
+如果页面只显示错误文字，原来的 `Error(message)` 就够了。现在还需要根据错误决定下一步。比如加载文章列表失败：
+
+- **401**：未登录或登录已失效，跳转登录页。
+- **500**：服务器出错，留在当前页显示错误；重新登录解决不了这个问题。
+
+后端已有的 `AppError` 会由错误中间件转换成 HTTP 状态码和错误 JSON，前端不会收到那个 `AppError` 对象。因此在前端新增 `ApiError`，让页面的 `catch` 同时拿到两项信息：`message` 用于显示提示，`status` 用于判断怎样处理。按状态码判断，也不会受提示文案变化影响。
 
 ```ts
 export class ApiError extends Error {
@@ -620,24 +627,43 @@ export class ApiError extends Error {
 }
 ```
 
-例如后端返回 401，请求层就抛出带有 `status: 401` 的 `ApiError`。页面先用 `error instanceof ApiError` 确认错误类型，再读 `error.status`，就能判断是否需要重新登录。
+`public status` 把传入的状态码保存为对象属性，`super(message)` 保留错误文字。页面在 `catch` 中先用 `error instanceof ApiError` 确认类型，再通过 `error.status === 401` 判断是否需要重新登录。
 
-**让公共请求函数携带 Cookie，并分别处理响应**
+**在两个现有函数中补上 Cookie 和错误状态码**
 
-`fetch` 默认只为同来源请求处理凭证。这里前后端端口不同，要设置 `credentials: "include"`，让浏览器接收登录响应中的 Cookie，并在后续请求中携带它。第一次登录也必须使用这个配置；后端的 `credentials: true` 则允许页面读取带凭证的跨来源响应。[MDN：credentials](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials)
+`fetch` 默认只在同源请求中携带 Cookie。这里前后端端口不同，需要设置 `credentials: "include"`，让浏览器保存登录响应中的 Cookie，并在后续请求中自动携带它。后端的 `credentials: true` 则允许页面读取这类跨来源请求的响应。[MDN：credentials](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials)
 
-收到响应后，按下面三种情况处理：
-
-| 响应 | 请求函数怎样处理 |
-|---|---|
-| 失败，例如 401 | 读取后端错误文案，连同状态码一起放入 `ApiError` 抛出 |
-| 成功且为 204 | 没有响应体，直接结束，不调用 `response.json()` |
-| 其他成功响应 | 沿用原来的方式解析并返回 JSON |
-
-用下面代码替换原来的 `requestJson()`：
+在 `apiRequest()` 和 `apiListRequest()` 中，分别将原来的 `fetch` 调用替换为：
 
 ```ts
-async function requestJson<S>(path: string, options?: RequestInit): Promise<S> {
+const response = await fetch(`${API_BASE_URL}${path}`, {
+  ...options,
+  credentials: "include",
+});
+```
+
+`fetch` 收到 401、500 等响应时不会自动抛错，需要自己检查 `response.ok`。把两个函数中原来的失败判断替换为下面这段，将响应的状态码和错误文字一起交给页面：
+
+```ts
+if (!response.ok) {
+  const errorBody: ApiFailure = await response.json();
+  throw new ApiError(response.status, errorBody.error.message);
+}
+```
+
+成功后的 JSON 解析和返回值保持原样：`apiRequest()` 取出 `data`，`apiListRequest()` 返回完整的 `data + pagination`。
+
+保存后刷新现有列表；尚未登录时，请求应抛出带 `status: 401` 的 `ApiError`。页面如何跳转在后面接入。
+
+**给退出请求单独准备一个函数**
+
+退出成功返回 204，没有 JSON，不能继续调用 `response.json()` 或读取 `body.data`。因此在同一文件中新增 `apiRequestNoContent()`：同样携带 Cookie、处理失败，成功后直接结束。
+
+```ts
+export async function apiRequestNoContent(
+  path: string,
+  options?: RequestInit,
+): Promise<void> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     credentials: "include",
@@ -647,23 +673,10 @@ async function requestJson<S>(path: string, options?: RequestInit): Promise<S> {
     const errorBody: ApiFailure = await response.json();
     throw new ApiError(response.status, errorBody.error.message);
   }
-
-  if (response.status === 204) return undefined as S;
-  return response.json();
 }
 ```
 
-`S` 沿用原来“整个成功响应”的类型参数。204 分支中的 `as S` 是类型断言，运行时返回的值仍然是 `undefined`。
-
-**给退出接口准备一个不读取 data 的入口**
-
-原来的 `apiRequest()` 会从 JSON 中取出 `body.data`，而退出接口没有 JSON，所以新增下面的函数。`requestJson<void>` 表示成功后没有业务数据返回，调用方仍然需要 `await` 等待请求完成。
-
-```ts
-export function apiRequestNoContent(path: string, options?: RequestInit) {
-  return requestJson<void>(path, options);
-}
-```
+`Promise<void>` 表示成功后没有业务数据，调用方仍要 `await` 等待退出完成。
 
 **把三个后端接口封装成页面函数**
 
@@ -790,7 +803,7 @@ useEffect(() => {
 
 **按状态决定显示什么**
 
-请求完成后，`setAuth()` 会让组件重新渲染。下面先处理检查中、等待跳转、检查出错三种情况，剩下的已登录状态再显示后台。在原有布局 JSX 的 `return` 之前加入这些分支，ProLayout、菜单和 `{children}` 继续放在它们之后：
+请求完成后，`setAuth()` 会让组件重新渲染。在原有布局 JSX 的 `return` 之前加入下面的分支：检查中显示提示，未登录等待跳转，检查失败显示重试按钮。已登录时继续显示原有 Layout、菜单和 `{children}`。
 
 重试按钮做两件事：把 `auth` 改回 `checking`，显示检查提示；把 `checkVersion` 加一，触发 Effect 再次请求。只改 `auth` 不会重新执行上面的 Effect，因为它的依赖中没有 `auth`。
 
@@ -820,7 +833,7 @@ if (auth.status === "error") {
 const admin = auth.admin;
 ```
 
-只有 `authenticated` 状态会执行到原有布局，可以用 `admin.username` 显示管理员。检查期间不返回后台的 `{children}`，文章、标签客户端页面暂时不会挂载并请求数据。
+只有 `authenticated` 状态会执行到原有布局。在现有 `Header` 的用户位置显示 `<span>{admin.username}</span>`，下一节再接上退出按钮。检查期间不返回后台的 `{children}`，文章、标签客户端页面暂时不会挂载并请求数据。
 
 `/login` 在 `app/admin` 之外，不会套用这段后台检查。
 
@@ -830,7 +843,7 @@ const admin = auth.admin;
 
 退出按钮先调用 `logout()`，等后端完成 Session 删除和 Cookie 清理，再清空页面中的管理员状态并跳转。请求失败时保留页面、提示重试，避免页面已经显示退出，服务器却仍保留登录记录。
 
-在同一个布局文件中，从 `antd` 增加 `App` 导入，从 `@/features/auth/api` 增加 `logout` 导入。下面代码放在组件体内、5.3 的所有提前 `return` 之前：
+在同一个布局文件中，从 `antd` 增加 `App`、`Space` 导入，从 `@/features/auth/api` 增加 `logout` 导入。下面代码放在组件体内、5.3 的所有提前 `return` 之前：
 
 ```tsx
 const { message: messageApi } = App.useApp();
@@ -850,12 +863,15 @@ async function handleLogout() {
 }
 ```
 
-第 14 章的根布局已经通过 `AntdProvider` 提供 `<App>`，因此能用 `App.useApp()` 显示消息。在 ProLayout 的用户区域加入退出按钮；已有按钮则接上这两个属性：
+第 14 章的根布局已经通过 `AntdProvider` 提供 `<App>`，因此能用 `App.useApp()` 显示消息。在现有 `Header` 内，把显示用户名的位置替换成下面这一组，保留原来的标题和样式：
 
 ```tsx
-<Button onClick={handleLogout} loading={signingOut}>
-  退出登录
-</Button>
+<Space>
+  <span>{admin.username}</span>
+  <Button onClick={handleLogout} loading={signingOut}>
+    退出登录
+  </Button>
+</Space>
 ```
 
 点击退出后，再直接打开 `/admin/articles`，应经过 `/me` 检查回到登录页。
@@ -872,9 +888,10 @@ app/admin/layout.tsx
    ├─ handleLogout()
    ├─ checking / unauthenticated / error 的提前返回
    ├─ const admin = auth.admin
-   └─ 原有 ProLayout 的 return
-      ├─ 显示 admin.username、退出按钮
-      └─ 原来的菜单和 children
+   └─ 原有 Layout 的 return
+      ├─ Header：标题、admin.username、退出按钮
+      ├─ Sider / Menu：原来的导航
+      └─ Content：原来的 children
 ```
 
 ### 5.5 处理后台使用过程中的登录失效
@@ -883,29 +900,100 @@ app/admin/layout.tsx
 
 ```text
 后端 requireAuth 检查失败 → 返回 401 和错误 JSON
-→ 前端 requestJson() 抛出带有 status: 401 的 ApiError
-→ 列表的 onRequestError 或提交、删除操作的 catch 收到错误
+→ 前端 apiRequest() 或 apiListRequest() 抛出带有 status: 401 的 ApiError
+→ 列表请求、表单提交或删除操作的 catch 收到错误
 ```
 
-所以这些位置也要判断 `error instanceof ApiError && error.status === 401`，再按当前操作给出反馈：
+从 `@/lib/api-client` 导入 `ApiError`，在已有的 `catch` 中判断 `error instanceof ApiError && error.status === 401`：
 
-- 列表的 `onRequestError` 遇到 401，提示登录已失效并跳转 `/login`。
-- 表单提交遇到 401，提示“登录已失效，请先保留输入并重新登录”，保留抽屉和输入，`onFinish` 返回 `false`。先保留内容，再由用户重新登录，避免直接跳转丢失编辑内容。
+- 列表加载遇到 401，跳转 `/login`。
+- 表单提交遇到 401，提示“登录已失效，请先保留输入并重新登录”，保留抽屉和输入，避免直接跳转丢失编辑内容。
 - 删除遇到 401，提示登录已失效，不显示删除成功，也不移除列表数据。
 - 其他网络、服务器或业务错误继续使用原来的反馈。
 
-以保留表单输入为例：从 `@/lib/api-client` 导入 `ApiError`，在现有 DrawerForm 的 `onFinish` 回调中，把下面的分支放到 **`catch (error)` 内最前面**，后面的普通错误处理保留：
+**列表：在加载请求的 catch 中跳转**
+
+在文章、标签页面从 `next/navigation` 导入 `useRouter`，在组件内调用 `const router = useRouter()`。把下面的分支放入 `loadArticles()`、`loadTags()` 的 `catch (error)` 中，位于原有普通错误提示之前；如果已有 `active` 检查，先确认请求结果仍有效，再处理 401：
+
+```ts
+if (error instanceof ApiError && error.status === 401) {
+  router.replace("/login");
+  return;
+}
+```
+
+这些列表请求位于 Effect 中，所以原有依赖数组也要补上 `router`。文章详情等读取请求遇到 401 时，同样可以在对应的 `catch` 中跳转。
+
+**表单：在提交的 catch 中保留输入**
+
+文章和标签表单仍使用普通 `Form`。在各自 `handleFinish()` 的 `catch` 中加入下面的分支，捕获变量统一命名为 `error`；原来的普通错误提示放在后面，`finally` 中的加载状态恢复保留：
 
 ```ts
 if (error instanceof ApiError && error.status === 401) {
   setSubmitError("登录已失效，请先保留输入并重新登录");
-  return false;
+  return;
 }
 ```
 
-`setSubmitError` 沿用现有表单的 Alert 显示错误；`return false` 让 DrawerForm 保留抽屉和输入。这个分支不执行跳转，用户先保留内容，再重新登录。
+父页面原本就在创建、更新请求成功后才关闭 Drawer；请求失败时不会执行到关闭操作，因此输入会保留。这里的 `return` 只结束本次提交处理，`finally` 仍会执行，按钮会结束加载；错误由原有 `submitError` 显示。
 
 可以在浏览器登录后，用 TablePro 按 `admin_id` 和 `created_at` 找到本次登录产生的 Session，删除这条记录后再操作页面，观察失效反馈。前端 Cookie 此时仍可能存在，但后端已经不会认可它；验证后重新登录。
+
+### 5.6 跑通后再整理：合并重复的请求代码
+
+完成前面的登录、刷新、退出和失效检查后，再回到 `lib/api-client.ts`。三个请求函数都在重复发送请求、携带 Cookie 和判断错误，现在把这些步骤提取为 `requestJson()`，以后只需在一处维护。
+
+**先新增公共函数**
+
+公共函数负责取得完整响应：失败时抛出 `ApiError`，成功为 204 时直接结束，其他成功响应解析 JSON。`S` 描述返回的整份响应类型，由调用它的函数指定。
+
+```ts
+async function requestJson<S>(path: string, options?: RequestInit): Promise<S> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const errorBody: ApiFailure = await response.json();
+    throw new ApiError(response.status, errorBody.error.message);
+  }
+
+  if (response.status === 204) return undefined as S;
+  return response.json();
+}
+```
+
+204 分支返回的值是 `undefined`；`as S` 是类型断言，不会生成数据。下面的退出函数用 `void` 指明它不需要返回数据。
+
+**再替换三个原有函数**
+
+`ApiError`、API 地址配置和原有响应类型保留。用下面代码替换 5.1 中的三个请求函数，让它们只决定怎样返回结果：
+
+```ts
+export async function apiRequest<T>(
+  path: string,
+  options?: RequestInit,
+): Promise<T> {
+  const body = await requestJson<{ data: T }>(path, options);
+  return body.data;
+}
+
+export function apiListRequest<T>(
+  path: string,
+  options?: RequestInit,
+): Promise<ApiListSuccess<T>> {
+  return requestJson<ApiListSuccess<T>>(path, options);
+}
+
+export function apiRequestNoContent(path: string, options?: RequestInit) {
+  return requestJson<void>(path, options);
+}
+```
+
+`apiRequest()` 仍只返回 `data`，`apiListRequest()` 仍返回包含分页信息的完整 JSON，`apiRequestNoContent()` 仍只等待退出完成。`ApiListSuccess<T>` 和原来调用时的类型参数不变，页面及 `features/auth/api.ts` 无需修改。
+
+整理后再验证登录、分页列表、退出及 401 提示，确认行为与 5.1～5.5 一致。
 
 ## 6. 走完完整流程，再进入测试章节
 
