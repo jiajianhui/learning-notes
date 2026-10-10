@@ -739,8 +739,6 @@ async function handleFinish(values: { username: string; password: string }) {
 
 在浏览器先试错误密码，再试正确密码。Network 中应能看到成功响应的管理员 JSON 和 `Set-Cookie`，Cookie 存储中能看到标记 HttpOnly 的 `mini_cms_session`，随后文章请求携带 Cookie。
 
-Apifox 和浏览器各自保存 Cookie，因此需要在浏览器重新登录。如果登录是 200、下一次请求却是 401，先检查两次请求是否都经过统一封装，以及前后端是否都使用 `localhost`。
-
 ### 5.3 进入后台时检查登录状态，未登录则跳转登录页
 
 进入后台或刷新页面时，浏览器可能已有 Cookie，但前端还不知道登录是否有效。因此在共用的后台布局中请求 `/me`，确认身份后再显示文章、标签页面。
