@@ -852,9 +852,11 @@ const admin = auth.admin;
 
 ### 5.4 退出按钮：等待退出成功再跳转
 
-退出按钮先调用 `logout()`，等后端完成 Session 删除和 Cookie 清理，再清空页面中的管理员状态并跳转。请求失败时保留页面、提示重试，避免页面已经显示退出，服务器却仍保留登录记录。
+鼠标移到顶栏用户名时展开退出菜单，点击后等待退出请求成功再跳转。
 
-在同一个布局文件中，从 `antd` 增加 `App`、`Space` 导入，从 `@/features/auth/api` 增加 `logout` 导入。下面代码放在组件体内、5.3 的所有提前 `return` 之前：
+继续修改 `app/admin/layout.tsx`，补充导入：`App`、`Dropdown`（`antd`），`LogoutOutlined`（`@ant-design/icons`），`logout`（`@/features/auth/api`）。
+
+在 `AdminLayout` 的所有提前 `return` 之前增加以下代码，确保每次渲染都会调用这些 Hook：
 
 ```tsx
 const { message: messageApi } = App.useApp();
@@ -866,6 +868,7 @@ async function handleLogout() {
     await logout();
     setAuth({ status: "unauthenticated" });
     router.replace("/login");
+    messageApi.success("退出登录成功");
   } catch {
     messageApi.error("退出失败，请重试");
   } finally {
@@ -874,36 +877,31 @@ async function handleLogout() {
 }
 ```
 
-第 14 章的根布局已经通过 `AntdProvider` 提供 `<App>`，因此能用 `App.useApp()` 显示消息。在现有 `Header` 内，把显示用户名的位置替换成下面这一组，保留原来的标题和样式：
+在 `Header` 内，把显示用户名的位置替换为以下菜单：
 
 ```tsx
-<Space>
-  <span>{admin.username}</span>
-  <Button onClick={handleLogout} loading={signingOut}>
-    退出登录
-  </Button>
-</Space>
+<Dropdown
+  trigger={["hover"]}
+  placement="bottomRight"
+  menu={{
+    items: [
+      {
+        key: "logout",
+        label: "退出登录",
+        icon: <LogoutOutlined />,
+        disabled: signingOut,
+        onClick: () => handleLogout(),
+      },
+    ],
+  }}
+>
+  <Button type="text">{admin.username}</Button>
+</Dropdown>
 ```
 
-点击退出后，再直接打开 `/admin/articles`，应经过 `/me` 检查回到登录页。
+`signingOut` 用于在退出请求期间禁用菜单项。请求失败时保留后台并提示重试。
 
-完成后，布局文件中的新增内容应按下面的顺序排列。这是位置示意，不是替换现有布局的代码：
-
-```text
-app/admin/layout.tsx
-├─ "use client" 与导入
-├─ AuthState 类型（组件外）
-└─ AdminLayout 函数
-   ├─ 原有 Hook，以及 auth、checkVersion、signingOut 等状态
-   ├─ App.useApp() 与登录检查 Effect
-   ├─ handleLogout()
-   ├─ checking / unauthenticated / error 的提前返回
-   ├─ const admin = auth.admin
-   └─ 原有 Layout 的 return
-      ├─ Header：标题、admin.username、退出按钮
-      ├─ Sider / Menu：原来的导航
-      └─ Content：原来的 children
-```
+验证：退出成功后进入登录页，再访问后台仍会回到登录页；重新登录后停止后端再退出，应提示失败并留在后台。
 
 ### 5.5 处理后台使用过程中的登录失效
 
