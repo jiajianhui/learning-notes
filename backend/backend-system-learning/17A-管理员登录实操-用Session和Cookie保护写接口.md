@@ -618,6 +618,8 @@ authRouter.post("/logout", async (request, response) => {
 
 后端已有的 `AppError` 会由错误中间件转换成 HTTP 状态码和错误 JSON，前端不会收到那个 `AppError` 对象。因此在前端新增 `ApiError`，让页面的 `catch` 同时拿到两项信息：`message` 用于显示提示，`status` 用于判断怎样处理。按状态码判断，也不会受提示文案变化影响。
 
+在 `lib/api-error.ts` 中定义这个错误类型：
+
 ```ts
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -628,6 +630,12 @@ export class ApiError extends Error {
 ```
 
 `public status` 把传入的状态码保存为对象属性，`super(message)` 保留错误文字。页面在 `catch` 中先用 `error instanceof ApiError` 确认类型，再通过 `error.status === 401` 判断是否需要重新登录。
+
+在 `lib/api-client.ts` 中导入：
+
+```ts
+import { ApiError } from "./api-error";
+```
 
 **在两个现有函数中补上 Cookie 和错误状态码**
 
@@ -753,7 +761,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getCurrentAdmin } from "@/features/auth/api";
 import type { Admin } from "@/features/auth/api";
-import { ApiError } from "@/lib/api-client";
+import { ApiError } from "@/lib/api-error";
 ```
 
 **用状态记录检查结果**
@@ -905,48 +913,62 @@ async function handleLogout() {
 
 ### 5.5 处理后台使用过程中的登录失效
 
-布局完成登录检查后，使用期间 Session 仍可能过期。此时页面里的管理员状态不会自动变化，下一次文章或标签请求才会从后端得知凭证已失效。错误会沿着这条路径传到页面：
+进入后台时检查通过，使用期间 Session 仍可能过期。因此，每次 CRUD 请求都要验证登录，但前后端的职责不同：
 
-```text
-后端 requireAuth 检查失败 → 返回 401 和错误 JSON
-→ 前端 apiRequest() 或 apiListRequest() 抛出带有 status: 401 的 ApiError
-→ 列表请求、表单提交或删除操作的 catch 收到错误
-```
+- **后端负责验证身份**：文章、标签 Router 前已经统一注册 `requireAuth`，每次请求都会检查 Cookie 对应的 Session。凭证无效时，由统一错误处理中间件返回 401 和错误 JSON，不执行后面的 CRUD 操作。
+- **前端负责反馈结果**：浏览器随请求携带 Cookie，请求封装收到 401 后抛出 `ApiError`，页面在已有的 `catch` 中决定如何提示。前端不用在每次操作前再请求一次 `/me`。
 
-从 `@/lib/api-client` 导入 `ApiError`，在已有的 `catch` 中判断 `error instanceof ApiError && error.status === 401`：
+**同样是 401，不同操作可以有不同反馈：**
 
-- 列表加载遇到 401，跳转 `/login`。
-- 表单提交遇到 401，提示“登录已失效，请先保留输入并重新登录”，保留抽屉和输入，避免直接跳转丢失编辑内容。
-- 删除遇到 401，提示登录已失效，不显示删除成功，也不移除列表数据。
-- 其他网络、服务器或业务错误继续使用原来的反馈。
+| 当前操作 | 前端怎样处理 |
+|---|---|
+| 加载文章、标签列表 | 显示后端错误提示，跳转登录页 |
+| 新建、修改 | 显示后端错误提示，保留抽屉和表单输入，避免跳转后丢失内容 |
+| 删除 | 显示后端错误提示，不移除列表数据，也不显示删除成功 |
+
+**错误需要处理，跳转则看场景。** 沿用原来的错误反馈时，已有 `catch` 就够了；需要针对 401 跳转或单独弹出提示时，才增加状态码判断。提示文字统一使用后端返回的 `error.message`，网络等其他错误保留原有兜底提示。
+
+下面在需要判断状态码的页面或表单中，从 `@/lib/api-error` 导入 `ApiError`。
 
 **列表：在加载请求的 catch 中跳转**
 
-在文章、标签页面从 `next/navigation` 导入 `useRouter`，在组件内调用 `const router = useRouter()`。把下面的分支放入 `loadArticles()`、`loadTags()` 的 `catch (error)` 中，位于原有普通错误提示之前；如果已有 `active` 检查，先确认请求结果仍有效，再处理 401：
+在文章、标签页面从 `next/navigation` 导入 `useRouter`，在组件内调用 `const router = useRouter()`，提示复用已有的 `messageApi`。只在以下两个请求的 `catch` 中加入 401 判断：
+
+- `app/admin/articles/page.tsx` 的 `loadArticles()`。
+- `app/admin/tags/page.tsx` 的 `loadTags()`。
+
+先通过已有的 `active` 检查，再执行下面的分支；原来的普通错误提示放在后面：
 
 ```ts
 if (error instanceof ApiError && error.status === 401) {
+  messageApi.error(error.message);
   router.replace("/login");
   return;
 }
 ```
 
-这些列表请求位于 Effect 中，所以原有依赖数组也要补上 `router`。文章详情等读取请求遇到 401 时，同样可以在对应的 `catch` 中跳转。
+文章列表 Effect 的依赖为 `[query, refreshVersion, router, messageApi]`，标签列表为 `[router, messageApi]`。各请求继续保留 `active` 检查和清理。
+
+文章页里加载标签选项的另一个 Effect 保留普通错误处理，不额外弹窗或跳转。因此，只有标签选项请求返回 401 时，会显示页面错误；文章请求返回 401 时才提示并跳转。
 
 **表单：在提交的 catch 中保留输入**
 
-文章和标签表单仍使用普通 `Form`。在各自 `handleFinish()` 的 `catch` 中加入下面的分支，捕获变量统一命名为 `error`；原来的普通错误提示放在后面，`finally` 中的加载状态恢复保留：
+在文章、标签表单中，从 `antd` 导入 `App`，在组件内用 `const { message: messageApi } = App.useApp()` 取得提示工具，已有的直接复用。在 `handleFinish()` 的 `catch` 中加入下面的分支；原来的普通错误提示放在后面，`finally` 中的加载状态恢复保留：
 
 ```ts
 if (error instanceof ApiError && error.status === 401) {
-  setSubmitError("登录已失效，请先保留输入并重新登录");
+  messageApi.error(error.message);
   return;
 }
 ```
 
-父页面原本就在创建、更新请求成功后才关闭 Drawer；请求失败时不会执行到关闭操作，因此输入会保留。这里的 `return` 只结束本次提交处理，`finally` 仍会执行，按钮会结束加载；错误由原有 `submitError` 显示。
+父页面只在创建、更新成功后关闭 Drawer，因此失败时输入会保留。这里的 `return` 不影响 `finally` 执行，按钮仍会结束加载；其他错误继续由 `submitError` 显示。
 
-可以在浏览器登录后，用 TablePro 按 `admin_id` 和 `created_at` 找到本次登录产生的 Session，删除这条记录后再操作页面，观察失效反馈。前端 Cookie 此时仍可能存在，但后端已经不会认可它；验证后重新登录。
+**删除：沿用原来的错误提示**
+
+删除失败时，沿用原有 `catch` 中的 `messageApi.error(...)` 显示错误即可，不必再单独判断 401。移除列表数据、刷新列表和显示删除成功，都放在删除请求 `await` 成功之后。
+
+验证时，在浏览器登录后，用 TablePro 按 `admin_id` 和 `created_at` 找到并删除本次 Session，再分别尝试加载列表、提交表单和删除，确认反馈符合上表。每次验证后重新登录。
 
 ### 5.6 跑通后再整理：合并重复的请求代码
 
@@ -977,7 +999,7 @@ async function requestJson<S>(path: string, options?: RequestInit): Promise<S> {
 
 **再替换三个原有函数**
 
-保留 `ApiError`、API 地址配置和原有响应类型。下面沿用你现有的文章分页类型 `ApiListSuccess`，只替换三个请求函数的实现：
+保留 `ApiError` 的导入、API 地址配置和原有响应类型。下面沿用你现有的文章分页类型 `ApiListSuccess`，只替换三个请求函数的实现：
 
 ```ts
 export async function apiRequest<T>(
