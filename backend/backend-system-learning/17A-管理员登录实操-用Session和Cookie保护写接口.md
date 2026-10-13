@@ -913,26 +913,13 @@ async function handleLogout() {
 
 ### 5.5 处理后台使用过程中的登录失效
 
-进入后台时检查通过，使用期间 Session 仍可能过期。因此，每次 CRUD 请求都要验证登录，但前后端的职责不同：
+进入后台后，Session 仍可能过期。本节只增加一个行为：**文章、标签列表请求返回 401 时，显示后端提示并跳转登录页。**
 
-- **后端负责验证身份**：文章、标签 Router 前已经统一注册 `requireAuth`，每次请求都会检查 Cookie 对应的 Session。凭证无效时，由统一错误处理中间件返回 401 和错误 JSON，不执行后面的 CRUD 操作。
-- **前端负责反馈结果**：浏览器随请求携带 Cookie，请求封装收到 401 后抛出 `ApiError`，页面在已有的 `catch` 中决定如何提示。前端不用在每次操作前再请求一次 `/me`。
+后端的 `requireAuth` 已统一验证每次管理请求，无效凭证会得到 401。前端请求封装将响应转换成 `ApiError`，页面根据 `status` 决定是否跳转，不用在请求列表前再调用一次 `/me`。
 
-**同样是 401，不同操作可以有不同反馈：**
+创建、编辑、删除沿用原来的 `catch` 和错误提示，无需额外判断 401。
 
-| 当前操作 | 前端怎样处理 |
-|---|---|
-| 加载文章、标签列表 | 显示后端错误提示，跳转登录页 |
-| 新建、修改 | 显示后端错误提示，保留抽屉和表单输入，避免跳转后丢失内容 |
-| 删除 | 显示后端错误提示，不移除列表数据，也不显示删除成功 |
-
-**错误需要处理，跳转则看场景。** 沿用原来的错误反馈时，已有 `catch` 就够了；需要针对 401 跳转或单独弹出提示时，才增加状态码判断。提示文字统一使用后端返回的 `error.message`，网络等其他错误保留原有兜底提示。
-
-下面在需要判断状态码的页面或表单中，从 `@/lib/api-error` 导入 `ApiError`。
-
-**列表：在加载请求的 catch 中跳转**
-
-在文章、标签页面从 `next/navigation` 导入 `useRouter`，在组件内调用 `const router = useRouter()`，提示复用已有的 `messageApi`。只在以下两个请求的 `catch` 中加入 401 判断：
+在文章、标签页面从 `@/lib/api-error` 导入 `ApiError`，从 `next/navigation` 导入 `useRouter`，在组件内调用 `const router = useRouter()`，提示复用已有的 `messageApi`。只修改以下两个请求的 `catch`：
 
 - `app/admin/articles/page.tsx` 的 `loadArticles()`。
 - `app/admin/tags/page.tsx` 的 `loadTags()`。
@@ -947,28 +934,13 @@ if (error instanceof ApiError && error.status === 401) {
 }
 ```
 
+401 会提示并跳转；500 等其他错误继续由原来的 `setListError()` 显示 Alert。
+
 文章列表 Effect 的依赖为 `[query, refreshVersion, router, messageApi]`，标签列表为 `[router, messageApi]`。各请求继续保留 `active` 检查和清理。
 
 文章页里加载标签选项的另一个 Effect 保留普通错误处理，不额外弹窗或跳转。因此，只有标签选项请求返回 401 时，会显示页面错误；文章请求返回 401 时才提示并跳转。
 
-**表单：在提交的 catch 中保留输入**
-
-在文章、标签表单中，从 `antd` 导入 `App`，在组件内用 `const { message: messageApi } = App.useApp()` 取得提示工具，已有的直接复用。在 `handleFinish()` 的 `catch` 中加入下面的分支；原来的普通错误提示放在后面，`finally` 中的加载状态恢复保留：
-
-```ts
-if (error instanceof ApiError && error.status === 401) {
-  messageApi.error(error.message);
-  return;
-}
-```
-
-父页面只在创建、更新成功后关闭 Drawer，因此失败时输入会保留。这里的 `return` 不影响 `finally` 执行，按钮仍会结束加载；其他错误继续由 `submitError` 显示。
-
-**删除：沿用原来的错误提示**
-
-删除失败时，沿用原有 `catch` 中的 `messageApi.error(...)` 显示错误即可，不必再单独判断 401。移除列表数据、刷新列表和显示删除成功，都放在删除请求 `await` 成功之后。
-
-验证时，在浏览器登录后，用 TablePro 按 `admin_id` 和 `created_at` 找到并删除本次 Session，再分别尝试加载列表、提交表单和删除，确认反馈符合上表。每次验证后重新登录。
+验证：保持文章页打开，用 TablePro 按 `admin_id` 和 `created_at` 找到并删除本次 Session，再通过翻页或筛选触发列表请求，应显示后端错误提示并跳转登录页。验证后重新登录。
 
 ### 5.6 跑通后再整理：合并重复的请求代码
 
