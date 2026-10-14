@@ -10,10 +10,23 @@
 npm install -D vitest supertest @types/supertest
 ```
 
-在项目根目录 `compose.yaml` 的 `services` 下增加 `postgres-test`，保留原来的开发数据库配置。下面是新增部分：
+修改项目根目录的 `compose.yaml`，把 `postgres-test` 与原来的 `postgres` 放在同一个 `services` 下。合并后的完整配置如下，整个文件只写一次 `services:`：
 
 ```yaml
+name: mini-cms
+
 services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: mini_cms
+      POSTGRES_PASSWORD: mini_cms_password
+      POSTGRES_DB: mini_cms
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
   postgres-test:
     image: postgres:18
     environment:
@@ -24,6 +37,9 @@ services:
       - "5433:5432"
     tmpfs:
       - /var/lib/postgresql
+
+volumes:
+  postgres_data:
 ```
 
 在项目根目录启动并确认数据库可以连接：
@@ -49,7 +65,9 @@ ADMIN_WEB_ORIGIN=http://localhost:3000
 
 **以下文件路径和命令均以 `mini-cms/server` 为起点。**
 
-新建 `tests/setup-env.ts`，在连接数据库前加载并检查测试配置：
+本节新增的三个配置文件统一放在 `tests/`，命令仍在 `server` 中运行。
+
+测试会清理数据，所以先新建 `tests/setup-env.ts`，加载测试配置并确认数据库地址，避免误操作开发库：
 
 ```ts
 import { config } from "dotenv";
@@ -69,16 +87,34 @@ if (
 }
 ```
 
-`override: true` 让 `.env.test` 覆盖终端中已有的同名变量；地址检查只允许本节配置的测试库。
+这段代码按“加载配置 → 拆解地址 → 检查目标”执行：
 
-新建 `prisma.test.config.ts`，让测试迁移也先执行同一份检查，再复用已有 Prisma 配置：
+- `config()` 读取 `path` 指定的 `.env.test`，把变量放入 `process.env`；`override: true` 覆盖已有的同名值。读取失败时，`result.error` 保存错误，`throw` 让执行停止。
+- `new URL()` 是 Node.js 内置的地址解析工具。它把连接字符串拆成 `hostname`（主机）、`port`（端口）、`pathname`（数据库路径，含开头的 `/`）；这一步只解析地址。
+- 最后的 `if` 要求环境为 `test`、主机为 `localhost`、端口为 `5433`、数据库路径为 `/mini_cms_test`。`||` 表示任何一项不符合就停止。
+
+新建 `tests/prisma.test.config.ts`。它供**测试库迁移命令**使用，告诉 Prisma 表结构在哪里、迁移文件在哪里、连接哪个数据库：
 
 ```ts
-import "./tests/setup-env";
-export { default } from "./prisma.config";
+import "./setup-env";
+import { defineConfig } from "prisma/config";
+
+export default defineConfig({
+  schema: "../prisma/schema.prisma",
+  migrations: {
+    path: "../prisma/migrations",
+  },
+  datasource: {
+    url: process.env.DATABASE_URL,
+  },
+});
 ```
 
-新建 `vitest.config.ts`：
+`import "./setup-env"` 会先执行 `setup-env.ts` 中的代码：读取 `.env.test`，检查数据库地址。检查通过后，`datasource.url` 使用加载到 `process.env.DATABASE_URL` 中的测试库地址。
+
+`schema` 和 `migrations.path` 从当前配置文件所在的 `tests/` 出发，`../` 回到 `server/`，指向开发库已有的表结构和迁移文件。`defineConfig()` 定义这份 Prisma 配置，`export default` 将它导出，供 Prisma 命令读取。
+
+新建 `tests/vitest.config.ts`。它供**测试运行命令**使用，告诉 Vitest 在什么环境运行、测试前先执行哪个文件：
 
 ```ts
 import { defineConfig } from "vitest/config";
@@ -92,19 +128,21 @@ export default defineConfig({
 });
 ```
 
-`setupFiles` 在加载每个测试文件前执行；关闭文件并行，避免多个文件同时清理同一个数据库。
+这里的 `defineConfig()` 来自 Vitest。`environment: "node"` 表示在 Node.js 中运行；`setupFiles` 在加载每个测试文件前执行环境检查，路径从 `server/` 出发；`fileParallelism: false` 让测试文件依次运行，避免同时清理数据库。
 
 在 `package.json` 的现有 `scripts` 中增加：
 
 ```json
 {
   "scripts": {
-    "db:test:migrate": "prisma migrate deploy --config prisma.test.config.ts",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "db:test:migrate": "prisma migrate deploy --config tests/prisma.test.config.ts",
+    "test": "vitest run --config tests/vitest.config.ts",
+    "test:watch": "vitest --config tests/vitest.config.ts"
   }
 }
 ```
+
+`--config` 指定使用 `tests/` 中的配置：Prisma 负责给测试库建表，Vitest 负责运行后面的测试代码。
 
 执行迁移，为测试库建表：
 
