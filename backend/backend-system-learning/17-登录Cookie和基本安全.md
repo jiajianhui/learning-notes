@@ -15,7 +15,7 @@ sequenceDiagram
     Note over B,D: ① 登录：创建 Session
     B->>S: POST /api/auth/login<br/>用户名 + 密码
     S->>D: 按用户名查询 admins
-    D-->>S: 管理员 ID + passwordHash
+    D-->>S: 返回管理员对象 admin<br/>含 id、username、passwordHash 等字段
     S->>S: 验证密码成功<br/>生成随机 Token，计算 tokenHash
     S->>D: 创建 Session<br/>保存 tokenHash、adminId、expiresAt
     D-->>S: 保存成功
@@ -36,8 +36,8 @@ sequenceDiagram
     S->>S: 从 Cookie 读取 Token<br/>计算 tokenHash
     S->>D: 删除 tokenHash 对应的 Session
     D-->>S: 删除完成
-    S-->>B: 204 + Set-Cookie，让登录 Cookie 过期
-    B->>B: 浏览器清除 Cookie<br/>前端清空管理员状态，跳转登录页
+    S-->>B: 204 + Set-Cookie，通知浏览器清除登录 Cookie
+    B->>B: 更新登录状态，跳转登录页
 ```
 
 图中画的是成功流程。第二段用 `/me` 查询身份举例；文章、标签管理接口也会先验证凭证，通过后才继续读写业务数据。
