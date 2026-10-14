@@ -204,7 +204,7 @@ app.use(notFound);
 app.use(errorHandler);
 ```
 
-阶段 4 只允许 Ant Design 后台的 3000 端口。第 17、17A 章增加 Cookie 登录时，再补 `credentials`；第 25 章创建第二套后台时，再允许 3002。
+阶段 4 只允许 Ant Design 后台的 3000 端口。第 17、17A 章增加 Cookie 登录时，再补 `credentials`；第 26 章创建第二套后台时，再允许 3002。
 
 ---
 
@@ -2527,7 +2527,7 @@ npm run dev
 -> 用测试固定共享 API 的核心行为
 ```
 
-下一步进入[第 15 章](./15-数据关系JOIN和事务.md)，给文章增加标签和发布规则。共享 API 稳定以后，再按第 24～28 章用 Axios 完成并列的 `admin-web-shadcn`。
+下一步进入[第 15 章](./15-数据关系JOIN和事务.md)，给文章增加标签和发布规则。共享 API 稳定以后，再按第 25～29 章用 Axios 完成并列的 `admin-web-shadcn`。
 
 ## 官方参考
 

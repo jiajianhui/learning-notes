@@ -1,4 +1,4 @@
-# 27. shadcn/ui 怎样完成文章新建和编辑表单
+# 28. shadcn/ui 怎样完成文章新建和编辑表单
 
 文章列表已经可用。本章按“创建草稿 → 选择状态与标签 → 编辑回填 → 显示字段错误”推进，始终使用同一个 `ArticleForm`。
 
@@ -63,7 +63,7 @@ export const emptyArticleFormValues: ArticleFormValues = {
 
 这是浏览器里的填写规则。字段名和限制继续对应已有 Express Schema，服务端校验照常执行。
 
-在 `features/articles/api.ts` 中增加 `ArticleFormValues` 类型导入和 `createArticle()`；保留第 26 章的请求函数及导入：
+在 `features/articles/api.ts` 中增加 `ArticleFormValues` 类型导入和 `createArticle()`；保留第 27 章的请求函数及导入：
 
 ```ts
 import type { ArticleFormValues } from "./article-form-schema";
@@ -363,7 +363,7 @@ if (loadError) return (
 
 勾选时把数字 id 加入数组，取消时移除。`tags` 是全部可选项，`tagIds` 是本次提交的选择；保存后的关联仍由后端维护。
 
-**验证：** 新建草稿和已发布文章各一篇；选择两个标签，列表正确显示名称；不选标签也能保存。正文继续作为字符串编辑，解析和排版留到第 19 章。
+**验证：** 新建草稿和已发布文章各一篇；选择两个标签，列表正确显示名称；不选标签也能保存。本章正文继续作为字符串编辑；完成第 29 章后，在[第 19 章](./19-文章写作预览与内容排版.md)统一改为富文本 JSON，并接入共享编辑器、预览和正文排版。
 
 ## 3. 编辑时先加载详情，再挂载同一张表单
 
@@ -517,11 +517,11 @@ export default function EditArticlePage() {
 }
 ```
 
-这里等待文章与标签都加载完成，才挂载 `ArticleForm`。`initialValues` 在表单首次创建时已经是真实数据，因此使用 `defaultValues` 即可，不需要为这次加载再加 `reset()` Effect。`key={articleId}` 让同一路由切换文章时也有明确的表单身份；第 27A 章再解释哪些场景需要 `reset()`。
+这里等待文章与标签都加载完成，才挂载 `ArticleForm`。`initialValues` 在表单首次创建时已经是真实数据，因此使用 `defaultValues` 即可，不需要为这次加载再加 `reset()` Effect。`key={articleId}` 让同一路由切换文章时也有明确的表单身份；第 28A 章再解释哪些场景需要 `reset()`。
 
 回填时把 `summary: null` 转成空字符串，把 `articleTags[].tag.id` 转成 `tagIds`；请求响应的形状和第 16A 章一致。
 
-在第 26 章的操作列中，用 `<div className="flex gap-2">` 包住编辑和删除按钮。导入 `Link` 和 `Button`，在原删除按钮旁增加：
+在第 27 章的操作列中，用 `<div className="flex gap-2">` 包住编辑和删除按钮。导入 `Link` 和 `Button`，在原删除按钮旁增加：
 
 ```tsx
 <Button variant="outline" render={<Link href={`/admin/articles/${row.original.id}/edit`} />}>
@@ -581,7 +581,7 @@ if (!hasFieldError) {
 
 ## 5. 完成页面反馈与回看
 
-将新建、编辑页的加载文字完善为 Skeleton，将错误区和整表错误改为 Alert，保留重试；这些视觉组合沿用第 26 章，不另写一套状态逻辑。
+将新建、编辑页的加载文字完善为 Skeleton，将错误区和整表错误改为 Alert，保留重试；这些视觉组合沿用第 27 章，不另写一套状态逻辑。
 
 完整操作一次“新建 → 选择标签 → 编辑 → 清空摘要 → 发布 → 返回列表”，再执行：
 
@@ -591,7 +591,7 @@ npx tsc --noEmit
 npm run build
 ```
 
-通过后阅读 [27A](./27A-React-Hook-Form和两次Zod校验怎样配合.md)，复习字段值、校验和错误如何流动，再进入第 28 章独立完成标签管理。
+通过后阅读 [28A](./28A-React-Hook-Form和两次Zod校验怎样配合.md)，复习字段值、校验和错误如何流动，再进入第 29 章独立完成标签管理。
 
 ## 官方参考
 

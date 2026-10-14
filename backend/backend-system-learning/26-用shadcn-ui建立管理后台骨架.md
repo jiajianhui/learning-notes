@@ -1,8 +1,8 @@
-# 25. 用 shadcn/ui 和 Axios 建立管理后台骨架
+# 26. 用 shadcn/ui 和 Axios 建立管理后台骨架
 
 ## 这一章要完成什么
 
-第 24 章已经分清 shadcn/ui 与传统组件库的区别。本章开始创建：
+第 25 章已经分清 shadcn/ui 与传统组件库的区别。本章开始创建：
 
 ```text
 mini-cms/admin-web-shadcn/
@@ -291,7 +291,7 @@ export function isRequestCanceled(error: unknown) {
 - `apiRequestResult()` 同时保留列表需要的 `data` 和 `pagination`。
 - `apiRequestNoContent()` 用于退出登录这类 204 响应。
 
-第 26 章会使用 `isRequestCanceled()` 忽略已经取消的列表请求。页面不需要直接处理 `AxiosError`。
+第 27 章会使用 `isRequestCanceled()` 忽略已经取消的列表请求。页面不需要直接处理 `AxiosError`。
 
 ---
 
@@ -403,7 +403,7 @@ export function logout() {
 
 ## 7. 先用普通 React 状态完成登录页
 
-React Hook Form 留到第 27 章。登录页字段很少，本章先用最小状态完成认证闭环。
+React Hook Form 留到第 28 章。登录页字段很少，本章先用最小状态完成认证闭环。
 
 `app/login/page.tsx` 的核心结构：
 
@@ -633,7 +633,7 @@ export default function AdminLayout({
 
 ## 10. 在根布局注册 Toast
 
-第 26 章删除文章、第 27 章保存文章都会用 Toast。把它放在根布局一次：
+第 27 章删除文章、第 28 章保存文章都会用 Toast。把它放在根布局一次：
 
 `app/layout.tsx`：
 
@@ -700,7 +700,7 @@ npm run build
 - 不引入 TanStack Query。
 - 不引入 React Hook Form。
 - 不改变 Express 登录方案。
-- 不让两套后台共享 UI 组件；它们只共享 API contract。
+- 本章两套后台各自实现 UI、共享 API contract；第 19 章再引入共同的正文编辑与渲染能力。
 
 下一章会读取真实文章列表，用 shadcn Table 和 TanStack Table 完成列、行操作、删除确认和服务端分页。
 

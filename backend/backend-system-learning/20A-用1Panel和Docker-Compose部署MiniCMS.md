@@ -1,10 +1,10 @@
-# 19A. 用 1Panel 和 Docker Compose 部署 Mini CMS
+# 20A. 用 1Panel 和 Docker Compose 部署 Mini CMS
 
-> Mini CMS 阶段 8：第 19 章的公开文章 API、个人网站详情页和生产运行准备完成后再使用。本章不使用宝塔，也不通过上传散文件的方式发布项目。
+> Mini CMS 阶段 8：第 19 章的内容能力和第 20 章的生产运行准备完成后再使用。本章不使用宝塔，也不通过上传散文件的方式发布项目。
 
 ## 这一章完成什么
 
-第 19 章已经完成公开文章 API、个人网站文章详情页，以及构建、环境变量、生产迁移、日志和备份地图。本章把 Mini CMS 的生产运行要求落到一台真实服务器：
+第 19 章已经完成富文本写作、公开文章 API、个人网站详情页和统一预览；第 20 章已经完成构建、环境变量、生产迁移、日志和备份准备。本章把 Mini CMS 的生产运行要求落到一台真实服务器：
 
 ```text
 1Panel
@@ -106,8 +106,9 @@ PostgreSQL
 
 - 文章列表和详情页已经在本地读取 Mini CMS 的真实公开 API。
 - API 地址可以从本地地址切换为正式 HTTPS 域名。
-- `content` 的 Markdown 或 MDX 解析方式已经确定，数据库字段仍保持 `String`。
-- 文章详情页布局和正文排版已经按第 19 章的两个参考链接完成本地验收。
+- 已按第 19 章把 `content` 转为富文本 JSON，旧正文转换与两个后台的编辑回显已经验证。
+- 文章详情页与后台预览共用正文组件和样式，已按第 19 章的排版目标完成本地验收。
+- 各工程的 `vendor/` 中有锁文件对应的共享正文包归档，不依赖开发机器上的绝对路径。
 
 ### 整个仓库
 
@@ -235,6 +236,7 @@ FROM node:22-bookworm-slim
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+COPY vendor ./vendor
 RUN npm ci
 
 COPY prisma ./prisma
@@ -252,6 +254,8 @@ EXPOSE 3001
 
 CMD ["npm", "run", "start"]
 ```
+
+第 19 章将共享正文包归档放在各工程自己的 `vendor/`，所以必须在 `npm ci` 前复制这个目录。两个后台的 Dockerfile 使用同样的顺序，`.dockerignore` 不要排除这些归档。
 
 镜像中暂时保留开发依赖，是因为 `prisma migrate deploy` 需要 Prisma CLI。后续确认迁移流程后，可以再拆 migration stage 和精简 runtime image，不在第一次部署同时优化。
 
@@ -272,6 +276,7 @@ FROM node:22-bookworm-slim
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+COPY vendor ./vendor
 RUN npm ci
 
 COPY . .

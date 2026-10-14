@@ -158,10 +158,10 @@ TypeScript 类型和运行时校验
 阶段 5：回看 06 API 设计、08 筛选分页，阅读 15 多表关系和事务，用 15A 复习关系维护，按 16 完成页面联调，再用 16A 梳理数据流，按 16B 完善普通 Ant Design 的 UI、16C 用 ProComponents 简化后台
 阶段 6：阅读 17 登录与安全、17A 登录实操
 阶段 7：阅读 18 测试分层、18A 接口测试实操
-阶段 8：回看 06 公开 API 设计，阅读 19 连通公开内容、个人网站详情页和生产运行，再用 19A 完成 1Panel 部署
+阶段 8：先用 19 完成富文本写作、公开内容、文章排版和预览，再用 20 准备生产运行、20A 完成 1Panel 部署
 ```
 
-阶段 8 开始前，先按第六部分完成 shadcn/ui 并列后台。这样两个管理后台、共享 API 和自动化测试都稳定后，再集中处理个人网站文章详情页和部署。
+阶段 8 开始前，先按第六部分完成 shadcn/ui 并列后台。这样两个管理后台、共享 API 和自动化测试都稳定后，再进入第 19 章完善写作与公开阅读，最后处理上线。
 
 `13A` 是 Next.js 架构对比选读，完成第一轮文章 CRUD 后再看，不影响任何实操阶段。
 
@@ -194,39 +194,52 @@ TypeScript 类型和运行时校验
 ### 第五部分：按需回看的辅助章节
 
 ```text
-20 如何阅读一个后端项目
-21 开始实践后怎样排错
-22 数据库与 ORM 术语速查
-23 练习题
+21 如何阅读一个后端项目
+22 开始实践后怎样排错
+23 数据库与 ORM 术语速查
+24 练习题
 ```
 
-第 19、19A 章对应 Mini CMS 必做阶段 8；第 20～23 章用于阅读、排错和复习，不要求第一次连续背完。
+第 19、20、20A 章共同完成 Mini CMS 必做阶段 8；第 21～24 章用于阅读、排错和复习，不要求第一次连续背完。
 
 ### 第六部分：完成 shadcn/ui 并列后台项目
 
 ```text
-24 shadcn/ui 为什么不是传统组件库
-25 用 Axios 建立后台骨架并复用登录 API
-26 用 TanStack Table 完成文章列表
-26A 从数据到表格实例
-27 用 React Hook Form 和 Zod 完成文章表单
-27A 表单状态和两次 Zod 校验
-28 独立完成标签管理并比较两套后台
+25 shadcn/ui 为什么不是传统组件库
+26 用 Axios 建立后台骨架并复用登录 API
+27 用 TanStack Table 完成文章列表
+27A 从数据到表格实例
+28 用 React Hook Form 和 Zod 完成文章表单
+28A 表单状态和两次 Zod 校验
+29 独立完成标签管理并比较两套后台
 ```
 
 阅读顺序：
 
 ```text
-24 -> 25 -> 26 -> 26A -> 27 -> 27A -> 28
+25 -> 26 -> 27 -> 27A -> 28 -> 28A -> 29
 ```
 
 Ant Design 和 shadcn/ui 是 Mini CMS 中两个并列的前端项目，两套都要掌握。实现顺序先 Ant Design、再 shadcn/ui，是为了先稳定 API contract，再把注意力集中到第二套 UI 组合方式，不代表项目有主次。
 
 请求工具也按同一条渐进路线练习：第 13 章认识原生 `fetch`，Ant Design 项目用它完成 CRUD；shadcn/ui 项目再用 Axios 请求同一套 API。这个组合只服务于学习，不代表 Ant Design 必须用 `fetch`，或 shadcn/ui 必须用 Axios。
 
-`admin-web-antd` 和 `admin-web-shadcn` 继续使用同一个 Express API 和 PostgreSQL。第 28 章用相同功能比较 Ant Design + ProComponents 与 shadcn/ui 组合方案。
+`admin-web-antd` 和 `admin-web-shadcn` 继续使用同一个 Express API 和 PostgreSQL。第 29 章用相同功能比较 Ant Design + ProComponents 与 shadcn/ui 组合方案。
 
 shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等新概念需要分别解释，不代表学习重心高于 Ant Design。
+
+### 第七部分：完成文章写作与排版，再上线
+
+```text
+29 两套后台核心功能完成
+-> 19 文章写作、预览与内容排版
+-> 20 准备生产运行
+-> 20A 用 1Panel 和 Docker Compose 部署
+```
+
+[19-文章写作、预览与内容排版](./19-文章写作预览与内容排版.md)是上线前的独立实操章节。直接使用 Tiptap 富文本，以 JSON 作为唯一正文来源，按“编辑保存与回显 → 统一排版与预览 → 双后台写作体验”完成；Markdown 只做简短对照。
+
+第 19 章也负责公开文章 API 和个人网站接入，让内容能力在上线前形成完整链路。第 20、20A 章专注生产准备与部署，不再承担编辑器选型和正文排版实操。
 
 ### 第 10 章怎样使用
 
@@ -237,7 +250,7 @@ shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等
 -> 回到第 10 章对照验收
 ```
 
-第 10 章负责衔接阶段性 CRUD 实操与 Mini CMS，并维护项目范围、实现顺序和完成标准。第 11～19 章负责讲清当前知识，并把它落到 Mini CMS 中。
+第 10 章负责衔接阶段性 CRUD 实操与 Mini CMS，并维护项目范围、实现顺序和完成标准。第 11～20 章和第 25～29 章负责讲清当前知识，并把它落到 Mini CMS 中。
 
 ---
 
@@ -253,7 +266,7 @@ shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等
 它在请求链路的哪一步？
 ```
 
-第一次阅读只跟正常流程，不要求提前记住大量故障和工程误区。开始写代码后，再使用第 21 章排错，并对照第 10 章每个阶段的验收标准。
+第一次阅读只跟正常流程，不要求提前记住大量故障和工程误区。开始写代码后，再使用第 22 章排错，并对照第 10 章每个阶段的验收标准。
 
 也不要求背下所有函数和配置。
 
@@ -279,7 +292,8 @@ shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等
 管理页面 B：Next.js + TypeScript + shadcn/ui + Axios + TanStack Table + React Hook Form
 接口检查：Apifox
 自动化测试：Vitest + Supertest
-公开内容与自托管部署（阶段 8）：个人网站 + 公开 API + 1Panel + Docker Compose + OpenResty
+写作与公开内容（阶段 8）：Tiptap 3 + 富文本 JSON + 共享正文组件 + 个人网站 + 公开 API
+自托管部署（阶段 8）：1Panel + Docker Compose + OpenResty
 ```
 
 ---
@@ -294,7 +308,7 @@ shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等
 - 能读懂常见的单表 CRUD SQL，并知道 Prisma 模型方法对应什么操作。
 - 能用 Docker 启动 PostgreSQL，并用 Prisma 记录表结构变化和管理数据。
 
-读完第 09 章后，先用 09A 收口 Prisma 主线，再读第 10 章完成从 demo 到 Mini CMS 的过渡。阶段 3 先补上请求校验、统一错误处理和项目结构；阶段 4 用第 13 章完成前后端过渡，完整学完第 14 章并完成 Ant Design 后台后，再用 14A 建立完整 CRUD、数据返回和错误传播主线，用 14B 收口 TypeScript、Promise 和 React 状态机制；阶段 5～7 继续增加标签、登录和测试。共享 API 稳定后，再按第 24～28 章完成 shadcn/ui 后台；最后完成阶段 8 的公开 API、个人网站文章详情页和真实部署。两套后台和个人网站公开阅读链路都是学习目标。
+读完第 09 章后，先用 09A 收口 Prisma 主线，再读第 10 章完成从 demo 到 Mini CMS 的过渡。阶段 3 先补上请求校验、统一错误处理和项目结构；阶段 4 用第 13 章完成前后端过渡，完整学完第 14 章并完成 Ant Design 后台后，再用 14A 建立完整 CRUD、数据返回和错误传播主线，用 14B 收口 TypeScript、Promise 和 React 状态机制；阶段 5～7 继续增加标签、登录和测试。共享 API 稳定后，再按第 25～29 章完成 shadcn/ui 后台；最后在阶段 8 按 `19 → 20 → 20A` 完成富文本写作、预览、公开阅读和真实部署。两套后台和个人网站公开阅读链路都是学习目标。
 
 ---
 
@@ -315,7 +329,7 @@ shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等
 -> 阶段 4 先理解前后端边界，再完成 Ant Design 后台
 -> 阶段 5～7 学习多表、登录和测试
 -> 完成 shadcn/ui 并列后台项目
--> 阶段 8 完成公开内容、文章详情页和部署
+-> 阶段 8 先用 19 完成写作、预览与公开内容，再用 20、20A 完成上线
 -> 按需使用阅读、排错和复习章节
 ```
 

@@ -142,7 +142,7 @@ DrawerForm 根据异步提交管理提交按钮的加载，可以移除手写 `s
 - 文章列表代码减少的部分，能明确对应到 ProTable 的请求、搜索或分页能力。
 - 对照 16B 的截图，页面层级和滚动行为保持一致，普通组件版与 ProComponents 版都接近同一个目标 UI。
 
-本章完成后，继续在这个 `admin-web-antd` 上接第 17、17A 章的登录。第 24～28 章另建 shadcn/ui 后台，最终比较的是“Ant Design + ProComponents”与“shadcn/ui + TanStack Table + React Hook Form”；基础 Ant Design 版本通过 Git 回看。
+本章完成后，继续在这个 `admin-web-antd` 上接第 17、17A 章的登录。第 25～29 章另建 shadcn/ui 后台，最终比较的是“Ant Design + ProComponents”与“shadcn/ui + TanStack Table + React Hook Form”；基础 Ant Design 版本通过 Git 回看。
 
 ## 官方参考
 

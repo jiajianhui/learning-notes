@@ -1,6 +1,6 @@
-# 26. shadcn/ui 和 TanStack Table 怎样完成文章列表
+# 27. shadcn/ui 和 TanStack Table 怎样完成文章列表
 
-第 25 章已经完成登录和请求层。现在沿着“显示真实文章 → 翻页 → 筛选 → 删除”完成列表。每一步都在上一步的页面上增加可操作的行为；第 26A 章用于完成后复习表格内部的数据流。
+第 26 章已经完成登录和请求层。现在沿着“显示真实文章 → 翻页 → 筛选 → 删除”完成列表。每一步都在上一步的页面上增加可操作的行为；第 27A 章用于完成后复习表格内部的数据流。
 
 ## 1. 先把真实文章显示出来
 
@@ -362,7 +362,7 @@ function handleSearch(event: FormEvent<HTMLFormElement>) {
 | 两个控件共同规则 | 更新对应查询条件时将 `page` 设为 1，保留其他条件 |
 | 重置 | 清空输入与筛选，将 query 恢复为 `{ page: 1, pageSize: 10 }` |
 
-在 `features/articles/api.ts` 增加 `apiRequest` 和 `TagSummary` 导入，再增加 `getTags()`，第 27 章表单继续复用它：
+在 `features/articles/api.ts` 增加 `apiRequest` 和 `TagSummary` 导入，再增加 `getTags()`，第 28 章表单继续复用它：
 
 ```ts
 export function getTags() {
@@ -522,7 +522,7 @@ const columns = getArticleColumns(handleDeleted, loading);
 
 ## 5. 完善反馈并进入表单章
 
-按已有页面经验，把加载文字完善为 Skeleton 或表格上方的刷新提示，把错误区换成 Alert，保留重试。空数据和请求失败使用不同反馈。详情编辑与新建入口在第 27 章对应页面建立后再接入。
+按已有页面经验，把加载文字完善为 Skeleton 或表格上方的刷新提示，把错误区换成 Alert，保留重试。空数据和请求失败使用不同反馈。详情编辑与新建入口在第 28 章对应页面建立后再接入。
 
 检查标题、状态、标签组合查询，翻页、删除、会话失效和网络失败；再运行：
 
@@ -532,7 +532,7 @@ npx tsc --noEmit
 npm run build
 ```
 
-通过后用 [26A](./26A-TanStack-Table从数据到表格实例.md) 复习 `data → columns → table → 单元格`，再进入第 27 章。
+通过后用 [27A](./27A-TanStack-Table从数据到表格实例.md) 复习 `data → columns → table → 单元格`，再进入第 28 章。
 
 ## 官方参考
 
