@@ -30,7 +30,7 @@ server
 PostgreSQL
 ```
 
-`admin-web-shadcn` 已经在阶段 8 前完成。第一次可以先让 Ant Design 后台、API 和数据库稳定上线，再用同类配置增加 shadcn/ui 后台服务。
+`admin-web-shadcn` 不要求在首次上线前完成。当前先让已有的 Ant Design 后台、API 和数据库稳定上线；以后完成第二套后台，需要部署时再用同类配置增加服务。
 
 个人网站保留在它自己的项目和部署环境中，不要求搬进这份 Compose。阶段 8 验收时，它必须能通过正式 HTTPS API 读取文章，并展示第 19 章已经完成的列表和详情页。
 
