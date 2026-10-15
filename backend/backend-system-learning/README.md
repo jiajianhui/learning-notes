@@ -237,7 +237,7 @@ shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等
 -> 20A 用 1Panel 和 Docker Compose 部署
 ```
 
-[19-文章写作、预览与内容排版](./19-文章写作预览与内容排版.md)是上线前的独立实操章节。直接使用 Tiptap 富文本，以 JSON 作为唯一正文来源，按“编辑保存与回显 → 统一排版与预览 → 双后台写作体验”完成；Markdown 只做简短对照。
+[19-文章写作、预览与内容排版](./19-文章写作预览与内容排版.md)是上线前的独立实操章节。以 Tiptap Simple Editor 模板接入现有文章表单，以 JSON 作为唯一正文来源，按“模板与表单适配 → 保存与回显 → 公开阅读、统一排版与预览 → 双后台写作体验”完成。原理随接入过程讲解，Markdown 只做简短对照。
 
 第 19 章也负责公开文章 API 和个人网站接入，让内容能力在上线前形成完整链路。第 20、20A 章专注生产准备与部署，不再承担编辑器选型和正文排版实操。
 
@@ -292,7 +292,7 @@ shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等
 管理页面 B：Next.js + TypeScript + shadcn/ui + Axios + TanStack Table + React Hook Form
 接口检查：Apifox
 自动化测试：Vitest + Supertest
-写作与公开内容（阶段 8）：Tiptap 3 + 富文本 JSON + 共享正文组件 + 个人网站 + 公开 API
+写作与公开内容（阶段 8）：Tiptap 3 Simple Editor 模板 + 富文本 JSON + 共享正文组件 + 个人网站 + 公开 API
 自托管部署（阶段 8）：1Panel + Docker Compose + OpenResty
 ```
 
