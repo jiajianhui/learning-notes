@@ -202,31 +202,19 @@ Zellij 的 Session Resurrection 不等于让进程穿越服务器重启。它保
 
 Zellij 的 Web Client 也不是第一轮服务器练习的公网入口。它默认关闭，并涉及认证、HTTPS 和新的攻击面。现在继续通过 SSH 使用 tmux 即可。
 
-## Herdr：从 tmux 同一层起步，再向上多认一层
+## Herdr：管理多个 Agent 的终端工作区
 
-[Herdr](https://herdr.dev/docs/) 是已经发布的终端工作区管理器。它同样把终端进程放在后台 Session 中，让客户端 Detach 后进程继续，再回来 Attach；但组织方式多了一层项目工作区：
+[Herdr](https://herdr.dev/docs/) 是已经发布的终端工作区管理器。它由自己的后台服务保管终端进程，客户端可以离开再连接，并按项目工作区组织终端。
 
-```text
-Herdr Session
-└── Workspace：一个项目或任务
-    └── Tab：项目中的一种布局
-        └── Pane：一个真实终端
-            └── Shell、命令或 Coding Agent
-```
+它还会识别终端里受支持的 Coding Agent，汇总谁正在工作、谁需要输入、谁已经完成。你同时跑几个 Agent 时，可以直接找到需要自己介入的那个。
 
-Herdr 还会识别 Pane 中常见的 Coding Agent，把 `working`、`blocked`、`done`、`idle` 等状态汇总到 Tab 和 Workspace。你同时跑几个 Agent 时，不必挨个终端查看谁正在做、谁需要决定、谁已经完成。
+它适合解决“多个 Agent 让我频繁巡查终端”的问题。工作区结构、状态含义与自动化接口集中放在[附录 B](./附录B-Superlogical与持久工作会话.md)，这里先掌握它与 tmux 共有的离开、重连与保留现场。
 
-| 角度 | tmux | Herdr |
-|---|---|---|
-| 基础能力 | 持久 Session、Window、Pane、Detach / Attach | 同样保留终端现场，并增加 Workspace 与 Tab |
-| 交互 | 以命令和前缀快捷键为主 | 鼠标优先，也保留前缀快捷键 |
-| 是否理解 Agent | 只知道 Pane 里有一个进程 | 能识别常见 Agent 并汇总状态 |
-| 自动化 | 命令与脚本生态成熟 | 还提供面向 Pane、Agent 的 CLI、本地 API 与插件 |
-| 现在怎样学 | 第一轮必做，概念简单且服务器普及 | 多 Agent 已经带来监督负担时再试 |
+## Rex：把持久会话融入终端应用
 
-所以 Herdr 不是“比 tmux 更底层一层”。更准确的说法是：**它从同一层的持久终端能力起步，再向上增加一层 Agent 语义和工作区管理。**
+[Rex](https://www.superlogical.com/updates/public-testing-beginning) 是 Superlogical 的终端产品。它可以作为日常终端入口，macOS 应用自带 Rex 服务端，也能连接其他机器上的 Rex 服务端，把终端界面、持久会话和远程连接一起设计。
 
-日常选一个作为主要工作台即可，不要机械地在 Herdr Pane 里再启动 tmux。Herdr 官方说明它不会检查内层 tmux Session，届时外层可能只看见 `tmux`，看不见里面的 Agent 状态。
+按 2026 年 10 月 5 日的公测公告，首批只开放 macOS 应用，并通过邮件候补名单分批邀请。Linux 服务端尚未纳入这轮测试，因此本章继续用 SSH + tmux 完成服务器练习；获得邀请后，可以在 Mac 上体验 Rex。当前能力与后续方向见[附录 B](./附录B-Superlogical与持久工作会话.md)。
 
 ## 针对你的默认选择
 
@@ -235,9 +223,9 @@ Herdr 还会识别 Pane 中常见的 Coding Agent，把 `working`、`blocked`、
 - Ubuntu 上容易安装。
 - 与 SSH 服务器场景直接相关。
 - 四个动作就能看懂 Session、Window、Pane、Detach 与 Attach 的关系。
-- 以后换 Zellij、Herdr 或将来的 Superlogical，这组基础概念仍然能复用。
+- 以后使用 Zellij、Herdr 或 Rex，这组基础概念仍然能复用。
 
-“先学 tmux”不等于以后必须永远使用 tmux。开始同时监督多个 Agent，并且经常检查谁卡住、谁完成时，Herdr 就有实际价值；主要只是嫌快捷键难发现、需要可复用布局时，再试 Zellij。Superlogical 目前继续观察，不进入安装步骤。
+之后按实际需求选择：需要更容易发现的操作与可复用布局时试 Zellij，需要监督多个 Agent 时试 Herdr，获得公测邀请后再体验 Rex 的终端与跨 Mac 连接。这些工具各自管理会话，可以直接选择适合任务的工具。
 
 ## Agent 工作流：给未来的 Agent 留一张可接管的工作台
 
@@ -326,4 +314,5 @@ tmux 解决的是“连接断了，交互现场还在”，并没有决定谁能
 - [Zellij：Web Client](https://zellij.dev/documentation/web-client.html)
 - [Herdr：核心概念](https://herdr.dev/docs/concepts/)
 - [Herdr：Agents](https://herdr.dev/docs/agents/)
+- [Rex：公测范围与参与方式](https://www.superlogical.com/updates/public-testing-beginning)
 - [OpenAI：创建可供 Codex 组合调用的 CLI](https://learn.chatgpt.com/use-cases/agent-friendly-clis)

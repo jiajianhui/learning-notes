@@ -8,9 +8,9 @@
 
 DHH 为自己基于 Arch 与 Hyprland 打造的 Linux 桌面 Omarchy 成立了非营利的 [Omacom Foundation](https://omarchy.org/news/2026/08/omacom-foundation-launches-with-8-million/)。Tobi Lütke、Patrick Collison、Michael Dell、Jack Dorsey、DHH 等首批 8 位 Founding Patrons 每人出资 100 万美元；三天后 Drew Houston 与 Peter Steinberger 加入，数字变成了[十人、1000 万美元](https://omarchy.org/news/2026/08/omacom-foundation-funding-hits-10m/)。完整阵容留在附录，这里先记住：钱会流向基础设施，以及 Omarchy 所依赖的开源项目与开发者。
 
-另一边，Ghostty 作者、HashiCorp 联合创始人 Mitchell Hashimoto 组建了 [Superlogical](https://www.superlogical.com/)。团队里有 HashiCorp 第一位员工和前工程负责人 Jack Pearkes，也有来自 Poolside、Vercel、HashiCorp、Heroku 的开发者工具设计者 Alasdair Monk 与 Hector Simpson；背后则站着 Notable Capital、Amplify Partners，以及 Aaron Levie、Armon Dadgar、Guillermo Rauch、Patrick Collison、Tobias Lütke 等一群做过开发者产品的人。
+另一边，Ghostty 作者、HashiCorp 联合创始人 Mitchell Hashimoto 组建了 [Superlogical](https://www.superlogical.com/)，首个产品叫 Rex。团队里有 HashiCorp 第一位员工和前工程负责人 Jack Pearkes，也有来自 Poolside、Vercel、HashiCorp、Heroku 的开发者工具设计者 Alasdair Monk 与 Hector Simpson；背后则站着 Notable Capital、Amplify Partners，以及 Aaron Levie、Armon Dadgar、Guillermo Rauch、Patrick Collison、Tobias Lütke 等一群做过开发者产品的人。
 
-与此同时，[Herdr](https://herdr.dev/docs/) 已经把其中一部分未来做成了可以安装的工具：它从 tmux 式的持久终端工作区起步，再识别多个 Coding Agent 谁在工作、谁卡住、谁已经完成。Herdr 与 Superlogical 没有从属关系，只是现在很适合放在同一张地图里理解。
+与此同时，[Herdr](https://herdr.dev/docs/) 也在重新组织终端工作：它保留持久终端现场，再识别多个 Coding Agent 谁在工作、谁需要输入、谁已经完成。Herdr 与 Rex 各自实现会话管理，适合放在同一张地图里理解。
 
 他们做的不是同一个产品，却在押注同一件更大的事：**电脑和软件工作流应该再次变得可以理解、可以组合，也可以由使用者掌控。**
 
@@ -18,11 +18,14 @@ DHH 为自己基于 Arch 与 Hyprland 打造的 Linux 桌面 Omarchy 成立了�
 Omacom / Omarchy
 -> 重新设计“开发者每天坐在什么样的电脑前”
 
+tmux
+-> 让终端工作现场在 SSH 断开后继续存在
+
 Herdr
 -> 把持久终端变成可以照看多个 Agent 的工作台
 
-Superlogical
--> 继续追问“人、Agent 和远程机器未来在哪里持续工作”
+Superlogical / Rex
+-> 把终端界面、持久会话与远程连接一起设计
 
 这套 Linux 路线
 -> 先学会支撑这些未来的文件、进程、网络、Shell、SSH 与 Session
@@ -121,7 +124,7 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 
 **07 · SSH 断了，工作还在**
 
-[第一次使用 tmux，并认识 Zellij 与 Herdr](./07-SSH断了工作还在-tmux与Zellij.md)
+[第一次使用 tmux，并认识 Zellij、Herdr 与 Rex](./07-SSH断了工作还在-tmux与Zellij.md)
 
 启动一只不断走动的秒针，Detach，关掉 SSH，再从新连接回到同一个现场。先用 tmux 认清 Session、Window、Pane、Detach 与 Attach，再用一次日志、健康检查和 Agent 同时运行的排错现场，看清 CLI、TUI 与 GUI 各自快在哪里。
 
@@ -160,9 +163,9 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 
 **附录 B · Herdr、Superlogical 与未来的工作 Session**
 
-[为什么它们都从持久终端开始](./附录B-Superlogical与持久工作会话.md)
+[tmux、Herdr 与 Rex 怎样保留和管理终端现场](./附录B-Superlogical与持久工作会话.md)
 
-先用已经发布的 Herdr 看见“tmux + Agent 状态”是什么，再认识 Superlogical 的明星团队与更大愿景。Herdr 可以按需试玩；Superlogical 尚未公开首个 beta，只观察方向，不安排安装。
+tmux 用来理解会话保留，Herdr 用来管理多个 Agent 的状态，Rex 用来认识终端与远程连接的一体体验。Herdr 按需选试；Rex 已于 [2026 年 10 月 5 日开始 macOS 邀请制公测](https://www.superlogical.com/updates/public-testing-beginning)，获得邀请后可选体验，Linux 服务器实操仍按主线进行。
 
 ---
 
