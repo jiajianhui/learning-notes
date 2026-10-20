@@ -84,11 +84,10 @@ mini-cms/
 ├── .git/        整个项目共用一份 Git 历史
 ├── server/      Express 后端
 ├── admin-web-antd/     Ant Design 后台项目
-├── admin-web-shadcn/   shadcn/ui 后台项目
-└── packages/article-content/   第 19 章再新增的共享正文包
+└── admin-web-shadcn/   shadcn/ui 后台项目
 ```
 
-三个应用工程各自有依赖和启动命令，但同属一个 Mini CMS，所以放在同一个 Git 仓库里。共享正文包在第 19 章才建立，用于复用编辑器、校验和渲染；它不是另一个后台服务。不要在子目录里再次运行 `git init`。
+三个应用工程各自有依赖和启动命令，但同属一个 Mini CMS，所以放在同一个 Git 仓库里。第 19 章先在现有工程中接入编辑器、保存和渲染，代码复用等链路稳定后再考虑。不要在子目录里再次运行 `git init`。
 
 个人网站仍保留在它自己的项目中。阶段 8 只让它读取 Mini CMS 的公开 API，不把个人网站搬进 `mini-cms` 仓库。
 
@@ -506,7 +505,7 @@ GET  /api/auth/me
 完成内容能力：
 
 - 先将 Ant Design 文章 Drawer / DrawerForm 改为独立新建、编辑页，复用已有字段校验与请求；shadcn/ui 后续实现时对齐同一写作布局与操作规则。
-- 在 Ant Design 独立写作页接入 Simple Editor 模板，理解 value/onChange、JSON 保存和回显；共享源码与文档规则供后续 shadcn/ui 复用。
+- 在 Ant Design 独立写作页接入 Simple Editor 模板，理解 value/onChange、JSON 保存和回显；保留可复用的编辑器代码与正文规则，供后续 shadcn/ui 对齐。
 - 沿用模板的基本工具栏，裁剪未开放的格式与演示上传功能；模板样式限定在编辑器范围，标题、摘要等字段继续由原来的表单管理。
 - 将 `Article.content` 从 `String` 迁移为 `Json`，转换原有纯文本，同步 API、表单类型、种子数据与测试。
 - 提供只返回已发布文章的公开 API，让个人网站读取真实列表和详情。
@@ -518,7 +517,7 @@ GET  /api/auth/me
 
 完成上线：
 
-- 为 `server`、`admin-web-antd` 补齐生产构建与启动命令，并确认共享正文包可在新环境安装；`admin-web-shadcn` 创建并计划上线时再补对应配置。
+- 为 `server`、`admin-web-antd` 补齐生产构建与启动命令，并确认各工程依赖可在新环境安装；`admin-web-shadcn` 创建并计划上线时再补对应配置。
 - 配置生产环境变量，使用 `prisma migrate deploy` 应用已提交且验证过的数据迁移。
 - 保留健康检查，增加基础请求与错误日志，不记录密码、Cookie 和密钥。
 - 用 1Panel 管理 Docker Compose、OpenResty、HTTPS 证书和备份任务。本项目不使用宝塔。
@@ -532,7 +531,7 @@ GET  /api/auth/me
 - 文章达到第 19 章的图文排版目标；手机页面不整体横向滚动，宽表格和代码块各自滚动。
 - 公开接口只能读取已发布文章；草稿、撤回文章和管理数据不会公开泄漏。
 - 文档格式、非法节点、空正文和公开范围有相关接口测试。
-- 新环境可按 README 完成共享包安装、构建、迁移和启动。
+- 新环境可按 README 完成依赖安装、构建、迁移和启动。
 - 线上健康检查可用，日志能帮助定位问题，数据库迁移和备份恢复方式明确。
 
 第 19 章的 Ant Design 写作与公开阅读验收通过后即可进入第 20 系列。公开阅读和真实部署都验证通过，完成八个阶段；第二套后台仍是后续学习目标，最终双后台标准见下文。

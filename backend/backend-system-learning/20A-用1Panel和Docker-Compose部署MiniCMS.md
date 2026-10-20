@@ -108,7 +108,7 @@ PostgreSQL
 - API 地址可以从本地地址切换为正式 HTTPS 域名。
 - 已按第 19 章把 `content` 转为富文本 JSON，旧正文转换与两个后台的编辑回显已经验证。
 - 文章详情页与后台预览共用正文组件和样式，已按第 19 章的排版目标完成本地验收。
-- 各工程的 `vendor/` 中有锁文件对应的共享正文包归档，不依赖开发机器上的绝对路径。
+- 正文组件、样式和依赖已保存在各自工程中，不依赖开发机器上的绝对路径。
 
 ### 整个仓库
 
@@ -236,7 +236,6 @@ FROM node:22-bookworm-slim
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-COPY vendor ./vendor
 RUN npm ci
 
 COPY prisma ./prisma
@@ -254,8 +253,6 @@ EXPOSE 3001
 
 CMD ["npm", "run", "start"]
 ```
-
-第 19 章将共享正文包归档放在各工程自己的 `vendor/`，所以必须在 `npm ci` 前复制这个目录。两个后台的 Dockerfile 使用同样的顺序，`.dockerignore` 不要排除这些归档。
 
 镜像中暂时保留开发依赖，是因为 `prisma migrate deploy` 需要 Prisma CLI。后续确认迁移流程后，可以再拆 migration stage 和精简 runtime image，不在第一次部署同时优化。
 
@@ -276,7 +273,6 @@ FROM node:22-bookworm-slim
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-COPY vendor ./vendor
 RUN npm ci
 
 COPY . .
