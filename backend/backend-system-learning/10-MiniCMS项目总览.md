@@ -507,7 +507,7 @@ GET  /api/auth/me
 - 先将 Ant Design 文章 Drawer / DrawerForm 改为独立新建、编辑页，复用已有字段校验与请求；shadcn/ui 后续实现时对齐同一写作布局与操作规则。
 - 在 Ant Design 独立写作页接入 Simple Editor 模板，理解 value/onChange、JSON 保存和回显；保留可复用的编辑器代码与正文规则，供后续 shadcn/ui 对齐。
 - 沿用模板的基本工具栏，裁剪未开放的格式与演示上传功能；模板样式限定在编辑器范围，标题、摘要等字段继续由原来的表单管理。
-- 将 `Article.content` 从 `String` 迁移为 `Json`，转换原有纯文本，同步 API、表单类型、种子数据与测试。
+- 将 `Article.content` 从 `String` 迁移为 `Json`，同步 API、表单类型、种子数据与测试。
 - 提供只返回已发布文章的公开 API，让个人网站读取真实列表和详情。
 - 如果需要封面，增加可为空的 `coverImageUrl`；封面和正文图片先使用 HTTPS 地址，不实现文件上传。
 - 完成标题层级、段落、列表、引用、链接、代码块、表格、图片、图注和宽幅图片的编辑与展示。
