@@ -4,7 +4,7 @@
 
 ## 这一章完成什么
 
-第 19 章已经完成富文本写作、公开文章 API、个人网站详情页和统一预览；第 20 章已经完成构建、环境变量、生产迁移、日志和备份准备。本章把 Mini CMS 的生产运行要求落到一台真实服务器：
+第 19 章已经完成富文本写作、公开文章 API、个人网站详情页和统一预览；第 20 章已在本地验证构建、启动、环境配置、空库迁移和日志。本章继续创建容器配置，把同一套程序部署到真实服务器，再配置 HTTPS 和数据库备份：
 
 ```text
 1Panel
@@ -87,7 +87,7 @@ PostgreSQL
 - 有 `GET /api/health`。
 - 有 `GET /api/public/articles` 和 `GET /api/public/articles/:slug`，并且只返回已发布内容。
 - 自动化测试能证明草稿和撤回文章不会从公开接口泄露。
-- CORS 和 CSRF 来源从 `ADMIN_WEB_ORIGINS` 读取，不再写死开发地址。
+- CORS 和 CSRF 来源从第 17A、20 章的 `ADMIN_WEB_ORIGIN` 读取，不再写死开发地址。
 - Cookie 在生产环境使用 `Secure`，并保持阶段 6 的认证和 CSRF 防护。
 
 ### admin-web-antd
@@ -100,13 +100,13 @@ PostgreSQL
 
 - `prisma/migrations` 已提交。
 - 新数据库可以用 `prisma migrate deploy` 建立结构。
-- 已经知道怎样生成和恢复备份。
+- 已区分迁移与数据备份；本章第 10 步配置正式备份并验证恢复。
 
 ### 个人网站
 
 - 文章列表和详情页已经在本地读取 Mini CMS 的真实公开 API。
 - API 地址可以从本地地址切换为正式 HTTPS 域名。
-- 已按第 19 章把 `content` 转为富文本 JSON，正文保存与两个后台的编辑回显已经验证。
+- 已按第 19 章把 `content` 转为富文本 JSON，正文保存与当前 Ant Design 后台的编辑回显已经验证。
 - 文章详情页与后台预览共用正文组件和样式，已按第 19 章的排版目标完成本地验收。
 - 正文组件、样式和依赖已保存在各自工程中，不依赖开发机器上的绝对路径。
 
@@ -115,7 +115,7 @@ PostgreSQL
 - 真实 `.env` 不在 Git 中。
 - 有 `.env.example` 说明必需字段。
 - 阶段 7 的测试和项目 README 已完成。
-- 已决定第一轮只上线 Ant Design 后台，还是两套后台都上线。
+- 首次按本章上线 Ant Design 后台；第二套后台完成后再按需增加服务。
 
 如果这些条件还没满足，回到对应阶段补齐，不用 1Panel 隐藏项目自身缺失的生产能力。
 
@@ -308,7 +308,7 @@ DATABASE_URL=postgresql://mini_cms:replace_with_a_long_random_password@postgres:
 
 ADMIN_DOMAIN=admin.example.com
 API_DOMAIN=api.example.com
-ADMIN_WEB_ORIGINS=https://admin.example.com
+ADMIN_WEB_ORIGIN=https://admin.example.com
 ```
 
 数据库密码进入 URL 时，`@`、`:`、`/`、`#` 等字符需要 URL 编码。第一次可以使用足够长的随机字母和数字组合，避免手写两处值时产生编码差异。
@@ -344,7 +344,7 @@ services:
       NODE_ENV: production
       PORT: 3001
       DATABASE_URL: ${DATABASE_URL}
-      ADMIN_WEB_ORIGINS: ${ADMIN_WEB_ORIGINS}
+      ADMIN_WEB_ORIGIN: ${ADMIN_WEB_ORIGIN}
     depends_on:
       postgres:
         condition: service_healthy
@@ -377,13 +377,15 @@ PostgreSQL 使用持久卷
 -> OpenResty 再把 HTTPS 请求转进来
 ```
 
-如果以后部署 `admin-web-shadcn`，增加一个同类服务即可。容器内部仍可使用 3000，主机绑定 `127.0.0.1:3002:3000`，不需要复制后端和数据库；同时把两个正式后台来源都写入 `ADMIN_WEB_ORIGINS`，用英文逗号分隔。不要在启用 Cookie credentials 时改成 `*`。
+如果以后部署 `admin-web-shadcn`，增加一个同类服务即可。容器内部仍可使用 3000，主机绑定 `127.0.0.1:3002:3000`，不需要复制后端和数据库。届时按[第 26 章第 5 节](./26-用shadcn-ui建立管理后台骨架.md#5-让-express-准确允许两个后台来源)一起更新 Express 的来源检查、环境文件和本节 Compose：把单数 `ADMIN_WEB_ORIGIN` 改为复数 `ADMIN_WEB_ORIGINS`，值为用英文逗号分隔的两个正式后台来源。已经完成第 26 章的项目也按这一规则调整，变量名必须与代码一致。不要在启用 Cookie credentials 时改成 `*`。
 
 ---
 
 ## 第 5 步：先在本地验证生产 Compose
 
-不要把云服务器当第一次运行 Dockerfile 的调试机。
+第 20 章已验证直接运行构建产物；这里再确认同样的代码放进容器后能启动。
+
+先停止本地占用 3000、3001 的前后端进程，并在项目根目录执行 `docker compose stop postgres`，释放开发 PostgreSQL 使用的 5432 端口。停止容器会保留开发数据卷，不要删除数据卷。下面使用独立的 `mini-cms-production` Compose 项目和数据卷。
 
 在 `mini-cms` 根目录：
 
@@ -391,7 +393,7 @@ PostgreSQL 使用持久卷
 cp deploy/.env.example deploy/.env
 ```
 
-填写本地测试值后：
+本次使用练习数据库密码，`DATABASE_URL` 的主机仍是 `postgres`，因为 API 在容器内连接数据库。域名可先保留示例值；这一轮只检查构建、容器和健康接口，真实域名下的登录在第 9 步验证。然后执行：
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml config
@@ -414,7 +416,7 @@ curl -I http://127.0.0.1:3000
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml down
 ```
 
-不要添加 `-v`。`down -v` 会删除 Compose 数据卷，里面可能有 PostgreSQL 数据。
+不要添加 `-v`。`down -v` 会删除 Compose 数据卷，里面可能有 PostgreSQL 数据。需要继续本地开发时，在项目根目录执行 `docker compose up -d postgres`，再启动原来的前后端开发命令。
 
 ---
 
