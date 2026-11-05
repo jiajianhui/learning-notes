@@ -183,6 +183,8 @@ Cookie 是浏览器保存的一小段带名称的数据，浏览器会在符合�
 
 登录、认证和退出需要共用 Cookie 名称与哈希方法，因此集中定义在 `src/modules/auth/session.ts`。下面只准备这些函数和配置，下一节的登录路由才会调用它们，写入数据库并设置 Cookie 响应头。
 
+下面的 `secure` 会读取 `NODE_ENV`。先确认 `server/.env` 已按前文配置 `NODE_ENV=development`；如果漏配，现在补上，并同步 `.env.example`。本地这个值使 `secure` 为 `false`；线上在 20A 中配置为 `production` 后，`secure` 为 `true`。修改环境变量后要重启后端。
+
 新建这个文件：
 
 ```ts

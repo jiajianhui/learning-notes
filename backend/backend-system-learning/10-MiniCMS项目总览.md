@@ -227,7 +227,7 @@ updated_at
 完成：
 
 - 确认第 09 章已安装的 Docker Desktop 可用，并在 `mini-cms` 仓库中用 `compose.yaml` 启动 PostgreSQL。
-- 配置 `DATABASE_URL` 和 `.env.example`。
+- 在 `server/.env` 中配置 `NODE_ENV=development` 和本项目的 `DATABASE_URL`，同步不含真实密码的 `.env.example`。
 - 安装 `@prisma/client@7`、`prisma@7`、`@prisma/adapter-pg` 和 `pg`。
 - 用 `schema.prisma` 定义 `Article` 模型。
 - 执行 Prisma Migrate，打开迁移 SQL 对照表、列和约束。
@@ -249,7 +249,7 @@ DELETE /api/articles/:id
 验收：
 
 - `docker compose ps` 能看到 PostgreSQL 正常运行。
-- 真实 `.env` 已忽略，仓库中有不包含真实密码的 `.env.example`，用来说明 `DATABASE_URL` 等必需变量。
+- 真实 `.env` 已忽略，仓库中有不包含真实密码的 `.env.example`，记录 `NODE_ENV=development` 和 `DATABASE_URL` 的配置方式。
 - TablePro 连接的数据库名、用户名和端口与 `compose.yaml` 一致。
 - 重启服务器后数据仍然存在，TablePro 和 API 能看到同一条数据。
 - 能不看完整示例写出最小 CRUD SQL。
@@ -484,7 +484,7 @@ GET  /api/auth/me
 - 回看 [06-API 设计和校验](./06-API设计和参数校验.md)。
 - [19-文章写作、预览与内容排版](./19-文章写作预览与内容排版.md)：先做第 1～5、7 节，完成 Ant Design 写作能力和公开阅读；第 6 节后续再做。
 - [19A-提升写作体验](./19A-提升写作体验.md)（按需完成）：统一标题与正文的写作区，增加选区排版和空行 `+` 插入，收起固定工具栏。
-- [20-从开发环境到线上运行](./20-从开发环境到线上运行.md)：准备生产运行。
+- [20-从本地到服务器：上线前需要改什么](./20-从开发环境到线上运行.md)：理解启动、配置和迁移的差别，在本地试过上线时的启动命令。
 - [20A-用 1Panel 部署 Mini CMS](./20A-用1Panel和Docker-Compose部署MiniCMS.md)：完成自托管部署。
 
 第 19 章独立完成写作与排版，第 20、20A 章负责上线。阶段 8 先把产品能力做完整，再处理部署。
@@ -520,7 +520,7 @@ GET  /api/auth/me
 
 完成上线：
 
-- 为 `server`、`admin-web-antd` 补齐生产构建与启动命令，并确认各工程依赖可在新环境安装；`admin-web-shadcn` 创建并计划上线时再补对应配置。
+- 后端沿用 `tsx` 运行，增加不带 `watch` 的启动命令并检查类型；Next.js 后台使用 `build`、`start`。确认各工程依赖可在新环境安装；`admin-web-shadcn` 创建并计划上线时再补对应配置。
 - 配置生产环境变量，使用 `prisma migrate deploy` 应用已提交且验证过的数据迁移。
 - 保留健康检查，增加基础请求与错误日志，不记录密码、Cookie 和密钥。
 - 用 1Panel 管理 Docker Compose、OpenResty、HTTPS 证书和备份任务。本项目不使用宝塔。

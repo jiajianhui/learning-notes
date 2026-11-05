@@ -350,13 +350,16 @@ server/
 
 ## 6. 配置本地 PostgreSQL 连接
 
-第 5 节生成了 `server/.env`。现在把其中的 `DATABASE_URL` 修改为第 3 节 Docker PostgreSQL 的连接信息：
+第 5 节生成了 `server/.env`。现在添加 `NODE_ENV=development`，并把 `DATABASE_URL` 修改为第 3 节 Docker PostgreSQL 的连接信息：
 
 ```text
+NODE_ENV=development
 DATABASE_URL=postgresql://backend_learning:backend_learning_password@localhost:5432/backend_learning
 ```
 
-这个地址的基本结构是 `postgresql://用户名:密码@主机:端口/数据库名`。对照本章的值可以拆成：
+`NODE_ENV` 标记程序的运行环境，本地开发设为 `development`。后面的登录配置会读取它，区分本地 HTTP 和线上 HTTPS 下的 Cookie 设置。
+
+`DATABASE_URL` 的基本结构是 `postgresql://用户名:密码@主机:端口/数据库名`。对照本章的值可以拆成：
 
 | 部分 | 含义 |
 |---|---|
@@ -377,7 +380,7 @@ Prisma
 
 这里填 `localhost`，是因为 Express 目前直接运行在 macOS 上，它通过 `compose.yaml` 暴露的 `5432` 端口访问容器。修改 `.env` 只是告诉 Prisma 去哪里连接，不会自动启动数据库。
 
-真实 `.env` 不提交到 Git。项目可以提交 `.env.example`，只说明需要 `DATABASE_URL`，不要放生产环境的真实密码。
+真实 `.env` 不提交到 Git。把上面的本地示例同步到 `.env.example`，记录 `NODE_ENV` 和 `DATABASE_URL` 的配置方式，不要放生产环境的真实密码。
 
 ---
 

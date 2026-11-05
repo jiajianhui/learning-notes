@@ -1,10 +1,20 @@
 # 20A. 用 1Panel 和 Docker Compose 部署 Mini CMS
 
-> Mini CMS 阶段 8：第 19 章的内容能力和第 20 章的生产运行准备完成后再使用。本章不使用宝塔，也不通过上传散文件的方式发布项目。
+> Mini CMS 阶段 8：完成第 19 章的内容功能，再按第 20 章试过前后端的启动命令后，进入本章实际部署。
 
 ## 这一章完成什么
 
-第 19 章已经完成富文本写作、公开文章 API、个人网站详情页和统一预览；第 20 章已在本地验证构建、启动、环境配置、空库迁移和日志。本章继续创建容器配置，把同一套程序部署到真实服务器，再配置 HTTPS 和数据库备份：
+第 20 章说明了换机器运行需要准备什么，并在本地试过后端 `tsx src/server.ts`、前端 `next build → next start`。本章让服务器完成同样的工作，再接上外部访问和长期运行所需的配置：
+
+```text
+准备服务器和域名
+-> 用 Dockerfile 写明怎样安装依赖、生成 Client、启动应用
+-> 用 Compose 启动 PostgreSQL，执行迁移，再启动 API 和后台
+-> 用正式域名和 HTTPS 访问
+-> 验证登录、发布与公开阅读，配置备份
+```
+
+Dockerfile 是制作应用镜像的步骤；镜像包含运行应用所需的代码、工具和依赖。Compose 用一份配置把数据库、API、后台三个容器一起运行。1Panel 提供管理界面，便于查看它们的状态和日志：
 
 ```text
 1Panel
@@ -78,8 +88,8 @@ PostgreSQL
 
 ### server
 
-- `npm run build` 能生成可运行的生产代码。
-- `npm run start` 运行生产构建，不使用 `tsx watch`。
+- `npx tsc --noEmit` 类型检查通过。
+- `npm run start` 按第 20 章执行 `tsx src/server.ts`，不使用 `watch`。
 - `npm run test` 可以验证核心 API。
 - `npm run db:generate` 可以生成 Prisma Client。
 - 第 17A 章的 `scripts/create-admin.ts` 和 `npm run admin:create` 可用，用于初始化生产管理员。
@@ -99,7 +109,7 @@ PostgreSQL
 ### PostgreSQL
 
 - `prisma/migrations` 已提交。
-- 新数据库可以用 `prisma migrate deploy` 建立结构。
+- 已有 `db:migrate:deploy` 命令；本章第 5 步在独立数据库中实际验证它能建立结构。
 - 已区分迁移与数据备份；本章第 10 步配置正式备份并验证恢复。
 
 ### 个人网站
@@ -228,7 +238,7 @@ coverage
 
 ### 4.2 `server/Dockerfile`
 
-这个第一版强调容易理解和可运行，不追求最小镜像。它依赖前置条件中的 `build`、`start` 和 Prisma scripts 已经真实可用。
+新机器没有本机安装好的依赖和生成的 Prisma Client。这份 Dockerfile 按顺序补齐它们，再检查类型。容器启动时仍使用第 20 章已经试过的 `npm run start`。
 
 ```dockerfile
 FROM node:22-bookworm-slim
@@ -236,7 +246,7 @@ FROM node:22-bookworm-slim
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --include=dev
 
 COPY prisma ./prisma
 COPY prisma.config.ts tsconfig.json ./
@@ -244,7 +254,7 @@ COPY src ./src
 COPY scripts ./scripts
 
 RUN DATABASE_URL=postgresql://build:build@postgres:5432/build npm run db:generate
-RUN npm run build
+RUN npx tsc --noEmit
 
 ENV NODE_ENV=production
 ENV PORT=3001
@@ -254,7 +264,9 @@ EXPOSE 3001
 CMD ["npm", "run", "start"]
 ```
 
-镜像中暂时保留开发依赖，是因为 `prisma migrate deploy` 需要 Prisma CLI。后续确认迁移流程后，可以再拆 migration stage 和精简 runtime image，不在第一次部署同时优化。
+`npm ci --include=dev` 按锁文件安装全部依赖。当前 `tsx`、Prisma CLI 和 TypeScript 放在 `devDependencies`，这里仍然需要它们来运行后端、执行迁移和检查类型，不能省略。
+
+这里的 `db:generate` 是为镜像生成 Client，不是在修改数据库。命令前的示例 `DATABASE_URL` 只供 Prisma 加载配置，生成 Client 时不连接这个地址；容器真正运行时，由 Compose 传入数据库地址。后端不生成 `dist`，`start` 直接通过 `tsx` 运行已复制进镜像的源码。
 
 ### 4.3 `admin-web-antd/.dockerignore`
 
@@ -383,7 +395,7 @@ PostgreSQL 使用持久卷
 
 ## 第 5 步：先在本地验证生产 Compose
 
-第 20 章已验证直接运行构建产物；这里再确认同样的代码放进容器后能启动。
+第 20 章已在本地试过前后端的启动命令；这里第一次把依赖安装、Client 生成、空库迁移和启动放在一起验证。通过后再把相同配置交给服务器。
 
 先停止本地占用 3000、3001 的前后端进程，并在项目根目录执行 `docker compose stop postgres`，释放开发 PostgreSQL 使用的 5432 端口。停止容器会保留开发数据卷，不要删除数据卷。下面使用独立的 `mini-cms-production` Compose 项目和数据卷。
 
