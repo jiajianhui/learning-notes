@@ -40,42 +40,56 @@
 
 `admin-web-shadcn` 留到实现后再部署。个人网站继续在原来的环境运行，改为请求 Mini CMS 的线上公开 API。
 
+## 先看部署顺序
+
+从上到下看，图中的步骤编号对应后文。先在本机验证配置，再让服务器根据这套配置构建镜像、运行项目。
+
+```mermaid
+flowchart TD
+    A["第 1～3 步 · 准备云服务器<br/>配置 DNS 和端口规则<br/>安装 1Panel 和 Docker<br/>准备 OpenResty"]
+    B["第 4～5 步 · 本机准备<br/>编写 Dockerfile 和 Compose<br/>本地验证后，提交并推送"]
+    C["第 6 步 · 服务器获取项目<br/>拉取代码<br/>填写 deploy/.env 正式配置"]
+    D["第 7 步 · 服务器构建镜像<br/>1Panel 启动 Compose 编排<br/>后端生成 Prisma Client<br/>管理端执行 build"]
+    E["第 7 步 · 启动并初始化<br/>数据库就绪 → 迁移成功<br/>启动 API 和管理端<br/>验证接口，创建管理员"]
+    F["第 8～9 步 · 公网访问<br/>OpenResty 反向代理 + HTTPS<br/>验证登录、编辑与公开阅读"]
+    G["第 10～11 步 · 备份与更新<br/>备份数据库，验证恢复<br/>更新代码后重新部署、验证"]
+    A --> B --> C --> D --> E --> F --> G
+```
+
 第 1～9 步完成首次上线，第 10～11 步接着练习备份和更新；遇到问题时再查末尾的排错表。
 
 ## 先看请求怎样到达项目
 
-下面是部署完成后的整体链路。个人网站和管理端都访问同一个后端，服务器根据请求的域名，把页面请求和 API 请求交给不同的程序：
+部署完成后，以请求 `https://api.example.com/api/public/articles` 为例。从上到下看请求与响应；框内的 OpenResty、API 容器和数据库容器，都在同一台云服务器上。
 
-```text
-个人网站文章列表和详情页
-└── 请求 https://api.example.com/api/public/articles
-    或   https://api.example.com/api/public/articles/:slug
+```mermaid
+sequenceDiagram
+    participant B as 调用方<br/>浏览器 / 个人网站
+    box 云服务器（Linux）
+        participant N as OpenResty<br/>基于 Nginx
+        participant A as API 容器<br/>Node.js + Express
+        participant D as 数据库容器<br/>PostgreSQL
+    end
 
-浏览器中的管理端
-├── 打开页面：https://admin.example.com
-└── 请求接口：https://api.example.com/api/...
-
-以上请求
-    ↓ DNS 将域名解析为服务器公网 IP
-云安全组（云平台上的访问规则）
-    ↓
-云服务器（Linux）内部
-└── 主机防火墙
-    ↓
-    1Panel 管理的 OpenResty：80 / 443
-    ├── admin.example.com
-    │   └── 转发到 127.0.0.1:3000 -> admin-web-antd 容器
-    └── api.example.com
-        └── 转发到 127.0.0.1:3001 -> server 容器
-                                      ↓ Docker 内部网络
-                                   postgres:5432
-                                      ↓
-                                   PostgreSQL 容器
-                                      ↓
-                                   PostgreSQL 数据卷
+    Note over B,N: ① DNS 查询得到 api.example.com 的服务器公网 IP
+    B->>N: ② 连接公网 443<br/>云安全组、主机防火墙允许通过
+    Note over B,N: TLS 握手：浏览器验证网站证书，建立加密连接
+    B->>N: ③ 发送 HTTPS 请求<br/>GET /api/public/articles
+    N->>N: 匹配 api.example.com<br/>选择 API 网站的转发规则
+    N->>A: ④ HTTP 转发到 127.0.0.1:3001<br/>Docker 端口映射到容器 3001
+    A->>D: ⑤ Prisma 发起 SQL 查询<br/>内部网络：postgres:5432
+    Note over D: 数据保存在<br/>PostgreSQL 数据卷
+    D-->>A: 返回文章数据
+    A-->>N: ⑥ 返回 200 + JSON<br/>经端口映射回到 OpenResty
+    N-->>B: 通过 HTTPS 返回状态码与 JSON
+    B->>B: 使用文章数据，更新页面
 ```
 
-图中 `:slug` 代表文章的实际 slug，例如 `/api/public/articles/hello-world`。请求由后端处理后，结果经 OpenResty 返回给调用方。
+**Docker 在这里提供容器网络和端口映射；OpenResty 接收网站请求，Express 处理 API，PostgreSQL 查询数据。** API 通过内部服务名 `postgres` 直接访问数据库，这一段不再经过 OpenResty。
+
+打开 `https://admin.example.com` 时，OpenResty 改为转发到 `127.0.0.1:3000`，由 Docker 交给管理端容器里的 Next.js。页面加载到浏览器后，前端代码向 `https://api.example.com` 请求数据，走上图的 API 链路。
+
+个人网站的文章列表使用图中的公开接口；详情页使用 `/api/public/articles/:slug`，例如 `/api/public/articles/hello-world`，经过相同的网络链路。
 
 ### 看懂图里的网络名词
 
@@ -92,8 +106,6 @@
 | Nginx、OpenResty | 接收和处理网站请求的服务程序。OpenResty 基于 Nginx，本章用它接收 HTTP/HTTPS 请求并转发给应用 |
 | 反向代理 | OpenResty 接住请求，再转发给内部服务，并将服务的响应返回给调用方 |
 | `127.0.0.1` | 当前电脑自身。图中由 OpenResty 访问，所以指云服务器本机，不是访问者的电脑 |
-
-例如，浏览器请求 `https://api.example.com/api/public/articles`：先通过 DNS 找到服务器，连接默认的 443 端口；安全组和防火墙允许通过后，OpenResty 接收 HTTPS 请求，再转发到 `http://127.0.0.1:3001/api/public/articles`，由 Express 查询数据库并返回文章。
 
 **1Panel 用来配置网站、证书和转发规则，实际接收并转发这些请求的是 OpenResty。** 第 1 步设置 DNS 和端口规则，第 3 步安装 OpenResty，第 8～9 步配置转发和 HTTPS。
 
@@ -714,6 +726,7 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml logs --tail=2
 - [Nginx：提供静态文件与转发请求](https://nginx.org/en/docs/beginners_guide.html)
 - [Nginx：怎样根据域名和路径处理请求](https://nginx.org/en/docs/http/request_processing.html)
 - [Docker：镜像与容器](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/)
+- [Docker Compose：端口映射、内部网络与服务名](https://docs.docker.com/compose/how-tos/networking/)
 - [Docker：数据卷与容器的生命周期](https://docs.docker.com/engine/storage/volumes/)
 - [Next.js：自托管与反向代理](https://nextjs.org/docs/app/guides/self-hosting)
 - [Node.js 官方 Docker 镜像](https://github.com/nodejs/docker-node)
