@@ -11,6 +11,8 @@ DHH 带来的兴趣很重要。它让 Linux 不再只是服务器上的黑色窗
 | Omakub | Ubuntu | 为从 Mac 或 Windows 迁移的开发者提供一套强默认 |
 | Omarchy | Arch Linux + Hyprland | DHH 的完整、键盘优先、可深度定制的桌面理想 |
 
+截至 2026 年 11 月，Omarchy 4.5 已发布原生 macOS 安装器，可在 M1、M2、M3 和 Neo MacBook 上与 macOS 并存启动，也提供 Homebrew 安装方式。这里的“Mac 版”指 Linux 运行在 Apple 硬件上，不是 Omarchy 变成 macOS 应用。M4、M5、M6 等机型仍在开发中，具体兼容性和限制以[官方 4.5 发布说明](https://omarchy.org/news/2026/11/omarchy-4-5/)为准。
+
 Hyprland 是 Omarchy 使用的 Wayland 合成器，负责窗口显示、布局和交互；它不是 Omarchy 的另一个名字。Omacom Foundation 则是承接 Omarchy 商标、基础设施与开源资助的非营利组织。
 
 它们最有价值的启发是：
@@ -20,6 +22,8 @@ Hyprland 是 Omarchy 使用的 Wayland 合成器，负责窗口显示、布局�
 工具之间的组合体验很重要
 开源允许用户理解并改变自己的环境
 ```
+
+想在 Mac 上体验 Omarchy，可以先看官方的 [Try Omarchy](https://github.com/omacom/try-omarchy)；想安装双启动，则先读[官方 Mac 支持与安装说明](https://omarchy.org/news/2026/11/omarchy-4-5/)，确认自己的芯片型号、功能限制与恢复方案。不要把“支持 Mac”理解成所有 Mac 功能都已成熟或所有芯片都可安装。
 
 ## 八张一百万美元的票，三天后变成十张
 
@@ -135,5 +139,7 @@ UTM 中的 Ubuntu Desktop ARM64
 - [Introducing Omakub](https://world.hey.com/dhh/introducing-omakub-354db366)
 - [The Year on Linux](https://world.hey.com/dhh/the-year-on-linux-7f30279e)
 - [Omarchy is out](https://world.hey.com/dhh/omarchy-is-out-4666dd31)
+- [Omarchy 4.5：Mac 安装器、桌面模式与语言支持](https://omarchy.org/news/2026/11/omarchy-4-5/)
+- [Omarchy M：Apple Silicon 支持团队与路线](https://omarchy.org/news/2026/09/introducing-omarchy-m/)
 - [Get in losers, we're moving to Linux!](https://world.hey.com/dhh/get-in-losers-we-re-moving-to-linux-5e1b93cd)
 - [DHH 的 X 主页](https://x.com/dhh)

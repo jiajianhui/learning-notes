@@ -49,7 +49,7 @@ Linux 内核
 | Ubuntu | 发行版 | 第一轮服务器默认选择 |
 | Arch Linux | 发行版 | Omarchy 的基础，先不作为服务器入门 |
 | Omakub | Ubuntu 开发环境配置 | 帮桌面开发者获得完整默认工具 |
-| Omarchy | Arch + Hyprland 等完整桌面体验 | 兴趣支线，不是云服务器系统课 |
+| Omarchy | Arch + Hyprland 等完整桌面体验；部分 Apple Silicon Mac 可用官方安装器双启动 | 兴趣支线，不是云服务器系统课，也不是 macOS 应用 |
 | ECS / VPS | 虚拟计算资源 | 可以运行 Ubuntu，也可以运行其他系统 |
 
 ---

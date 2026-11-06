@@ -23,7 +23,7 @@
 | Linux 容器 | 隔离 PostgreSQL、Node.js 等应用进程 | 高，现有 Docker 已经在用 |
 | Linux 桌面 | 像 macOS 一样作为个人电脑操作系统 | 兴趣支线 |
 
-DHH 的 Omarchy 主要讨论 Linux 桌面体验；你现在最需要的是服务器 Linux。两者共享文件、权限、进程、端口和 Shell 等基础，但最终使用场景不同。
+DHH 的 Omarchy 主要讨论 Linux 桌面体验。2026 年 11 月发布的 Omarchy 4.5 已提供原生 Mac 安装器，可在部分 Apple Silicon Mac 上与 macOS 并存启动；这仍是在 Mac 硬件上运行 Linux，不是 macOS 桌面应用。你现在最需要的仍是服务器 Linux。两者共享文件、权限、进程、端口和 Shell 等基础，但最终使用场景不同。机型支持会继续变化，尝试前先核对[官方 Mac 支持说明](https://omarchy.org/news/2026/11/omarchy-4-5/)。
 
 ---
 
