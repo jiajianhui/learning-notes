@@ -2,6 +2,19 @@
 
 > **第一次打开：**直接从第 00 章往下走，不需要先看懂下面出现的所有人名和新工具。DHH、Omacom、Herdr 与 Superlogical 是沿途的路标和彩蛋，不是入场考试；如果你已经能用 `ssh aliyun` 登录服务器，第 04 章就当作一次“拆开现有配置看看”的复习，不要重建或覆盖它。
 
+## 正在部署 Mini CMS：遇到问题从这里查
+
+已经读到后端 20A 时，可以按问题回看下面几章，理解后返回[20A 部署步骤](../backend/backend-system-learning/20A-用1Panel和Docker-Compose部署MiniCMS.md)继续操作。
+
+| 当前疑惑 | 阅读位置 |
+|---|---|
+| `ssh aliyun` 怎样完成登录，密钥放哪里；服务器怎样访问 GitHub | [04：SSH 配置与认证](./04-SSH-从Mac安全连接Linux.md#一次-ssh-密钥登录怎样完成) |
+| `root`、`sudo`、`chown` 是什么；OpenSSL 和 npm 包分别安装在哪里 | [05：用户、权限与软件安装](./05-文件系统用户权限与软件安装.md#你现在戴着谁的工牌) |
+| 网站打不开，怎样看进程、端口和日志；SSH 断开后任务会怎样 | [06：排查进程与端口](./06-进程服务日志与端口.md)、[07：会话与服务管理](./07-SSH断了工作还在-tmux与Zellij.md#sshtmux-和服务管理各管多久) |
+| DNS、80/443、安全组、防火墙、证书、Nginx/OpenResty 怎样配合 | [08：一次 HTTPS 请求的完整路线](./08-云服务器网络安全组与防火墙.md#一次-https-请求怎样到达-express) |
+| 宿主机、容器、端口映射、内部网络、数据卷是什么 | [09：Docker 与 Linux](./09-Docker与Linux-容器不是云服务器.md) |
+| 前后端怎样启动，配置、迁移和备份各在什么时候执行 | [10：项目在线上怎样运行](./10-Nodejs-Nextjs-PostgreSQL怎样运行在线上.md) |
+
 ## 导读：一边押注 Linux 桌面，一边押注未来工作现场
 
 2026 年 8 月，Linux 与终端这条看起来有点古早的赛道，忽然坐满了你会认识的人。
@@ -106,7 +119,7 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 
 [创建短期 ECS，再用 SSH 与 `~/.ssh/config` 登录](./04-SSH-从Mac安全连接Linux.md)
 
-还没有服务器时，在 Mac 生成密钥并创建短期 Ubuntu ECS，第一次走完“公网 IP → 22 → sshd → 远程 Shell”；已经能 `ssh aliyun` 时，不重配，只拆开现有别名看看 IP、用户、端口和密钥怎样接上。
+还没有服务器时，在 Mac 生成密钥并创建短期 Ubuntu ECS；已经能 `ssh aliyun` 时，从现有配置理解客户端怎样选密钥、服务器怎样验证签名，并分清登录服务器与服务器访问 GitHub 两次连接。
 
 ### 第三幕：进入没有桌面的 Linux
 
@@ -126,7 +139,7 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 
 [第一次使用 tmux，并认识 Zellij、Herdr 与 Rex](./07-SSH断了工作还在-tmux与Zellij.md)
 
-启动一只不断走动的秒针，Detach，关掉 SSH，再从新连接回到同一个现场。先用 tmux 认清 Session、Window、Pane、Detach 与 Attach，再用一次日志、健康检查和 Agent 同时运行的排错现场，看清 CLI、TUI 与 GUI 各自快在哪里。
+启动一只不断走动的秒针，Detach，关掉 SSH，再从新连接回到同一个现场。先用 tmux 认清 Session、Window、Pane、Detach 与 Attach，再用一次日志、接口检查和 Agent 同时运行的排错现场，看清 CLI、TUI 与 GUI 各自快在哪里。
 
 **08 · 穿过三道门**
 

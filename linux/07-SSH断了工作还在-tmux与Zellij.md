@@ -254,12 +254,12 @@ TUI
 
 ### 一个真正占优势的现场
 
-以后 Mini CMS 已经用 Docker Compose 运行时，假设 API 偶尔请求失败。你已经进入 Compose 配置所在目录，可以把临时排错 Session 组织成：
+以后 Mini CMS 已按第 20A 章用 Docker Compose 运行时，假设 API 偶尔请求失败。在服务器进入 `/opt/mini-cms/deploy`，这里存放 `docker-compose.yml` 和 `.env`，下面的命令就可以直接使用 `docker compose`。可以把临时排错 Session 组织成：
 
 ```text
 minicms-debug
 ├── logs：持续观察 API 日志
-├── check：每两秒检查一次健康接口
+├── check：每两秒请求一次公开文章接口
 └── agent：交互式 Coding Agent 或普通 Shell
 ```
 
@@ -269,13 +269,13 @@ minicms-debug
 docker compose logs -f --tail=100 api
 ```
 
-`check` Pane 持续检查 Express 健康接口：
+`check` Pane 临时观察公开文章接口是否能响应并读取数据库：
 
 ```bash
-watch -n 2 'curl -fsS http://127.0.0.1:3001/api/articles/health || echo FAIL'
+watch -n 2 'curl -fsS http://127.0.0.1:3001/api/public/articles || echo FAIL'
 ```
 
-这里的 `curl -f` 会把 HTTP 错误状态当作失败，`-sS` 隐藏普通进度但保留错误；只有 `curl` 返回非零退出码时，Shell 才执行 `||` 后面的 `echo FAIL`。
+这里的 `curl -f` 会把 HTTP 错误状态当作失败，`-sS` 隐藏普通进度但保留错误；只有 `curl` 返回非零退出码时，Shell 才执行 `||` 后面的 `echo FAIL`。正常响应包含 `data` 和 `pagination`，没有已发布文章时 `data` 是空数组。这是临时排错中的业务接口检查，排查结束后按 `Ctrl+C` 停止。
 
 `agent` Pane 留给 Coding Agent 或人工排查。例如先收窄最近十分钟的错误：
 
@@ -283,7 +283,7 @@ watch -n 2 'curl -fsS http://127.0.0.1:3001/api/articles/health || echo FAIL'
 docker compose logs --since=10m api | grep -E 'ERROR|ECONNREFUSED'
 ```
 
-如果日志出现数据库连接失败，左边保留原始证据，右上仍在重复检查接口，右下则检查 Compose 状态和 `DATABASE_URL`。修复测试环境配置并重启服务后，不必重新打开三个页面：日志出现新的启动记录，健康检查也会从 `FAIL` 变回正常响应。
+如果日志出现数据库连接失败，左边保留原始证据，右上仍在重复检查接口，右下则检查 Compose 状态和 `DATABASE_URL`。修复测试环境配置并重启服务后，不必重新打开三个页面：日志出现新的启动记录，接口检查也会从 `FAIL` 变回正常响应。
 
 这里真正节省的是恢复现场和搬运信息的时间：
 

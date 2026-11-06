@@ -6,7 +6,7 @@
 ssh linux-learning
 ```
 
-IP、用户名、端口和私钥都藏到哪里去了？它们没有消失，只是被整齐地收进了 `~/.ssh/config`。
+IP、用户名、端口可以保存在 `~/.ssh/config` 中；使用哪把私钥，也可以由配置或客户端的默认规则决定。命令变短了，连接和身份认证的步骤仍然存在。
 
 如果你现在已经可以输入 `ssh aliyun` 进入服务器，这一站的最终结果其实已经有了。后文出现 `linux-learning` 时，直接换成你现有的 `aliyun` 即可，不需要为了跟文档同名而重配一次。
 
@@ -18,7 +18,7 @@ SSH 也不是某个云厂商 App，而是一套安全远程连接协议：
 Mac 上的 ssh 客户端
 -> 连接服务器 IP 的 TCP 22
 -> Linux 上的 sshd 接住连接
--> 验证用户名和密钥
+-> Mac 确认服务器身份，服务器验证登录用户的身份
 -> 进入远程用户的 Shell
 ```
 
@@ -61,6 +61,43 @@ Mac 上的 ssh 客户端
 
 ---
 
+## 一次 SSH 密钥登录怎样完成
+
+先用你已经能执行的 `ssh aliyun` 理解。假设现有配置的 `Host` 是 `aliyun`，`User` 是 `root`，客户端就会连接 `HostName` 指定的服务器，并申请登录它的 `root` 账号。
+
+下面以普通的公钥认证为例。数字签名可以先理解为：客户端用私钥为本次连接生成一份证明，服务器用配对的公钥检查这份证明是否有效。
+
+```text
+在 Mac 执行 ssh aliyun
+-> 客户端读取配置，确定服务器地址、端口和登录用户
+-> 连接服务器的 sshd，核对服务器主机密钥与 known_hosts 记录
+-> 客户端提供准备使用的公钥，服务器检查它是否获准登录这个用户
+-> 客户端用对应私钥为本次认证数据生成数字签名
+-> 服务器用公钥验证签名，确认客户端确实持有对应私钥
+-> 认证及其他登录策略通过，进入该用户的远程 Shell
+```
+
+**公钥获得授权，只说明这把钥匙可以登录；签名验证通过，才证明连接方持有对应私钥。** 服务器不会打开你 Mac 上的私钥文件，私钥也不会随连接发送给服务器。服务器通常在目标用户的 `~/.ssh/authorized_keys` 中查找授权公钥：登录 `root` 时，一般对应 `/root/.ssh/authorized_keys`。
+
+这里有两个方向的身份检查：`known_hosts` 帮 Mac 确认连到的服务器，`authorized_keys` 帮服务器判断允许谁登录。第一次连接还没有主机记录时，客户端会要求你核对并接受主机指纹。
+
+### 不写 -i，客户端怎样找到私钥
+
+`ssh root@服务器IP` 已经指定了地址和用户，密钥可以来自 SSH 配置中的 `IdentityFile`、默认路径（如 `~/.ssh/id_ed25519`、`~/.ssh/id_rsa`），或 SSH Agent 中可用的身份。实际尝试哪些密钥，取决于客户端配置。
+
+`-i` 用来明确指定密钥文件，例如 `ssh -i ~/.ssh/id_rsa_linux_learning root@服务器IP`。省略它，客户端仍然会按配置寻找身份；如果没有可用密钥且服务器允许密码登录，也可能转而询问账户密码。
+
+### 让你输入的密码是哪一种
+
+| 提示 | 填写什么 | 用在哪里 |
+|---|---|---|
+| `Enter passphrase for key ...` | 创建私钥时设置的口令 | 在本机解锁私钥，供客户端签名 |
+| `root@... password:` | 服务器上 `root` 账户的登录密码 | 由服务器验证账户密码 |
+
+SSH Agent 可以在本机管理已解锁的密钥并代为签名，减少重复输入私钥口令。后面的 `AddKeysToAgent`、`UseKeychain` 配置与此有关。能免输入密码登录，不代表没有做身份认证。
+
+---
+
 ## 在 Mac 铸一把只给学习服务器用的钥匙
 
 先检查，避免覆盖已有文件：
@@ -75,7 +112,7 @@ ls -la ~/.ssh
 ssh -G aliyun | grep -E '^(hostname|user|port|identityfile) '
 ```
 
-`ssh -G` 只展开这条别名最终会采用的配置，不会真的连接服务器。能看到正确的 `hostname`、`user`、`port` 和 `identityfile`，就继续使用原来的密钥，跳过下面的 `ssh-keygen`。
+`ssh -G` 只展开这条别名最终会采用的配置，不会连接服务器，也不能单独证明某把密钥已通过认证。已有密钥登录可用时，继续使用原配置，跳过下面的 `ssh-keygen`；想确认本次用了哪种认证方式，可以看后面的 `ssh -v` 输出。
 
 只有在没有可用密钥，或者明确想给这台学习服务器单独换一把钥匙时，才创建：
 
@@ -120,6 +157,8 @@ id_rsa_linux_learning.pub   公钥
 停止实例后是否仍有磁盘、公网 IP 或快照计费
 ```
 
+导入公钥是把公钥交给云平台；绑定实例后，还要让它获得目标 Linux 账号的登录授权，通常体现在该账号的 `authorized_keys` 中。只有“上传了公钥”，还不能证明已经可以登录。下一步用实际连接确认。
+
 不要为了省一步把 22 对 `0.0.0.0/0` 长期开启。80、443、面板端口和应用端口也先别开，第 08 章会逐扇处理。
 
 ## 第一次先走一遍长路
@@ -146,15 +185,7 @@ uname -m
 
 确认看到 Ubuntu、服务器主机名和预期用户，再输入 `exit` 回到 Mac。
 
-现在完整链路已经跑通：
-
-```text
-Mac 私钥
--> 公网 IP:22
--> 安全组放行
--> sshd 验证服务器中的公钥
--> Ubuntu 为远程用户打开 Shell
-```
+这时你已经实际完成前面的连接与认证流程。退出远程 Shell 后，同一个终端里后续执行的命令又回到了 Mac。
 
 ---
 
@@ -199,7 +230,7 @@ Host linux-learning
 - `User`：远程 Linux 用户。
 - `Port`：sshd 监听端口，默认 22。
 - `IdentityFile`：本次连接使用的私钥。
-- `IdentitiesOnly`：只尝试明确指定的身份。
+- `IdentitiesOnly`：只使用配置指定或默认身份文件中的密钥，不额外尝试 SSH Agent 提供的其他身份。
 - `AddKeysToAgent`：连接后把密钥交给本机 SSH Agent 管理。
 - `UseKeychain`：让 macOS 钥匙串安全保存私钥口令；把配置复制到非 macOS 系统时要删除这一行。
 
@@ -213,11 +244,28 @@ ssh linux-learning
 
 ---
 
+## 登录服务器与服务器拉取 GitHub 代码，是两次连接
+
+部署 Mini CMS 时，你先从 Mac 登录服务器，再让服务器去 GitHub 获取代码。第二次连接中，服务器变成了 SSH 客户端。按第 20A 章使用专用部署密钥的方式，各自的密钥放在这里：
+
+| 连接 | 私钥放在哪里 | 公钥授权给谁 |
+|---|---|---|
+| Mac → Linux 服务器 | Mac 上 | 服务器目标用户的 `authorized_keys` |
+| Linux 服务器 → GitHub 仓库 | Linux 服务器上，使用单独生成的部署私钥 | GitHub 仓库的 **Settings → Deploy keys** |
+
+能执行 `ssh aliyun`，只证明第一条连接可用。第二条需要单独配置仓库读取权限。`git@github.com:...` 中的 `git` 是 GitHub 的 SSH 连接用户，与服务器上的 `root` 或 `ecs-user` 不是一回事。
+
+公开仓库使用 HTTPS 地址克隆时无需 SSH 密钥。具体拉取命令和部署密钥入口见[后端 20A 第 6 步](../backend/backend-system-learning/20A-用1Panel和Docker-Compose部署MiniCMS.md#第-6-步把项目代码放到服务器)。
+
+---
+
 ## 钥匙插进去却打不开门
 
 ```bash
 ssh -v linux-learning
 ```
+
+已经使用 `aliyun` 别名时，执行 `ssh -v aliyun`。日志会显示客户端尝试了哪些密钥，以及最终采用的认证方式；看到成功认证使用 `publickey`，才能确认这次是密钥登录。`ssh -G` 查看将采用的配置，`ssh -v` 观察实际连接，两者用途不同。
 
 顺序：
 
@@ -279,14 +327,14 @@ Mac localhost:8080
 - 不在密钥不匹配时关闭主机身份检查。
 - 修改 SSH 和防火墙前保留一个已连接终端。
 - 第二个终端验证新连接成功后，再退出旧连接。
-- 日常使用普通管理用户，不直接使用 root 部署应用。
+- 新建学习服务器时优先使用普通管理用户。已有连接使用 `root` 时，先理解它的权限；登录用户与应用进程用户的区别见[第 05 章](./05-文件系统用户权限与软件安装.md#登录用户与应用进程用户)。
 
 ## 今晚你拿到了远程钥匙
 
 离开前确认四件事：
 
 - 输入 `ssh linux-learning`，或者你现有的 `ssh aliyun`，就能登录。
-- 你能解释客户端、`sshd`、用户、端口和密钥怎样接上。
+- 你能解释客户端怎样找到私钥，以及服务器为什么既要检查公钥授权，又要验证签名。
 - 你知道 `authorized_keys` 是“谁能进来”，`known_hosts` 是“我来的是不是原来那台服务器”。
 - 连接失败时，你会打开 `ssh -v` 找线索。
 
@@ -294,7 +342,11 @@ SSH 登录已经稳定后，下一站进入[第 05 章](./05-文件系统用户�
 
 ## 路边资料
 
+- [OpenSSH ssh：连接与身份认证](https://man.openbsd.org/ssh)
 - [OpenSSH ssh_config](https://man.openbsd.org/ssh_config)
+- [OpenSSH ssh-agent：保管密钥并参与认证](https://man.openbsd.org/ssh-agent)
+- [SSH 公钥认证协议：公钥授权与签名验证](https://www.rfc-editor.org/rfc/rfc4252#section-7)
+- [GitHub：部署密钥](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys#deploy-keys)
 - [阿里云 ECS：创建并连接 Linux 实例](https://help.aliyun.com/zh/ecs/getting-started/create-and-manage-an-ecs-instance-by-using-the-ecs-console/)
 - [阿里云 ECS：登录名与密钥对管理](https://help.aliyun.com/zh/ecs/user-guide/instance-logon-credential-management)
 - [Apple：在 Mac 终端连接服务器](https://support.apple.com/guide/terminal/connect-to-servers-trml1018/mac)

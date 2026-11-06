@@ -2,6 +2,8 @@
 
 > 第 20 章已在本地试过前后端的启动命令。本章把同一个 Mini CMS 放到服务器，用域名和 HTTPS 访问。
 
+遇到 SSH、用户权限或网络名词不清楚时，可以按 [Linux 学习目录中的问题导航](../../linux/README.md#正在部署-mini-cms遇到问题从这里查)回看对应章节，理解后继续本章操作。
+
 ## 建立一套可以长期复用的部署方式
 
 以后再部署项目，希望每个项目都能明确自己的 Node.js 版本、依赖和启动方式，更新一个项目时尽量减少对其他项目的影响。因此，本章采用下面这套分工，作为个人项目和小型服务在单台服务器上部署时的默认方案：
@@ -94,6 +96,8 @@
 例如，浏览器请求 `https://api.example.com/api/public/articles`：先通过 DNS 找到服务器，连接默认的 443 端口；安全组和防火墙允许通过后，OpenResty 接收 HTTPS 请求，再转发到 `http://127.0.0.1:3001/api/public/articles`，由 Express 查询数据库并返回文章。
 
 **1Panel 用来配置网站、证书和转发规则，实际接收并转发这些请求的是 OpenResty。** 第 1 步设置 DNS 和端口规则，第 3 步安装 OpenResty，第 8～9 步配置转发和 HTTPS。
+
+完整的请求过程，以及放行、监听、证书之间的关系，见 [Linux 08：一次 HTTPS 请求怎样到达 Express](../../linux/08-云服务器网络安全组与防火墙.md#一次-https-请求怎样到达-express)。
 
 ## Dockerfile、Compose 和 1Panel 分别做什么
 
@@ -237,7 +241,7 @@ CMD ["npm", "run", "start"]
 
 `FROM` 选择基础镜像，`WORKDIR` 设置容器内的工作目录，`COPY` 复制文件。`RUN` 在制作镜像时执行；`CMD` 指定容器启动时执行的命令。
 
-OpenSSL 是 Prisma 7 迁移工具需要的系统依赖。这里用 `apt-get` 把它装进后端镜像，由底层工具使用，业务代码不用 `import`。参见 [Prisma 的 Docker 部署说明](https://www.prisma.io/docs/guides/v7/deployment/docker#31-option-2-use-linux-debian-nodeslim-as-a-base-image)。
+OpenSSL 是 Prisma 7 迁移工具需要的[系统依赖](../../linux/05-文件系统用户权限与软件安装.md#系统依赖与-npm-依赖分别装在哪里)。这里用 `apt-get` 把它装进后端镜像，由底层工具使用，业务代码不用 `import`。参见 [Prisma 的 Docker 部署说明](https://www.prisma.io/docs/guides/v7/deployment/docker#31-option-2-use-linux-debian-nodeslim-as-a-base-image)。
 
 `npm ci --include=dev` 按锁文件安装全部依赖。当前 `tsx`、Prisma CLI 和 TypeScript 放在 `devDependencies`，这里仍然需要它们来运行后端、执行迁移和检查类型，不能省略。
 
@@ -412,7 +416,7 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml down
 
 ## 第 6 步：把项目代码放到服务器
 
-下面在以 `root` 登录服务器后的终端操作，可以用 `whoami` 查看当前用户。`ssh aliyun` 中的 `aliyun` 是连接别名，实际登录用户由 SSH 配置中的 `User` 决定。
+下面在以 `root` 登录服务器后的终端操作，可以用 `whoami` 查看当前用户。`ssh aliyun` 中的 `aliyun` 是连接别名，实际登录用户由 SSH 配置中的 `User` 决定；认证过程见 [Linux 04](../../linux/04-SSH-从Mac安全连接Linux.md#一次-ssh-密钥登录怎样完成)。
 
 项目放在 `/opt/mini-cms`。公开仓库可以直接通过 HTTPS 拉取；先把下面的仓库地址换成自己的地址，再执行：
 
@@ -423,7 +427,7 @@ cd /opt/mini-cms
 git status
 ```
 
-`root` 创建的目录可以直接使用，不需要再修改目录归属。`git clone` 的目标目录应为空；以后更新代码用第 11 步的 `git pull`。
+`root` 创建的目录可以直接使用，不需要再修改目录归属。`git clone` 的目标目录应为空；以后更新代码用第 11 步的 `git pull`。用户与目录归属的关系见 [Linux 05](../../linux/05-文件系统用户权限与软件安装.md#三组门禁灯r--w--x)。
 
 如果是私有仓库，先按 [GitHub 的部署密钥说明](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys#deploy-keys)，在服务器生成 SSH 密钥，并把公钥添加到该仓库的 **Settings → Deploy keys**，只授予读取权限。然后把上面的克隆命令换成：
 
@@ -431,7 +435,7 @@ git status
 git clone git@github.com:your-account/mini-cms.git /opt/mini-cms
 ```
 
-你用 `ssh aliyun` 登录服务器，与服务器通过 SSH 访问 GitHub，是两次不同的连接。后者需要服务器自己的 GitHub 访问密钥；即使仓库公开，使用 `git@github.com:...` 地址也需要认证。
+你用 `ssh aliyun` 登录服务器，与服务器通过 SSH 访问 GitHub，是两次不同的连接。两次连接的密钥放在哪里，见 [Linux 04 的对照表](../../linux/04-SSH-从Mac安全连接Linux.md#登录服务器与服务器拉取-github-代码是两次连接)。即使仓库公开，使用 `git@github.com:...` 地址也需要认证。
 
 在服务器创建真实配置：
 

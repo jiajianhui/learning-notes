@@ -11,7 +11,7 @@
 -> PostgreSQL
 ```
 
-这一站不假装用几段伪配置就完成了部署，也不在 Linux 基础路线里复制一套 Mini CMS。它负责把整台机器的运行关系拼完整；真实项目准备好后，再沿着明确出口进入 1Panel 实操。
+这一章把前面的 Linux 基础串到当前 Mini CMS：谁接收请求、谁运行代码、谁保存数据。具体 Dockerfile、Compose 和面板操作集中在[后端 20A](../backend/backend-system-learning/20A-用1Panel和Docker-Compose部署MiniCMS.md)，这里先看懂它们为什么这样配合。
 
 ## 先把所有角色请到同一张桌上
 
@@ -22,51 +22,44 @@
           ↓
 云安全组和 UFW
           ↓
-OpenResty / Caddy / Nginx
-├── 127.0.0.1:3000 -> Next.js
-└── 127.0.0.1:3001 -> Express
+1Panel 管理的 OpenResty
+├── 127.0.0.1:3000 -> Next.js 容器
+└── 127.0.0.1:3001 -> Express 容器
                           ↓
-                 postgres:5432
+                 postgres:5432（PostgreSQL 容器）
                           ↓
-                    数据卷与备份
+                     PostgreSQL 数据卷
 ```
 
 公网只需要 80、443 和受限的管理入口。应用端口和数据库端口留在服务器内部。
 
 ---
 
-## `npm run dev` 不能通宵值班
+## 前后端上线时分别怎样启动
 
-开发环境重视热更新和调试：
+开发时的 `dev` 会监听代码变化，方便修改后立即查看结果。当前 Mini CMS 上线使用下面的启动方式：
 
-```text
-npm run dev
-```
+| 项目 | 上线时怎样运行 |
+|---|---|
+| Express：`server` | `npm run start` 执行 `tsx src/server.ts`，直接运行 TypeScript 源码，不监听修改 |
+| Next.js：`admin-web-antd` | 先用 `npm run build` 生成 `.next`，再用 `npm run start` 启动 Next.js 服务 |
 
-生产环境需要：
+**当前 Express 项目通过 `tsx` 运行，不需要先生成 `dist`；Next.js 则需要先构建。** 第 20 章已经在本地试过这两条启动路径。
 
-```text
-安装锁定依赖
--> 生成 Prisma Client
--> 构建 TypeScript / Next.js
--> 应用已提交的数据库迁移
--> 使用稳定启动命令
--> 由 Docker 或 systemd 监督
-```
+20A 将安装依赖、生成 Prisma Client、构建 Next.js 写进 Dockerfile；容器启动时，API 先应用已有数据库迁移，再执行 `start`。Compose 保存启动命令和重启策略，Docker 持续管理容器，退出 SSH 后应用仍然运行。
 
-不能把 Next.js 开发服务器或 `tsx watch` 直接当长期生产方式。
+具体命令见[第 20 章：前后端上线时分别怎样启动](../backend/backend-system-learning/20-从开发环境到线上运行.md#2-前后端上线时分别怎样启动)。
 
 ---
 
 ## 有些变量上车前就要写好
 
-服务器运行时读取：
+当前 Express 运行时读取：
 
 - `DATABASE_URL`。
 - `PORT`。
-- Web 登录会话使用的 Cookie 或签名密钥。这里不是第 07 章的 tmux Session。
-- CORS 允许来源。
-- 日志级别和运行环境。
+- `NODE_ENV`：生产环境设为 `production`，当前项目据此设置 Cookie 的 `Secure`。
+- `ADMIN_WEB_ORIGIN`：允许访问管理 API 的管理端来源。
 
 Next.js 浏览器端公开变量常在构建时写入静态资源，例如：
 
@@ -74,7 +67,7 @@ Next.js 浏览器端公开变量常在构建时写入静态资源，例如：
 NEXT_PUBLIC_API_BASE_URL
 ```
 
-只在容器启动时修改它，已经构建好的浏览器代码可能不会变化。部署时要明确变量是构建时还是运行时读取。
+这个值会进入浏览器端构建结果。改变正式 API 地址后，需要重新构建管理端；只改容器启动时的变量，不会改写已经生成的代码。
 
 真实 `.env` 不进入 Git。`.env.example` 只保留字段名和非敏感示例。
 
@@ -94,20 +87,11 @@ prisma migrate deploy
 
 ---
 
-## 反向代理是站在 443 门口的接待员
+## OpenResty 怎样把请求交给应用
 
-- 监听公网 80 和 443。
-- 管理 HTTPS 证书和跳转。
-- 根据域名或路径选择上游服务。
-- 把真实协议和客户端信息传给应用。
-- 记录入口访问日志。
+第 08 章已经讲过[反向代理与 HTTPS](./08-云服务器网络安全组与防火墙.md#一次-https-请求怎样到达-express)。在当前项目中，OpenResty 接收公网 80、443 的请求，处理 HTTPS，再按域名选择目标：`admin.example.com` 交给 Next.js，`api.example.com` 交给 Express。
 
-它不负责：
-
-- Express 业务校验。
-- 用户认证与授权。
-- Prisma 迁移。
-- PostgreSQL 数据备份。
+Express 继续负责登录验证、业务处理和数据库读写。排错时可以分别查看 OpenResty 的入口日志和 API 容器的应用日志，判断请求在哪一步失败。
 
 ---
 
@@ -129,11 +113,15 @@ SSL 证书
 
 ## 上线不等于故事结束
 
-健康检查：
+先在服务器内部请求已有的公开文章接口：
 
-```text
-GET /api/health
+```bash
+curl -i http://127.0.0.1:3001/api/public/articles
 ```
+
+返回 `200`，且 JSON 包含 `data`、`pagination`，说明这次请求已由 Express 处理并完成数据库查询。没有已发布文章时，`data` 可以是空数组。这与 20A 的验证方式一致。
+
+你当前工程的 `/api/health` 只返回服务运行状态，没有查询数据库。因此它能检查 API 是否响应，公开文章接口还能检查数据库读取；两者都不能替代登录、保存和重新打开文章的业务验证。
 
 日志至少回答：
 
@@ -142,14 +130,9 @@ GET /api/health
 - 花了多长时间。
 - 未知错误在服务器内部是什么。
 
-备份至少覆盖：
+当前 Mini CMS 的文章、标签、管理员和会话保存在 PostgreSQL 中，使用数据库逻辑备份导出结构和数据；Dockerfile、Compose、示例配置和恢复步骤保存在 Git 与 README 中。
 
-- PostgreSQL 逻辑备份。
-- 上传文件或持久数据卷。
-- Compose 和非敏感配置。
-- 恢复步骤。
-
-备份任务显示成功还不够，要把备份恢复到测试环境验证。
+数据卷保存正在使用的数据，备份提供能够恢复的历史副本。按[20A 第 10 步](../backend/backend-system-learning/20A-用1Panel和Docker-Compose部署MiniCMS.md#第-10-步配置数据库备份和恢复验证)完成导出、恢复到测试库、查询文章，再设置每日备份和服务器之外的副本。
 
 ---
 
@@ -179,7 +162,7 @@ GET /api/health
 -> 重建镜像
 -> 应用迁移
 -> 替换容器
--> 检查健康、日志和业务链路
+-> 检查接口、日志和业务链路
 ```
 
 回滚代码不一定能回滚数据库结构。发布前要判断迁移是否向后兼容。
@@ -206,9 +189,9 @@ Express 为什么用 postgres:5432，而不是 localhost？
 
 真实上线属于 Mini CMS 项目的最终阶段，按这个顺序继续：
 
-1. 阅读[后端第 20 章：从开发环境到线上运行](../backend/backend-system-learning/20-从开发环境到线上运行.md)，确认构建、启动、环境变量、迁移、健康检查与备份已经准备好。
+1. 阅读[后端第 20 章：从本地到服务器，上线前需要改什么](../backend/backend-system-learning/20-从开发环境到线上运行.md)，理解启动、配置和数据库的差别，在本地试过前后端启动命令。
 2. 使用[后端第 20A 章：用 1Panel 和 Docker Compose 部署 Mini CMS](../backend/backend-system-learning/20A-用1Panel和Docker-Compose部署MiniCMS.md)，在真实服务器配置 Compose、OpenResty、HTTPS 和备份。
-3. 从外部浏览器打开正式域名，再故意检查一次容器状态、日志和健康接口，证明网站不是“碰巧能开”。
+3. 从外部浏览器打开正式域名，完成登录、保存和重新打开文章，再检查公开接口、容器状态与日志。
 
 ```text
 Linux 00～10
@@ -218,4 +201,4 @@ Linux 00～10
 -> 把已经完成的 Mini CMS 真正部署上去
 ```
 
-当 HTTPS 页面能打开、API 健康检查成功、数据库备份也完成一次恢复验证，这趟“从 Mac 出发，去 Linux 里跑一个网站”的旅程才算真正抵达。
+当 HTTPS 页面能打开、文章管理和公开阅读可用、数据库备份也完成一次恢复验证，这趟“从 Mac 出发，去 Linux 里跑一个网站”的旅程才算真正抵达。
