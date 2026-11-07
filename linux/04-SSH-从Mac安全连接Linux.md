@@ -246,7 +246,7 @@ ssh linux-learning
 
 ## 登录服务器与服务器拉取 GitHub 代码，是两次连接
 
-部署 Mini CMS 时，你先从 Mac 登录服务器，再让服务器去 GitHub 获取代码。第二次连接中，服务器变成了 SSH 客户端。按第 20A 章使用专用部署密钥的方式，各自的密钥放在这里：
+如果采用“服务器从 GitHub 获取源代码”的部署方式，你先从 Mac 登录服务器，再让服务器连接 GitHub。第二次连接中，服务器变成了 SSH 客户端。使用专用部署密钥时，各自的密钥放在这里：
 
 | 连接 | 私钥放在哪里 | 公钥授权给谁 |
 |---|---|---|
@@ -255,7 +255,9 @@ ssh linux-learning
 
 能执行 `ssh aliyun`，只证明第一条连接可用。第二条需要单独配置仓库读取权限。`git@github.com:...` 中的 `git` 是 GitHub 的 SSH 连接用户，与服务器上的 `root` 或 `ecs-user` 不是一回事。
 
-公开仓库使用 HTTPS 地址克隆时无需 SSH 密钥。具体拉取命令和部署密钥入口见[后端 20A 第 6 步](../backend/backend-system-learning/20A-用1Panel和Docker-Compose部署MiniCMS.md#第-6-步把项目代码放到服务器)。
+公开仓库使用 HTTPS 地址克隆时无需 SSH 密钥；私有仓库的部署密钥配置见 [GitHub 部署密钥说明](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys#deploy-keys)。
+
+当前 Mini CMS 的 [20A 第 6 步](../backend/backend-system-learning/20A-用1Panel和Docker-Compose部署MiniCMS.md#第-6-步把运行配置放到服务器)采用本地制作镜像的路线：Mac 用 `scp` 把运行配置传到服务器，服务器从 Docker Hub 下载镜像。`scp` 复用第一条 SSH 连接，不需要再配置服务器访问 GitHub 的部署密钥。
 
 ---
 

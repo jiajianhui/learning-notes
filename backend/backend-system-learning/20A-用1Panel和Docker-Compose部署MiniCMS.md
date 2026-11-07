@@ -42,17 +42,17 @@
 
 ## 先看部署顺序
 
-从上到下看，图中的步骤编号对应后文。先在本机验证配置，再让服务器根据这套配置构建镜像、运行项目。
+从上到下看，图中的步骤编号对应后文。**在 Mac 上制作并验证镜像，上传到 Docker Hub；服务器下载这份镜像运行。** 安装依赖、生成 Prisma Client、构建 Next.js 都在本地制作镜像时完成。
 
 ```mermaid
 flowchart TD
     A["第 1～3 步 · 准备云服务器<br/>配置 DNS 和端口规则<br/>安装 1Panel 和 Docker<br/>准备 OpenResty"]
-    B["第 4～5 步 · 本机准备<br/>编写 Dockerfile 和 Compose<br/>本地验证后，提交并推送"]
-    C["第 6 步 · 服务器获取项目<br/>拉取代码<br/>填写 deploy/.env 正式配置"]
-    D["第 7 步 · 服务器构建镜像<br/>1Panel 启动 Compose 编排<br/>后端生成 Prisma Client<br/>管理端执行 build"]
+    B["第 4～5 步 · Mac 制作镜像<br/>按服务器架构打包、验证<br/>上传镜像到 Docker Hub"]
+    C["第 6 步 · 服务器准备配置<br/>上传 Compose 和配置示例<br/>填写 deploy/.env 正式配置"]
+    D["第 7 步 · 服务器下载镜像<br/>从 Docker Hub 拉取指定版本<br/>1Panel 启动 Compose 编排"]
     E["第 7 步 · 启动并初始化<br/>数据库就绪 → 迁移成功<br/>启动 API 和管理端<br/>验证接口，创建管理员"]
     F["第 8～9 步 · 公网访问<br/>OpenResty 反向代理 + HTTPS<br/>验证登录、编辑与公开阅读"]
-    G["第 10～11 步 · 备份与更新<br/>备份数据库，验证恢复<br/>更新代码后重新部署、验证"]
+    G["第 10～11 步 · 备份与更新<br/>备份数据库，验证恢复<br/>本地上传新版，服务器下载更新"]
     A --> B --> C --> D --> E --> F --> G
 ```
 
@@ -115,18 +115,29 @@ sequenceDiagram
 
 知道项目运行在哪里后，接下来要让 Docker 按项目需要准备环境、启动程序。
 
-以后端为例，在新机器上需要准备 Node.js 24、复制代码、安装依赖、生成 Prisma Client。`server/Dockerfile` 就是把这些操作写下来，交给 Docker 执行：
+本章就用“在本地打包，再上传”的做法。`server/Dockerfile` 告诉 Docker 怎样把后端代码、Node.js 和依赖一起打包：
 
 ```text
-Docker 读取 server/Dockerfile
--> 准备 Node.js 24、项目代码、依赖和 Prisma Client
--> 将这些文件保存成后端镜像
--> 根据镜像创建容器，在容器中执行 npm run start
+你的电脑：后端代码 + Dockerfile → 制作后端镜像 → push 到 Docker Hub
+服务器：从 Docker Hub 拉取这个镜像 → 启动容器，运行后端
 ```
 
-**镜像保存运行所需的文件；容器是 Docker 根据镜像创建的独立运行环境。** 制作镜像时完成准备工作，启动容器时才运行后端服务。
+**这条流程里，镜像在本地做好，服务器下载后直接运行，不需要再打包。** 以后改了代码，再制作并上传新版本，服务器换成新版运行。
 
-管理端也有一份 Dockerfile，其中会执行 `npm run build`，把构建结果放进镜像。PostgreSQL 直接使用官方镜像，不需要自己制作。
+把这几个名词放在一起看：
+
+| 概念 | 大白话理解 | 用你的后端举例 |
+|---|---|---|
+| Dockerfile | 打包说明书 | 告诉 Docker：用 Node.js 24，复制后端代码，装好依赖 |
+| 镜像（image） | 打包好的程序，连运行它需要的东西也一起带上 | 可以理解成后端的一份打包版，里面已经准备好了 Node.js 和依赖 |
+| 容器（container） | 先理解成在 Docker 里运行的一份程序 | 后端在里面启动，开始接收前端请求、读写数据库 |
+| 镜像仓库 | 存镜像的地方，类似 GitHub 存代码 | 你可以把打包好的后端上传到这里，让服务器下载后运行 |
+
+**GitHub 存源代码，Docker Hub 存打包好的镜像。** 本章选用 Docker Hub；GitHub 也有单独的镜像仓库服务 GHCR，但不是把镜像当普通文件提交到代码仓库。参见 [GitHub 镜像仓库说明](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)。
+
+你的 M1 Max 负责打包，2 核 2GB 的服务器负责运行，避免构建时抢占线上网站和数据库的资源。PostgreSQL 已经有官方做好的镜像，直接下载来用。
+
+管理端也有一份 Dockerfile，其中会执行 `npm run build`，把构建结果放进镜像。
 
 三个容器还要分别设置数据库地址、端口、数据保存位置和启动顺序。这些配置集中写进 `deploy/docker-compose.yml`，**Compose 读取它，一次启动或停止这组容器**。第 4 步会写出这些文件，第 5 步先在本地试运行。
 
@@ -148,7 +159,9 @@ Docker 读取 server/Dockerfile
 
 本章使用 Ubuntu LTS、x86_64 架构的服务器，**4GB 不是硬性要求**。若已有 2GB 内存的机器还运行着 Node.js 项目、MySQL 等服务，需要先确认剩余内存，再决定是否把 Mini CMS 也部署到这台机器。
 
-需要留意的是构建时的内存：服务器还要同时运行 1Panel、数据库等服务，`next build` 可能因可用内存不足而失败。4GB 会多一些余量；2GB 能否顺利完成本项目的构建和运行，需要实际验证。参见 [Next.js 内存说明](https://nextjs.org/docs/app/guides/memory-usage)。
+本章把 `next build` 等打包工作放在 Mac 上，服务器只下载镜像、运行服务。但运行中的 Next.js、Express、PostgreSQL 和已有服务仍会共用这 2GB 内存，上线后要在 1Panel 观察实际占用，不能把“省掉构建”理解成“运行一定够用”。
+
+先在服务器执行 `uname -m`：本章按输出为 `x86_64` 编写，对应镜像平台 `linux/amd64`。你的 M1 是 ARM，所以后面的配置会明确指定 `linux/amd64`，让 Mac 制作适合服务器的镜像。若输出是 `aarch64`，则将后文两处 `platform` 改成 `linux/arm64`。Docker Desktop 支持这种跨架构制作，模拟另一种 CPU 时可能慢一些。参见 [Docker 跨平台构建说明](https://docs.docker.com/build/building/multi-platform/)。
 
 ### 一个域名，配置两个子域名
 
@@ -205,7 +218,7 @@ Docker 读取 server/Dockerfile
 
 ## 第 4 步：为项目增加生产容器配置
 
-在本机的 `mini-cms` 中创建下面这些文件，路径都相对于项目根目录。第 5 步验证后，再把它们随代码提交、推送到 Git，供服务器获取。
+在本机的 `mini-cms` 中创建下面这些文件，路径都相对于项目根目录。Dockerfile 和本地打包配置留在 Mac 上使用；服务器只需要启动用的 Compose 和正式环境配置。源代码与这些配置仍通过 Git 保存版本。
 
 ### 4.1 `server/.dockerignore`
 
@@ -306,6 +319,9 @@ CMD ["npm", "run", "start", "--", "-H", "0.0.0.0"]
 ### 4.6 `deploy/.env.example`
 
 ```dotenv
+DOCKERHUB_USERNAME=yourdockerhubname
+IMAGE_TAG=v1
+
 POSTGRES_USER=mini_cms
 POSTGRES_PASSWORD=replace_with_a_long_random_password
 POSTGRES_DB=mini_cms
@@ -316,9 +332,13 @@ API_DOMAIN=api.example.com
 ADMIN_WEB_ORIGIN=https://admin.example.com
 ```
 
+`DOCKERHUB_USERNAME` 填 Docker Hub 用户名，`IMAGE_TAG` 是你给这次发布起的版本号，例如 `v1`。本地打包、上传和服务器下载，都使用同一个用户名和版本号。
+
 数据库密码进入 URL 时，`@`、`:`、`/`、`#` 等字符需要 URL 编码。第一次可以使用足够长的随机字母和数字组合，避免手写两处值时产生编码差异。
 
 ### 4.7 `deploy/docker-compose.yml`
+
+这份文件负责启动服务，本地验证和服务器运行都用它：
 
 ```yaml
 name: mini-cms-production
@@ -342,8 +362,8 @@ services:
       retries: 5
 
   api:
-    build:
-      context: ../server
+    image: "${DOCKERHUB_USERNAME}/mini-cms-api:${IMAGE_TAG}"
+    platform: linux/amd64
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -358,10 +378,8 @@ services:
       - "127.0.0.1:3001:3001"
 
   admin_web_antd:
-    build:
-      context: ../admin-web-antd
-      args:
-        NEXT_PUBLIC_API_BASE_URL: "https://${API_DOMAIN}"
+    image: "${DOCKERHUB_USERNAME}/mini-cms-admin:${IMAGE_TAG}"
+    platform: linux/amd64
     restart: unless-stopped
     depends_on:
       - api
@@ -372,6 +390,8 @@ volumes:
   postgres_data:
 ```
 
+`image` 指定使用哪个镜像。例如 `yourdockerhubname/mini-cms-api:v1` 就是“你的 Docker Hub 账号下，后端镜像的 v1 版本”。这里没有 `build`，服务器启动时不会重新打包。
+
 `ports` 中的 `127.0.0.1:3000:3000` 表示：将服务器本机的 3000 端口连接到管理端容器的 3000 端口。OpenResty 访问 `http://127.0.0.1:3000`，就能把请求交给容器里的 Next.js。3001 对应后端，5432 对应数据库。
 
 其余配置对应四件事：
@@ -381,31 +401,82 @@ volumes:
 - **保留数据**：`volumes` 把 PostgreSQL 数据保存在独立的数据卷中，重新构建应用镜像不会删除它。
 - **自动重启**：`restart: unless-stopped` 让 Docker 在容器意外退出后重新启动它；手动停止的容器保持停止。
 
+### 4.8 `deploy/docker-compose.build.yml`
+
+这份文件只在 Mac 上打包时使用，补充“去哪里找代码、怎样打包”：
+
+```yaml
+services:
+  api:
+    build:
+      context: ../server
+
+  admin_web_antd:
+    build:
+      context: ../admin-web-antd
+      args:
+        NEXT_PUBLIC_API_BASE_URL: "https://${API_DOMAIN}"
+```
+
+打包时让 Compose 同时读取 4.7 和 4.8：前一份提供镜像名称与目标平台，后一份提供代码目录与构建参数。两个 `context` 都相对于 `deploy/`；服务器只使用 4.7。参见 [Compose 多文件用法](https://docs.docker.com/compose/how-tos/multiple-compose-files/merge/)和[构建目标平台说明](https://docs.docker.com/reference/compose-file/build/#platforms)。
+
 ---
 
-## 第 5 步：先在本地验证生产 Compose
+## 第 5 步：在本地制作、验证并上传镜像
 
-第 20 章已在本地试过前后端的启动命令；这里第一次把依赖安装、Client 生成、空库迁移和启动放在一起验证。通过后再把相同配置交给服务器。
+这一整步都在 Mac 上操作。先启动 Docker Desktop，下面的终端命令都在 `mini-cms` 根目录执行。
 
-先停止本地占用 3000、3001 的前后端进程，并在项目根目录执行 `docker compose stop postgres`，释放开发 PostgreSQL 使用的 5432 端口。停止容器会保留开发数据卷，不要删除数据卷。下面使用独立的 `mini-cms-production` Compose 项目和数据卷。
+### 5.1 准备 Docker Hub 和本地配置
 
-在 `mini-cms` 根目录：
+登录 [Docker Hub](https://hub.docker.com/)，在自己的账号下创建两个镜像仓库：`mini-cms-api` 和 `mini-cms-admin`。Public 允许任何人下载，Private 只允许有权限的账号下载；镜像里包含项目代码，按代码是否愿意公开选择。创建方式见 [Docker Hub 仓库说明](https://docs.docker.com/docker-hub/repos/create/)。
+
+在 Docker 账号设置中创建有 **Read & Write** 权限的个人访问令牌，用来上传镜像。终端执行下面的命令，将用户名换成自己的，在密码提示处粘贴令牌：
+
+```bash
+docker login --username yourdockerhubname
+```
+
+令牌不用写进项目文件。具体入口见 [Docker 个人访问令牌说明](https://docs.docker.com/security/access-tokens/personal-access-tokens/)。看到 `Login Succeeded` 后，首次创建本地部署配置：
 
 ```bash
 cp deploy/.env.example deploy/.env
 ```
 
-本次使用练习数据库密码，`DATABASE_URL` 的主机仍是 `postgres`，因为 API 在容器内连接数据库。域名可先保留示例值；这一轮检查构建、容器和公开文章接口，真实域名下的登录在第 9 步验证。然后执行：
+编辑 `deploy/.env`：
+
+- `DOCKERHUB_USERNAME` 填刚才登录的用户名，`IMAGE_TAG` 填 `v1`。
+- 数据库使用本地练习密码，保持 `DATABASE_URL` 中的账号、密码、库名与 PostgreSQL 配置一致，主机仍填 `postgres`。
+- `ADMIN_DOMAIN`、`API_DOMAIN` 和 `ADMIN_WEB_ORIGIN` 填计划上线的真实域名，例如 `admin.你的域名`、`api.你的域名` 和 `https://admin.你的域名`。
+
+**API 域名必须在这次打包前填好。** 它会写进管理端镜像；本地验证通过后上传的就是这一份镜像，不能保留 `api.example.com` 等到服务器再改。数据库密码只在容器运行时传入，不会作为构建参数打进镜像。
+
+### 5.2 按服务器架构制作镜像
 
 ```bash
-docker compose --env-file deploy/.env -f deploy/docker-compose.yml config
-docker compose --env-file deploy/.env -f deploy/docker-compose.yml build
+docker compose --env-file deploy/.env \
+  -f deploy/docker-compose.yml -f deploy/docker-compose.build.yml config
+
+docker compose --env-file deploy/.env \
+  -f deploy/docker-compose.yml -f deploy/docker-compose.build.yml build api admin_web_antd
+```
+
+两个 `-f` 表示同时读取两份配置。检查 `config` 输出：镜像名称带自己的用户名和 `v1`，两个应用的 `platform` 都是第 1 步确认的服务器平台，管理端构建参数使用正式 API 地址。
+
+`build` 会在 Mac 上按 Dockerfile 安装依赖、生成 Prisma Client，并完成管理端的 `next build`。结束时应没有报错。这一步得到的就是准备上传的后端和管理端镜像。
+
+### 5.3 用这两份镜像在本地试跑
+
+先停止本地占用 3000、3001 的前后端进程，并在项目根目录执行 `docker compose stop postgres`，释放开发 PostgreSQL 使用的 5432 端口。停止容器会保留开发数据卷，不要删除数据卷。下面使用独立的 `mini-cms-production` Compose 项目和数据卷。
+
+启动时只读取运行配置，使用刚才已经做好的镜像：
+
+```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml ps
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml logs -f api
 ```
 
-`build` 完成后应没有报错；`ps` 应显示三个容器运行，PostgreSQL 为 `healthy`，API 日志显示迁移成功或没有待执行迁移，随后启动服务。看完日志按 `Ctrl+C` 退出查看，容器会继续运行。
+`ps` 应显示三个容器运行，PostgreSQL 为 `healthy`，API 日志显示迁移成功或没有待执行迁移，随后启动服务。看完日志按 `Ctrl+C` 退出查看，容器会继续运行。
 
 请求当前项目已有的公开文章接口和管理端：
 
@@ -416,7 +487,9 @@ curl -I http://127.0.0.1:3000
 
 文章接口应返回 `200` 和包含 `data`、`pagination` 的 JSON；新数据库没有文章时，`data` 是空数组。管理端应返回页面响应或跳转响应（如 `200`、`307`）。这说明前后端已启动，后端也能读取数据库。
 
-结束本地练习：
+本轮检查镜像能否启动、迁移和读取数据。管理端浏览器请求已经指向正式 API 域名，所以完整登录、保存文章留到第 9 步在真实 HTTPS 域名下验证。
+
+结束本地试跑：
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml down
@@ -424,57 +497,88 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml down
 
 不要添加 `-v`。`down -v` 会删除 Compose 数据卷，里面可能有 PostgreSQL 数据。需要继续本地开发时，在项目根目录执行 `docker compose up -d postgres`，再启动原来的前后端开发命令。
 
+### 5.4 上传已经验证过的镜像
+
+保持 `deploy/.env` 中的用户名和版本号不变，执行：
+
+```bash
+docker compose --env-file deploy/.env \
+  -f deploy/docker-compose.yml -f deploy/docker-compose.build.yml push api admin_web_antd
+```
+
+**`push` 只上传刚才做好的镜像，不会再打包。** 这里指定两个应用，不上传 PostgreSQL 官方镜像。打开 Docker Hub 的两个仓库，确认都出现了 `v1` 标签，再继续服务器部署。参见 [Compose push](https://docs.docker.com/reference/cli/docker/compose/push/)。
+
+同时用 Git 保存这次源代码和容器配置的版本，记录 `v1` 对应哪个 commit；真实 `deploy/.env` 不提交。
+
 ---
 
-## 第 6 步：把项目代码放到服务器
+## 第 6 步：把运行配置放到服务器
 
-下面在以 `root` 登录服务器后的终端操作，可以用 `whoami` 查看当前用户。`ssh aliyun` 中的 `aliyun` 是连接别名，实际登录用户由 SSH 配置中的 `User` 决定；认证过程见 [Linux 04](../../linux/04-SSH-从Mac安全连接Linux.md#一次-ssh-密钥登录怎样完成)。
+服务器需要下载镜像，并知道用什么配置启动。代码已经在镜像里，所以这里只传两个文件：`deploy/docker-compose.yml` 和 `deploy/.env.example`。
 
-项目放在 `/opt/mini-cms`。公开仓库可以直接通过 HTTPS 拉取；先把下面的仓库地址换成自己的地址，再执行：
+沿用已有的 `ssh aliyun` 连接。本章按 `root` 登录编写；`aliyun` 是连接别名，实际用户由 SSH 配置中的 `User` 决定。认证过程见 [Linux 04](../../linux/04-SSH-从Mac安全连接Linux.md#一次-ssh-密钥登录怎样完成)。
+
+**在 Mac 的 `mini-cms` 根目录执行：**
 
 ```bash
-mkdir -p /opt/mini-cms
-git clone https://github.com/your-account/mini-cms.git /opt/mini-cms
+ssh aliyun 'mkdir -p /opt/mini-cms/deploy'
+scp deploy/docker-compose.yml deploy/.env.example aliyun:/opt/mini-cms/deploy/
+```
+
+`scp` 通过 SSH 上传这两个文件，使用与 `ssh aliyun` 相同的连接配置。然后登录服务器：
+
+```bash
+ssh aliyun
+```
+
+**下面都在服务器终端执行。** 首次创建正式配置：
+
+```bash
 cd /opt/mini-cms
-git status
-```
-
-`root` 创建的目录可以直接使用，不需要再修改目录归属。`git clone` 的目标目录应为空；以后更新代码用第 11 步的 `git pull`。用户与目录归属的关系见 [Linux 05](../../linux/05-文件系统用户权限与软件安装.md#三组门禁灯r--w--x)。
-
-如果是私有仓库，先按 [GitHub 的部署密钥说明](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys#deploy-keys)，在服务器生成 SSH 密钥，并把公钥添加到该仓库的 **Settings → Deploy keys**，只授予读取权限。然后把上面的克隆命令换成：
-
-```bash
-git clone git@github.com:your-account/mini-cms.git /opt/mini-cms
-```
-
-你用 `ssh aliyun` 登录服务器，与服务器通过 SSH 访问 GitHub，是两次不同的连接。两次连接的密钥放在哪里，见 [Linux 04 的对照表](../../linux/04-SSH-从Mac安全连接Linux.md#登录服务器与服务器拉取-github-代码是两次连接)。即使仓库公开，使用 `git@github.com:...` 地址也需要认证。
-
-在服务器创建真实配置：
-
-```bash
-cp deploy/.env.example deploy/.env
+cp -n deploy/.env.example deploy/.env
 chmod 600 deploy/.env
 ```
 
-通过 SSH 或 1Panel 文件管理器编辑 `deploy/.env`：填写数据库账号和密码，保持 `DATABASE_URL` 中的账号、密码、库名与 PostgreSQL 配置一致；把 `ADMIN_DOMAIN`、`API_DOMAIN` 和 `ADMIN_WEB_ORIGIN` 换成自己的子域名和完整 HTTPS 来源地址。再次确认：
+`cp -n` 保留已经存在的 `.env`。通过 SSH 或 1Panel 文件管理器编辑它：
 
-```bash
-git status --short
+- `DOCKERHUB_USERNAME`、`IMAGE_TAG` 与本地上传的镜像一致，例如自己的用户名和 `v1`。
+- 填写正式数据库账号和密码，保持 `DATABASE_URL` 中的账号、密码、库名一致。
+- 填写真实的 `ADMIN_DOMAIN`、`API_DOMAIN` 和 `ADMIN_WEB_ORIGIN`，与本地打包时选定的域名一致。
+
+服务器的 `.env` 使用正式密码，不从 Mac 复制练习用的 `.env`。此时服务器目录是：
+
+```text
+/opt/mini-cms/deploy/
+├── docker-compose.yml
+├── .env.example
+└── .env
 ```
 
-真实 `deploy/.env` 不应出现在待提交文件里。
-
-在启动前先解析 Compose：
+在启动前解析一次配置：
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml config
 ```
 
-检查输出中端口、域名和服务名是否正确。不要把包含真实密钥的完整输出粘贴到聊天或工单。
+检查镜像名称和版本、端口、域名、服务名是否正确。不要把包含真实密钥的完整输出粘贴到聊天或工单。
 
 ---
 
-## 第 7 步：在 1Panel 创建 Compose 编排
+## 第 7 步：下载镜像，在 1Panel 启动 Compose 编排
+
+先在服务器的 `/opt/mini-cms` 目录拉取镜像。如果使用 Private 仓库，先以当前管理 Docker 的用户登录；本章是 `root`，密码提示处使用有 **Read** 权限的 Docker Hub 令牌：
+
+```bash
+docker login --username yourdockerhubname
+```
+
+Public 仓库可以不登录直接拉取。随后执行：
+
+```bash
+docker compose --env-file deploy/.env -f deploy/docker-compose.yml pull
+```
+
+这会下载你上传的两个应用镜像和 PostgreSQL 官方镜像。**拉取成功后，服务器已经拿到打包好的程序，下一步直接启动。**
 
 在 1Panel 中进入：
 
@@ -482,11 +586,12 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml config
 容器
 -> 编排
 -> 创建编排
+-> 名称：mini-cms-production
 -> 路径选择
 -> /opt/mini-cms/deploy/docker-compose.yml
 ```
 
-`deploy/.env` 与 Compose 文件位于同一目录，便于 Docker Compose 读取变量。创建前核对 1Panel 显示的最终配置没有空变量。
+编排名称与文件中的 `name` 保持一致，后面用命令行管理的才是同一组容器和数据卷。`deploy/.env` 与 Compose 文件位于同一目录，创建前核对 1Panel 显示的最终配置没有空变量；本次使用刚拉取的本机镜像。若面板另行要求私有仓库认证，先在其镜像仓库管理中配置同一账号的读取凭据。
 
 启动后查看：
 
@@ -655,22 +760,31 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml \
 
 ## 第 11 步：以后怎样更新
 
-更新前：
+以后每次发布都走同一条线：**Mac 制作并上传新版镜像 → 服务器下载新版 → 更新容器。**
 
-1. 阅读本次变更和迁移。
-2. 运行本地测试和生产构建。
-3. 创建数据库备份。
-4. 记录当前可回退的 Git commit。
+先在 Mac 上准备新版：
 
-服务器获取代码：
+1. 完成本次修改，检查迁移文件，运行项目已有的测试和检查。
+2. 把本地 `deploy/.env` 的 `IMAGE_TAG` 从 `v1` 改成新版本，例如 `v2`。每次发布使用新标签，保留旧版供核对和回退。
+3. 按第 5.2～5.4 节重新制作两个应用镜像、本地试跑，再上传。确认 Docker Hub 两个仓库都有 `v2`；源代码和配置提交到 Git，记录这次版本对应的 commit。
+
+再更新服务器：
+
+1. 按第 10 步备份正式数据库，记录服务器当前的 `IMAGE_TAG`。
+2. 将服务器 `deploy/.env` 的 `IMAGE_TAG` 改为刚上传的 `v2`，保留正式数据库密码等配置。
+3. 如果本次修改了运行用的 `deploy/docker-compose.yml`，先按第 6 步从 Mac 上传该文件；仅修改业务代码时不用重新上传配置。
+
+在服务器执行：
 
 ```bash
 cd /opt/mini-cms
-git pull --ff-only
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml config
-docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d --build
+docker compose --env-file deploy/.env -f deploy/docker-compose.yml pull api admin_web_antd
+docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml ps
 ```
+
+`pull` 下载已经打包好的新版，`up -d` 用新版镜像更新容器。镜像拉取失败时先解决错误，成功后再执行 `up`。更新前不用 `down`，也不用在服务器运行 `build`；这里仅拉取两个应用，PostgreSQL 的版本升级另行安排。
 
 然后检查：
 
@@ -681,12 +795,13 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml logs --tail=2
 
 重新打开管理端，确认本次修改已生效，更新前保存的文章仍能查看和编辑。把本节更新命令与第 10 步实际使用的备份、恢复方法记到项目 README。
 
-回退旧代码不能自动撤销数据库迁移。需要在设计迁移时考虑向后兼容，并在高风险变更前验证恢复方案。
+需要回退应用时，将 `IMAGE_TAG` 改回保留的旧版本，再拉取并更新容器。**切回旧镜像不会撤销数据库迁移**；先确认旧程序还能使用更新后的表结构，不能把镜像回退当作数据库恢复。
 
 ---
 
 ## 完成本章时确认的结果
 
+- 在 Mac 上制作并验证镜像，Docker Hub 能看到对应版本，服务器拉取后直接运行。
 - 通过 HTTPS 登录管理端，能保存、重新打开文章；个人网站能读取已发布内容。
 - 更新或重启容器后，服务能恢复，已有文章仍在。
 - 已生成数据库备份，并在测试数据库中成功恢复。
@@ -703,7 +818,10 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml logs --tail=2
 |---|---|
 | 面板打不开 | 1Panel 服务、面板端口、云安全组、授权 IP、安全入口 |
 | OpenResty 无法启动 | 80 / 443 是否被其他进程占用，应用日志 |
-| 容器构建失败 | Node 版本、lockfile、Dockerfile、构建时环境变量 |
+| Mac 制作镜像失败 | Docker Desktop、Node 版本、lockfile、Dockerfile、正式 API 构建参数 |
+| 上传或拉取镜像失败 | Docker Hub 是否可访问、登录权限、用户名、仓库名和版本标签是否存在 |
+| 提示架构不匹配或 `exec format error` | 服务器 `uname -m` 与镜像平台是否对应，是否按第 4～5 步重新制作了正确平台的镜像 |
+| 更新后还是旧页面 | 本地是否制作并上传新标签，服务器是否修改 `IMAGE_TAG`、执行 `pull` 和 `up -d` |
 | API 容器反复重启 | 数据库健康、`DATABASE_URL`、迁移和 API 日志 |
 | 服务器内部 API 正常，域名失败 | OpenResty 代理、网站状态、80 / 443、防火墙和 DNS |
 | 页面打开但请求 API 失败 | `NEXT_PUBLIC_API_BASE_URL` 是否在构建时正确，CORS 和证书 |
@@ -726,6 +844,10 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml logs --tail=2
 - [Nginx：提供静态文件与转发请求](https://nginx.org/en/docs/beginners_guide.html)
 - [Nginx：怎样根据域名和路径处理请求](https://nginx.org/en/docs/http/request_processing.html)
 - [Docker：镜像与容器](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/)
+- [Docker Hub：创建镜像仓库](https://docs.docker.com/docker-hub/repos/create/)
+- [Docker：跨平台构建](https://docs.docker.com/build/building/multi-platform/)
+- [Docker Compose：合并运行与构建配置](https://docs.docker.com/compose/how-tos/multiple-compose-files/merge/)
+- [Docker Compose：上传镜像](https://docs.docker.com/reference/cli/docker/compose/push/)
 - [Docker Compose：端口映射、内部网络与服务名](https://docs.docker.com/compose/how-tos/networking/)
 - [Docker：数据卷与容器的生命周期](https://docs.docker.com/engine/storage/volumes/)
 - [Next.js：自托管与反向代理](https://nextjs.org/docs/app/guides/self-hosting)

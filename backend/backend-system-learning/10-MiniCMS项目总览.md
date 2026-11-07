@@ -524,6 +524,7 @@ GET  /api/auth/me
 - 配置生产环境变量，使用 `prisma migrate deploy` 应用已提交且验证过的数据迁移。
 - 保留健康检查，增加基础请求与错误日志，不记录密码、Cookie 和密钥。
 - 用 1Panel 管理 Docker Compose、OpenResty、HTTPS 证书和备份任务。本项目不使用宝塔。
+- 在本地制作适合服务器架构的前后端镜像，验证后上传 Docker Hub；服务器拉取指定版本运行，更新时沿用相同流程。
 - 确认备份和恢复方式，再部署 Express API、PostgreSQL 和计划上线的一套或两套后台。
 
 验收：
