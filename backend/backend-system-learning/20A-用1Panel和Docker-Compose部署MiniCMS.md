@@ -60,96 +60,112 @@ flowchart TD
 
 ## 先看请求怎样到达项目
 
-部署完成后，以请求 `https://api.example.com/api/public/articles` 为例。从上到下看请求与响应；框内的 OpenResty、API 容器和数据库容器，都在同一台云服务器上。
+**系统的主要分工确实就是这几步。** 图里画的是真实的请求主线，只是先省略 DNS 查询、HTTPS 建立连接和端口映射等细节。先看懂“谁把请求交给谁”，后面配置端口和域名时再补上这些细节。
+
+可以先这样记：**OpenResty 是网站入口，Next.js 提供后台页面，Express 处理业务，PostgreSQL 保存数据。** Docker 负责让这些应用在容器里运行、互相连接；1Panel 是你管理它们的操作界面。
+
+以“已经登录后，打开文章列表”为例。这里有两件事：**先拿到管理页面，再请求文章数据。**
 
 ```mermaid
 sequenceDiagram
-    participant B as 调用方<br/>浏览器 / 个人网站
-    box 云服务器（Linux）
-        participant N as OpenResty<br/>基于 Nginx
-        participant A as API 容器<br/>Node.js + Express
-        participant D as 数据库容器<br/>PostgreSQL
+    participant B as 你的浏览器
+    box 同一台云服务器
+        participant N as OpenResty<br/>网站入口
+        participant W as Next.js<br/>管理端容器
+        participant A as Express<br/>API 容器
+        participant D as PostgreSQL<br/>数据库容器
     end
 
-    Note over B,N: ① DNS 查询得到 api.example.com 的服务器公网 IP
-    B->>N: ② 连接公网 443<br/>云安全组、主机防火墙允许通过
-    Note over B,N: TLS 握手：浏览器验证网站证书，建立加密连接
-    B->>N: ③ 发送 HTTPS 请求<br/>GET /api/public/articles
-    N->>N: 匹配 api.example.com<br/>选择 API 网站的转发规则
-    N->>A: ④ HTTP 转发到 127.0.0.1:3001<br/>Docker 端口映射到容器 3001
-    A->>D: ⑤ Prisma 发起 SQL 查询<br/>内部网络：postgres:5432
-    Note over D: 数据保存在<br/>PostgreSQL 数据卷
-    D-->>A: 返回文章数据
-    A-->>N: ⑥ 返回 200 + JSON<br/>经端口映射回到 OpenResty
-    N-->>B: 通过 HTTPS 返回状态码与 JSON
-    B->>B: 使用文章数据，更新页面
+    Note over B,W: ① 先拿到管理页面
+    B->>N: 打开 admin.example.com/admin/articles
+    N->>W: 按 admin 域名，把请求交给管理端
+    W-->>N: 返回页面内容和前端代码
+    N-->>B: 返回给浏览器，显示管理页面
+
+    Note over B,D: ② 页面中的前端代码再请求文章数据
+    B->>N: 请求 api.example.com/api/articles
+    N->>A: 按 api 域名，把请求交给后端
+    A->>A: 检查登录状态，处理文章查询
+    A->>D: 通过 Prisma 查询文章
+    D-->>A: 返回查询结果
+    A-->>N: 返回文章 JSON
+    N-->>B: 返回 JSON，前端把文章显示成列表
 ```
 
-**Docker 在这里提供容器网络和端口映射；OpenResty 接收网站请求，Express 处理 API，PostgreSQL 查询数据。** API 通过内部服务名 `postgres` 直接访问数据库，这一段不再经过 OpenResty。
+沿着图看一次实际操作：
 
-打开 `https://admin.example.com` 时，OpenResty 改为转发到 `127.0.0.1:3000`，由 Docker 交给管理端容器里的 Next.js。页面加载到浏览器后，前端代码向 `https://api.example.com` 请求数据，走上图的 API 链路。
+1. **你打开后台地址。** 浏览器访问 `https://admin.example.com/admin/articles`，先找到 OpenResty。它看到 `admin.example.com`，就把请求交给 Next.js。
+2. **Next.js 把管理页面交给浏览器。** 图里把页面和 JavaScript、CSS 等资源的加载合并画在这一步。拿到页面，不等于已经拿到数据库里的文章。
+3. **浏览器里的前端代码再发请求。** 文章列表页面请求 `https://api.example.com/api/articles`。这次 OpenResty 看到的是 `api.example.com`，于是交给 Express；这次数据请求不经过 Next.js。
+4. **Express 处理查询，PostgreSQL 提供数据。** 后端确认登录状态后，通过 Prisma 访问数据库，把查询结果整理成 JSON。JSON 经 OpenResty 返回浏览器，前端再把它显示出来。
 
-个人网站的文章列表使用图中的公开接口；详情页使用 `/api/public/articles/:slug`，例如 `/api/public/articles/hello-world`，经过相同的网络链路。
+**OpenResty 主要负责接住外部的网站请求，不是所有服务之间的中转站。** Express 和 PostgreSQL 在同一个 Docker 网络里，后端可以直接通过 `postgres:5432` 找数据库，不需要再经过 OpenResty。
+
+个人网站读取公开文章时，请求的是 `https://api.example.com/api/public/articles`，直接走上图的第二段数据链路；它不需要先访问 Mini CMS 管理端。个人网站自己的页面仍由它原来的部署环境提供。
 
 ### 看懂图里的网络名词
 
-你本地已经用过 `localhost:3000` 和 `localhost:3001`。上线后，管理端和后端仍使用这两个端口，新增的是让外部请求找到它们的配置：
+上图先讲清业务分工。下面这些配置负责让请求真正到达对应服务：
 
-| 名词 | 在本项目中是什么意思 |
+| 名词 | 放进这条请求链路里理解 |
 |---|---|
-| IP 地址 | 找到云服务器这台电脑。浏览器通过服务器的公网 IP 访问它 |
-| 域名、DNS | `api.example.com` 是便于记忆的名字；DNS 将这个名字解析为服务器 IP |
-| 端口 | 区分同一台电脑上的服务：管理端用 3000，后端用 3001，PostgreSQL 用 5432 |
-| HTTP、HTTPS；80、443 | 浏览器访问网站使用的协议，HTTPS 会加密传输。它们的默认端口分别是 80、443，所以地址中通常省略端口 |
-| 安全组、主机防火墙 | 都控制允许哪些网络连接进入。安全组由云平台管理，主机防火墙运行在服务器系统中 |
-| 放行端口 | 在访问规则中允许指定来源连接某个端口，例如允许公网连接 443；放行本身不会启动服务 |
-| Nginx、OpenResty | 接收和处理网站请求的服务程序。OpenResty 基于 Nginx，本章用它接收 HTTP/HTTPS 请求并转发给应用 |
-| 反向代理 | OpenResty 接住请求，再转发给内部服务，并将服务的响应返回给调用方 |
-| `127.0.0.1` | 当前电脑自身。图中由 OpenResty 访问，所以指云服务器本机，不是访问者的电脑 |
+| 域名、DNS、IP | `admin.example.com` 和 `api.example.com` 是两个名字，DNS 把它们都指向这台服务器的公网 IP。OpenResty 再根据请求里的域名区分该找谁 |
+| HTTP、HTTPS；80、443 | 浏览器访问网站的方式。HTTPS 会加密传输，默认连接 443；HTTP 默认连接 80，因此网址中通常不用写端口 |
+| 安全组、主机防火墙 | 决定外部连接能不能进入。例如允许公网访问网站的 443，但不允许直接访问数据库端口 |
+| 反向代理 | OpenResty 接住浏览器的请求，转给 Next.js 或 Express，再把结果交还给浏览器 |
+| 端口映射 | 把服务器上的某个端口接到容器里的端口。比如 OpenResty 访问服务器的 3001，Docker 将请求交给 API 容器里的 3001 |
 
-**1Panel 用来配置网站、证书和转发规则，实际接收并转发这些请求的是 OpenResty。** 第 1 步设置 DNS 和端口规则，第 3 步安装 OpenResty，第 8～9 步配置转发和 HTTPS。
-
-完整的请求过程，以及放行、监听、证书之间的关系，见 [Linux 08：一次 HTTPS 请求怎样到达 Express](../../linux/08-云服务器网络安全组与防火墙.md#一次-https-请求怎样到达-express)。
+**1Panel 用来配置网站、证书和转发规则，真正接收和转发网站请求的是 OpenResty。** 第 1 步会画清公网与内部端口，第 8～9 步配置转发和 HTTPS。需要继续追踪 DNS、连接和证书时，再看 [Linux 08：一次 HTTPS 请求怎样到达 Express](../../linux/08-云服务器网络安全组与防火墙.md#一次-https-请求怎样到达-express)。
 
 ## Dockerfile、Compose 和 1Panel 分别做什么
 
-知道项目运行在哪里后，接下来要让 Docker 按项目需要准备环境、启动程序。
+上一节讲服务运行后怎样处理请求。现在看怎样把这些服务准备好、启动起来。
 
-本章就用“在本地打包，再上传”的做法。`server/Dockerfile` 告诉 Docker 怎样把后端代码、Node.js 和依赖一起打包：
+本章采用“在本地打包，再上传”：后端 `server` 和管理端 `admin-web-antd` 各有一份 Dockerfile，分别制作自己的镜像。
 
 ```text
-你的电脑：后端代码 + Dockerfile → 制作后端镜像 → push 到 Docker Hub
-服务器：从 Docker Hub 拉取这个镜像 → 启动容器，运行后端
+你的 Mac：项目代码 + 各自的 Dockerfile → 制作镜像 → push 到 Docker Hub
+服务器：拉取镜像 → 创建并启动容器 → 运行对应服务
 ```
 
-**这条流程里，镜像在本地做好，服务器下载后直接运行，不需要再打包。** 以后改了代码，再制作并上传新版本，服务器换成新版运行。
+这里的“服务”包括 **Next.js 管理端、Express 后端 API 和 PostgreSQL 数据库**。前两个镜像由你制作，PostgreSQL 用官方现成的镜像。服务器拿到的已经是打包好的程序，不需要再打包；以后改了代码，再上传新版本。
 
-把这几个名词放在一起看：
+把这些名词放在一起看：
 
-| 概念 | 大白话理解 | 用你的后端举例 |
+| 概念 | 大白话理解 | Mini CMS 中的例子 |
 |---|---|---|
-| Dockerfile | 打包说明书 | 告诉 Docker：用 Node.js 24，复制后端代码，装好依赖 |
-| 镜像（image） | 打包好的程序，连运行它需要的东西也一起带上 | 可以理解成后端的一份打包版，里面已经准备好了 Node.js 和依赖 |
-| 容器（container） | 先理解成在 Docker 里运行的一份程序 | 后端在里面启动，开始接收前端请求、读写数据库 |
-| 镜像仓库 | 存镜像的地方，类似 GitHub 存代码 | 你可以把打包好的后端上传到这里，让服务器下载后运行 |
+| Dockerfile | 打包说明书 | 告诉 Docker 用哪个 Node.js 版本、复制哪些代码、怎样安装依赖 |
+| 镜像（image） | 打包好的程序，连运行它需要的东西也一起带上 | 后端镜像里已经准备好 Node.js、后端代码、依赖和 Prisma Client |
+| 容器（container） | 先理解成在 Docker 里运行的一份程序 | 管理端容器提供页面，后端容器处理 API，数据库容器保存数据 |
+| 镜像仓库 | 存镜像的地方，类似 GitHub 存代码 | 本地把镜像上传到 Docker Hub，服务器从这里下载 |
+| Compose | 按配置把一组容器启动起来的工具 | 读取 `docker-compose.yml`，知道三个服务各用哪个镜像、端口和环境变量，然后一起管理 |
+| 1Panel | 在浏览器里管理服务器和服务的面板 | 导入 Compose 配置、启停容器、看日志、配置网站和 HTTPS |
 
 **GitHub 存源代码，Docker Hub 存打包好的镜像。** 本章选用 Docker Hub；GitHub 也有单独的镜像仓库服务 GHCR，但不是把镜像当普通文件提交到代码仓库。参见 [GitHub 镜像仓库说明](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)。
 
-你的 M1 Max 负责打包，2 核 2GB 的服务器负责运行，避免构建时抢占线上网站和数据库的资源。PostgreSQL 已经有官方做好的镜像，直接下载来用。
+你的 M1 Max 负责打包，2 核 2GB 的服务器负责运行，避免构建时抢占线上网站和数据库的资源。两个 Node.js 项目分别这样准备：
 
-管理端也有一份 Dockerfile，其中会执行 `npm run build`，把构建结果放进镜像。
+| 项目 | 在 Mac 制作镜像时 | 在服务器启动容器时 |
+|---|---|---|
+| `server` 后端 | 用 `server/Dockerfile` 安装依赖、生成 Prisma Client、检查 TypeScript | 本章先执行数据库迁移，再用 `npm run start` 启动 Express；这个命令实际用 `tsx` 运行后端源码 |
+| `admin-web-antd` 管理端 | 用自己的 Dockerfile 安装依赖，执行 `npm run build`，把构建结果放进镜像 | 用 `npm run start` 启动 Next.js，向浏览器提供管理页面 |
 
-三个容器还要分别设置数据库地址、端口、数据保存位置和启动顺序。这些配置集中写进 `deploy/docker-compose.yml`，**Compose 读取它，一次启动或停止这组容器**。第 4 步会写出这些文件，第 5 步先在本地试运行。
+因此，后端也有 Dockerfile，只是当前后端直接用 `tsx` 运行，没有管理端的 `npm run build` 这一步。具体文件在第 4 步编写。
 
-1Panel 提供操作这些服务的网页界面：启动和停止容器、查看日志、配置网站和 HTTPS、执行备份。它会实际执行管理操作。
+这三个容器还需要设置数据库地址、端口、数据保存位置和启动顺序，统一写在 `deploy/docker-compose.yml` 里。**Dockerfile 说明怎样打包，Compose 配置说明怎样把服务一起运行起来，1Panel 提供日常管理界面。**
 
 ### 一定要自己写 Compose 吗
 
-不一定。也可以在 1Panel 中创建 Node.js 运行环境、选择代码目录和启动命令。它的 Node.js 运行环境使用容器镜像，因此省去自己写 Compose，并不等于不用 Docker。参见 [1Panel Node.js 运行环境](https://docs.fit2cloud.com/1panel/user_manual/websites/node/)和[官方运行环境镜像](https://github.com/1Panel-dev/runtime/blob/dev/README_zh.md)。
+不一定。这里可以用两种方式创建 Node.js 服务，它们最终都运行在**云服务器的 Docker 容器里**：
 
-项目本身也可以完全不用 Docker：直接在服务器安装 Node.js 24 和 PostgreSQL，上传或拉取代码，再安装依赖、构建、启动，并配置进程管理工具，让程序退出后能重启。
+| 方式 | 你怎样操作 | 最后在哪里运行 |
+|---|---|---|
+| 自己写 Dockerfile 和 Compose（本章采用） | 本地制作项目镜像；写好镜像、端口、环境变量等配置，再让服务器上的 Compose／1Panel 编排按文件启动 | 云服务器的 Node.js 容器里 |
+| 用 1Panel 可视化创建 Node.js 运行环境 | 在面板中选择 Node.js 版本、服务器上的代码目录，并配置依赖、启动命令、端口等，由面板管理容器 | 同样在云服务器的 Node.js 容器里 |
 
-本章选择 Compose，是为了把两个 Node.js 项目和数据库的配置一起保存在项目里，本地验证后能在服务器重复使用。1Panel 负责日常管理。这是一种部署方式，不是 Mini CMS 必须使用的技术。
+第二种方式里，**你在 1Panel 点“创建运行环境”，1Panel 调用服务器上的 Docker 创建容器，再让容器里的 Node.js 运行你的项目。** 代码通过目录挂载等方式提供给容器；选择好 Node.js 版本后，仍要把项目依赖和启动命令配置好。参见 [1Panel Node.js 运行环境](https://docs.fit2cloud.com/1panel/user_manual/websites/node/)和[官方运行环境镜像](https://github.com/1Panel-dev/runtime/blob/dev/README_zh.md)。
+
+本章选第一种，因为我们要在 Mac 上提前打包，让服务器下载镜像后直接运行；同时把前后端和数据库的配置一起保存在项目里，方便以后重复部署。写好文件后仍然可以用 1Panel 启停服务、查看日志，不需要每次都敲命令。
 
 ---
 
@@ -178,15 +194,57 @@ sequenceDiagram
 
 ### 放行本次需要的端口
 
-在云服务商的安全组中按下面设置；如果服务器自身也启用了防火墙，同样放行这些端口：
+先分清两段：**浏览器从公网访问网站，只需要找到服务器的 80／443；OpenResty 接到请求后，再通过服务器本机端口把请求交给项目。** SSH 和 1Panel 是你管理服务器的另外两个入口，限制为自己的公网 IP 访问。
 
-| 端口 | 允许谁访问 | 用途 |
+下图只画网站请求的去向，响应会沿相反方向返回：
+
+```mermaid
+flowchart TD
+    B["外部浏览器<br/>访问 admin.example.com 或 api.example.com"]
+    subgraph S["同一台云服务器"]
+        N["OpenResty<br/>网站公网入口：80 / 443"]
+        H0["127.0.0.1:3000<br/>服务器本机入口"]
+        H1["127.0.0.1:3001<br/>服务器本机入口"]
+        subgraph D["Mini CMS 的 Docker 内部网络"]
+            W["Next.js 管理端容器<br/>容器内 3000"]
+            A["Express API 容器<br/>容器内 3001"]
+            P["PostgreSQL 容器<br/>容器内 5432"]
+        end
+        N -->|admin 域名| H0
+        N -->|api 域名| H1
+        H0 -->|Docker 端口映射| W
+        H1 -->|Docker 端口映射| A
+        A -->|内部直连 postgres:5432| P
+    end
+    B -->|安全组、防火墙放行 80 / 443| N
+```
+
+`127.0.0.1` 表示当前电脑自身，这里是**云服务器本机**。1Panel 默认的 OpenResty 使用宿主机网络，所以能通过这些本机入口访问应用。参见 [1Panel 对默认网络方式的说明](https://github.com/1Panel-dev/1Panel/issues/11676)。
+
+各个入口的访问范围如下；在云安全组及已启用的主机防火墙中，只放行表里的公网入口：
+
+| 访问范围 | 入口 | 谁来访问、用来做什么 |
 |---|---|---|
-| 80、443 | 公网 | 浏览器访问网站、申请 HTTPS 证书 |
-| SSH 端口（通常是 22） | 你当前电脑的公网 IP | 远程登录服务器 |
-| 1Panel 安装时设置的端口 | 你当前电脑的公网 IP | 打开面板管理页面 |
+| 公网网站入口 | 服务器的 80、443 | 浏览器访问网站；80 用于 HTTP 和部分证书验证，443 用于 HTTPS |
+| 公网管理入口，仅允许你的公网 IP | SSH 端口，通常为 22 | 你从 Mac 登录服务器、上传文件 |
+| 公网管理入口，仅允许你的公网 IP | 1Panel 安装时设置的端口 | 你打开 1Panel 管理页面 |
+| 仅服务器本机，不向公网开放 | `127.0.0.1:3000`、`127.0.0.1:3001` | OpenResty 通过这里把请求转给管理端、API 容器 |
+| Docker 内部通信，不向公网开放 | `postgres:5432` | API 容器直接连接数据库，不经过 OpenResty |
+| 仅服务器本机，不向公网开放 | `127.0.0.1:5432` | 本章 Compose 另外保留的本机查库入口；API 连接数据库不走这里 |
 
-3000、3001 和 5432 不向公网开放。后面的 Compose 会把它们绑定到 `127.0.0.1`，供服务器本机访问。如果这些端口已被其他项目使用，调整 Compose 映射中的主机端口，容器内部端口可以保持原值。管理端或 API 的主机端口变化时，反向代理的目标地址也要同步修改。
+**不开放 3000、3001，不等于外部用户不能访问你的项目。** 用户通过网站的 443 入口访问，OpenResty 再向内部转发。例如打开 `https://admin.example.com`，浏览器连接的是 443，由 OpenResty 找到内部的 3000。浏览器不会直接连接服务器的公网 3000。
+
+数据库则由 Express 通过 Docker 内部网络访问。即使不把数据库端口映射到服务器本机，`postgres:5432` 这条内部链路也能工作；本章保留本机 5432 映射，便于需要时从服务器本机连接数据库。参见 [Docker 端口映射](https://docs.docker.com/engine/network/port-publishing/)和[Compose 内部网络](https://docs.docker.com/compose/how-tos/networking/)。
+
+如果服务器的 3001 已经被旧项目占用，可以把 API 的映射改成：
+
+```text
+127.0.0.1:13001:3001
+          ↑     ↑
+     服务器端口  容器内端口
+```
+
+这时第 8 步的 OpenResty 代理地址也改成 `http://127.0.0.1:13001`，容器里的 Express 仍用 3001。**外部用户继续访问原来的 HTTPS 域名，网址和公网 443 都不用改。** 管理端端口冲突时按相同方式处理。
 
 ---
 
