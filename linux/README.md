@@ -4,14 +4,14 @@
 
 ## 正在部署 Mini CMS：遇到问题从这里查
 
-已经读到后端 20A 时，可以按问题回看下面几章，理解后返回[20A 部署步骤](../backend/backend-system-learning/20A-用1Panel和Docker-Compose部署MiniCMS.md)继续操作。
+已经读到后端 20A 时，可以按问题回看下面几章，理解后返回[20A 部署步骤](../backend/backend-system-learning/20A-用宝塔和Docker-Compose部署MiniCMS.md)继续操作。
 
 | 当前疑惑 | 阅读位置 |
 |---|---|
 | `ssh aliyun` 怎样完成登录，密钥放哪里；服务器怎样访问 GitHub | [04：SSH 配置与认证](./04-SSH-从Mac安全连接Linux.md#一次-ssh-密钥登录怎样完成) |
 | `root`、`sudo`、`chown` 是什么；OpenSSL 和 npm 包分别安装在哪里 | [05：用户、权限与软件安装](./05-文件系统用户权限与软件安装.md#你现在戴着谁的工牌) |
 | 网站打不开，怎样看进程、端口和日志；SSH 断开后任务会怎样 | [06：排查进程与端口](./06-进程服务日志与端口.md)、[07：会话与服务管理](./07-SSH断了工作还在-tmux与Zellij.md#sshtmux-和服务管理各管多久) |
-| DNS、80/443、安全组、防火墙、证书、Nginx/OpenResty 怎样配合 | [08：一次 HTTPS 请求的完整路线](./08-云服务器网络安全组与防火墙.md#一次-https-请求怎样到达-express) |
+| DNS、80/443、安全组、防火墙、证书与 Nginx 怎样配合 | [08：一次 HTTPS 请求的完整路线](./08-云服务器网络安全组与防火墙.md#一次-https-请求怎样到达-express) |
 | 宿主机、容器、端口映射、内部网络、数据卷是什么 | [09：Docker 与 Linux](./09-Docker与Linux-容器不是云服务器.md) |
 | 前后端怎样启动，配置、迁移和备份各在什么时候执行 | [10：项目在线上怎样运行](./10-Nodejs-Nextjs-PostgreSQL怎样运行在线上.md) |
 
@@ -59,7 +59,7 @@ Superlogical / Rex
 -> 连进一台远程 Linux
 -> 看懂文件、进程、日志和端口
 -> 看懂 Next.js、Express 和 PostgreSQL 在线上怎样碰头
--> Mini CMS 准备好后，用 1Panel 完成部署
+-> Mini CMS 准备好后，用已有宝塔完成部署
 -> 最后从浏览器打开自己的 HTTPS 网站
 ```
 
@@ -160,7 +160,7 @@ Linux 与终端在技术上不是一回事，但在服务器开发中几乎总�
 
 [Next.js、Express、Prisma 与 PostgreSQL 在线上怎样碰头](./10-Nodejs-Nextjs-PostgreSQL怎样运行在线上.md)
 
-把前面捡到的碎片拼成完整系统：443 入口、反向代理、应用端口、数据库、迁移、日志和备份；然后从明确出口进入 Mini CMS 的 1Panel 实操。
+把前面捡到的碎片拼成完整系统：443 入口、反向代理、应用端口、数据库、迁移、日志和备份；然后进入 Mini CMS 的宝塔部署实操；新服务器的 1Panel 路线留到 20B。
 
 ---
 
@@ -194,7 +194,7 @@ tmux 用来理解会话保留，Herdr 用来管理多个 Agent 的状态，Rex �
 
 **想把自己的 Web 应用送上网**
 
-走完 09～10。等 Mini CMS 主体完成后，依次进入[后端第 20 章](../backend/backend-system-learning/20-从开发环境到线上运行.md)和[第 20A 章 1Panel 实操](../backend/backend-system-learning/20A-用1Panel和Docker-Compose部署MiniCMS.md)，把概念落到真实项目。
+走完 09～10。等 Mini CMS 主体完成后，依次进入[后端第 20 章](../backend/backend-system-learning/20-从开发环境到线上运行.md)和[第 20A 章宝塔实操](../backend/backend-system-learning/20A-用宝塔和Docker-Compose部署MiniCMS.md)，把概念落到真实项目。
 
 每次学习只做一站。命令跑出结果后，试着改变一个小地方：换个文件名、换个端口、停止一个进程，再猜结果会怎样。Linux 的乐趣大多藏在这种“我动了一下，它真的变了”里面。
 
@@ -214,7 +214,7 @@ tmux 用来理解会话保留，Herdr 用来管理多个 Agent 的状态，Rex �
 | 远程工作现场 | tmux 起步；Herdr / Zellij 有真实痛点再试 | 先掌握通用的 Detach / Attach，再决定是否需要 Agent 状态或现代布局 |
 | 图形化传输 | Cyberduck，可选 | 用 GUI 辅助传文件，但不隐藏 SSH 基础 |
 | 应用运行 | Docker Compose | 把 Node.js、PostgreSQL 和应用关系留在代码里 |
-| 公网入口 | OpenResty / Caddy / Nginx 接住 80、443 | 应用和数据库端口不用直接暴露公网 |
+| 公网入口 | 当前复用宝塔 Nginx 和证书管理；新服务器可用 1Panel + OpenResty | 应用和数据库端口不用直接暴露公网 |
 
 ## 暂时封印的支线
 

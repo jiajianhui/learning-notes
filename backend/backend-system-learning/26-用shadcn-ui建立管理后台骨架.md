@@ -367,7 +367,7 @@ app.use((request, _response, next) => {
 
 本节修改后，后端读取的变量名变成了 `ADMIN_WEB_ORIGINS`。下一次部署后端时，把 `deploy/.env.example`、服务器的 `deploy/.env` 和 Compose 中 `api.environment` 的变量名一起改为复数。即使线上暂时只有 Ant Design 管理端，也要改名，此时只填写它的 HTTPS 来源地址。
 
-完成第二套管理端并准备上线时，再按 [20A](./20A-用1Panel和Docker-Compose部署MiniCMS.md)增加部署配置：
+完成第二套管理端并准备上线时，再按 [20A](./20A-用宝塔和Docker-Compose部署MiniCMS.md)增加部署配置：
 
 - 参考 `admin-web-antd` 的 Dockerfile，增加 `admin-web-shadcn` 的镜像和 Compose 服务，共用已有 API 和数据库。
 - 本章 `start` 使用 `next start -p 3002`，对应 Dockerfile 的端口也设为 3002，Compose 映射使用 `127.0.0.1:3002:3002`。为第二套管理端配置自己的子域名、反向代理和 HTTPS；构建时仍传入同一个正式 API 地址。

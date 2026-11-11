@@ -11,7 +11,7 @@
 -> PostgreSQL
 ```
 
-这一章把前面的 Linux 基础串到当前 Mini CMS：谁接收请求、谁运行代码、谁保存数据。具体 Dockerfile、Compose 和面板操作集中在[后端 20A](../backend/backend-system-learning/20A-用1Panel和Docker-Compose部署MiniCMS.md)，这里先看懂它们为什么这样配合。
+这一章把前面的 Linux 基础串到当前 Mini CMS：谁接收请求、谁运行代码、谁保存数据。具体 Dockerfile、Compose 和面板操作集中在[后端 20A](../backend/backend-system-learning/20A-用宝塔和Docker-Compose部署MiniCMS.md)，这里先看懂它们为什么这样配合。
 
 ## 先把所有角色请到同一张桌上
 
@@ -22,7 +22,7 @@
           ↓
 云安全组和 UFW
           ↓
-1Panel 管理的 OpenResty
+宝塔管理的宿主机 Nginx
 ├── 127.0.0.1:3000 -> Next.js 容器
 └── 127.0.0.1:3001 -> Express 容器
                           ↓
@@ -87,27 +87,26 @@ prisma migrate deploy
 
 ---
 
-## OpenResty 怎样把请求交给应用
+## Nginx 怎样把请求交给应用
 
-第 08 章已经讲过[反向代理与 HTTPS](./08-云服务器网络安全组与防火墙.md#一次-https-请求怎样到达-express)。在当前项目中，OpenResty 接收公网 80、443 的请求，处理 HTTPS，再按域名选择目标：`admin.example.com` 交给 Next.js，`api.example.com` 交给 Express。
+第 08 章已经讲过[反向代理与 HTTPS](./08-云服务器网络安全组与防火墙.md#一次-https-请求怎样到达-express)。在当前项目中，Nginx 接收公网 80、443 的请求，处理 HTTPS，再按域名选择目标：`admin.example.com` 交给 Next.js，`api.example.com` 交给 Express。
 
-Express 继续负责登录验证、业务处理和数据库读写。排错时可以分别查看 OpenResty 的入口日志和 API 容器的应用日志，判断请求在哪一步失败。
+Express 继续负责登录验证、业务处理和数据库读写。排错时可以分别查看 Nginx 的入口日志和 API 容器的应用日志，判断请求在哪一步失败。
 
 ---
 
-## 1Panel 给你按钮，但运行关系仍要留在代码里
+## 面板给你按钮，但运行关系仍要留在代码里
 
-例如使用 1Panel 时，可以通过它管理：
+按第 20A 章的部署方式，Compose 用文件和命令启动应用，宝塔提供：
 
 ```text
-Docker Compose
-OpenResty 反向代理
-SSL 证书
+容器状态与日志
+Nginx 网站、反向代理和 HTTPS
 防火墙
-日志与备份任务
+备份任务
 ```
 
-项目仍应保留 Dockerfile、Compose、环境变量示例、迁移和启动命令。换一台 Linux 服务器时，不能只有原面板中的点击记录。
+网站请求实际由 Nginx 接收，宝塔管理配置与证书。新服务器使用 1Panel + OpenResty 时，按第 20B 章操作。项目仍应保留 Dockerfile、Compose、Nginx 配置示例、环境变量示例、迁移和启动命令。换一台 Linux 服务器时，不能只有原面板中的点击记录。
 
 ---
 
@@ -132,7 +131,7 @@ curl -i http://127.0.0.1:3001/api/public/articles
 
 当前 Mini CMS 的文章、标签、管理员和会话保存在 PostgreSQL 中，使用数据库逻辑备份导出结构和数据；Dockerfile、Compose、示例配置和恢复步骤保存在 Git 与 README 中。
 
-数据卷保存正在使用的数据，备份提供能够恢复的历史副本。按[20A 第 10 步](../backend/backend-system-learning/20A-用1Panel和Docker-Compose部署MiniCMS.md#第-10-步配置数据库备份和恢复验证)完成导出、恢复到测试库、查询文章，再设置每日备份和服务器之外的副本。
+数据卷保存正在使用的数据，备份提供能够恢复的历史副本。按[20A 第 9 步](../backend/backend-system-learning/20A-用宝塔和Docker-Compose部署MiniCMS.md#第-9-步配置数据库备份和恢复验证)完成导出、恢复到测试库、查询文章，再设置每日备份和服务器之外的副本。
 
 ---
 
@@ -141,11 +140,11 @@ curl -i http://127.0.0.1:3001/api/public/articles
 首次部署：
 
 ```text
-准备服务器和网络
--> 获取固定版本代码
--> 写入生产环境变量
--> 构建镜像
--> 启动数据库
+确认服务器架构、资源和域名
+-> Mac 构建、验证并上传镜像
+-> 准备服务器上的 Docker 与面板
+-> 上传运行配置，填写正式环境变量
+-> 拉取镜像并启动数据库
 -> 应用迁移
 -> 启动应用
 -> 配置反向代理和 HTTPS
@@ -157,9 +156,9 @@ curl -i http://127.0.0.1:3001/api/public/articles
 
 ```text
 确认版本和变更
--> 备份数据
--> 获取新代码
--> 重建镜像
+-> Mac 构建、验证并上传新标签
+-> 服务器备份数据
+-> 修改镜像标签并拉取新版
 -> 应用迁移
 -> 替换容器
 -> 检查接口、日志和业务链路
@@ -190,7 +189,7 @@ Express 为什么用 postgres:5432，而不是 localhost？
 真实上线属于 Mini CMS 项目的最终阶段，按这个顺序继续：
 
 1. 阅读[后端第 20 章：从本地到服务器，上线前需要改什么](../backend/backend-system-learning/20-从开发环境到线上运行.md)，理解启动、配置和数据库的差别，在本地试过前后端启动命令。
-2. 使用[后端第 20A 章：用 1Panel 和 Docker Compose 部署 Mini CMS](../backend/backend-system-learning/20A-用1Panel和Docker-Compose部署MiniCMS.md)，在真实服务器配置 Compose、OpenResty、HTTPS 和备份。
+2. 使用[后端第 20A 章：用宝塔和 Docker Compose 部署 Mini CMS](../backend/backend-system-learning/20A-用宝塔和Docker-Compose部署MiniCMS.md)，在已有宝塔服务器配置 Compose、Nginx、HTTPS 和备份。以后在新服务器使用 1Panel 时选读 [20B](../backend/backend-system-learning/20B-用1Panel和Docker-Compose部署MiniCMS.md)。
 3. 从外部浏览器打开正式域名，完成登录、保存和重新打开文章，再检查公开接口、容器状态与日志。
 
 ```text

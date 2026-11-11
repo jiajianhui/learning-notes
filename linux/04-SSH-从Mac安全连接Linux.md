@@ -257,7 +257,7 @@ ssh linux-learning
 
 公开仓库使用 HTTPS 地址克隆时无需 SSH 密钥；私有仓库的部署密钥配置见 [GitHub 部署密钥说明](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys#deploy-keys)。
 
-当前 Mini CMS 的 [20A 第 6 步](../backend/backend-system-learning/20A-用1Panel和Docker-Compose部署MiniCMS.md#第-6-步把运行配置放到服务器)采用本地制作镜像的路线：Mac 用 `scp` 把运行配置传到服务器，服务器从 Docker Hub 下载镜像。`scp` 复用第一条 SSH 连接，不需要再配置服务器访问 GitHub 的部署密钥。
+当前 Mini CMS 的 [20A 第 5 步](../backend/backend-system-learning/20A-用宝塔和Docker-Compose部署MiniCMS.md#第-5-步把运行配置放到服务器)采用本地制作镜像的路线：Mac 用 `scp` 把运行配置传到服务器，服务器从 Docker Hub 下载镜像。`scp` 复用第一条 SSH 连接，不需要再配置服务器访问 GitHub 的部署密钥。
 
 ---
 
