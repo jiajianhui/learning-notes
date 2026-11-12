@@ -4,6 +4,7 @@
 
 ## 目录
 
+- `agent-development/`：从 Web 开发到 Agent 工程，以独立的本地学习笔记助手练习开发与协作
 - `ai/`：AI 应用相关概念笔记
 - `github/`：GitHub 相关笔记
 - `frontend/`：前端相关笔记
@@ -13,6 +14,7 @@
 
 ## 当前内容
 
+- `agent-development/README.md`
 - `ai/AI应用开发概念总览.md`
 - `ai/AI应用开发实践.md`
 - `github/GitHub核心功能速查.md`
