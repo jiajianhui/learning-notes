@@ -1,4 +1,6 @@
-# 03. 给任务独立的工作台
+# 附录 C. 用 Git Worktree 准备独立开发目录
+
+本篇属于开发协作附录，不是笔记助手内部的执行机制。
 
 ## 分支和 Worktree 有什么区别？
 
@@ -25,22 +27,18 @@ flowchart TB
 
 实线看各工作台自己的文件，虚线看仍可能共享的外部资源。排查干扰时，两部分都要检查。
 
-## 第一步：把示例复制成独立项目
+## 第一步：使用你自己跟练的独立项目
 
-本章命令用于独立练习仓库，**不在 learning-notes 中执行 `git init` 或创建练习分支**。
-
-从学习笔记仓库根目录执行。目标目录必须尚不存在；已有同名项目时请换名字。
+主线第 02 章已经在仓库外创建了 `note-agent-lab`，本章直接使用它。先完成第 07 章测试，不需要从学习仓库复制另一套代码。
 
 ```bash
-mkdir "$HOME/Desktop/note-agent-lab"
-rsync -a --exclude node_modules --exclude .env --exclude .note-agent \
-  agent-development/code/note-agent/ "$HOME/Desktop/note-agent-lab/"
 cd "$HOME/Desktop/note-agent-lab"
-npm ci
 npm run check
 ```
 
-随后在这个独立目录初始化历史。下面的提交是读者练习步骤，不表示编写本系列时已经替你执行。
+只在这个独立练习目录初始化 Git，不在 learning-notes 中创建练习分支。已有 Git 历史时跳过初始化，先检查当前分支与改动。
+
+首次初始化时执行下面三条命令。这是读者练习步骤，不表示编写本系列时已经替你执行。
 
 ```bash
 git init -b main
@@ -50,7 +48,7 @@ git commit -m "chore: 初始化笔记助手练习"
 
 此时 `git status --short` 应为空。如果 Git 提示缺少用户名和邮箱，先按你的身份配置，不要直接复制别人的身份。
 
-## 第二步：为两个任务准备工作台
+## 第二步：为两个任务准备独立目录
 
 仍在 `note-agent-lab` 执行：
 
@@ -68,15 +66,15 @@ npm ci
 git branch --show-current
 ```
 
-另一个终端进入 `note-agent-model`，也执行 `npm ci`。把每个开发 Agent 的工作目录明确设为自己的任务目录，而不是只在提示词中提一个分支名。
+另一个终端进入 `note-agent-model`，也执行 `npm ci`。把每个编程 Agent 的工作目录明确设为自己的任务目录，而不是只在提示词中提一个分支名。
 
 ## 什么被隔离了，什么没有？
 
 | 对象 | 本例中的情况 |
 |---|---|
-| `src/`、`test/` 与样例笔记 | 各工作目录有自己的副本 |
+| 项目根目录的 `.ts` 文件与 `notes/` | 各工作目录有自己的副本 |
 | `node_modules/`、`.env` | 不在 Git 中，需要各目录准备 |
-| `.note-agent/` | 相对当前目录保存，各目录分别生成 |
+| `.proposals/`、`.runs/` | 相对当前目录保存，各目录分别生成 |
 | Git 提交历史 | 共用仓库对象和分支引用 |
 | API 账号额度 | 如果使用同一个 Key，仍共用额度 |
 | 外部笔记目录 | 如果 NOTES_DIR 都指向同一绝对路径，仍然共享 |
@@ -94,7 +92,7 @@ git status --short
 npm run check
 ```
 
-任务交付、结果已经按第 04 章集成或确认不再需要后，回到 `note-agent-lab` 清理工作目录：
+任务交付、结果已经按附录 D 集成或确认不再需要后，回到 `note-agent-lab` 清理工作目录：
 
 ```bash
 git worktree remove ../note-agent-search
@@ -107,4 +105,4 @@ git worktree remove ../note-agent-model
 
 “两个 Agent 使用不同分支，为什么还需要不同工作目录？”再解释为什么 Worktree 不能解决两个进程使用同一数据库的问题。
 
-下一章：[多个 Agent 怎样分工与汇合](./04-多个Agent怎样分工与汇合.md)。
+下一篇：[多个编程 Agent 分工与集成](./D-多个编程Agent分工与集成.md)。

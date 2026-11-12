@@ -4,7 +4,7 @@
 
 ## 目录
 
-- `agent-development/`：从 Web 开发到 Agent 工程，以独立的本地学习笔记助手练习开发与协作
+- `agent-development/`：从 Web 全栈到 Agent 开发，以文档引导 TS 跟练，包含岗位进阶与开发协作附录
 - `ai/`：AI 应用相关概念笔记
 - `github/`：GitHub 相关笔记
 - `frontend/`：前端相关笔记
