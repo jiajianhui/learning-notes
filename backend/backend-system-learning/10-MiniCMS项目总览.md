@@ -525,7 +525,7 @@ GET  /api/auth/me
 - 配置生产环境变量，使用 `prisma migrate deploy` 应用已提交且验证过的数据迁移。
 - 保留健康检查，增加基础请求与错误日志，不记录密码、Cookie 和密钥。
 - 当前复用已有宝塔和 Nginx，使用 Compose 运行应用，在宝塔配置反向代理、HTTPS 和备份任务。以后在新服务器选用 1Panel + OpenResty，按 20B 操作。
-- 在本地制作适合服务器架构的前后端镜像，验证后上传阿里云 ACR；服务器拉取指定版本运行，更新时沿用相同流程。Docker Hub 上传方式保留在 20A 第 3.4 节供参考。
+- 在 Mac 构建适合服务器架构的前后端镜像，并准备同架构的 PostgreSQL 官方镜像；三个镜像验证后通过公网上传 ACR，同地域 ECS 通过 VPC 拉取指定版本运行。应用更新只构建和上传两个应用，PostgreSQL 版本单独管理。Docker Hub 上传方式保留在 20A 第 3.4 节供参考。
 - 确认备份和恢复方式，再部署 Express API、PostgreSQL 和计划上线的一套或两套后台。
 
 验收：

@@ -4,11 +4,13 @@
 
 Mini CMS 的程序和镜像不会因为换面板而改变。本章复用 20A 的 Dockerfile、Compose、迁移、管理员初始化与备份命令，补齐新服务器上的 1Panel 操作。
 
+本章同样以与 ACR 同地域、能够访问其 VPC 入口的阿里云 ECS 为例，Mini CMS 的三个镜像统一通过内网拉取。
+
 ## 两条部署路线有哪些差别
 
 | 工作 | 20A：已有宝塔服务器 | 20B：新服务器使用 1Panel |
 |---|---|---|
-| 构建、验证、上传镜像 | Mac + Docker Desktop / Compose + 阿里云 ACR | 相同 |
+| 镜像准备与交付 | Mac 准备三个镜像 → 公网上传 ACR → ECS 通过 VPC 拉取 | 相同 |
 | 运行应用与 PostgreSQL | Docker Compose | 相同 |
 | 查看容器和日志 | 宝塔 Docker 页面 | 1Panel 容器页面 |
 | 接收网站请求 | 已有的 Nginx | 1Panel 应用商店安装的 OpenResty |
@@ -59,14 +61,15 @@ ssh mini-cms-new 'hostname; uname -m; free -h; df -h /'
 
 为本次新环境填写：
 
-- Compose 中两个应用的 `platform`：使用第 1 步确认的服务器架构。
+- Compose 中三个服务的 `platform`：使用第 1 步确认的服务器架构，PostgreSQL 的下载和上传平台也要一致。
+- Mac 的 `IMAGE_PREFIX`：使用 ACR 公网域名与命名空间。
 - `ADMIN_DOMAIN`、`API_DOMAIN`：填写新环境的真实子域名。
 - `ADMIN_WEB_ORIGIN`：填写新管理端的完整 HTTPS 来源，例如 `https://admin-new.example.com`。
 - `IMAGE_TAG`：使用新的发布标签，例如 `v1-1panel`，保留旧环境的镜像标签。
 
 **换成新的 API 域名后，必须重新构建管理端镜像。** `NEXT_PUBLIC_API_BASE_URL` 在 `next build` 时写入浏览器代码，不能只改服务器 `.env`。如果目标架构和所有构建参数都没变，可以直接复用已验证的镜像；换面板本身不要求重新构建。
 
-本地试跑时完成迁移、公开 API 和管理端响应检查。沿用 20A 第 3.5 节的 ACR 配置和上传命令，首次切换时将其中示例 `v1` 换成本次标签。确认 ACR 的两个应用仓库都出现本次标签后，再进入服务器部署。
+本地试跑时完成迁移、公开 API 和管理端响应检查。沿用 20A 第 3.1～3.5 节的 ACR 配置和上传命令，将应用标签换成本次的 `v1-1panel`，PostgreSQL 仍使用 `18`。确认 ACR 的三个仓库都有对应标签后，再进入服务器部署；已有同架构的 PostgreSQL 镜像可以复用。
 
 ## 第 3 步：在新服务器安装 1Panel、Docker 和 OpenResty
 
@@ -109,15 +112,15 @@ cp -n deploy/.env.example deploy/.env
 chmod 600 deploy/.env
 ```
 
-通过 SSH 或 1Panel 文件管理器编辑 `deploy/.env`：`IMAGE_PREFIX` 填 20A 第 3.5 节的 `ACR域名/命名空间`，`IMAGE_TAG` 与刚才上传的一致；域名使用本次的新子域名，数据库账号、密码和库名使用正式值。`DATABASE_URL` 的主机仍是 `postgres`，`ADMIN_WEB_ORIGIN` 与管理端构建时计划使用的来源一致。
+通过 SSH 或 1Panel 文件管理器编辑 `deploy/.env`：按 [20A 第 5 步](./20A-用宝塔和Docker-Compose部署MiniCMS.md#第-5-步把运行配置放到服务器)把 `IMAGE_PREFIX` 改为 `ACR的VPC域名/命名空间`，`IMAGE_TAG` 与刚才上传的一致；域名使用本次的新子域名，数据库账号、密码和库名使用正式值。`DATABASE_URL` 的主机仍是 `postgres`，`ADMIN_WEB_ORIGIN` 与管理端构建时计划使用的来源一致。Mac 的 `.env` 继续保留公网前缀。
 
-解析配置，检查镜像名、标签、环境变量和端口：
+解析配置，确认三个镜像名都使用 ACR 的 VPC 域名，并检查标签、环境变量和端口：
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml config
 ```
 
-不要分享包含密码的完整输出。先按 [20A 第 6 步](./20A-用宝塔和Docker-Compose部署MiniCMS.md#第-6-步拉取镜像并启动-compose在宝塔查看状态)在这台新服务器登录 ACR，输入访问凭证中设置的固定密码。看到 `Login Succeeded` 后拉取并启动：
+不要分享包含密码的完整输出。先按 [20A 第 6 步](./20A-用宝塔和Docker-Compose部署MiniCMS.md#第-6-步拉取镜像并启动-compose在宝塔查看状态)在这台新服务器登录 ACR 的 VPC 域名，输入访问凭证中设置的固定密码。看到 `Login Succeeded` 后拉取三个镜像：
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml pull
