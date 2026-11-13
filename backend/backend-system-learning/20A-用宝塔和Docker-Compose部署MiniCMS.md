@@ -474,9 +474,9 @@ services:
 
 ### 3.1 准备 Docker Hub 和本地配置
 
-登录 [Docker Hub](https://hub.docker.com/)，在自己的账号下创建两个镜像仓库：`mini-cms-api` 和 `mini-cms-admin`。Public 允许任何人下载，Private 只允许有权限的账号下载；镜像里包含项目代码，按代码是否愿意公开选择。创建方式见 [Docker Hub 仓库说明](https://docs.docker.com/docker-hub/repos/create/)。
+登录 [Docker Hub](https://hub.docker.com/)，在自己的账号下[创建两个镜像仓库](https://docs.docker.com/docker-hub/repos/create/)：`mini-cms-api` 和 `mini-cms-admin`，都选 **Public（公开）**。免费个人账户[只支持 1 个私有仓库](https://docs.docker.com/docker-hub/usage/)，本章统一使用两个公开仓库；任何人都能下载镜像，镜像内包含项目代码。
 
-打开 Docker Desktop，点击右上角 **Sign in**，在浏览器中登录刚才创建仓库的同一个 Docker 账号，再回到 Docker Desktop 确认已显示登录账号。后面会在它的 Images 页面上传镜像。参见 [Docker Desktop 登录入口](https://docs.docker.com/desktop/use-desktop/)。
+打开 Docker Desktop，点击右上角 **Sign in**，登录同一个 Docker 账号，供后面上传镜像使用。
 
 接着在编辑器的文件列表中准备本机配置。如果 `deploy/.env` 已存在，直接打开检查；首次创建时按下面两步操作：
 
@@ -676,48 +676,52 @@ ss -lntp
 
 服务器接下来会从 Docker Hub 下载程序，现在先准备“用什么配置运行”。**这一步在宝塔的文件管理器中完成目录创建、文件上传和编辑，最后再用终端检查配置。**
 
-代码已经在镜像里，这里只上传本机 `mini-cms/deploy` 中的两个文件：`docker-compose.yml` 和 `.env.example`。
+代码已经在镜像里。**首次部署直接上传本机 `mini-cms/deploy` 中的 `docker-compose.yml` 和已经填好的 `.env`。** `.env.example` 留在本地作为模板，服务器运行不需要它。服务器已有正式 `.env` 时保留该文件，直接编辑需要调整的项，不用本地文件覆盖。
 
 在宝塔左侧打开 **文件**，按下面的顺序操作：
 
 1. 进入 `/opt`，新建 `mini-cms` 文件夹，再在其中新建 `deploy`；已有目录直接进入。
-2. 在 `/opt/mini-cms/deploy` 点击 **上传**，选择上述两个本地文件。Mac 文件选择框若看不到 `.env.example`，按 `Command + Shift + .` 显示隐藏文件。
-3. 首次配置时，新建一个名为 `.env` 的文件，将 `.env.example` 的全部内容复制进去。已经有 `.env` 时直接打开编辑，保留已有正式配置。
-4. 按下表填写并保存 `.env`，然后打开它的权限设置：所有者使用本章的 `root`，权限设为 `600`。它表示只有所有者能读写这个文件；只修改 `.env` 的权限。
+2. 在 `/opt/mini-cms/deploy` 点击 **上传**，选择上述两个本地文件。Mac 文件选择框若看不到 `.env`，按 `Command + Shift + .` 显示隐藏文件。
+3. 打开上传后的 `.env`，按下表核对；已经正确的值直接保留，只调整仍使用练习值的配置。
+4. 保存后打开 `.env` 的权限设置：所有者使用本章的 `root`，权限设为 `600`。它表示只有所有者能读写这个文件；只修改 `.env` 的权限。
 
-变量的对应关系沿用[第 3.1 节](#31-准备-docker-hub-和本地配置)，这次填写服务器实际使用的值：
+变量的对应关系沿用[第 3.1 节](#31-准备-docker-hub-和本地配置)，这次核对服务器实际使用的值：
 
-| 配置 | 服务器上怎样填写 |
+| 配置 | 上传后核对什么 |
 |---|---|
 | `DOCKERHUB_USERNAME`、`IMAGE_TAG` | 与已上传的镜像一致，例如自己的用户名和 `v1`，让服务器能找到这一版程序 |
-| `POSTGRES_USER`、`POSTGRES_PASSWORD`、`POSTGRES_DB`、`DATABASE_URL` | 使用正式数据库账号、密码和库名；连接串中的三项与前面一致，主机仍为 `postgres` |
+| `POSTGRES_USER`、`POSTGRES_PASSWORD`、`POSTGRES_DB`、`DATABASE_URL` | 账号和库名可以沿用；如果密码仍是本地简单练习值，在服务器上改为正式密码，同时修改 `DATABASE_URL` 中的密码，主机仍为 `postgres` |
 | `ADMIN_DOMAIN`、`API_DOMAIN`、`ADMIN_WEB_ORIGIN` | 与第 3 步选定的正式地址一致；管理端镜像已经写入当时的 API 地址 |
 
-服务器的 `.env` 使用正式密码，不上传 Mac 上练习用的 `.env`。完成后，在宝塔文件列表中应看到：
+本地 `.env` 已经填好正式配置时，上传后无需重新填写。完成后，在宝塔文件列表中应看到：
 
 ```text
 /opt/mini-cms/deploy/
 ├── docker-compose.yml
-├── .env.example
 └── .env
 ```
 
-文件管理操作见 [宝塔文件管理器](https://docs.bt.cn/user-guide/files/)。接着打开宝塔左侧 **终端**，连接当前服务器，使用本章的 `root` 账号。先执行下面两行，进入 Bash 和项目目录：
+文件上传完成后，检查这两个配置文件能否被 Docker 正确读取。打开宝塔左侧 **终端**，连接当前服务器。这里输入的命令会在云服务器上执行。
+
+先进入项目文件夹：
 
 ```bash
-bash
 cd /opt/mini-cms
 ```
 
-`bash` 让后面的密码输入、备份脚本使用同一种 Shell，`cd` 切换当前操作目录。**第 5～10 步中标明“服务器终端”的命令，都在这台服务器上执行。** 每次重新连接后，先进入 `/opt/mini-cms`；也可以沿用 Mac 的 `ssh aliyun` 连接同一台服务器，二者选一种即可。参见 [宝塔终端说明](https://docs.bt.cn/user-guide/xterm/)。
+`cd` 的意思是“切换到这个文件夹”。进入后，下面命令里的 `deploy/.env` 就能找到刚上传的 `/opt/mini-cms/deploy/.env`。
 
-在启动前解析一次配置：
+再检查配置：
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml config
 ```
 
-`config` 只检查并显示最终配置，不会启动服务。核对两个应用的镜像名称和版本、三个服务的端口，以及 API 的数据库地址和管理端来源。输出包含正式密码，只在自己终端查看。没有配置错误后，进入第 6 步。
+这条命令的意思是：**读取 `deploy/.env` 中的值，填入 `deploy/docker-compose.yml`，检查并显示最终配置。**
+
+终端会打印一大段配置，核对其中的镜像用户名、版本号、端口和数据库连接信息。出现格式错误或缺少变量的提示时，回到宝塔文件管理器修改对应文件，再执行一次检查。输出包含密码，只在自己终端查看。
+
+这一步完成的是配置检查。确认没有错误、填写的值也正确后，进入第 6 步下载镜像并启动服务。
 
 ---
 
@@ -725,13 +729,7 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml config
 
 这一步让服务器真正运行 Mini CMS：**下载镜像 → 按配置启动 → 查看运行结果。** 下载和启动使用 Compose，状态和日志在宝塔查看。
 
-**先下载镜像。** 在服务器终端的 `/opt/mini-cms` 目录操作。如果使用 Private 仓库，先在 Docker 账号设置中[创建有 Read 权限的个人访问令牌](https://docs.docker.com/security/access-tokens/personal-access-tokens/)，再登录；将命令中的用户名换成自己的，密码提示处粘贴令牌：
-
-```bash
-docker login --username yourdockerhubname
-```
-
-Mac 上 Docker Desktop 的登录状态不会自动带到服务器。Public 仓库可以跳过登录，直接执行下面的下载命令：
+**先下载镜像。** 本章使用两个公开仓库，服务器无需登录 Docker Hub，也不用输入密码或令牌。在宝塔终端的 `/opt/mini-cms` 目录执行：
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml pull
@@ -791,7 +789,7 @@ curl -I http://127.0.0.1:3000
 
 迁移只建立表，不会复制本地管理员。现在要运行第 17A 章的 `admin:create` 脚本，在正式数据库中创建能登录后台的账号。镜像已经包含这个脚本及运行工具。
 
-确认宝塔中的 API 迁移日志正常后，在服务器的 Bash 终端、`/opt/mini-cms` 目录操作。先逐行输入下面两条命令，每条执行后按提示填写；密码输入时不显示字符：
+确认宝塔中的 API 迁移日志正常后，在宝塔终端先输入 `bash`，让下面的账号密码输入命令按 Bash 语法执行，再输入 `cd /opt/mini-cms` 进入项目目录。接着逐行输入下面两条命令，每条执行后按提示填写；密码输入时不显示字符：
 
 ```bash
 read -r -p "管理员用户名: " ADMIN_USERNAME
@@ -920,7 +918,7 @@ flowchart TD
 
 这段脚本完成三件事：准备备份目录、导出数据库、清理超过保留期的旧备份。第 9.3 节会将同一段脚本交给宝塔定时执行，所以这里保留完整的目录准备和文件整理步骤。
 
-先在服务器的 Bash 终端执行一次：
+先在宝塔终端输入 `bash`，再执行一次下面的脚本：
 
 ```bash
 (
@@ -1038,7 +1036,7 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml \
 
 1. 在 **计划任务** 中手动执行第 9.3 节的数据库导出任务，确认成功并记下本次备份路径。记录服务器当前的 `IMAGE_TAG`。
 2. 在 **文件** 中打开 `/opt/mini-cms/deploy/.env`，只把 `IMAGE_TAG` 改为刚上传的 `v2`，保留正式数据库密码等配置。
-3. 如果本次修改了 `deploy/docker-compose.yml`，按第 5 步上传并更新服务器上的同名文件。仅改业务代码时不用重传配置，更不用上传本地 `.env`。
+3. 如果本次修改了 `deploy/docker-compose.yml`，按第 5 步上传并更新服务器上的同名文件。首次部署已经上传过 `.env`，后续更新直接修改服务器上的版本号，保留其余正式配置。
 
 打开服务器终端，先检查配置：
 
