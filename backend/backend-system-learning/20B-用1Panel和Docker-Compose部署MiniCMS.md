@@ -151,7 +151,7 @@ curl -I http://127.0.0.1:3000
 
 随后按 [20A：创建首个管理员](./20A-用宝塔和Docker-Compose部署MiniCMS.md#在新数据库中创建首个管理员)，在新服务器执行一次 `admin:create`。这里仍连接新环境的数据库，不会复制旧服务器的账号和文章。
 
-需要用 TablePro 查库时，沿用 [20A 的 SSH 隧道方法](./20A-用宝塔和Docker-Compose部署MiniCMS.md#放行本次需要的端口)，把连接别名 `aliyun` 换成 `mini-cms-new`；若本机 15432 已被旧隧道占用，关闭旧隧道或为新隧道选择另一个本地端口。
+需要用 TablePro 查库时，按 [20A 的 TablePro 配置](./20A-用宝塔和Docker-Compose部署MiniCMS.md#用-tablepro-查看线上数据库)新建连接，SSH 配置填写新服务器的公网 IP、SSH 端口、用户和对应私钥；数据库地址仍为 `127.0.0.1:5432`，库名、账号和密码使用新服务器 `deploy/.env` 中的值。
 
 ## 第 6 步：在 1Panel 配置反向代理和 HTTPS
 
