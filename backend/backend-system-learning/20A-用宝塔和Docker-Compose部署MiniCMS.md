@@ -232,7 +232,29 @@ TablePro 查库也使用上表中的 SSH 入口，由它内置的隧道转发到
 
 ## 第 2 步：为项目增加生产容器配置
 
-在本机的 `mini-cms` 中创建下面这些文件，路径都相对于项目根目录。Dockerfile 和本地打包配置留在 Mac 上使用；服务器只需要启动用的 Compose 和正式环境配置。源代码与这些配置仍通过 Git 保存版本。
+这一步要把两件事写清楚：**怎样把代码做成镜像，以及怎样用镜像启动服务。** 先沿着图看一遍，第 3 步再实际执行：
+
+```mermaid
+flowchart TD
+    S["前后端代码 + 各自的 Dockerfile<br/>.dockerignore 排除无需打包的文件"]
+    E["deploy/.env.example<br/>第 3.1 节复制并填写为 deploy/.env"]
+    B["第 3.2 节：制作镜像<br/>读取 docker-compose.yml<br/>和 docker-compose.build.yml"]
+    I["后端镜像 + 管理端镜像"]
+    P["PostgreSQL 官方镜像"]
+    R["第 3.3 节：启动服务<br/>读取 docker-compose.yml"]
+    C["后端、管理端、数据库<br/>三个运行中的容器"]
+    S --> B
+    E -->|提供镜像名、版本和 API 域名| B
+    B --> I
+    I --> R
+    P --> R
+    E -->|提供数据库等运行配置| R
+    R --> C
+```
+
+图里的两份 Compose 配置各有用途：`docker-compose.yml` 定义三个服务用什么镜像、怎样运行；`docker-compose.build.yml` 补充两个应用的代码目录和构建参数。**制作镜像时合并读取两份，启动服务时只读取第一份。** PostgreSQL 使用官方镜像，所以不需要为它写 Dockerfile。
+
+现在在编辑器中打开本机 `mini-cms`，按下面的路径新建文件；还没有 `deploy` 文件夹时，先手动创建。Dockerfile 和构建配置在 Mac 上使用，服务器只需要运行配置和正式 `.env`。源代码与配置模板通过 Git 保存版本，真实 `.env` 由下面的 `.gitignore` 排除。
 
 ### 2.1 `server/.dockerignore`
 
@@ -326,11 +348,15 @@ CMD ["npm", "run", "start", "--", "-H", "0.0.0.0"]
 
 ### 2.5 `deploy/.gitignore`
 
+它负责让 Git 忽略同目录下保存真实配置的 `.env`。前面的 `.dockerignore` 控制哪些文件不参与打包，这里的 `.gitignore` 控制哪些文件不提交到 Git：
+
 ```gitignore
 .env
 ```
 
 ### 2.6 `deploy/.env.example`
+
+这份文件是配置模板，先保存变量名和示例值。第 3.1 节会保留模板，复制出本机实际使用的 `.env`：
 
 ```dotenv
 DOCKERHUB_USERNAME=yourdockerhubname
@@ -438,93 +464,187 @@ services:
 
 打包时让 Compose 同时读取 2.7 和 2.8：前一份提供镜像名称与目标平台，后一份提供代码目录与构建参数。两个 `context` 都相对于 `deploy/`；服务器只使用 2.7。参见 [Compose 多文件用法](https://docs.docker.com/compose/how-tos/multiple-compose-files/merge/)和[构建目标平台说明](https://docs.docker.com/reference/compose-file/build/#platforms)。
 
+文件准备好后，对照开头的图检查：两个应用各有 Dockerfile 和 `.dockerignore`，`deploy` 中有两份 Compose、`.env.example` 和 `.gitignore`。此时还没有制作镜像；接下来先填写本机配置，再执行构建。
+
 ---
 
 ## 第 3 步：在本地制作、验证并上传镜像
 
-这一整步都在 Mac 上操作。先启动 Docker Desktop，下面的终端命令都在 `mini-cms` 根目录执行。
+这一整步都在 Mac 上操作，顺序是：**填写配置 → 制作镜像 → 本地试跑 → 上传镜像。** 文件操作使用编辑器，登录、查看状态和上传使用 Docker Desktop；解析配置、构建和首次启动仍用 Compose 命令，让第 2 步保存的配置实际生效。下面的终端命令都在 `mini-cms` 根目录执行。
 
 ### 3.1 准备 Docker Hub 和本地配置
 
 登录 [Docker Hub](https://hub.docker.com/)，在自己的账号下创建两个镜像仓库：`mini-cms-api` 和 `mini-cms-admin`。Public 允许任何人下载，Private 只允许有权限的账号下载；镜像里包含项目代码，按代码是否愿意公开选择。创建方式见 [Docker Hub 仓库说明](https://docs.docker.com/docker-hub/repos/create/)。
 
-在 Docker 账号设置中创建有 **Read & Write** 权限的个人访问令牌，用来上传镜像。终端执行下面的命令，将用户名换成自己的，在密码提示处粘贴令牌：
+打开 Docker Desktop，点击右上角 **Sign in**，在浏览器中登录刚才创建仓库的同一个 Docker 账号，再回到 Docker Desktop 确认已显示登录账号。后面会在它的 Images 页面上传镜像。参见 [Docker Desktop 登录入口](https://docs.docker.com/desktop/use-desktop/)。
 
-```bash
-docker login --username yourdockerhubname
+接着在编辑器的文件列表中准备本机配置。如果 `deploy/.env` 已存在，直接打开检查；首次创建时按下面两步操作：
+
+1. 在 `deploy` 文件夹中复制 `.env.example`，粘贴到同一个文件夹。
+2. 将副本重命名为 `.env`，保留原来的 `.env.example`。
+
+打开 `deploy/.env`，按下面三组填写：**镜像叫什么、后端怎样连接数据库、浏览器怎样访问网站。** 三组配置分别交给不同的对象使用。
+
+**① 镜像：属于谁，这次是哪个版本**
+
+`DOCKERHUB_USERNAME` 填 Docker Hub 用户名，`IMAGE_TAG` 填本次版本号 `v1`。假设用户名是 `yourname`，Compose 会这样组合镜像名称：
+
+```mermaid
+flowchart TD
+    U["DOCKERHUB_USERNAME = yourname<br/>IMAGE_TAG = v1"]
+    A["后端镜像<br/>yourname/mini-cms-api:v1"]
+    W["管理端镜像<br/>yourname/mini-cms-admin:v1"]
+    U -->|与后端仓库名组合| A
+    U -->|与管理端仓库名组合| W
 ```
 
-令牌不用写进项目文件。具体入口见 [Docker 个人访问令牌说明](https://docs.docker.com/security/access-tokens/personal-access-tokens/)。看到 `Login Succeeded` 后，首次创建本地部署配置：
+把 `yourname` 换成自己的 Docker Hub 用户名。`mini-cms-api`、`mini-cms-admin` 对应刚才创建的两个仓库；`v1` 是镜像版本标签，以后发布新版时再改成 `v2` 等新标签。
 
-```bash
-cp deploy/.env.example deploy/.env
+**② 数据库：一边创建账号和库，一边用相同信息连接**
+
+这里的数据库账号由你给 PostgreSQL 设置，与 Docker Hub 账号无关。同一组账号、密码和库名，要分别告诉数据库和后端：
+
+```mermaid
+flowchart TD
+    P["POSTGRES_USER：数据库账号<br/>POSTGRES_PASSWORD：数据库密码<br/>POSTGRES_DB：数据库名称"]
+    D["交给 PostgreSQL 容器<br/>在首次初始化时创建账号和数据库"]
+    U["DATABASE_URL<br/>把相同的账号、密码、库名<br/>与数据库地址手动写成一条连接串"]
+    A["交给 Express 后端<br/>按连接串找到并访问数据库"]
+    P --> D
+    P -->|填写相同的值| U
+    U --> A
 ```
 
-编辑 `deploy/.env`：
+例如，数据库账号和库名都用 `mini_cms`，这四行就应对应起来：
 
-- `DOCKERHUB_USERNAME` 填刚才登录的用户名，`IMAGE_TAG` 填 `v1`。
-- 数据库使用本地练习密码，保持 `DATABASE_URL` 中的账号、密码、库名与 PostgreSQL 配置一致，主机仍填 `postgres`。
-- `ADMIN_DOMAIN`、`API_DOMAIN` 和 `ADMIN_WEB_ORIGIN` 填计划上线的真实域名，例如 `admin.你的域名`、`api.你的域名` 和 `https://admin.你的域名`。
+```dotenv
+POSTGRES_USER=mini_cms
+POSTGRES_PASSWORD=your_local_password
+POSTGRES_DB=mini_cms
+DATABASE_URL=postgresql://mini_cms:your_local_password@postgres:5432/mini_cms
+```
+
+将两处 `your_local_password` 换成**同一个本地练习密码**。`DATABASE_URL` 的格式是 `postgresql://账号:密码@主机:端口/库名`；这里的 `postgres` 对应 Compose 中的数据库服务名，`5432` 是数据库在容器内的端口。后端容器通过这个名字找到数据库，所以这里保留 `postgres`，不填 Mac 的 `localhost`。
+
+**③ 网站地址：管理端在哪里，API 在哪里**
+
+沿用第 1 步确定的两个子域名。图中的 `example.com` 都替换为自己的域名：
+
+```mermaid
+flowchart TD
+    M["ADMIN_DOMAIN<br/>admin.example.com"]
+    N["记录管理端域名<br/>第 7 步在宝塔手动配置网站入口"]
+    O["ADMIN_WEB_ORIGIN<br/>https://admin.example.com"]
+    E["传给 Express 后端<br/>用于检查管理页面的请求来源"]
+    A["API_DOMAIN<br/>api.example.com"]
+    W["NEXT_PUBLIC_API_BASE_URL<br/>https://api.example.com<br/>写进管理端，供浏览器请求 API"]
+    M --> N
+    M -->|手动加上 https:// 后填写| O
+    O --> E
+    A -->|构建配置自动加上 https://| W
+```
+
+在 `.env` 中，`ADMIN_DOMAIN`、`API_DOMAIN` 只填域名，`ADMIN_WEB_ORIGIN` 填管理端的完整来源地址，包含 `https://`，不加 `/admin` 等页面路径。`NEXT_PUBLIC_API_BASE_URL` 由构建配置根据 `API_DOMAIN` 生成，不需要在这个 `.env` 中另加一行。
+
+当前 `ADMIN_DOMAIN` 只用于记录和后面手动配置；填写这些变量不会自动创建 DNS 记录或宝塔网站。这里先把选好的地址告诉程序，第 7～8 步再接通域名和 HTTPS。
 
 **API 域名必须在这次打包前填好。** 它会写进管理端镜像；本地验证通过后上传的就是这一份镜像，不能保留 `api.example.com` 等到服务器再改。数据库密码只在容器运行时传入，不会作为构建参数打进镜像。
 
 ### 3.2 按服务器架构制作镜像
 
+先查看两份 Compose 合并、填入 `.env` 中的值后，最终得到什么配置：
+
 ```bash
 docker compose --env-file deploy/.env \
   -f deploy/docker-compose.yml -f deploy/docker-compose.build.yml config
+```
 
+这条命令可以分成下面几部分理解：
+
+| 部分 | 本次做什么 |
+|---|---|
+| `docker compose` | 使用 Compose 管理这一组服务 |
+| `--env-file deploy/.env` | 从这个文件读取变量值，用来填入 Compose 中的 `${IMAGE_TAG}`、`${DATABASE_URL}` 等位置 |
+| 两个 `-f 文件路径` | 按顺序读取并合并两份 Compose 配置，第二份补充构建信息 |
+| `config` | 检查并输出解析后的配置，这一步不会构建镜像或启动容器 |
+
+命令末尾的 `\` 表示同一条命令在下一行继续，方便阅读。检查 `config` 输出：镜像名称带自己的用户名和 `v1`，两个应用的 `platform` 都是第 1 步确认的服务器平台，管理端构建参数使用正式 API 地址。输出也会包含数据库密码，只在自己电脑上查看。
+
+确认后，把最后的动作换成 `build`，制作两个应用镜像：
+
+```bash
 docker compose --env-file deploy/.env \
   -f deploy/docker-compose.yml -f deploy/docker-compose.build.yml build api admin_web_antd
 ```
 
-两个 `-f` 表示同时读取两份配置。检查 `config` 输出：镜像名称带自己的用户名和 `v1`，两个应用的 `platform` 都是第 1 步确认的服务器平台，管理端构建参数使用正式 API 地址。
-
-`build` 会在 Mac 上按 Dockerfile 安装依赖、生成 Prisma Client，并完成管理端的 `next build`。结束时应没有报错。这一步得到的就是准备上传的后端和管理端镜像。
+`api`、`admin_web_antd` 是 Compose 中的两个服务名，表示只构建它们。`build` 会在 Mac 上按各自 Dockerfile 安装依赖、生成后端 Prisma Client，并完成管理端的 `next build`。结束时应没有报错；在 Docker Desktop 的 **Images → Local** 中，应能找到带自己用户名和 `v1` 标签的 `mini-cms-api`、`mini-cms-admin` 两个镜像。
 
 ### 3.3 用这两份镜像在本地试跑
 
-先停止本地占用 3000、3001 的前后端进程，并在项目根目录执行 `docker compose stop postgres`，释放开发 PostgreSQL 使用的 5432 端口。停止容器会保留开发数据卷，不要删除数据卷。下面使用独立的 `mini-cms-production` Compose 项目和数据卷。
+本轮先确认镜像能启动、数据库迁移能完成、接口能读取数据库。完整登录和文章编辑留到第 8 步，在正式 HTTPS 地址下验证。
 
-启动时只读取运行配置，使用刚才已经做好的镜像：
+先给这次试跑腾出端口：
+
+1. 在原来启动前后端的两个终端中按 `Ctrl+C`，停止占用 3000、3001 的开发进程。
+2. 打开 Docker Desktop 的 **Containers**，找到本地开发使用的 PostgreSQL 容器，点击 **Stop**，释放 5432 端口。停止会保留容器和数据卷，不要点击删除。
+
+下面会创建独立的 `mini-cms-production` Compose 项目和数据卷，不使用原来的开发数据库。
+
+在项目根目录执行启动命令。这里使用刚才制作的镜像，只读取运行配置：
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d
-docker compose --env-file deploy/.env -f deploy/docker-compose.yml ps
-docker compose --env-file deploy/.env -f deploy/docker-compose.yml logs -f api
 ```
 
-`ps` 应显示三个容器运行，PostgreSQL 为 `healthy`，API 日志显示迁移成功或没有待执行迁移，随后启动服务。看完日志按 `Ctrl+C` 退出查看，容器会继续运行。
+沿用 3.2 的读法：`--env-file` 指定这次用的变量文件，`-f` 指定运行配置；末尾的 **`up` 创建并启动容器，`-d` 让容器在后台运行**，命令完成后终端可以继续输入其他命令。整句就是“按这份配置启动三个服务，并让它们在后台持续运行”。参见 [Compose 命令参数](https://docs.docker.com/reference/cli/docker/compose/)和 [up 命令](https://docs.docker.com/reference/cli/docker/compose/up/)。
 
-请求当前项目已有的公开文章接口和管理端：
+`.env` 中的值先用于填好 Compose 配置；例如 `DATABASE_URL` 再通过 `api.environment` 传入后端容器。这样后端才能连接这次试跑的 PostgreSQL。
+
+回到 Docker Desktop 的 **Containers**，展开新出现的 **mini-cms-production**：
+
+- 三个容器应处于运行状态；进入 PostgreSQL 容器详情，可在 **Inspect** 中查看 `State.Health.Status`，应为 `healthy`。
+- 打开 API 容器的 **Logs**，应看到迁移成功或没有待执行迁移，随后 Express 启动。
+
+查看日志和容器状态都可以在这个界面完成，关闭详情页不会停止服务。参见 [Docker Desktop 容器管理](https://docs.docker.com/desktop/use-desktop/container/)。
+
+接着在 **Apifox** 中发送下面两个请求，检查响应状态和内容：
+
+| 请求 | 应看到什么 | 验证了什么 |
+|---|---|---|
+| `GET http://127.0.0.1:3001/api/public/articles` | `200`，JSON 包含 `data`、`pagination`；新数据库没有文章时，`data` 是空数组 | 后端已启动，并且能查询数据库 |
+| `HEAD http://127.0.0.1:3000` | 首页的响应状态和响应头；当前首页跳转到 `/admin/articles`，通常返回 `307`，`Location` 为目标路径 | Next.js 已启动，能接收页面请求 |
+
+`HEAD` 只要求返回状态和响应头，不返回页面正文。如果 Apifox 自动跟随跳转，可能看到目标页的 `200`；要查看首页原始的 `307` 和 `Location`，关闭这个请求的自动重定向后再发送。
+
+如果使用终端检查，对应命令仍是下面两条，和 Apifox 任选一种即可：
 
 ```bash
 curl -i http://127.0.0.1:3001/api/public/articles
 curl -I http://127.0.0.1:3000
 ```
 
-文章接口应返回 `200` 和包含 `data`、`pagination` 的 JSON；新数据库没有文章时，`data` 是空数组。管理端应返回页面响应或跳转响应（如 `200`、`307`）。这说明前后端已启动，后端也能读取数据库。
+小写 `-i` 在响应正文之外显示状态和响应头；大写 `-I` 发送 `HEAD` 请求，只看状态和响应头。上面的 `curl` 命令不会自动跟随跳转，也不会执行页面 JavaScript。参见 [curl 参数说明](https://curl.se/docs/manpage.html)。
 
-本轮检查镜像能否启动、迁移和读取数据，此时服务器可以还没有准备 Docker 和网站入口。管理端浏览器请求已经指向正式 API 域名，所以完整登录、保存文章留到第 8 步在真实 HTTPS 域名下验证。
+**为什么没有登录，也能得到响应？** 这两个请求检查的是不同入口：
 
-结束本地试跑：
+- `/api/public/articles` 是第 19 章提供给网站访客的公开接口，允许匿名读取已发布文章。
+- `http://127.0.0.1:3000` 请求的是 Next.js 首页。当前 `admin-web-antd/app/page.tsx` 会先返回跳转到 `/admin/articles` 的响应；浏览器加载管理页面后，`admin-web-antd/app/admin/layout.tsx` 才会请求 `/api/auth/me` 检查登录，未登录时转到登录页。只检查首页响应还没有走到这一段。
+- 真正读取管理数据时，Express 的 `/api/articles`、`/api/tags` 等接口会检查登录 Cookie，没有有效凭证就返回 `401`。`HEAD` 和 `curl` 都不会绕过认证。
 
-```bash
-docker compose --env-file deploy/.env -f deploy/docker-compose.yml down
-```
+因此，这里验证的是“服务能响应请求”，登录保护是否完整生效要在第 8 步继续验证。此时服务器可以还没有准备 Docker 和网站入口；管理端构建时已写入正式 API 域名，本地浏览器中的登录检查会请求那个地址，所以本轮不要求在本地管理页面完成登录。
 
-不要添加 `-v`。`down -v` 会删除 Compose 数据卷，里面可能有 PostgreSQL 数据。需要继续本地开发时，在项目根目录执行 `docker compose up -d postgres`，再启动原来的前后端开发命令。
+检查结束后，在 Docker Desktop 的 **Containers** 中点击 **mini-cms-production** 这一组的 **Stop**，停止本次试跑的三个容器，保留镜像和数据。需要继续本地开发时，再启动原来开发用的 PostgreSQL 容器，并在两个终端中启动原来的前后端开发命令。
 
 ### 3.4 上传已经验证过的镜像
 
-保持 `deploy/.env` 中的用户名和版本号不变，执行：
+在 Docker Desktop 的 **Images → Local** 中找到刚才验证过的两个镜像：
 
-```bash
-docker compose --env-file deploy/.env \
-  -f deploy/docker-compose.yml -f deploy/docker-compose.build.yml push api admin_web_antd
-```
+- `你的DockerHub用户名/mini-cms-api:v1`
+- `你的DockerHub用户名/mini-cms-admin:v1`
 
-**`push` 只上传刚才做好的镜像，不会再打包。** 这里指定两个应用，不上传 PostgreSQL 官方镜像。打开 Docker Hub 的两个仓库，确认都出现了 `v1` 标签，再继续服务器部署。参见 [Compose push](https://docs.docker.com/reference/cli/docker/compose/push/)。
+分别打开镜像的操作菜单，选择 **Push to Hub**，等待上传成功。镜像名称中的用户名必须属于当前登录的账号；这里上传的是已经构建好的 `v1`，不会重新打包，也不用上传 PostgreSQL 官方镜像。参见 [Docker Desktop 上传镜像](https://docs.docker.com/desktop/use-desktop/images/#push-an-image-to-docker-hub)。
+
+打开 Docker Hub 的两个仓库，确认都出现了 `v1` 标签，再继续服务器部署。以后发布 `v2` 时，先修改 `.env` 中的 `IMAGE_TAG` 并重新构建、验证，再选择对应的 `v2` 镜像上传。
 
 同时用 Git 保存这次源代码和容器配置的版本，记录 `v1` 对应哪个 commit；真实 `deploy/.env` 不提交。
 
@@ -554,38 +674,26 @@ ss -lntp
 
 ## 第 5 步：把运行配置放到服务器
 
-服务器需要下载镜像，并知道用什么配置启动。代码已经在镜像里，所以这里只传两个文件：`deploy/docker-compose.yml` 和 `deploy/.env.example`。
+服务器接下来会从 Docker Hub 下载程序，现在先准备“用什么配置运行”。**这一步在宝塔的文件管理器中完成目录创建、文件上传和编辑，最后再用终端检查配置。**
 
-沿用已有的 `ssh aliyun` 连接。本章按 `root` 登录编写；`aliyun` 是连接别名，实际用户由 SSH 配置中的 `User` 决定。认证过程见 [Linux 04](../../linux/04-SSH-从Mac安全连接Linux.md#一次-ssh-密钥登录怎样完成)。
+代码已经在镜像里，这里只上传本机 `mini-cms/deploy` 中的两个文件：`docker-compose.yml` 和 `.env.example`。
 
-**在 Mac 的 `mini-cms` 根目录执行：**
+在宝塔左侧打开 **文件**，按下面的顺序操作：
 
-```bash
-ssh aliyun 'mkdir -p /opt/mini-cms/deploy'
-scp deploy/docker-compose.yml deploy/.env.example aliyun:/opt/mini-cms/deploy/
-```
+1. 进入 `/opt`，新建 `mini-cms` 文件夹，再在其中新建 `deploy`；已有目录直接进入。
+2. 在 `/opt/mini-cms/deploy` 点击 **上传**，选择上述两个本地文件。Mac 文件选择框若看不到 `.env.example`，按 `Command + Shift + .` 显示隐藏文件。
+3. 首次配置时，新建一个名为 `.env` 的文件，将 `.env.example` 的全部内容复制进去。已经有 `.env` 时直接打开编辑，保留已有正式配置。
+4. 按下表填写并保存 `.env`，然后打开它的权限设置：所有者使用本章的 `root`，权限设为 `600`。它表示只有所有者能读写这个文件；只修改 `.env` 的权限。
 
-`scp` 通过 SSH 上传这两个文件，使用与 `ssh aliyun` 相同的连接配置。然后登录服务器：
+变量的对应关系沿用[第 3.1 节](#31-准备-docker-hub-和本地配置)，这次填写服务器实际使用的值：
 
-```bash
-ssh aliyun
-```
+| 配置 | 服务器上怎样填写 |
+|---|---|
+| `DOCKERHUB_USERNAME`、`IMAGE_TAG` | 与已上传的镜像一致，例如自己的用户名和 `v1`，让服务器能找到这一版程序 |
+| `POSTGRES_USER`、`POSTGRES_PASSWORD`、`POSTGRES_DB`、`DATABASE_URL` | 使用正式数据库账号、密码和库名；连接串中的三项与前面一致，主机仍为 `postgres` |
+| `ADMIN_DOMAIN`、`API_DOMAIN`、`ADMIN_WEB_ORIGIN` | 与第 3 步选定的正式地址一致；管理端镜像已经写入当时的 API 地址 |
 
-**下面都在服务器终端执行。** 首次创建正式配置：
-
-```bash
-cd /opt/mini-cms
-cp -n deploy/.env.example deploy/.env
-chmod 600 deploy/.env
-```
-
-`cp -n` 保留已经存在的 `.env`。通过 SSH 或 宝塔文件管理器编辑它：
-
-- `DOCKERHUB_USERNAME`、`IMAGE_TAG` 与本地上传的镜像一致，例如自己的用户名和 `v1`。
-- 填写正式数据库账号和密码，保持 `DATABASE_URL` 中的账号、密码、库名一致。
-- 填写真实的 `ADMIN_DOMAIN`、`API_DOMAIN` 和 `ADMIN_WEB_ORIGIN`，与本地打包时选定的域名一致。
-
-服务器的 `.env` 使用正式密码，不从 Mac 复制练习用的 `.env`。此时服务器目录是：
+服务器的 `.env` 使用正式密码，不上传 Mac 上练习用的 `.env`。完成后，在宝塔文件列表中应看到：
 
 ```text
 /opt/mini-cms/deploy/
@@ -594,76 +702,121 @@ chmod 600 deploy/.env
 └── .env
 ```
 
+文件管理操作见 [宝塔文件管理器](https://docs.bt.cn/user-guide/files/)。接着打开宝塔左侧 **终端**，连接当前服务器，使用本章的 `root` 账号。先执行下面两行，进入 Bash 和项目目录：
+
+```bash
+bash
+cd /opt/mini-cms
+```
+
+`bash` 让后面的密码输入、备份脚本使用同一种 Shell，`cd` 切换当前操作目录。**第 5～10 步中标明“服务器终端”的命令，都在这台服务器上执行。** 每次重新连接后，先进入 `/opt/mini-cms`；也可以沿用 Mac 的 `ssh aliyun` 连接同一台服务器，二者选一种即可。参见 [宝塔终端说明](https://docs.bt.cn/user-guide/xterm/)。
+
 在启动前解析一次配置：
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml config
 ```
 
-检查镜像名称和版本、端口、域名、服务名是否正确。不要把包含真实密钥的完整输出粘贴到聊天或工单。
+`config` 只检查并显示最终配置，不会启动服务。核对两个应用的镜像名称和版本、三个服务的端口，以及 API 的数据库地址和管理端来源。输出包含正式密码，只在自己终端查看。没有配置错误后，进入第 6 步。
 
 ---
 
 ## 第 6 步：拉取镜像并启动 Compose，在宝塔查看状态
 
-先在服务器的 `/opt/mini-cms` 目录拉取镜像。如果使用 Private 仓库，先以当前管理 Docker 的用户登录；本章是 `root`，密码提示处使用有 **Read** 权限的 Docker Hub 令牌：
+这一步让服务器真正运行 Mini CMS：**下载镜像 → 按配置启动 → 查看运行结果。** 下载和启动使用 Compose，状态和日志在宝塔查看。
+
+**先下载镜像。** 在服务器终端的 `/opt/mini-cms` 目录操作。如果使用 Private 仓库，先在 Docker 账号设置中[创建有 Read 权限的个人访问令牌](https://docs.docker.com/security/access-tokens/personal-access-tokens/)，再登录；将命令中的用户名换成自己的，密码提示处粘贴令牌：
 
 ```bash
 docker login --username yourdockerhubname
 ```
 
-Public 仓库可以不登录直接拉取。随后执行：
+Mac 上 Docker Desktop 的登录状态不会自动带到服务器。Public 仓库可以跳过登录，直接执行下面的下载命令：
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml pull
 ```
 
-这会下载你上传的两个应用镜像和 PostgreSQL 官方镜像。**拉取成功后，服务器已经拿到打包好的程序，下一步直接启动。**
+`pull` 读取 Compose 中的 `image`，下载你上传的两个应用镜像和 PostgreSQL 官方镜像。它只下载，不启动程序；等待三个镜像全部拉取成功再继续。
 
-拉取成功后，仍在服务器 `/opt/mini-cms` 目录执行：
+**再启动服务。** 仍在同一个服务器终端执行：
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d
 ```
 
-这个命令明确指定 Compose 和 `.env`，创建名为 `mini-cms-production` 的编排。打开宝塔 **Docker → 容器**，查看这三个容器；支持发现本地编排的版本，也会在“容器编排”中显示它。日常看日志、观察资源和单独启停容器可用面板；发布更新继续使用第 10 步的同一套文件和命令。
+`up -d` 按运行配置创建并在后台启动三个容器，Compose 项目名为 `mini-cms-production`。其中后端启动时还会沿着配置完成下面的流程：
+
+```mermaid
+flowchart LR
+    P["PostgreSQL 健康检查通过"]
+    M["API 容器执行<br/>npm run db:migrate:deploy"]
+    A["迁移成功后执行<br/>npm run start"]
+    P --> M --> A
+```
+
+迁移使用镜像中已有的 SQL 文件建立或更新表结构，成功后才启动 Express。这一步已由 Compose 的 `command` 安排好，首次启动不用再手动执行一次迁移。
+
+**然后在宝塔查看结果。** 打开 **Docker → 容器**，找到属于 `mini-cms-production` 的三个容器；支持发现本地编排的版本，也会在“容器编排”中显示它。
 
 不要再把相同配置复制到面板创建第二套编排，否则可能出现端口冲突或连接到另一份数据卷。
 
-启动后查看：
+| 查看位置 | 应看到什么 |
+|---|---|
+| 三个容器的状态 | 都处于运行中，没有反复重启 |
+| PostgreSQL 容器详情 | 健康状态为 `healthy` |
+| API 容器日志 | 迁移成功或没有待执行迁移，随后 Express 启动 |
+| 各容器的端口映射 | 宿主机地址是 `127.0.0.1`，对应 3000、3001、5432，而非公网监听 |
 
-- 三个容器是否运行。
-- PostgreSQL 健康检查是否通过。
-- API 日志中迁移是否成功。
-- 3000、3001、5432 是否只绑定 `127.0.0.1`。
-
-在 SSH 中交叉验证：
+日常查看日志、资源占用和简单启停都可以在宝塔完成，参见 [宝塔容器管理](https://docs.bt.cn/user-guide/docker/container/)。如果面板没有显示健康状态或完整端口，在服务器终端执行下面的命令补充查看：
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml ps
-ss -lntp
+```
+
+`ps` 列出这组容器的状态和端口。最后确认服务能响应请求，**下面两条仍在服务器终端执行**：
+
+```bash
 curl -i http://127.0.0.1:3001/api/public/articles
 curl -I http://127.0.0.1:3000
 ```
 
-响应应与第 3 步一致。到这里，项目已经在服务器内部运行，接下来创建管理员，再配置域名访问。
+这里的 `127.0.0.1` 指执行命令的服务器本机；在 Mac 的 Apifox 中填写相同地址，会访问 Mac 自己。当前应用端口只允许服务器本机连接，所以这次用服务器终端检查，第 7 步接通域名后再改用 Mac 上的 Apifox。
+
+公开文章接口应返回 `200` 和 JSON，新库的 `data` 为空数组；管理端返回首页或跳转响应，当前首页通常是 `307`。这与[第 3.3 节](#33-用这两份镜像在本地试跑)相同，只检查服务响应，完整登录留到 HTTPS 就绪后。
 
 ---
 
 ### 在新数据库中创建首个管理员
 
-迁移只建立表，不会复制本地管理员。确认 API 日志中的 migration 已成功，再在服务器的 Bash 中、`/opt/mini-cms` 目录执行一次初始化。镜像已复制第 17A 章的 `scripts/`，并保留运行 `admin:create` 所需的 `tsx`：
+迁移只建立表，不会复制本地管理员。现在要运行第 17A 章的 `admin:create` 脚本，在正式数据库中创建能登录后台的账号。镜像已经包含这个脚本及运行工具。
+
+确认宝塔中的 API 迁移日志正常后，在服务器的 Bash 终端、`/opt/mini-cms` 目录操作。先逐行输入下面两条命令，每条执行后按提示填写；密码输入时不显示字符：
 
 ```bash
 read -r -p "管理员用户名: " ADMIN_USERNAME
 read -r -s -p "管理员密码（至少 12 位）: " ADMIN_PASSWORD
+```
+
+再执行初始化，并清除本次终端中临时保存的账号密码变量：
+
+```bash
 printf '\n'
 export ADMIN_USERNAME ADMIN_PASSWORD
-docker compose --env-file deploy/.env -f deploy/docker-compose.yml run --rm --no-deps -e ADMIN_USERNAME -e ADMIN_PASSWORD api npm run admin:create
+docker compose --env-file deploy/.env -f deploy/docker-compose.yml \
+  run --rm --no-deps -e ADMIN_USERNAME -e ADMIN_PASSWORD api npm run admin:create
 unset ADMIN_USERNAME ADMIN_PASSWORD
 ```
 
-`run` 复用 API 服务的生产数据库配置，用 `admin:create` 替换默认启动命令，结束后删除这次运行的容器。密码通过隐藏输入传入环境，不写进命令历史或仓库。看到创建成功后再配置域名；HTTPS 就绪后，用这个账号登录验证。该脚本对同名账号会更新密码，不要作为每次部署的自动启动步骤。
+关键命令可以这样读：
+
+| 部分 | 作用 |
+|---|---|
+| `run --rm --no-deps` | 创建一个临时容器执行任务，结束后删除它；数据库已运行，不再启动依赖服务 |
+| `-e ADMIN_USERNAME -e ADMIN_PASSWORD` | 将刚输入并导出的两个变量传给临时容器 |
+| `api npm run admin:create` | 复用 `api` 的镜像和数据库配置，这次执行创建管理员脚本 |
+
+密码通过隐藏输入传入，不写进命令历史或配置文件。确认看到管理员创建成功的提示且没有错误后，再配置域名；HTTPS 就绪后用这个账号验证登录。该脚本对同名账号会更新密码，首次创建后不作为日常发布步骤。参见 [Compose run](https://docs.docker.com/reference/cli/docker/compose/run/)。
 
 ### 用 TablePro 查看线上数据库
 
@@ -682,7 +835,9 @@ unset ADMIN_USERNAME ADMIN_PASSWORD
 
 ## 第 7 步：把两个子域名分别转发到管理端和 API
 
-确认 `admin`、`api` 两条 DNS A 记录已指向服务器公网 IPv4，第 6 步的本机接口检查也已通过。在宝塔里为两个子域名各建一个网站，再配置反向代理。
+第 6 步已确认程序在服务器内部可用。这一步给它们接上域名，让 Mac 上的浏览器也能访问。
+
+先在域名服务商的 DNS 控制台检查 `admin`、`api` 两条 A 记录，记录值都应为服务器公网 IPv4。然后在宝塔里为两个子域名各建一个网站，再配置反向代理：
 
 1. 进入 **网站 → 添加站点**，分别填写两个真实域名。使用普通站点入口时，PHP 版本选择“纯静态”，FTP 和数据库选择“不创建”。这里只为 Nginx 建立域名入口，不需要安装 PHP，也不用把 Next.js 源码上传到站点目录。
 2. 打开每个站点的 **设置 → 反向代理 → 添加反向代理**，按下表填写。不同版本的按钮名称可能略有差别，目标都是给这两个网站各增加一条 `/` 的转发规则。
@@ -701,14 +856,14 @@ admin.example.com → 宝塔 Nginx → 服务器 127.0.0.1:3000 → Next.js
 api.example.com/api/public/articles → 宝塔 Nginx → 127.0.0.1:3001/api/public/articles → Express
 ```
 
-在 Mac 上验证，替换为自己的域名：
+现在在 Mac 的 **Apifox** 中发送两个请求，将域名替换为自己的：
 
-```bash
-curl -I http://admin.example.com
-curl -i http://api.example.com/api/public/articles
-```
+| 请求 | 应看到什么 |
+|---|---|
+| `HEAD http://admin.example.com` | 首页或跳转响应；当前首页通常是 `307`，跟随跳转后可能看到 `200` |
+| `GET http://api.example.com/api/public/articles` | `200` 和包含 `data`、`pagination` 的 JSON |
 
-管理端应返回页面或跳转响应，公开文章接口应返回 `200` 和 JSON。此时只检查 HTTP 转发；正式前端已使用 HTTPS API 地址，登录与保存留到下一步验证。API 的 CORS、Cookie 和认证仍由 Express 负责，不在代理层另加宽松 CORS 规则。
+这说明公网请求已通过 Nginx 到达对应容器。此时只检查 HTTP 转发；正式前端已使用 HTTPS API 地址，登录与保存留到下一步验证。API 的 CORS、Cookie 和认证仍由 Express 负责，不在代理层另加宽松 CORS 规则。
 
 配置方式见 [宝塔反向代理指南](https://docs.bt.cn/user-guide/site/php/site-config/reverse-proxy/)。面板负责生成并加载 Nginx 配置，后续也从对应站点设置中维护。
 
@@ -730,14 +885,9 @@ curl -i http://api.example.com/api/public/articles
 
 两个网站都完成证书部署后，检查证书的域名、有效期及自动续签设置。这里用宝塔原有的证书管理，不额外安装 Certbot。具体界面和验证方式见 [宝塔网站 SSL 文档](https://docs.bt.cn/user-guide/site/php/site-config/ssl/)。
 
-启用后验证：
+启用后，在 Mac 的 Apifox 中把第 7 步两个请求的 `http://` 改为 `https://`，重新发送。公开接口应正常返回 JSON，管理端应返回首页或跳转响应，两者都不应出现证书校验错误。
 
-```bash
-curl -I https://admin.example.com
-curl -i https://api.example.com/api/public/articles
-```
-
-再从浏览器完成一次真实操作：
+再从浏览器完成一次真实操作，这次验证完整的登录和文章管理链路：
 
 1. 打开管理端 HTTPS 地址，用刚创建的管理员登录，确认浏览器没有证书错误。
 2. 新建并保存一篇文章，重新打开，确认标题和正文正确；发布后，让个人网站通过正式 API 读取它。
@@ -749,11 +899,28 @@ curl -i https://api.example.com/api/public/articles
 
 ## 第 9 步：配置数据库备份和恢复验证
 
-数据卷能保留容器重建后的数据，但误删文章或服务器磁盘损坏时，还需要从备份恢复。本节先用 PostgreSQL 容器里已有的工具导出数据，再恢复到测试数据库，最后让宝塔定时执行备份。
+数据卷能保留容器重建后的数据；误删文章或服务器磁盘损坏时，还需要一份可以恢复的备份。本节先走通这条线，再让宝塔定时执行：
+
+```mermaid
+flowchart TD
+    D["正式 PostgreSQL 数据库"]
+    F["服务器上的 .dump 备份文件"]
+    T["独立的恢复测试库<br/>mini_cms_restore_check"]
+    V["用 TablePro 查看恢复后的文章"]
+    O["服务器之外的云存储副本"]
+    D -->|9.1：pg_dump 导出| F
+    F -->|9.2：pg_restore 导入| T
+    T --> V
+    F -->|9.3：宝塔定时上传| O
+```
+
+导出和恢复交给 PostgreSQL 自带的工具；查看文件用宝塔，检查恢复的数据用 TablePro。恢复演练使用单独的测试库，API 始终连接原来的正式库。
 
 ### 9.1 导出一份数据库备份
 
-在服务器的 Bash 终端执行：
+这段脚本完成三件事：准备备份目录、导出数据库、清理超过保留期的旧备份。第 9.3 节会将同一段脚本交给宝塔定时执行，所以这里保留完整的目录准备和文件整理步骤。
+
+先在服务器的 Bash 终端执行一次：
 
 ```bash
 (
@@ -774,13 +941,24 @@ curl -i https://api.example.com/api/public/articles
 )
 ```
 
-`pg_dump` 导出数据库的表结构和数据，`-Fc` 生成供 `pg_restore` 恢复的归档文件。`exec -T` 在已有容器中执行命令，`>` 把结果保存到服务器的备份目录；账号和库名读取容器已有的配置。
+先理解真正导出数据的这一行：
 
-整段遇到错误就停止，只有导出成功才把临时文件改成 `.dump`。文件名包含备份时间，脚本保留最近 7 天的文件，并输出本次备份的完整路径。记下这个路径，下一步使用。
+| 部分 | 放在本次备份里理解 |
+|---|---|
+| `exec -T postgres` | 在已运行的 PostgreSQL 容器里执行命令，关闭交互终端，便于把输出保存成文件 |
+| `sh -c '…'` | 让容器里的 Shell 读取容器自身的数据库账号、库名，再执行其中的命令 |
+| `pg_dump -U … -d … -Fc` | 用指定账号导出指定数据库；`-Fc` 生成供 `pg_restore` 恢复的归档格式 |
+| `> "$backup_file.tmp"` | 将导出的内容写到服务器上的临时备份文件 |
+
+外层括号让脚本在单独的 Shell 环境里运行；`set -e` 让出错时停止，`umask`、`chmod` 限制备份文件和目录的访问权限。导出成功后，`mv` 才将临时文件改成 `.dump`；`find` 清理超过保留期的旧备份，正常每天执行时保留最近 7 天的文件。参见 [Compose exec](https://docs.docker.com/reference/cli/docker/compose/exec/)和 [PostgreSQL 导出说明](https://www.postgresql.org/docs/18/app-pgdump.html)。
+
+看到“备份完成”后，在宝塔 **文件** 中打开 `/opt/backups/mini-cms`，确认出现带本次时间的 `.dump`，文件大小不为 0。记录终端输出的完整路径，下一节用它恢复。文件已生成只是第一项检查，能恢复出文章才说明这次备份可用。
 
 ### 9.2 恢复到测试数据库，检查文章
 
-使用刚才生成的备份，在同一个 PostgreSQL 容器中新建 `mini_cms_restore_check` 测试库。API 仍连接原来的数据库。在服务器的 Bash 终端执行，提示时粘贴备份文件的完整路径：
+现在验证刚才的文件能否还原出文章。下面两条数据库命令依次做两件事：`createdb` 新建空的测试库，`pg_restore` 把备份导入这个测试库。
+
+在服务器的 Bash 终端执行下面整段，提示时粘贴第 9.1 节输出的备份文件完整路径：
 
 ```bash
 (
@@ -794,14 +972,16 @@ curl -i https://api.example.com/api/public/articles
   docker compose --env-file deploy/.env -f deploy/docker-compose.yml \
     exec -T postgres sh -c 'pg_restore -U "$POSTGRES_USER" -d mini_cms_restore_check --exit-on-error' \
     < "$backup_file"
-  docker compose --env-file deploy/.env -f deploy/docker-compose.yml \
-    exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d mini_cms_restore_check -v ON_ERROR_STOP=1 -c "SELECT id, title, slug FROM articles ORDER BY id DESC LIMIT 5;"'
 )
 ```
 
-`createdb` 创建空库，`pg_restore` 导入备份，最后的 SQL 查询恢复后的文章。确认能看到第 8 步保存的文章，且整段没有报错，才算完成恢复验证。如果测试库已经存在，命令会停止，先确认上次验证已结束，再用下面的命令清理后重试。
+`test -s` 检查备份文件存在且非空；`< "$backup_file"` 把这个文件交给恢复命令读取，方向与导出时的 `>` 相反。`--exit-on-error` 要求恢复遇到错误就停止。如果测试库已存在，创建命令会停止；先确认上次演练已结束，再按本节末尾的命令清理测试库后重试。
 
-验证结束后删除测试库：
+命令执行完且没有错误后，在 Mac 的 **TablePro** 中检查数据：
+
+1. 按第 6 步的方法新建一个临时 PostgreSQL 连接，SSH 信息、数据库账号和密码沿用线上连接，**数据库名填写 `mini_cms_restore_check`**。
+2. 连接后打开 `articles` 表，找到第 8 步保存的文章，核对标题和正文内容。确认查看的是恢复测试库。
+3. 检查完成后断开这个临时连接，再回到服务器终端删除测试库：
 
 ```bash
 cd /opt/mini-cms
@@ -809,58 +989,89 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml \
   exec -T postgres sh -c 'dropdb -U "$POSTGRES_USER" mini_cms_restore_check'
 ```
 
-删除的只是 `mini_cms_restore_check`，保留原数据库和备份文件。
+`dropdb` 删除指定数据库。这里固定删除演练用的 `mini_cms_restore_check`，保留正式数据库和备份文件；TablePro 的临时连接可以一并移除。
 
 ### 9.3 设置每日自动备份，并保存到服务器之外
 
-在宝塔的“计划任务”中创建 **Shell 脚本**任务：在宿主机上用 Bash 执行，内容粘贴 9.1 的完整代码块，周期设为每天 03:00。先手动执行一次，确认任务报告显示成功，并出现新的 `.dump` 文件。
+第 9.1～9.2 节验证通过后，再把重复执行交给宝塔。这里安排两个任务：先导出数据库，再把导出文件复制到服务器之外。
 
-再在宝塔的软件商店配置所用云存储插件，例如阿里云 OSS 或腾讯云 COS。在“计划任务”中创建 **备份目录**任务：源目录为 `/opt/backups/mini-cms`，备份位置选择已配置的云存储，保留最近 7 份。执行时间安排在数据库导出完成后，例如每天 03:30；若实际导出耗时更长，就相应延后。排除 `*.tmp` 临时文件。
+先打开宝塔 **计划任务 → 添加任务**，创建导出任务：
 
-这里先用 `pg_dump` 导出 PostgreSQL，再备份导出目录，不把面板的“备份网站”当作数据库备份。计划任务设置见 [宝塔官方说明](https://docs.bt.cn/user-guide/crontab/task/)。
+| 设置项 | 填写内容 |
+|---|---|
+| 任务类型、名称 | Shell 脚本；Mini CMS 数据库导出 |
+| 执行身份与环境 | 服务器上的 `root`，使用 Bash 执行 |
+| 脚本内容 | 第 9.1 节已经验证过的完整代码块，保留外层括号 |
+| 执行周期 | 每天 03:00，按服务器时间 |
 
-手动执行目录备份，确认远端能找到文件；下载一份、解压取出其中的 `.dump`，再按 9.2 恢复一次，确认服务器之外的副本同样可用。之后定期重复恢复验证。项目的 Dockerfile、Compose 配置和恢复步骤保存在 Git 与 README 中，数据库内容依靠这些备份恢复。
+保存后点击任务的 **执行**，再打开任务日志，确认出现“备份完成”，并在宝塔文件管理器中看到新的 `.dump`。以后需要立即备份，也可以点击这个任务的“执行”。
+
+再在宝塔软件商店配置所用的云存储插件，例如阿里云 OSS 或腾讯云 COS，然后创建第二个计划任务：
+
+| 设置项 | 填写内容 |
+|---|---|
+| 任务类型、名称 | 备份目录；Mini CMS 备份文件上传 |
+| 源目录 | `/opt/backups/mini-cms` |
+| 备份位置 | 已配置的云存储，保留最近 7 份 |
+| 排除规则 | `*.tmp`，跳过尚未完成的导出文件 |
+| 执行周期 | 每天 03:30，按服务器时间；应晚于数据库导出完成，耗时更长时相应延后 |
+
+这两个任务的输入不同：第一个读取 PostgreSQL，第二个读取已经导出的文件。计划任务设置见 [宝塔官方说明](https://docs.bt.cn/user-guide/crontab/task/)。
+
+手动执行第二个任务，在云存储控制台确认远端文件已出现。下载一份、解压取出 `.dump`，再在宝塔文件管理器的 `/opt/backups/mini-cms` 下新建 `remote-check` 文件夹，将下载的副本上传到其中，避免覆盖原文件。按第 9.2 节填写这份上传文件的路径，再恢复检查一次，确认服务器之外的副本同样可用。之后定期重复恢复验证。
+
+项目的 Dockerfile、Compose 配置和恢复步骤保存在 Git 与 README 中；文章、管理员等数据库内容依靠这些备份恢复。
 
 ---
 
 ## 第 10 步：以后怎样更新
 
-以后每次发布都走同一条线：**Mac 制作并上传新版镜像 → 服务器下载新版 → 更新容器。**
+以后每次发布都走同一条线：**Mac 制作并上传新版镜像 → 宝塔备份并修改版本号 → 服务器拉取并更新 → 浏览器验证。**
 
 先在 Mac 上准备新版：
 
 1. 完成本次修改，检查迁移文件，运行项目已有的测试和检查。
-2. 把本地 `deploy/.env` 的 `IMAGE_TAG` 从 `v1` 改成新版本，例如 `v2`。每次发布使用新标签，保留旧版供核对和回退。
-3. 按第 3.2～3.4 节重新制作两个应用镜像、本地试跑，再上传。确认 Docker Hub 两个仓库都有 `v2`；源代码和配置提交到 Git，记录这次版本对应的 commit。
+2. 在编辑器中把本地 `deploy/.env` 的 `IMAGE_TAG` 从 `v1` 改成新版本，例如 `v2`。每次发布使用新标签，保留旧版供核对和回退。
+3. 按第 3.2～3.4 节重新制作两个应用镜像、本地试跑，再通过 Docker Desktop 上传。确认 Docker Hub 两个仓库都有 `v2`；源代码和配置提交到 Git，记录这次版本对应的 commit。
 
-再更新服务器：
+再在宝塔准备服务器配置：
 
-1. 按第 9 步备份正式数据库，记录服务器当前的 `IMAGE_TAG`。
-2. 将服务器 `deploy/.env` 的 `IMAGE_TAG` 改为刚上传的 `v2`，保留正式数据库密码等配置。
-3. 如果本次修改了运行用的 `deploy/docker-compose.yml`，先按第 5 步从 Mac 上传该文件；仅修改业务代码时不用重新上传配置。
+1. 在 **计划任务** 中手动执行第 9.3 节的数据库导出任务，确认成功并记下本次备份路径。记录服务器当前的 `IMAGE_TAG`。
+2. 在 **文件** 中打开 `/opt/mini-cms/deploy/.env`，只把 `IMAGE_TAG` 改为刚上传的 `v2`，保留正式数据库密码等配置。
+3. 如果本次修改了 `deploy/docker-compose.yml`，按第 5 步上传并更新服务器上的同名文件。仅改业务代码时不用重传配置，更不用上传本地 `.env`。
 
-在服务器执行：
+打开服务器终端，先检查配置：
 
 ```bash
 cd /opt/mini-cms
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml config
-docker compose --env-file deploy/.env -f deploy/docker-compose.yml pull api admin_web_antd
-docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d
-docker compose --env-file deploy/.env -f deploy/docker-compose.yml ps
 ```
 
-`pull` 下载已经打包好的新版，`up -d` 用新版镜像更新容器。镜像拉取失败时先解决错误，成功后再执行 `up`。更新前不用 `down`，也不用在服务器运行 `build`；这里仅拉取两个应用，PostgreSQL 的版本升级另行安排。
-
-然后检查：
+确认没有配置错误，两个应用都使用 `v2`，再下载新版镜像：
 
 ```bash
-curl -i https://api.example.com/api/public/articles
-docker compose --env-file deploy/.env -f deploy/docker-compose.yml logs --tail=200 api
+docker compose --env-file deploy/.env -f deploy/docker-compose.yml pull api admin_web_antd
 ```
 
-重新打开管理端，确认本次修改已生效，更新前保存的文章仍能查看和编辑。把本节更新命令与第 9 步实际使用的备份、恢复方法记到项目 README。
+`pull` 只下载，原来的容器此时还在运行。等待两个镜像全部拉取成功；下载失败时先解决错误。
 
-需要回退应用时，将 `IMAGE_TAG` 改回保留的旧版本，再拉取并更新容器。**切回旧镜像不会撤销数据库迁移**；先确认旧程序还能使用更新后的表结构，不能把镜像回退当作数据库恢复。
+下载成功后，再执行更新：
+
+```bash
+docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d
+```
+
+`up -d` 按新镜像更新容器，API 启动时仍会先执行迁移。这里仅拉取两个应用，PostgreSQL 的版本升级另行安排；更新前不用 `down`，服务器也不用重新 `build`。
+
+更新后通过界面检查三件事：
+
+1. 在宝塔 **Docker → 容器** 中确认应用运行正常，API 日志中的迁移和启动没有错误。
+2. 在 Mac 的 Apifox 中请求正式 HTTPS 公开文章接口，确认返回正常。
+3. 在浏览器重新打开管理端，登录后确认本次修改已生效，更新前保存的文章仍能查看和编辑。
+
+把本节更新命令与第 9 步实际使用的备份、恢复方法记到项目 README。后续接入代码推送后的自动发布时，可以复用这条已经验证过的流程。
+
+需要回退应用时，在宝塔文件管理器中将 `IMAGE_TAG` 改回保留的旧版本，再执行相同的拉取、更新和验证步骤。**切回旧镜像不会撤销数据库迁移**；先确认旧程序还能使用更新后的表结构，不能把镜像回退当作数据库恢复。
 
 ---
 
@@ -869,7 +1080,7 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml logs --tail=2
 - 在 Mac 上制作并验证镜像，Docker Hub 能看到对应版本，服务器拉取后直接运行。
 - 通过 HTTPS 登录管理端，能保存、重新打开文章；个人网站能读取已发布内容。
 - 更新或重启容器后，服务能恢复，已有文章仍在。
-- 已生成数据库备份，并在测试数据库中成功恢复。
+- 已配置定时备份和服务器之外的副本，并用恢复测试库验证文章可读。
 
 完成后回到[第 10 章项目总览](./10-MiniCMS项目总览.md)完成阶段 8 验收。
 
@@ -884,19 +1095,22 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml logs --tail=2
 | 面板打不开 | 宝塔服务、面板端口、云安全组、授权 IP、安全入口 |
 | Nginx 配置保存失败或网站异常 | 宝塔显示的配置错误、Nginx 服务状态、对应站点的错误日志、80 / 443 是否被占用 |
 | Mac 制作镜像失败 | Docker Desktop、Node 版本、lockfile、Dockerfile、正式 API 构建参数 |
-| 上传或拉取镜像失败 | Docker Hub 是否可访问、登录权限、用户名、仓库名和版本标签是否存在 |
+| 上传或拉取镜像失败 | Mac 上查看 Docker Desktop 的上传结果；服务器上查看 `pull` 的错误。核对登录账号、仓库名、标签和 Docker Hub 网络连接 |
 | 提示架构不匹配或 `exec format error` | 服务器 `uname -m` 与镜像平台是否对应，是否按第 2～3 步重新制作了正确平台的镜像 |
-| 更新后还是旧页面 | 本地是否制作并上传新标签，服务器是否修改 `IMAGE_TAG`、执行 `pull` 和 `up -d` |
-| API 容器反复重启 | 数据库健康、`DATABASE_URL`、迁移和 API 日志 |
-| 服务器内部 API 正常，域名失败 | Nginx 的 `server_name`、`proxy_pass`、站点是否启用、80 / 443、防火墙和 DNS |
+| 更新后还是旧页面 | Docker Hub 是否已有新标签；宝塔中的正式 `.env` 是否改了 `IMAGE_TAG`，是否完成 `pull` 和 `up -d` |
+| API 容器反复重启 | 在宝塔打开 API 容器日志，查看数据库连接或迁移错误；核对 PostgreSQL 健康状态和正式 `DATABASE_URL` |
+| 服务器内部 API 正常，域名失败 | 在宝塔检查站点是否启用、绑定域名和反向代理目标是否正确，再检查 DNS、80 / 443 与防火墙 |
 | 页面打开但请求 API 失败 | `NEXT_PUBLIC_API_BASE_URL` 是否在构建时正确，CORS 和证书 |
 | 登录后仍然 401 | Cookie 的 `Secure`、Domain、SameSite、前端 credentials 和 CORS |
 | 重启后数据消失 | PostgreSQL volume 是否仍挂载，是否误删卷 |
 | 证书续签失败 | 宝塔 SSL 续签日志、DNS API 授权或文件验证路径、80 端口与代理规则 |
-| 备份任务成功但无法恢复 | 备份内容、数据库版本、压缩密码和恢复步骤 |
+| 备份任务成功但无法恢复 | 宝塔任务日志和 `.dump` 文件大小、恢复命令的错误；下载的是目录压缩包时，先解压取出 `.dump` |
 
 ## 官方参考
 
+- [宝塔：文件管理器](https://docs.bt.cn/user-guide/files/)
+- [宝塔：在线终端](https://docs.bt.cn/user-guide/xterm/)
+- [宝塔：容器管理](https://docs.bt.cn/user-guide/docker/container/)
 - [宝塔：Docker 容器与编排](https://www.bt.cn/bbs/thread-140412-1-1.html)
 - [宝塔：Nginx 反向代理](https://docs.bt.cn/user-guide/site/php/site-config/reverse-proxy/)
 - [宝塔：网站 SSL 与自动续签](https://docs.bt.cn/user-guide/site/php/site-config/ssl/)
@@ -908,7 +1122,7 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml logs --tail=2
 - [Docker Hub：创建镜像仓库](https://docs.docker.com/docker-hub/repos/create/)
 - [Docker：跨平台构建](https://docs.docker.com/build/building/multi-platform/)
 - [Docker Compose：合并运行与构建配置](https://docs.docker.com/compose/how-tos/multiple-compose-files/merge/)
-- [Docker Compose：上传镜像](https://docs.docker.com/reference/cli/docker/compose/push/)
+- [Docker Desktop：查看与上传镜像](https://docs.docker.com/desktop/use-desktop/images/)
 - [Docker Compose：端口映射、内部网络与服务名](https://docs.docker.com/compose/how-tos/networking/)
 - [Docker：数据卷与容器的生命周期](https://docs.docker.com/engine/storage/volumes/)
 - [Next.js：自托管与反向代理](https://nextjs.org/docs/app/guides/self-hosting)
