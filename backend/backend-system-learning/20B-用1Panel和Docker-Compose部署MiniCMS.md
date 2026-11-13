@@ -8,7 +8,7 @@ Mini CMS 的程序和镜像不会因为换面板而改变。本章复用 20A 的
 
 | 工作 | 20A：已有宝塔服务器 | 20B：新服务器使用 1Panel |
 |---|---|---|
-| 构建、验证、上传镜像 | Mac + Docker Desktop + Docker Hub | 相同 |
+| 构建、验证、上传镜像 | Mac + Docker Desktop / Compose + 阿里云 ACR | 相同 |
 | 运行应用与 PostgreSQL | Docker Compose | 相同 |
 | 查看容器和日志 | 宝塔 Docker 页面 | 1Panel 容器页面 |
 | 接收网站请求 | 已有的 Nginx | 1Panel 应用商店安装的 OpenResty |
@@ -66,7 +66,7 @@ ssh mini-cms-new 'hostname; uname -m; free -h; df -h /'
 
 **换成新的 API 域名后，必须重新构建管理端镜像。** `NEXT_PUBLIC_API_BASE_URL` 在 `next build` 时写入浏览器代码，不能只改服务器 `.env`。如果目标架构和所有构建参数都没变，可以直接复用已验证的镜像；换面板本身不要求重新构建。
 
-本地试跑时完成迁移、公开 API 和管理端响应检查。确认 Docker Hub 的两个应用仓库都出现本次标签后，再进入服务器部署。
+本地试跑时完成迁移、公开 API 和管理端响应检查。沿用 20A 第 3.5 节的 ACR 配置和上传命令，首次切换时将其中示例 `v1` 换成本次标签。确认 ACR 的两个应用仓库都出现本次标签后，再进入服务器部署。
 
 ## 第 3 步：在新服务器安装 1Panel、Docker 和 OpenResty
 
@@ -109,7 +109,7 @@ cp -n deploy/.env.example deploy/.env
 chmod 600 deploy/.env
 ```
 
-通过 SSH 或 1Panel 文件管理器编辑 `deploy/.env`：镜像账号和标签与刚才上传的一致，域名使用本次的新子域名，数据库账号、密码和库名使用正式值。`DATABASE_URL` 的主机仍是 `postgres`，`ADMIN_WEB_ORIGIN` 与管理端构建时计划使用的来源一致。
+通过 SSH 或 1Panel 文件管理器编辑 `deploy/.env`：`IMAGE_PREFIX` 填 20A 第 3.5 节的 `ACR域名/命名空间`，`IMAGE_TAG` 与刚才上传的一致；域名使用本次的新子域名，数据库账号、密码和库名使用正式值。`DATABASE_URL` 的主机仍是 `postgres`，`ADMIN_WEB_ORIGIN` 与管理端构建时计划使用的来源一致。
 
 解析配置，检查镜像名、标签、环境变量和端口：
 
@@ -117,7 +117,7 @@ chmod 600 deploy/.env
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml config
 ```
 
-不要分享包含密码的完整输出。私有 Docker Hub 仓库先执行 `docker login --username yourdockerhubname`，输入有读取权限的令牌；公开仓库可以直接拉取：
+不要分享包含密码的完整输出。先按 [20A 第 6 步](./20A-用宝塔和Docker-Compose部署MiniCMS.md#第-6-步拉取镜像并启动-compose在宝塔查看状态)在这台新服务器登录 ACR，输入访问凭证中设置的固定密码。看到 `Login Succeeded` 后拉取并启动：
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml pull
