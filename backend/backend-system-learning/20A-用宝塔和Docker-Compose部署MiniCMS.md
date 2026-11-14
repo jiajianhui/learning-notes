@@ -479,7 +479,7 @@ services:
 
 这一整步都在 Mac 上操作，顺序是：**准备 ACR 与配置 → 构建两个应用并准备 PostgreSQL → 三个容器本地试跑 → 上传三个镜像。** 文件操作使用编辑器，查看容器使用 Docker Desktop；构建、首次启动和上传 ACR 使用终端。下面的终端命令都在 `mini-cms` 根目录执行。
 
-本章走 **3.1 → 3.2 → 3.3 → 3.5**，3.4 保留为 Docker Hub 上传参考。已按旧版构建好两个应用时，先对照 2.7 更新三处 `image` 和 PostgreSQL 的 `platform`，再按 3.1 更新 `.env`；3.2 提供直接复用已有镜像的方法。
+本章走 **3.1 → 3.2 → 3.3 → 3.5**，3.4 保留为 Docker Hub 上传参考。沿用旧版配置时，先对照 2.7 更新三处 `image` 和 PostgreSQL 的 `platform`，再按 3.1 更新 `.env`，然后在 3.2 构建两个应用镜像。
 
 ### 3.1 准备 ACR 和本地配置
 
@@ -550,6 +550,8 @@ flowchart TD
 
 ### 3.2 按服务器架构制作镜像
 
+**本节命令都在 Mac 终端的 `mini-cms` 项目根目录执行**，也就是能同时看到 `server`、`admin-web-antd` 和 `deploy` 文件夹的那一层。
+
 先查看两份 Compose 合并、填入 `.env` 中的值后，最终得到什么配置：
 
 ```bash
@@ -568,7 +570,7 @@ docker compose --env-file deploy/.env \
 
 命令末尾的 `\` 表示同一条命令在下一行继续，方便阅读。检查 `config` 输出：三个镜像都使用 ACR 公网前缀，三个服务的 `platform` 都是第 1 步确认的服务器平台，管理端构建参数使用正式 API 地址。输出也会包含数据库密码，只在自己电脑上查看。
 
-**先准备两个应用镜像。** 首次构建或代码已更新时，把最后的动作换成 `build`：
+**先构建两个应用镜像。** 在 Mac 终端中，保持当前目录为 `mini-cms` 项目根目录，执行：
 
 ```bash
 docker compose --env-file deploy/.env \
@@ -590,20 +592,6 @@ docker compose --env-file deploy/.env \
 
 </details>
 
-<details>
-<summary>已经构建好 Docker Hub 名称的两个 v1 镜像：用增加标签代替重新构建</summary>
-
-如果代码、目标架构和 API 构建地址都没变，可以直接复用。替换原来的 Docker Hub 用户名、ACR 域名和命名空间后，在 Mac 执行：
-
-```bash
-docker tag yourdockerhubname/mini-cms-api:v1 crpi-xxxx.cn-beijing.personal.cr.aliyuncs.com/mini-cms/mini-cms-api:v1
-docker tag yourdockerhubname/mini-cms-admin:v1 crpi-xxxx.cn-beijing.personal.cr.aliyuncs.com/mini-cms/mini-cms-admin:v1
-```
-
-`docker tag 原名称 新名称` 给同一份镜像增加名称，不会重新打包。新名称须与当前 Compose 配置一致；已有 ACR 名称时跳过这两条命令。
-
-</details>
-
 **再准备 PostgreSQL 镜像。** 在 Mac 下载服务器所需架构的官方镜像，并增加 ACR 标签。把示例域名和命名空间换成自己的：
 
 ```bash
@@ -619,7 +607,7 @@ docker tag postgres:18 crpi-xxxx.cn-beijing.personal.cr.aliyuncs.com/mini-cms/po
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml config --images
 ```
 
-PostgreSQL 只在首次准备或计划更新数据库镜像时处理。以后仅发布应用代码时，复用已经准备好的 PostgreSQL 镜像。
+确认三个镜像都已准备好后，进入 3.3，在本地启动它们验证。
 
 ### 3.3 用这三份镜像在本地试跑
 
@@ -675,7 +663,7 @@ curl -I http://127.0.0.1:3000
 
 因此，这里验证的是“服务能响应请求”，登录保护是否完整生效要在第 8 步继续验证。此时服务器可以还没有准备 Docker 和网站入口；管理端构建时已写入正式 API 域名，本地浏览器中的登录检查会请求那个地址，所以本轮不要求在本地管理页面完成登录。
 
-检查结束后，在 Docker Desktop 的 **Containers** 中点击 **mini-cms-production** 这一组的 **Stop**，停止本次试跑的三个容器，保留镜像和数据。需要继续本地开发时，再启动原来开发用的 PostgreSQL 容器，并在两个终端中启动原来的前后端开发命令。
+试跑通过后，在 Docker Desktop 的 **Containers** 中停止并删除 **mini-cms-production** 这组测试容器，保留三个镜像用于上传 ACR。
 
 ### 3.4 上传已经验证过的镜像
 
@@ -710,32 +698,30 @@ docker login --username=你的ACR登录名 crpi-xxxx.cn-beijing.personal.cr.aliy
 
 执行后才会出现 `Password:`。输入第 3.1 节在 ACR **访问凭证**中设置的固定密码；输入时不显示字符是正常的，回车后看到 `Login Succeeded` 再继续。登录命令只填域名，不带命名空间和仓库名。
 
-**再上传两个应用镜像。** 在 Mac 的项目根目录执行：
+**再上传三个镜像。** 在 Mac 终端依次执行下面三条命令，将示例域名和命名空间换成自己的；两个应用的 `v1` 与本地 `deploy/.env` 中的 `IMAGE_TAG` 保持一致，完整镜像名与 3.2 检查的结果一致：
 
 ```bash
-docker compose --env-file deploy/.env \
-  -f deploy/docker-compose.yml -f deploy/docker-compose.build.yml push api admin_web_antd
-```
+# API
+docker push --platform linux/amd64 crpi-xxxx.cn-beijing.personal.cr.aliyuncs.com/mini-cms/mini-cms-api:v1
 
-`push` 按 Compose 中的 ACR 地址上传已经构建好的两个应用，不会重新构建。两个 `-f` 沿用第 3.2 节的构建配置；Docker Desktop 的 **Push to Hub** 对应 Docker Hub，上传 ACR 使用这里的终端命令。参见 [Compose push](https://docs.docker.com/reference/cli/docker/compose/push/)。
+# Admin
+docker push --platform linux/amd64 crpi-xxxx.cn-beijing.personal.cr.aliyuncs.com/mini-cms/mini-cms-admin:v1
 
-**接着上传 PostgreSQL。** 它是从官方转存的现成镜像，用下面的命令单独上传；替换为自己第 3.2 节使用的 ACR 地址：
-
-```bash
+# PostgreSQL
 docker push --platform linux/amd64 crpi-xxxx.cn-beijing.personal.cr.aliyuncs.com/mini-cms/postgres:18
 ```
 
-`--platform linux/amd64` 只上传本章服务器需要的架构，须与前面的下载和试跑平台一致。它使用本机已经准备好的镜像，不会重新下载 PostgreSQL。参见 [Docker push 平台参数](https://docs.docker.com/reference/cli/docker/image/push/)。
+`push` 上传本机已有镜像，不会重新构建；`--platform linux/amd64` 只上传服务器需要的平台，并跳过可能导致 ACR 报错的附加证明信息。参见 [Docker 单平台上传](https://docs.docker.com/reference/cli/docker/image/push/)。
 
 最后在 ACR 控制台分别打开三个仓库的 **镜像版本**，确认：
 
-| 仓库 | 首次上传后应看到的标签 |
+| 仓库 | 应看到的标签（应用版本以 `v1` 为例） |
 |---|---|
 | `mini-cms-api` | `v1` |
 | `mini-cms-admin` | `v1` |
 | `postgres` | `18` |
 
-三个镜像都上传成功后，再进入服务器部署。把本次源代码和配置改动保存到 Git，记录应用标签对应的 commit，真实 `.env` 不提交。
+三个镜像上传成功后，提交本次构建使用的代码和配置（不含真实 `.env`），为该 commit 打上与应用镜像版本一致的 Git 标签，例如 `v1`，然后进入服务器部署。
 
 **以后只发布应用代码时，构建、验证并上传两个应用的新标签即可，PostgreSQL 不必重复下载或上传。** 三个镜像仍分别保存在各自的 ACR 仓库中。
 
@@ -1143,7 +1129,7 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml \
 
 1. 完成本次修改，检查迁移文件，运行项目已有的测试和检查。
 2. 在编辑器中把本地 `deploy/.env` 的 `IMAGE_TAG` 从 `v1` 改成新版本，例如 `v2`。每次发布使用新标签，保留旧版供核对和回退。
-3. 按第 3.2～3.3 节重新制作两个应用镜像并本地试跑，跳过 PostgreSQL 的下载和改标签。Mac 的 `IMAGE_PREFIX` 保持公网地址，再执行第 3.5 节上传两个应用的 Compose `push` 命令。确认 ACR 两个应用仓库都有 `v2`；源代码和配置提交到 Git，记录这次版本对应的 commit。
+3. 按第 3.2～3.3 节重新制作两个应用镜像并本地试跑，跳过 PostgreSQL 的下载和改标签。Mac 的 `IMAGE_PREFIX` 保持公网地址，再执行第 3.5 节的 API、Admin 两条 `docker push --platform linux/amd64` 命令，**把命令中镜像名末尾的 `:v1` 改成 `:v2`**。确认 ACR 两个应用仓库都有 `v2`；源代码和配置提交到 Git，记录这次版本对应的 commit。
 
 再在宝塔准备服务器配置：
 
@@ -1207,6 +1193,7 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d
 | Nginx 配置保存失败或网站异常 | 宝塔显示的配置错误、Nginx 服务状态、对应站点的错误日志、80 / 443 是否被占用 |
 | Mac 制作镜像失败 | Docker Desktop、Node 版本、lockfile、Dockerfile、正式 API 构建参数 |
 | 上传或拉取镜像失败 | 查看 `push` / `pull` 错误；Mac 使用公网域名，ECS 使用同地域 VPC 域名。登录域名须与镜像域名一致，三个仓库均应有指定标签 |
+| 上传报 `unknown manifest class for application/vnd.oci.empty.v1+json` | 按第 3.5 节使用 `docker push --platform linux/amd64 完整镜像名:标签` 重新上传，跳过仓库不接受的附加证明信息 |
 | PostgreSQL 仍从 Docker Hub 下载 | 检查服务器 Compose 的 `postgres.image` 是否已改为 `${IMAGE_PREFIX}/postgres:18`，并确认 `IMAGE_PREFIX` 使用 ACR 的 VPC 域名 |
 | 提示架构不匹配或 `exec format error` | 服务器 `uname -m` 与镜像平台是否对应，是否按第 2～3 步重新制作了正确平台的镜像 |
 | 更新后还是旧页面 | ACR 是否已有新标签；宝塔中的正式 `.env` 是否改了 `IMAGE_TAG`，是否完成 `pull` 和 `up -d` |
