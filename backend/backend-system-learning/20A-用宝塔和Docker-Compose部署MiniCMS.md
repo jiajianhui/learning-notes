@@ -13,7 +13,7 @@
 | 部分 | 怎样安排 |
 |---|---|
 | 云服务器（宿主机） | 使用 Linux，安装 Docker；由 Nginx 统一接收网站请求、处理 HTTPS，再把请求交给对应项目 |
-| Node.js 项目 | 在 Docker 容器中运行；把所需 Node.js 版本、依赖和启动命令写进 Dockerfile，用 Compose 保存端口、环境变量等配置 |
+| Node.js 项目 | 用 Dockerfile 定义 Node.js 版本、依赖安装和默认启动命令；在 Compose 配置文件中声明端口映射和传给容器的环境变量，由 Compose 按配置启动容器 |
 | 静态网站 | 构建后只需要提供 HTML、CSS、JavaScript 等文件时，优先让 Nginx 直接提供这些文件，省去常驻的 Node.js 进程 |
 | 数据库 | 可以运行在 Docker 容器中，把数据保存在独立数据卷；也可以使用云厂商维护的托管数据库。两种方式都要配置备份并验证恢复 |
 
@@ -483,95 +483,70 @@ services:
 
 ### 3.1 准备 ACR 和本地配置
 
-先在阿里云界面准备保存三个镜像的位置：
+这一节只做两件事：**准备三个镜像仓库，填好一份 `deploy/.env`。**
 
-1. 打开 [ACR 控制台](https://cr.console.aliyun.com/)，进入 **实例列表 → 个人版**，选择与 ECS 相同的地域创建实例；已有实例先核对地域。
-2. 在 **仓库管理 → 命名空间** 中创建 `mini-cms`。命名空间就是给镜像仓库分组的名字；名称被占用时换成自己的，并同步替换下文示例。
-3. 在 **镜像仓库** 中创建 `mini-cms-api`、`mini-cms-admin`、`postgres`，都放入这个命名空间，类型选 **私有**，代码源选 **本地仓库**。本章由 Mac 构建和上传。
-4. 打开 **仓库管理 → 访问凭证**，设置并保存 **固定密码**，记下页面显示的登录名。后面 `docker login` 提示 `Password:` 时，输入的就是这个仓库密码。
+**先准备 ACR。已有的仓库和凭证直接沿用。**
 
-个人版用于这次学习验证；阿里云将其限定为开发测试用途，且共享带宽没有固定速度保障。参见 [个人版使用条件](https://help.aliyun.com/zh/acr/user-guide/create-a-container-registry-personal-edition-instance)和[带宽说明](https://help.aliyun.com/zh/acr/user-guide/individual-edition-instance-independent-domain-name-capacity-limit)。
+1. 打开 [ACR 控制台](https://cr.console.aliyun.com/)，在 **实例列表 → 个人版** 创建与 ECS 同地域的实例。
+2. 在 **仓库管理 → 命名空间** 创建 `mini-cms`，用它给仓库分组；名称被占用时换成自己的。
+3. 在这个命名空间下创建 `mini-cms-api`、`mini-cms-admin`、`postgres` 三个仓库，都选 **私有**，代码源选 **本地仓库**。
+4. 在 **访问凭证** 设置并保存**固定密码**，记下登录名。后面上传、下载镜像时用这组凭证登录 ACR。
 
-接着在编辑器的文件列表中准备本机配置。如果 `deploy/.env` 已存在，直接打开检查；首次创建时按下面两步操作：
+个人版用于学习验证，官方限定开发测试用途，且无固定带宽保障。参见 [使用条件](https://help.aliyun.com/zh/acr/user-guide/create-a-container-registry-personal-edition-instance)和[带宽说明](https://help.aliyun.com/zh/acr/user-guide/individual-edition-instance-independent-domain-name-capacity-limit)。
 
-1. 在 `deploy` 文件夹中复制 `.env.example`，粘贴到同一个文件夹。
-2. 将副本重命名为 `.env`，保留原来的 `.env.example`。
+**再填部署配置。** 在编辑器里复制 `deploy/.env.example`，将副本命名为 `.env`；已有 `.env` 就直接编辑，保留已填好的真实值。本节只改 `deploy/.env`，管理端的 `.env.local` 继续用于本地开发。
 
-打开 `deploy/.env`，按下面三组填写：**镜像叫什么、后端怎样连接数据库、浏览器怎样访问网站。** 三组配置分别交给不同的对象使用。
-
-**① 镜像：存在哪里，这次是哪个版本**
-
-在 ACR 仓库的基本信息中复制**公网地址**，把域名和命名空间填入本机 `.env` 的 `IMAGE_PREFIX`，两个应用的 `IMAGE_TAG` 填 `v1`。例如：
+对照下面填写，三组值放在**同一个文件**中：
 
 ```dotenv
+# 镜像：换成自己的 ACR 公网域名和命名空间
 IMAGE_PREFIX=crpi-xxxx.cn-beijing.personal.cr.aliyuncs.com/mini-cms
 IMAGE_TAG=v1
-```
 
-把示例域名替换为控制台给你的真实域名。`IMAGE_PREFIX` 不带 `https://`，末尾不加 `/`。旧配置中的 `DOCKERHUB_USERNAME` 改成这个变量；`.env.example` 同步保留新变量名和示例值。
-
-```mermaid
-flowchart TD
-    H["ACR 公网域名<br/>从控制台复制"] --> P["IMAGE_PREFIX<br/>ACR 域名 / 命名空间"]
-    N["命名空间<br/>例如 mini-cms"] --> P
-    P --> A["后端：前缀/mini-cms-api:v1"]
-    P --> W["管理端：前缀/mini-cms-admin:v1"]
-    P --> D["数据库：前缀/postgres:18"]
-    T["IMAGE_TAG = v1<br/>只控制两个应用的版本"] --> A
-    T --> W
-```
-
-例如后端的完整名称是 `crpi-xxxx.cn-beijing.personal.cr.aliyuncs.com/mini-cms/mini-cms-api:v1`。以后发布新版应用时修改 `IMAGE_TAG`；PostgreSQL 的 `18` 单独管理。Mac 保留公网前缀，第 5 步只把服务器那份 `.env` 改为 VPC 前缀。
-
-**② 数据库：一边创建账号和库，一边用相同信息连接**
-
-这里的数据库账号由你给 PostgreSQL 设置，与 ACR 登录账号无关。同一组账号、密码和库名，要分别告诉数据库和后端：
-
-```mermaid
-flowchart TD
-    P["POSTGRES_USER：数据库账号<br/>POSTGRES_PASSWORD：数据库密码<br/>POSTGRES_DB：数据库名称"]
-    D["交给 PostgreSQL 容器<br/>在首次初始化时创建账号和数据库"]
-    U["DATABASE_URL<br/>把相同的账号、密码、库名<br/>与数据库地址手动写成一条连接串"]
-    A["交给 Express 后端<br/>按连接串找到并访问数据库"]
-    P --> D
-    P -->|填写相同的值| U
-    U --> A
-```
-
-例如，数据库账号和库名都用 `mini_cms`，这四行就应对应起来：
-
-```dotenv
+# 数据库：本地练习配置，密码两处保持一致
 POSTGRES_USER=mini_cms
 POSTGRES_PASSWORD=your_local_password
 POSTGRES_DB=mini_cms
 DATABASE_URL=postgresql://mini_cms:your_local_password@postgres:5432/mini_cms
+
+# 网站：将 example.com 换成准备上线的真实域名
+ADMIN_DOMAIN=admin.example.com
+API_DOMAIN=api.example.com
+ADMIN_WEB_ORIGIN=https://admin.example.com
 ```
 
-将两处 `your_local_password` 换成**同一个本地练习密码**。`DATABASE_URL` 的格式是 `postgresql://账号:密码@主机:端口/库名`；这里的 `postgres` 对应 Compose 中的数据库服务名，`5432` 是数据库在容器内的端口。后端容器通过这个名字找到数据库，所以这里保留 `postgres`，不填 Mac 的 `localhost`。
+填的时候注意四点：
 
-**③ 网站地址：管理端在哪里，API 在哪里**
+- **镜像地址**：从 ACR 仓库的基本信息中复制公网域名，后接 `/命名空间`；不带 `https://`，末尾不加 `/`。服务器的 VPC 地址到第 5 步再填。
+- **镜像版本**：`IMAGE_TAG` 只填一次，API、Admin 共用。`v1` 是示例标签，使用已有镜像时与实际标签一致；PostgreSQL 的 `18` 单独管理。
+- **数据库**：账号、密码和库名由你设置，与 ACR 凭证无关；修改时同步更新 `DATABASE_URL`，其中的主机保留 `postgres`，不要改成 `localhost`。
+- **网站地址**：`ADMIN_DOMAIN`、`API_DOMAIN` 只填域名；`ADMIN_WEB_ORIGIN` 加 `https://`，不加 `/admin` 等路径。
 
-沿用第 1 步确定的两个子域名。图中的 `example.com` 都替换为自己的域名：
+**先看：三个网站变量分别交给谁？**
+
+```mermaid
+flowchart LR
+    A["API_DOMAIN<br/>后端域名"] -->|构建时使用| W["admin-web-antd 管理端<br/>知道去哪里请求后端"]
+    O["ADMIN_WEB_ORIGIN<br/>管理端来源地址"] -->|创建容器时传入| S["server 后端<br/>检查管理页面的请求来源"]
+    M["ADMIN_DOMAIN<br/>管理端域名"] -->|只作记录| N["第 7 步手动配置宝塔网站<br/>不参与构建"]
+```
+
+**再看：API 地址怎样进入管理端？**
 
 ```mermaid
 flowchart TD
-    M["ADMIN_DOMAIN<br/>admin.example.com"]
-    N["记录管理端域名<br/>第 7 步在宝塔手动配置网站入口"]
-    O["ADMIN_WEB_ORIGIN<br/>https://admin.example.com"]
-    E["传给 Express 后端<br/>用于检查管理页面的请求来源"]
-    A["API_DOMAIN<br/>api.example.com"]
-    W["NEXT_PUBLIC_API_BASE_URL<br/>https://api.example.com<br/>写进管理端，供浏览器请求 API"]
-    M --> N
-    M -->|手动加上 https:// 后填写| O
-    O --> E
-    A -->|构建配置自动加上 https://| W
+    C["① Compose<br/>读取 deploy/.env 中的 API_DOMAIN<br/>加上 https://，生成构建参数"]
+    D["② Docker<br/>按管理端 Dockerfile 接收参数<br/>设置构建环境变量"]
+    N["③ Next.js<br/>构建管理端，把 API 地址<br/>写进浏览器运行的 JavaScript"]
+    B["上线后：浏览器<br/>按代码中的地址请求后端"]
+    C --> D --> N --> B
 ```
 
-在 `.env` 中，`ADMIN_DOMAIN`、`API_DOMAIN` 只填域名，`ADMIN_WEB_ORIGIN` 填管理端的完整来源地址，包含 `https://`，不加 `/admin` 等页面路径。`NEXT_PUBLIC_API_BASE_URL` 由构建配置根据 `API_DOMAIN` 生成，不需要在这个 `.env` 中另加一行。
+**读取 `deploy/.env` 的是 Compose；Next.js 读取的是 Dockerfile 设置的 `NEXT_PUBLIC_API_BASE_URL`。** 这个变量由上述流程传入，不用另填；具体配置见 3.2 的折叠说明。
 
-当前 `ADMIN_DOMAIN` 只用于记录和后面手动配置；填写这些变量不会自动创建 DNS 记录或宝塔网站。这里先把选好的地址告诉程序，第 7～8 步再接通域名和 HTTPS。
+**`API_DOMAIN` 要在构建前填好，之后更换需要重新构建并部署管理端镜像。** 只改服务器 `.env` 不会改写已生成的浏览器代码。参见 [Next.js 构建时写入公开环境变量](https://nextjs.org/docs/app/guides/environment-variables#bundling-environment-variables-for-the-browser)。
 
-**API 域名必须在这次打包前填好。** 它会写进管理端镜像；本地验证通过后上传的就是这一份镜像，不能保留 `api.example.com` 等到服务器再改。数据库密码只在容器运行时传入，不会作为构建参数打进镜像。
+如果沿用旧版配置，将 `DOCKERHUB_USERNAME` 改为 `IMAGE_PREFIX`，并按第 2.6 节同步 `.env.example` 的变量名。填好这份文件后，进入 3.2 检查并构建。
 
 ### 3.2 按服务器架构制作镜像
 
@@ -601,6 +576,19 @@ docker compose --env-file deploy/.env \
 ```
 
 `api`、`admin_web_antd` 是 Compose 中的两个服务名，表示只构建它们。`build` 会在 Mac 上按各自 Dockerfile 安装依赖、生成后端 Prisma Client，并完成管理端的 `next build`。结束时应没有报错；在 Docker Desktop 的 **Images → Local** 中，应能找到以 ACR 地址开头、带本次标签的两个应用镜像。
+
+<details>
+<summary>对照代码：API 地址传递对应哪些配置？</summary>
+
+3.1 第二张图的前三步，对应以下配置：
+
+| 步骤 | 对应配置 |
+|---|---|
+| ① Compose 读取并传递 | 命令中的 `--env-file deploy/.env` 指定读取文件；`deploy/docker-compose.build.yml` 的 `build.args` 将 `https://${API_DOMAIN}` 作为 `NEXT_PUBLIC_API_BASE_URL` 传出 |
+| ② Docker 设置环境变量 | `admin-web-antd/Dockerfile` 中的 `ARG` 接收参数，`ENV` 将它设为构建环境变量 |
+| ③ Next.js 构建 | Dockerfile 的 `RUN npm run build` 执行 `next build`，读取 `NEXT_PUBLIC_API_BASE_URL` 并生成浏览器代码 |
+
+</details>
 
 <details>
 <summary>已经构建好 Docker Hub 名称的两个 v1 镜像：用增加标签代替重新构建</summary>
