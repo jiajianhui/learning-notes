@@ -751,16 +751,23 @@ ss -lntp
 
 ## 第 5 步：把运行配置放到服务器
 
-服务器接下来会通过 VPC 从 ACR 下载三个镜像，现在先准备“用什么配置运行”。**这一步在宝塔的文件管理器中完成目录创建、文件上传和编辑，最后再用终端检查配置。**
+这一步在宝塔上传本机 `mini-cms/deploy` 中的 **`docker-compose.yml` 和已填好的 `.env`**，调整服务器配置，再检查是否正确。
 
-代码已经在镜像里。**首次部署直接上传本机 `mini-cms/deploy` 中的 `docker-compose.yml` 和已经填好的 `.env`。** `.env.example` 留在本地作为模板，服务器运行不需要它。服务器已有正式 `.env` 时保留该文件，直接编辑需要调整的项，不用本地文件覆盖。
+两次修改 `.env` 的作用不同：
+
+| 哪次修改 | 作用 | 填写或调整什么 |
+|---|---|---|
+| 第 3 步：Mac 的 `deploy/.env` | 为构建镜像、本地试跑和上传 ACR 准备配置 | 填 ACR 公网地址、镜像版本、正式 API 域名和本地试跑的数据库配置 |
+| 第 5 步：上传到服务器的 `.env` 副本 | 为服务器通过内网拉取镜像、运行容器提供配置 | ACR 改成 VPC 地址；数据库密码按需改为正式密码，并同步 `DATABASE_URL`；镜像版本和域名保持一致，Mac 原文件不动 |
+
+构建时，Compose 根据 `.env` 中的 ACR 地址和版本给镜像命名；上传时，`docker push` 使用这个完整镜像名，将镜像上传到同一个 ACR 公网地址。
 
 在宝塔左侧打开 **文件**，按下面的顺序操作：
 
 1. 进入 `/opt`，新建 `mini-cms` 文件夹，再在其中新建 `deploy`；已有目录直接进入。
-2. 在 `/opt/mini-cms/deploy` 点击 **上传**，选择上述两个本地文件。Mac 文件选择框若看不到 `.env`，按 `Command + Shift + .` 显示隐藏文件。
-3. 打开上传后的 `.env`，把 `IMAGE_PREFIX` 的公网域名改为 ACR 控制台提供的 **VPC（专有网络）域名**，再按下表核对其余配置。
-4. 保存后打开 `.env` 的权限设置：所有者使用本章的 `root`，权限设为 `600`。它表示只有所有者能读写这个文件；只修改 `.env` 的权限。
+2. 在 `/opt/mini-cms/deploy` 点击 **上传**，选择上述两个本地文件；已有正式 `.env` 时保留原文件。Mac 文件选择框若看不到 `.env`，按 `Command + Shift + .` 显示隐藏文件。
+3. 打开服务器上的 `.env`，把 `IMAGE_PREFIX` 的公网域名改为 ACR 控制台提供的 **VPC（专有网络）域名**。
+4. 保存后将 `.env` 的所有者设为 `root`、权限设为 `600`，仅允许所有者读写。
 
 公网与 VPC 地址通往**同一个 ACR 实例里的同一份镜像**，只是访问入口不同，不用再上传一份：
 
@@ -771,45 +778,13 @@ ss -lntp
 
 两个域名都从自己的 ACR 控制台复制；命名空间和仓库名保持一致，不带 `https://`。**只改服务器这份 `.env`，Mac 保留公网地址。** VPC 入口供云内网络访问，本机 Mac 继续通过公网完成上传。参见 [ACR 域名说明](https://help.aliyun.com/zh/acr/user-guide/individual-edition-instance-independent-domain-name-capacity-limit)。
 
-数据库和域名的对应关系沿用[第 3.1 节](#31-准备-acr-和本地配置)，这次核对服务器实际使用的值：
-
-| 配置 | 上传后核对什么 |
-|---|---|
-| `IMAGE_PREFIX`、`IMAGE_TAG` | 前缀为自己的 `ACR的VPC域名/命名空间`，两个应用的版本与已上传的镜像一致，例如 `v1`；PostgreSQL 仍由 Compose 固定为 `18` |
-| `POSTGRES_USER`、`POSTGRES_PASSWORD`、`POSTGRES_DB`、`DATABASE_URL` | 账号和库名可以沿用；如果密码仍是本地简单练习值，在服务器上改为正式密码，同时修改 `DATABASE_URL` 中的密码，主机仍为 `postgres` |
-| `ADMIN_DOMAIN`、`API_DOMAIN`、`ADMIN_WEB_ORIGIN` | 与第 3 步选定的正式地址一致；管理端镜像已经写入当时的 API 地址 |
-
-本地 `.env` 已经填好正式数据库和域名配置时，上传后只需调整镜像前缀。完成后，在宝塔文件列表中应看到：
-
-```text
-/opt/mini-cms/deploy/
-├── docker-compose.yml
-└── .env
-```
-
-如果之前已上传旧配置，这次按第 2.7 节更新 `docker-compose.yml`，确保三个 `image` 都使用 `${IMAGE_PREFIX}`，并保留正式端口和数据卷配置。服务器 `.env` 使用新的 VPC 前缀，保留已有正式数据库密码和域名。
-
-文件上传完成后，检查这两个配置文件能否被 Docker 正确读取。打开宝塔左侧 **终端**，连接当前服务器。这里输入的命令会在云服务器上执行。
-
-先进入项目文件夹：
+最后打开宝塔左侧 **终端**，在服务器上检查配置：
 
 ```bash
-cd /opt/mini-cms
+docker compose --env-file /opt/mini-cms/deploy/.env -f /opt/mini-cms/deploy/docker-compose.yml config
 ```
 
-`cd` 的意思是“切换到这个文件夹”。进入后，下面命令里的 `deploy/.env` 就能找到刚上传的 `/opt/mini-cms/deploy/.env`。
-
-再检查配置：
-
-```bash
-docker compose --env-file deploy/.env -f deploy/docker-compose.yml config
-```
-
-这条命令的意思是：**读取 `deploy/.env` 中的值，填入 `deploy/docker-compose.yml`，检查并显示最终配置。**
-
-终端会打印一大段配置，确认**三个 `image` 都使用 ACR 的 VPC 域名**，再核对版本号、端口和数据库连接信息。如果 PostgreSQL 仍是 `postgres:18`，说明还没换成 ACR 地址；回到宝塔修改对应文件。出现格式错误或缺少变量的提示时同样修改后再检查。输出包含密码，只在自己终端查看。
-
-这一步完成的是配置检查。确认没有错误、填写的值也正确后，进入第 6 步下载镜像并启动服务。
+`config` 读取 `.env` 并显示最终配置，不会启动容器。确认没有报错、三个 `image` 都使用 ACR 的 VPC 域名且版本正确，再进入第 6 步；输出包含密码，只在自己终端查看。
 
 ---
 
