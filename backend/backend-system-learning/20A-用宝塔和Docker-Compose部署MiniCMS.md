@@ -945,16 +945,12 @@ services:
 
 ### 用 TablePro 查看线上数据库
 
-**按需操作，用于查看线上数据库。** 在 Mac 的 TablePro 中新建 PostgreSQL 连接，在 **Network → Connect via** 选择 **SSH Tunnel**：
+在 Mac 的 TablePro 中新建 PostgreSQL 连接，在 **Network → Connect via** 选择 **SSH Tunnel**：
 
-| 配置 | 地址与端口 | 登录凭证 |
-|---|---|---|
-| SSH | 服务器公网 IP、实际 SSH 端口（通常为 22） | 沿用登录这台服务器的 SSH 用户和 Mac 上的私钥 |
-| 数据库 | `127.0.0.1`、`5432` | 服务器 `deploy/.env` 中的 `POSTGRES_DB`、`POSTGRES_USER`、`POSTGRES_PASSWORD` |
+- **SSH**：填写服务器公网 IP、SSH 端口（默认 `22`，改过则填实际端口）和 SSH 用户（本章为 `root`），选择登录服务器的私钥。
+- **数据库**：地址填 `127.0.0.1`，端口填 `5432`；数据库名称、账号和密码分别填写服务器 `deploy/.env` 中的 `POSTGRES_DB`、`POSTGRES_USER`、`POSTGRES_PASSWORD`。
 
-TablePro 通过 SSH 访问**服务器本机的 `127.0.0.1:5432`**，隧道由它自动管理。
-
-点击 **Test Connection**，成功后保存并连接，确认能看到数据库表。参见 [TablePro SSH 连接说明](https://tablepro.app/blog/postgresql-ssh-tunnel-mac)。
+点击 **Test Connection**，成功后保存并连接。
 
 ---
 
