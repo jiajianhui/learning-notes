@@ -843,7 +843,7 @@ curl -I http://127.0.0.1:3000
 
 本地把账号密码临时写进 `server/.env`；本节在服务器终端输入，用完清除变量，省去临时编辑部署配置再删除密码的步骤。**输入方式变了，创建账号的脚本和数据库操作没变。**
 
-**新数据库需要执行一次，日常更新不用重复。** 前面的数据库迁移只建表，不会带过来本地管理员，也不会自动执行创建脚本。
+**服务器的新数据库还没有管理员，需要按本节下面的命令运行 `npm run admin:create`，创建首个账号。** 以后只更新应用代码、继续使用同一个数据库时，已有管理员会保留，不用重复创建。
 
 **先理解“临时容器”：就像本地另开一个终端，单独运行脚本。**
 
@@ -869,7 +869,9 @@ curl -I http://127.0.0.1:3000
 
 **② 在服务器终端输入账号密码，让 Docker 运行脚本**
 
-确认第 6 步的数据库已运行、API 迁移成功。在宝塔终端**逐行执行**下面的命令；出现提示后，输入账号或密码并按回车，再继续下一行。密码输入时不显示字符。
+第 6 步启动 API 容器时，会先执行 `npm run db:migrate:deploy`，在数据库中创建或更新表结构，再启动 API 服务。**数据库迁移准备好了管理员表，但不会自动创建管理员账号。**
+
+确认 PostgreSQL 已运行、数据库迁移已完成，再在宝塔终端**逐行执行**下面的命令创建管理员；出现提示后，输入账号或密码并按回车，再继续下一行。密码输入时不显示字符。
 
 ```bash
 bash
@@ -902,13 +904,21 @@ unset ADMIN_USERNAME ADMIN_PASSWORD
 
 宝塔终端所在的服务器叫**宿主机**。`cd` 只是在宿主机换目录，不会进入容器；真正执行 `npm run admin:create` 的位置是容器里的 `/app`。这个名字来自 Dockerfile 的 `WORKDIR /app`，里面放的是后端工程，例如 `/app/package.json`、`/app/scripts/create-admin.ts`，相当于本地执行脚本时所在的 `server` 目录。Docker 会替你在这里执行命令。参见 [Compose 一次性任务](https://docs.docker.com/reference/cli/docker/compose/run/)。
 
-**数据库地址、账号密码分别怎样到脚本里？**
+**数据库连接地址、管理员账号密码，分别怎样到脚本里？**
 
-你可以把 `process.env` 理解成 **Node.js 程序启动时拿到的一份配置表**。本地由 `dotenv` 把 `.env` 中的值读进去；这里由 Compose 在启动容器时传进去。数据库地址来自服务器 `deploy/.env`，管理员账号密码来自刚才的终端输入，脚本最终仍从 `process.env` 读取这些值。
+先看脚本要做什么：**连接服务器的数据库，再把你输入的管理员账号写进去。** 因此它需要两类信息：
 
-本章通过 `.dockerignore` 排除本地 `server/.env`，容器里不必再放一份 `.env`；以后调整这些运行配置，也不用重新构建镜像。
+- `DATABASE_URL`：包含数据库地址、库名，以及**数据库自己的账号密码**，让程序有权限连接数据库。
+- `ADMIN_USERNAME`、`ADMIN_PASSWORD`：你要创建的**后台管理员账号密码**，以后在管理页面登录时使用。
 
-`api.environment` 指的就是 `deploy/docker-compose.yml` 中 **`api` 服务下面的 `environment` 配置块**。以下是已有配置的节选，不需要修改：
+前者是“程序连接数据库”的凭证，后者是“你登录管理后台”的凭证，不能混为一谈。本节用下面两条路径把它们交给容器里的程序：
+
+| 需要的值 | 从哪里来 | 怎样传进容器 | 为什么这样安排 |
+|---|---|---|---|
+| 数据库连接地址 `DATABASE_URL` | 服务器 `deploy/.env` | `--env-file` 让 Compose 读取 → `api` 服务下的 `environment` 配置传入 | API 平时运行也要连接数据库，因此保存在部署配置中 |
+| 管理员账号密码 `ADMIN_USERNAME`、`ADMIN_PASSWORD` | 你在服务器终端输入 | `read` 接收 → `export` 交给 Compose → `-e` 传入 | 只在运行创建脚本时使用，用完清除终端变量，不长期保存在部署配置中 |
+
+表格里的 `environment`，就是 `deploy/docker-compose.yml` 中 **`api` 服务下面的配置块**（`api.environment`）。以下是已有配置的节选，不需要修改：
 
 ```yaml
 services:
@@ -919,7 +929,11 @@ services:
 
 右边 `${DATABASE_URL}` 是 Compose 从 `deploy/.env` 取出的值，左边 `DATABASE_URL` 是传给容器的变量名。**就像给函数传参：右边准备值，左边约定程序用什么名字接收。**
 
-管理员账号密码则走另一条路径：**`read` 接收输入 → `export` 交给 Compose → `-e` 传入容器**，只在这次任务中使用，不用加进上面的长期配置。单写 `--env-file` 不会把文件里的所有变量自动传给容器。参见 [Compose 环境变量传递](https://docs.docker.com/compose/how-tos/environment-variables/set-environment-variables/)。
+**Compose 读到变量，不等于容器已经收到变量。** `--env-file` 负责读取文件；本章通过 `environment` 指定要传入的数据库连接地址，通过 `-e` 指定本次要传入的管理员账号密码。采用两条路径，是因为这些值的使用时机不同。参见 [Compose 环境变量传递](https://docs.docker.com/compose/how-tos/environment-variables/set-environment-variables/)。
+
+**值传进容器以后，脚本怎样读取？** 容器启动 Node.js 程序时，这些值成为程序可读取的环境变量。Node.js 提供一个叫 `process.env` 的对象，可以把它理解成程序拿到的一份配置表。例如，脚本中的 `const username = process.env.ADMIN_USERNAME`，就是从这份表里取出管理员用户名。
+
+回到本地开发，`dotenv` 会读取 `server/.env`，把里面的值放进 `process.env`。本章的镜像通过 `.dockerignore` 排除了本地 `.env`，由 Compose 把值传进容器，Node.js 再通过 `process.env` 提供给代码。**两边提供配置的方式不同，脚本读取配置的写法相同。** 这些值在运行时提供，因此以后修改数据库连接地址等运行配置，不用重新构建镜像。
 
 **③ 确认管理员已写入数据库**
 
