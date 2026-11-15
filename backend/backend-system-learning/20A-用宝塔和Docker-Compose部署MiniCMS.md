@@ -790,89 +790,92 @@ docker compose --env-file /opt/mini-cms/deploy/.env -f /opt/mini-cms/deploy/dock
 
 ## 第 6 步：拉取镜像并启动 Compose，在宝塔查看状态
 
-这一步让服务器真正运行 Mini CMS：**下载镜像 → 按配置启动 → 查看运行结果。** 下载和启动使用 Compose，状态和日志在宝塔查看。
+**登录 ACR → 拉取镜像 → 启动容器 → 检查服务。** 以下命令都在宝塔的服务器终端执行。
 
-**先登录 ACR 的 VPC 域名，再下载镜像。** 第 3.1 节创建的是私有仓库，服务器需要单独登录一次。在宝塔终端执行下面的命令：登录名沿用 ACR 访问凭证页面的值，域名使用服务器 `IMAGE_PREFIX` 中斜线前的 VPC 域名，不带命名空间：
+**① 登录 ACR。** 登录名使用 ACR 访问凭证页面的值，域名使用服务器 `IMAGE_PREFIX` 中斜线前的 VPC 域名：
 
 ```bash
 docker login --username=你的ACR登录名 crpi-xxxx-vpc.cn-beijing.personal.cr.aliyuncs.com
 ```
 
-执行后出现 `Password:`，输入第 3.1 节在 ACR **访问凭证**中设置的固定密码。输入时不显示字符，回车后看到 `Login Succeeded` 即登录成功。**登录域名要与拉取镜像的域名一致**；Mac 的登录状态不会自动同步到服务器。
+出现 `Password:` 后，输入第 3.1 节设置的 ACR 固定密码（输入时不显示字符），看到 `Login Succeeded` 后继续。
 
-然后进入项目目录下载镜像：
+**② 拉取三个镜像。**
 
 ```bash
 cd /opt/mini-cms
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml pull
 ```
 
-`pull` 按 Compose 中的 VPC 地址，从 ACR 下载 API、Admin 和 PostgreSQL。三个服务都使用第 3 步准备好的镜像，服务器不需要访问 Docker Hub 或执行 `npm install`。等待三个镜像全部拉取成功再继续；下载不会启动程序。
+等待 API、Admin 和 PostgreSQL 全部下载成功。
 
-如果 VPC 域名无法连接，先核对 ECS 与 ACR 是否同地域、域名是否复制正确，以及 ECS 的网络能否访问这个入口。若提示未授权，核对登录域名和仓库密码；若提示镜像不存在，核对第 3.5 节的三个仓库和标签。
-
-**再启动服务。** 仍在同一个服务器终端执行：
+**③ 启动容器。**
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d
 ```
 
-`up -d` 按运行配置创建并在后台启动三个容器，Compose 项目名为 `mini-cms-production`。其中后端启动时还会沿着配置完成下面的流程：
+三个容器在后台运行，API 会自动完成数据库迁移后再启动。
 
-```mermaid
-flowchart LR
-    P["PostgreSQL 健康检查通过"]
-    M["API 容器执行<br/>npm run db:migrate:deploy"]
-    A["迁移成功后执行<br/>npm run start"]
-    P --> M --> A
-```
-
-迁移使用镜像中已有的 SQL 文件建立或更新表结构，成功后才启动 Express。这一步已由 Compose 的 `command` 安排好，首次启动不用再手动执行一次迁移。
-
-**然后在宝塔查看结果。** 打开 **Docker → 容器**，找到属于 `mini-cms-production` 的三个容器；支持发现本地编排的版本，也会在“容器编排”中显示它。
-
-不要再把相同配置复制到面板创建第二套编排，否则可能出现端口冲突或连接到另一份数据卷。
+**④ 检查服务。** 打开宝塔 **Docker → 容器**，查看 `mini-cms-production` 的三个容器：
 
 | 查看位置 | 应看到什么 |
 |---|---|
 | 三个容器的状态 | 都处于运行中，没有反复重启 |
 | PostgreSQL 容器详情 | 健康状态为 `healthy` |
 | API 容器日志 | 迁移成功或没有待执行迁移，随后 Express 启动 |
-| 各容器的端口映射 | 宿主机地址是 `127.0.0.1`，对应 3000、3001、5432，而非公网监听 |
+| 各容器的端口映射 | 宿主机地址为 `127.0.0.1`，端口与配置一致（本章为 3000、3001、5432） |
 
-日常查看日志、资源占用和简单启停都可以在宝塔完成，参见 [宝塔容器管理](https://docs.bt.cn/user-guide/docker/container/)。如果面板没有显示健康状态或完整端口，在服务器终端执行下面的命令补充查看：
-
-```bash
-docker compose --env-file deploy/.env -f deploy/docker-compose.yml ps
-```
-
-`ps` 列出这组容器的状态和端口。最后确认服务能响应请求，**下面两条仍在服务器终端执行**：
+再在同一个服务器终端检查响应，下面的 `127.0.0.1` 指服务器本机：
 
 ```bash
 curl -i http://127.0.0.1:3001/api/public/articles
 curl -I http://127.0.0.1:3000
 ```
 
-这里的 `127.0.0.1` 指执行命令的服务器本机；在 Mac 的 Apifox 中填写相同地址，会访问 Mac 自己。当前应用端口只允许服务器本机连接，所以这次用服务器终端检查，第 7 步接通域名后再改用 Mac 上的 Apifox。
-
-公开文章接口应返回 `200` 和 JSON，新库的 `data` 为空数组；管理端返回首页或跳转响应，当前首页通常是 `307`。这与[第 3.3 节](#33-用这三份镜像在本地试跑)相同，只检查服务响应，完整登录留到 HTTPS 就绪后。
+公开文章接口应返回 `200` 和 JSON，新库的 `data` 为空数组；管理端首页通常返回 `307` 跳转。完整登录留到第 8 步 HTTPS 就绪后验证，异常时查文末[排错速查](#排错速查遇到问题再看)。
 
 ---
 
 ### 在新数据库中创建首个管理员
 
-迁移只建立表，不会复制本地管理员。现在要运行第 17A 章的 `admin:create` 脚本，在正式数据库中创建能登录后台的账号。镜像已经包含这个脚本及运行工具。
+沿用你在[第 17A 章](./17A-管理员登录实操-用Session和Cookie保护写接口.md#13-创建初始管理员)熟悉的主线：**准备账号密码 → 执行 `npm run admin:create` → 管理员写入数据库。** 镜像里包含同一个 `server/scripts/create-admin.ts`，现在由 Docker 帮你运行它。
 
-确认宝塔中的 API 迁移日志正常后，在宝塔终端先输入 `bash`，让下面的账号密码输入命令按 Bash 语法执行，再输入 `cd /opt/mini-cms` 进入项目目录。接着逐行输入下面两条命令，每条执行后按提示填写；密码输入时不显示字符：
+本地把账号密码临时写进 `server/.env`；本节在服务器终端输入，用完清除变量，省去临时编辑部署配置再删除密码的步骤。**输入方式变了，创建账号的脚本和数据库操作没变。**
+
+**新数据库需要执行一次，日常更新不用重复。** 前面的数据库迁移只建表，不会带过来本地管理员，也不会自动执行创建脚本。
+
+**先理解“临时容器”：就像本地另开一个终端，单独运行脚本。**
+
+本地开发时，一个终端运行 `npm run dev` 提供 API，另一个终端运行 `npm run admin:create`，写入数据库后结束。Docker 中也可以这样分工：
+
+| 用途 | Docker 怎样运行 |
+|---|---|
+| 持续提供 API | 已启动的 API 容器一直运行后端服务 |
+| 创建管理员 | 用同一个 API 镜像另开一个容器，只运行创建脚本，结束后删除这个容器 |
+
+镜像可以理解成**打包好的后端工程、Node.js 和依赖**，容器是用它启动的一份独立运行环境。这里称它为“临时容器”，只是因为它做完这次任务就删除；无需重新打包镜像，也不会替换正在提供服务的 API 容器。
+
+**① 确认账号密码规则**
+
+**密码规则要看创建脚本，不能只看 `loginSchema`。** 它们是两个入口，像“开户”和“登录”：创建脚本负责写入新账号，登录接口负责核对已有账号。当前项目代码中：
+
+| 代码 | 何时执行 | 当前检查 |
+|---|---|---|
+| `server/scripts/create-admin.ts` | 执行 `npm run admin:create` 时 | 用户名非空，密码至少 6 个字符 |
+| `server/src/modules/auth/auth-schema.ts` 中的 `loginSchema` | 提交登录请求时 | 用户名去掉首尾空格后为 1～50 个字符，密码为 1～200 个字符 |
+
+创建脚本没有调用 `loginSchema`，登录校验通过后还要核对数据库里的密码哈希。因此这次输入用户名时不要带首尾空格、长度不超过 50；密码取 6～200 个字符，兼顾创建和登录两边的规则。
+
+**② 在服务器终端输入账号密码，让 Docker 运行脚本**
+
+确认第 6 步的数据库已运行、API 迁移成功。在宝塔终端**逐行执行**下面的命令；出现提示后，输入账号或密码并按回车，再继续下一行。密码输入时不显示字符。
 
 ```bash
+bash
+cd /opt/mini-cms
 read -r -p "管理员用户名: " ADMIN_USERNAME
-read -r -s -p "管理员密码（至少 12 位）: " ADMIN_PASSWORD
-```
-
-再执行初始化，并清除本次终端中临时保存的账号密码变量：
-
-```bash
+read -r -s -p "管理员密码: " ADMIN_PASSWORD
 printf '\n'
 export ADMIN_USERNAME ADMIN_PASSWORD
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml \
@@ -880,28 +883,64 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml \
 unset ADMIN_USERNAME ADMIN_PASSWORD
 ```
 
-关键命令可以这样读：
+**这组命令可以读成：终端接收账号密码 → Docker 把变量传给临时容器 → 容器运行脚本 → 删除临时容器、清除终端变量。**
 
-| 部分 | 作用 |
+| 命令部分 | 在这里做什么 |
 |---|---|
-| `run --rm --no-deps` | 创建一个临时容器执行任务，结束后删除它；数据库已运行，不再启动依赖服务 |
-| `-e ADMIN_USERNAME -e ADMIN_PASSWORD` | 将刚输入并导出的两个变量传给临时容器 |
-| `api npm run admin:create` | 复用 `api` 的镜像和数据库配置，这次执行创建管理员脚本 |
+| `bash` | 切换到 Bash，让下面的输入命令按同一种 Shell 语法执行 |
+| `cd /opt/mini-cms` | 在服务器上切换到部署配置所在目录，让后面的相对路径能找到文件 |
+| `read`、`printf '\n'` | `read` 把输入保存到指定变量；`-p` 显示提示，`-r` 保留反斜杠，`-s` 隐藏密码输入。`printf` 只负责输入密码后的换行 |
+| `export ADMIN_USERNAME ADMIN_PASSWORD` | 让接下来启动的 Compose 程序也能读到这两个终端变量 |
+| `--env-file deploy/.env`、`-f deploy/docker-compose.yml` | 告诉 Compose 分别从哪里读取变量和服务配置 |
+| `run ... api npm run admin:create` | 按 Compose 中名为 `api` 的服务配置另开容器，把原来的服务启动命令换成管理员脚本 |
+| `-e ADMIN_USERNAME -e ADMIN_PASSWORD` | 让 Compose 把刚输入的两个变量传进这次的容器 |
+| `--no-deps` | 不自动启动依赖服务，所以前面要先确认数据库已经运行 |
+| `--rm` | 脚本结束后删除这次的临时容器 |
+| `unset ADMIN_USERNAME ADMIN_PASSWORD` | 清除当前终端里的这两个变量，无论脚本成功还是报错，执行结束后都要运行这一行 |
 
-密码通过隐藏输入传入，不写进命令历史或配置文件。确认看到管理员创建成功的提示且没有错误后，再配置域名；HTTPS 就绪后用这个账号验证登录。该脚本对同名账号会更新密码，首次创建后不作为日常发布步骤。参见 [Compose run](https://docs.docker.com/reference/cli/docker/compose/run/)。
+`read` 只负责接收输入，不校验密码长度；真正的检查仍由创建脚本执行。
+
+宝塔终端所在的服务器叫**宿主机**。`cd` 只是在宿主机换目录，不会进入容器；真正执行 `npm run admin:create` 的位置是容器里的 `/app`。这个名字来自 Dockerfile 的 `WORKDIR /app`，里面放的是后端工程，例如 `/app/package.json`、`/app/scripts/create-admin.ts`，相当于本地执行脚本时所在的 `server` 目录。Docker 会替你在这里执行命令。参见 [Compose 一次性任务](https://docs.docker.com/reference/cli/docker/compose/run/)。
+
+**数据库地址、账号密码分别怎样到脚本里？**
+
+你可以把 `process.env` 理解成 **Node.js 程序启动时拿到的一份配置表**。本地由 `dotenv` 把 `.env` 中的值读进去；这里由 Compose 在启动容器时传进去。数据库地址来自服务器 `deploy/.env`，管理员账号密码来自刚才的终端输入，脚本最终仍从 `process.env` 读取这些值。
+
+本章通过 `.dockerignore` 排除本地 `server/.env`，容器里不必再放一份 `.env`；以后调整这些运行配置，也不用重新构建镜像。
+
+`api.environment` 指的就是 `deploy/docker-compose.yml` 中 **`api` 服务下面的 `environment` 配置块**。以下是已有配置的节选，不需要修改：
+
+```yaml
+services:
+  api:
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+```
+
+右边 `${DATABASE_URL}` 是 Compose 从 `deploy/.env` 取出的值，左边 `DATABASE_URL` 是传给容器的变量名。**就像给函数传参：右边准备值，左边约定程序用什么名字接收。**
+
+管理员账号密码则走另一条路径：**`read` 接收输入 → `export` 交给 Compose → `-e` 传入容器**，只在这次任务中使用，不用加进上面的长期配置。单写 `--env-file` 不会把文件里的所有变量自动传给容器。参见 [Compose 环境变量传递](https://docs.docker.com/compose/how-tos/environment-variables/set-environment-variables/)。
+
+**③ 确认管理员已写入数据库**
+
+看到 `管理员 用户名 已创建` 即成功。自己保管好账号密码，HTTPS 就绪后再验证登录。同名账号重复执行创建脚本，会更新密码。
+
+**为什么删了临时容器、清除了终端变量，还能登录？** 脚本已经通过 `DATABASE_URL` 把用户名和密码哈希写入服务器的 PostgreSQL。就像本地运行脚本后关掉终端，数据库里的记录仍然保留；登录时查的是这条记录。
+
+读完后试着用自己的话说清：**脚本在哪里运行？三个变量怎样到它手里？为什么临时容器删除后账号还在？** 能串起这三件事，就不用靠背命令理解这一步。
 
 ### 用 TablePro 查看线上数据库
 
-需要查库时，在 Mac 的 TablePro 中新建 PostgreSQL 连接，在 **Network → Connect via** 选择 **SSH Tunnel**，填写两组配置：
+**按需操作，用于查看线上数据库。** 在 Mac 的 TablePro 中新建 PostgreSQL 连接，在 **Network → Connect via** 选择 **SSH Tunnel**：
 
 | 配置 | 地址与端口 | 登录凭证 |
 |---|---|---|
 | SSH | 服务器公网 IP、实际 SSH 端口（通常为 22） | 沿用登录这台服务器的 SSH 用户和 Mac 上的私钥 |
 | 数据库 | `127.0.0.1`、`5432` | 服务器 `deploy/.env` 中的 `POSTGRES_DB`、`POSTGRES_USER`、`POSTGRES_PASSWORD` |
 
-这里的数据库地址指**服务器本机**。TablePro 先通过 SSH 连接服务器，再把目标 `127.0.0.1:5432` 告诉服务器上的 SSH 服务，由它连接数据库并转发通信。
+TablePro 通过 SSH 访问**服务器本机的 `127.0.0.1:5432`**，隧道由它自动管理。
 
-点击 **Test Connection**，成功后保存并连接，确认能看到线上数据库的表。隧道由 TablePro 自动管理，不需要另开终端。参见 [TablePro SSH 连接说明](https://tablepro.app/blog/postgresql-ssh-tunnel-mac)。
+点击 **Test Connection**，成功后保存并连接，确认能看到数据库表。参见 [TablePro SSH 连接说明](https://tablepro.app/blog/postgresql-ssh-tunnel-mac)。
 
 ---
 
@@ -1167,7 +1206,7 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d
 | 面板打不开 | 宝塔服务、面板端口、云安全组、授权 IP、安全入口 |
 | Nginx 配置保存失败或网站异常 | 宝塔显示的配置错误、Nginx 服务状态、对应站点的错误日志、80 / 443 是否被占用 |
 | Mac 制作镜像失败 | Docker Desktop、Node 版本、lockfile、Dockerfile、正式 API 构建参数 |
-| 上传或拉取镜像失败 | 查看 `push` / `pull` 错误；Mac 使用公网域名，ECS 使用同地域 VPC 域名。登录域名须与镜像域名一致，三个仓库均应有指定标签 |
+| 上传或拉取镜像失败 | VPC 连接失败时，核对 ECS 与 ACR 是否同地域、域名和网络是否正确；未授权时，核对登录域名和 ACR 密码；镜像不存在时，核对第 3.5 节的仓库和标签。Mac 使用公网地址 |
 | 上传报 `unknown manifest class for application/vnd.oci.empty.v1+json` | 按第 3.5 节使用 `docker push --platform linux/amd64 完整镜像名:标签` 重新上传，跳过仓库不接受的附加证明信息 |
 | PostgreSQL 仍从 Docker Hub 下载 | 检查服务器 Compose 的 `postgres.image` 是否已改为 `${IMAGE_PREFIX}/postgres:18`，并确认 `IMAGE_PREFIX` 使用 ACR 的 VPC 域名 |
 | 提示架构不匹配或 `exec format error` | 服务器 `uname -m` 与镜像平台是否对应，是否按第 2～3 步重新制作了正确平台的镜像 |
@@ -1179,6 +1218,13 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d
 | 重启后数据消失 | PostgreSQL volume 是否仍挂载，是否误删卷 |
 | 证书续签失败 | 宝塔 SSL 续签日志、DNS API 授权或文件验证路径、80 端口与代理规则 |
 | 备份任务成功但无法恢复 | 宝塔任务日志和 `.dump` 文件大小、恢复命令的错误；下载的是目录压缩包时，先解压取出 `.dump` |
+
+宝塔未显示完整状态或端口时，在服务器终端补充查看已有容器，不用在面板重新创建编排：
+
+```bash
+cd /opt/mini-cms
+docker compose --env-file deploy/.env -f deploy/docker-compose.yml ps
+```
 
 ## 官方参考
 
