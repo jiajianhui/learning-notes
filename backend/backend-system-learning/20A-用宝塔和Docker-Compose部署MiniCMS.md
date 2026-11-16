@@ -522,6 +522,19 @@ ADMIN_WEB_ORIGIN=https://admin.example.com
 - **数据库**：账号、密码和库名由你设置，与 ACR 凭证无关；修改时同步更新 `DATABASE_URL`，其中的主机保留 `postgres`，不要改成 `localhost`。
 - **网站地址**：`ADMIN_DOMAIN`、`API_DOMAIN` 只填域名；`ADMIN_WEB_ORIGIN` 加 `https://`，不加 `/admin` 等路径。
 
+**镜像名称为什么要带 ACR 域名？**
+
+完整镜像名同时包含了仓库地址，格式是 **`仓库服务器域名/命名空间/镜像仓库:版本标签`**。执行 `docker push` 时，Docker 根据这个地址决定上传到哪里：
+
+| 镜像名称示例 | 上传到哪里 |
+|---|---|
+| `你的DockerHub用户名/mini-cms-api:v1` | 没写仓库服务器域名，默认上传 Docker Hub |
+| `crpi-xxxx.cn-beijing.personal.cr.aliyuncs.com/mini-cms/mini-cms-api:v1` | 上传到该 ACR 实例中，`mini-cms` 命名空间下的 `mini-cms-api` 仓库，标签为 `v1` |
+
+所以 `docker push` 支持 ACR 等兼容的镜像仓库服务，并不限于 Docker Hub。前提是目标地址正确，并且登录账号有上传权限。参见 [Docker 镜像地址格式](https://docs.docker.com/reference/cli/docker/image/tag/)。
+
+本项目的 Compose 用 `${IMAGE_PREFIX}/mini-cms-api:${IMAGE_TAG}` 拼出完整名称，Admin 同理。**像寄快递一样：构建时给本地镜像贴好地址，执行 `push` 时才真正上传。** 填写 ACR 名称或构建镜像，都不会自动触发上传；第 3.5 节会执行上传命令。
+
 **先看：三个网站变量分别交给谁？**
 
 ```mermaid
