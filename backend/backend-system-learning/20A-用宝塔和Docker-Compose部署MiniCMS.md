@@ -977,16 +977,12 @@ admin.example.com → 宝塔 Nginx → 服务器 127.0.0.1:3000 → Next.js
 api.example.com/api/public/articles → 宝塔 Nginx → 127.0.0.1:3001/api/public/articles → Express
 ```
 
-现在在 Mac 的 **Apifox** 中发送两个请求，将域名替换为自己的：
+在 Mac 浏览器中打开以下地址，将域名换成自己的：
 
-| 请求 | 应看到什么 |
-|---|---|
-| `HEAD http://admin.example.com` | 首页或跳转响应；当前首页通常是 `307`，跟随跳转后可能看到 `200` |
-| `GET http://api.example.com/api/public/articles` | `200` 和包含 `data`、`pagination` 的 JSON |
+- `http://admin.example.com`：能看到管理端页面或登录页。
+- `http://api.example.com/api/public/articles`：能看到包含 `data`、`pagination` 的 JSON。
 
-这说明公网请求已通过 Nginx 到达对应容器。此时只检查 HTTP 转发；正式前端已使用 HTTPS API 地址，登录与保存留到下一步验证。API 的 CORS、Cookie 和认证仍由 Express 负责，不在代理层另加宽松 CORS 规则。
-
-配置方式见 [宝塔反向代理指南](https://docs.bt.cn/user-guide/site/php/site-config/reverse-proxy/)。面板负责生成并加载 Nginx 配置，后续也从对应站点设置中维护。
+两项正常，说明 Nginx 转发已打通。下一步配置 HTTPS 后，再验证登录和保存。
 
 ---
 
@@ -1006,7 +1002,7 @@ api.example.com/api/public/articles → 宝塔 Nginx → 127.0.0.1:3001/api/publ
 
 两个网站都完成证书部署后，检查证书的域名、有效期及自动续签设置。这里用宝塔原有的证书管理，不额外安装 Certbot。具体界面和验证方式见 [宝塔网站 SSL 文档](https://docs.bt.cn/user-guide/site/php/site-config/ssl/)。
 
-启用后，在 Mac 的 Apifox 中把第 7 步两个请求的 `http://` 改为 `https://`，重新发送。公开接口应正常返回 JSON，管理端应返回首页或跳转响应，两者都不应出现证书校验错误。
+启用后，在 Mac 浏览器中把第 7 步两个地址的 `http://` 改为 `https://`，重新打开。管理端页面和公开接口的 JSON 都应正常显示，浏览器不应提示证书错误。
 
 再从浏览器完成一次真实操作，这次验证完整的登录和文章管理链路：
 
