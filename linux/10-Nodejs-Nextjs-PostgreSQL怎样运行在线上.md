@@ -44,7 +44,7 @@
 | Express：`server` | `npm run start` 执行 `tsx src/server.ts`，直接运行 TypeScript 源码，不监听修改 |
 | Next.js：`admin-web-antd` | 先用 `npm run build` 生成 `.next`，再用 `npm run start` 启动 Next.js 服务 |
 
-**当前 Express 项目通过 `tsx` 运行，不需要先生成 `dist`；Next.js 则需要先构建。** 第 20 章已经在本地试过这两条启动路径。
+**当前 Express 项目通过 `tsx` 运行，不需要先生成 `dist`；Next.js 则需要先构建。** 第 20 章会补齐对应脚本，并把启动方式记到 README。
 
 20A 将安装依赖、生成 Prisma Client、构建 Next.js 写进 Dockerfile；容器启动时，API 先应用已有数据库迁移，再执行 `start`。Compose 保存启动命令和重启策略，Docker 持续管理容器，退出 SSH 后应用仍然运行。
 
@@ -188,7 +188,7 @@ Express 为什么用 postgres:5432，而不是 localhost？
 
 真实上线属于 Mini CMS 项目的最终阶段，按这个顺序继续：
 
-1. 阅读[后端第 20 章：从本地到服务器，上线前需要改什么](../backend/backend-system-learning/20-从开发环境到线上运行.md)，理解启动、配置和数据库的差别，在本地试过前后端启动命令。
+1. 阅读[后端第 20 章：从本地到服务器，上线前需要改什么](../backend/backend-system-learning/20-从开发环境到线上运行.md)，补齐启动与迁移脚本，整理项目 README。
 2. 使用[后端第 20A 章：用宝塔和 Docker Compose 部署 Mini CMS](../backend/backend-system-learning/20A-用宝塔和Docker-Compose部署MiniCMS.md)，在已有宝塔服务器配置 Compose、Nginx、HTTPS 和备份。以后在新服务器使用 1Panel 时选读 [20B](../backend/backend-system-learning/20B-用1Panel和Docker-Compose部署MiniCMS.md)。
 3. 从外部浏览器打开正式域名，完成登录、保存和重新打开文章，再检查公开接口、容器状态与日志。
 

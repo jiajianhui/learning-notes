@@ -236,8 +236,9 @@ shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等
 18A 现有 Ant Design 后台与 API 已可用
 -> 19 第 1～5、7 节：文章写作、预览与内容排版
 -> 19A 提升写作体验（按需完成）
--> 20 理解换机器运行的差别，试过前后端启动命令
+-> 20 补齐启动与迁移脚本，整理项目 README
 -> 20A 用已有宝塔、Nginx 和 Docker Compose 部署
+-> 20C 部署后简短回顾 Docker Compose 的构建、启动、请求与数据链路
 -> 20B 在新服务器用 1Panel + OpenResty 部署（选读）
 -> 后续学习 25～29；在 28 中结合 19 第 6 节接入正文编辑器
 ```
@@ -246,7 +247,9 @@ shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等
 
 完成后，可以继续用 [19A-提升写作体验](./19A-提升写作体验.md)将固定工具栏改成按需出现的菜单，`/` 搜索插入作为可选练习。标题继续使用独立 `title` 字段，保存与预览流程沿用第 19 章；19A 不作为首次部署的前置条件。
 
-第 19 章也负责公开文章 API 和个人网站接入，让内容能力在上线前形成完整链路。[第 20 章](./20-从开发环境到线上运行.md)解释换机器运行时，启动、配置和数据库有哪些差别，并在本地试过启动命令；[20A](./20A-用宝塔和Docker-Compose部署MiniCMS.md)在 Mac 构建两个应用、准备 PostgreSQL 镜像，验证后通过公网上传阿里云 ACR，再由已有宝塔的同地域 ECS 通过 VPC 拉取、迁移数据库并启动服务。[20B](./20B-用1Panel和Docker-Compose部署MiniCMS.md)复用相同镜像流程，讲解新服务器上的 1Panel + OpenResty 部署；它不是当前上线的前置任务。
+第 19 章也负责公开文章 API 和个人网站接入，让内容能力在上线前形成完整链路。[第 20 章](./20-从开发环境到线上运行.md)补齐启动与迁移脚本，整理项目 README；[20A](./20A-用宝塔和Docker-Compose部署MiniCMS.md)在 Mac 构建两个应用、准备 PostgreSQL 镜像，验证后通过公网上传阿里云 ACR，再由已有宝塔的同地域 ECS 通过 VPC 拉取、迁移数据库并启动服务。[20B](./20B-用1Panel和Docker-Compose部署MiniCMS.md)复用相同镜像流程，讲解新服务器上的 1Panel + OpenResty 部署；它不是当前上线的前置任务。
+
+完成 20A 后，用 [20C-Docker Compose 部署链路回顾](./20C-Docker-Compose部署链路回顾.md)把配置文件、镜像、容器、请求和数据串起来，不增加实操任务。
 
 ### 第 10 章怎样使用
 

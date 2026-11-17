@@ -1,6 +1,6 @@
 # 20A. 用宝塔和 Docker Compose 部署 Mini CMS
 
-> 第 20 章已在本地试过前后端的启动命令。本章在 Mac 制作并上传镜像，再部署到已有宝塔和 Nginx 的服务器，用域名和 HTTPS 访问。
+> 第 20 章已补齐项目脚本和 README。本章在 Mac 制作并上传镜像，再部署到已有宝塔和 Nginx 的服务器，用域名和 HTTPS 访问。
 
 当前使用已有的 2 核 2GB 服务器，继续保留宝塔、Nginx 和原有项目。以后在新服务器使用 1Panel 时，转到 [20B](./20B-用1Panel和Docker-Compose部署MiniCMS.md)；两章共用本章的 Dockerfile、Compose 和本地镜像流程。
 
@@ -276,7 +276,7 @@ coverage
 
 ### 2.2 `server/Dockerfile`
 
-这份 Dockerfile 使用与当前项目一致的 Node.js 24，安装依赖、生成 Prisma Client 并检查类型。容器启动时仍使用第 20 章已经试过的 `npm run start`。
+这份 Dockerfile 使用与当前项目一致的 Node.js 24，安装依赖、生成 Prisma Client 并检查类型。容器启动时使用第 20 章补好的 `npm run start`。
 
 ```dockerfile
 FROM node:24-bookworm-slim
