@@ -250,7 +250,7 @@ flowchart TD
     R["第 3.3 节：启动服务<br/>读取 docker-compose.yml"]
     C["后端、管理端、数据库<br/>三个运行中的容器"]
     S --> B
-    E -->|提供镜像名、版本和 API 域名| B
+    E -->|提供镜像名、版本和两个完整地址| B
     B --> I
     I --> R
     P --> R
@@ -376,14 +376,14 @@ POSTGRES_DB=mini_cms
 DATABASE_URL=postgresql://mini_cms:replace_with_a_long_random_password@postgres:5432/mini_cms
 
 ADMIN_DOMAIN=admin.example.com
-API_DOMAIN=api.example.com
 ADMIN_WEB_ORIGIN=https://admin.example.com
-NEXT_PUBLIC_UPLOAD_URL=
+NEXT_PUBLIC_API_BASE_URL=https://api.example.com
+NEXT_PUBLIC_UPLOAD_URL=https://upload.example.com/upload
 ```
 
 `IMAGE_PREFIX` 填“ACR 域名 / 命名空间”：Mac 使用公网域名，服务器使用 VPC 域名，第 3.1、5 步分别填写。`IMAGE_TAG` 是两个应用的发布版本，例如 `v1`；PostgreSQL 在 Compose 中单独固定为 `18`，不随应用版本变化。
 
-`NEXT_PUBLIC_UPLOAD_URL` 在模板中留空，第 3.1 节填写现有上传接口的完整 HTTPS 地址，包含接口路径。
+两个 `NEXT_PUBLIC_` 变量都填写完整 HTTPS 地址。第 3.1 节将示例值替换为实际 API 地址和上传接口地址。
 
 数据库密码进入 URL 时，`@`、`:`、`/`、`#` 等字符需要 URL 编码。第一次可以使用足够长的随机字母和数字组合，避免手写两处值时产生编码差异。
 
@@ -471,9 +471,11 @@ services:
     build:
       context: ../admin-web-antd
       args:
-        NEXT_PUBLIC_API_BASE_URL: "https://${API_DOMAIN}"
+        NEXT_PUBLIC_API_BASE_URL: "${NEXT_PUBLIC_API_BASE_URL}"
         NEXT_PUBLIC_UPLOAD_URL: "${NEXT_PUBLIC_UPLOAD_URL}"
 ```
+
+两个地址都在 `deploy/.env` 中填写完整的 `https://...`，这里原样传入。
 
 打包时让 Compose 同时读取 2.7 和 2.8：前一份提供镜像名称与目标平台，后一份提供代码目录与构建参数。两个 `context` 都相对于 `deploy/`；服务器只使用 2.7。参见 [Compose 多文件用法](https://docs.docker.com/compose/how-tos/multiple-compose-files/merge/)和[构建目标平台说明](https://docs.docker.com/reference/compose-file/build/#platforms)。
 
@@ -517,8 +519,8 @@ DATABASE_URL=postgresql://mini_cms:your_local_password@postgres:5432/mini_cms
 
 # 网站：将 example.com 换成准备上线的真实域名
 ADMIN_DOMAIN=admin.example.com
-API_DOMAIN=api.example.com
 ADMIN_WEB_ORIGIN=https://admin.example.com
+NEXT_PUBLIC_API_BASE_URL=https://api.example.com
 # 图片上传：替换成第 19 章使用的正式上传接口完整地址
 NEXT_PUBLIC_UPLOAD_URL=https://upload.example.com/upload
 ```
@@ -528,7 +530,7 @@ NEXT_PUBLIC_UPLOAD_URL=https://upload.example.com/upload
 - **镜像地址**：从 ACR 仓库的基本信息中复制公网域名，后接 `/命名空间`；不带 `https://`，末尾不加 `/`。服务器的 VPC 地址到第 5 步再填。
 - **镜像版本**：`IMAGE_TAG` 只填一次，API、Admin 共用。`v1` 是示例标签，使用已有镜像时与实际标签一致；PostgreSQL 的 `18` 单独管理。
 - **数据库**：账号、密码和库名由你设置，与 ACR 凭证无关；修改时同步更新 `DATABASE_URL`，其中的主机保留 `postgres`，不要改成 `localhost`。
-- **网站地址**：`ADMIN_DOMAIN`、`API_DOMAIN` 只填域名；`ADMIN_WEB_ORIGIN` 加 `https://`，不加 `/admin` 等路径。
+- **网站地址**：`ADMIN_DOMAIN` 只记录后台域名。`ADMIN_WEB_ORIGIN` 和 `NEXT_PUBLIC_API_BASE_URL` 分别填写后台、API 的完整 HTTPS 地址，如上例所示，不加 `/admin`、`/api` 等路径或末尾的 `/`。
 - **上传地址**：`NEXT_PUBLIC_UPLOAD_URL` 填浏览器能访问的完整 HTTPS 上传接口，示例中的域名和 `/upload` 都要替换为实际值。本地 `.env.local` 已使用正式 HTTPS 接口时，可以复制这一项；不要填写 `localhost` 或图片存储桶地址。
 
 **镜像名称为什么要带 ACR 域名？**
@@ -548,26 +550,26 @@ NEXT_PUBLIC_UPLOAD_URL=https://upload.example.com/upload
 
 ```mermaid
 flowchart LR
-    A["API_DOMAIN<br/>后端域名"] -->|构建时使用| W["admin-web-antd 管理端<br/>知道去哪里请求后端"]
+    A["NEXT_PUBLIC_API_BASE_URL<br/>API 完整地址"] -->|构建时使用| W["admin-web-antd 管理端<br/>请求 API 和上传图片"]
     U["NEXT_PUBLIC_UPLOAD_URL<br/>图片上传接口完整地址"] -->|构建时使用| W
     O["ADMIN_WEB_ORIGIN<br/>管理端来源地址"] -->|创建容器时传入| S["server 后端<br/>检查管理页面的请求来源"]
     M["ADMIN_DOMAIN<br/>管理端域名"] -->|只作记录| N["第 7 步手动配置宝塔网站<br/>不参与构建"]
 ```
 
-**再看：API 地址怎样进入管理端？**
+**再看：两个地址怎样进入管理端？**
 
 ```mermaid
 flowchart TD
-    C["① Compose<br/>读取 deploy/.env 中的 API_DOMAIN<br/>加上 https://，生成构建参数"]
+    C["① Compose<br/>读取 deploy/.env 中的两个完整地址<br/>通过 build.args 原样传入"]
     D["② Docker<br/>按管理端 Dockerfile 接收参数<br/>设置构建环境变量"]
-    N["③ Next.js<br/>构建管理端，把 API 地址<br/>写进浏览器运行的 JavaScript"]
-    B["上线后：浏览器<br/>按代码中的地址请求后端"]
+    N["③ Next.js<br/>构建管理端，把两个地址<br/>写进浏览器运行的 JavaScript"]
+    B["上线后：浏览器<br/>按代码中的地址请求 API 或上传图片"]
     C --> D --> N --> B
 ```
 
-**读取 `deploy/.env` 的是 Compose；Next.js 读取的是 Dockerfile 设置的构建环境变量。** `NEXT_PUBLIC_API_BASE_URL` 由 `API_DOMAIN` 拼接得到，`NEXT_PUBLIC_UPLOAD_URL` 按填写的完整地址传入；具体配置见 3.2 的折叠说明。
+**读取 `deploy/.env` 的是 Compose；Next.js 读取的是 Dockerfile 设置的构建环境变量。** `NEXT_PUBLIC_API_BASE_URL` 和 `NEXT_PUBLIC_UPLOAD_URL` 在整条链路中保持同名，直接传递填写好的完整地址；具体配置见 3.2 的折叠说明。
 
-**`API_DOMAIN` 和 `NEXT_PUBLIC_UPLOAD_URL` 都要在构建前填好，更换任一地址都需要重新构建并部署管理端镜像。** 只改服务器 `.env` 不会改写已生成的浏览器代码。参见 [Next.js 构建时写入公开环境变量](https://nextjs.org/docs/app/guides/environment-variables#bundling-environment-variables-for-the-browser)。
+**`NEXT_PUBLIC_API_BASE_URL` 和 `NEXT_PUBLIC_UPLOAD_URL` 都要在构建前填好，更换任一地址都需要重新构建并部署管理端镜像。** 只改服务器 `.env` 不会改写已生成的浏览器代码。参见 [Next.js 构建时写入公开环境变量](https://nextjs.org/docs/app/guides/environment-variables#bundling-environment-variables-for-the-browser)。
 
 如果沿用旧版配置，将 `DOCKERHUB_USERNAME` 改为 `IMAGE_PREFIX`，并按第 2.6 节同步 `.env.example` 的变量名。填好这份文件后，进入 3.2 检查并构建。
 
@@ -609,7 +611,7 @@ docker compose --env-file deploy/.env \
 
 | 步骤 | 对应配置 |
 |---|---|
-| ① Compose 读取并传递 | `--env-file deploy/.env` 指定变量文件；`build.args` 将 `https://${API_DOMAIN}` 作为 `NEXT_PUBLIC_API_BASE_URL`，并传入 `NEXT_PUBLIC_UPLOAD_URL` |
+| ① Compose 读取并传递 | `--env-file deploy/.env` 指定变量文件；`build.args` 原样传入 `NEXT_PUBLIC_API_BASE_URL` 和 `NEXT_PUBLIC_UPLOAD_URL` |
 | ② Docker 设置环境变量 | 管理端 Dockerfile 中的两组 `ARG/ENV` 接收并设置这两个构建环境变量 |
 | ③ Next.js 构建 | `RUN npm run build` 执行 `next build`，将两个地址写入浏览器代码 |
 
@@ -780,7 +782,7 @@ ss -lntp
 
 | 哪次修改 | 作用 | 填写或调整什么 |
 |---|---|---|
-| 第 3 步：Mac 的 `deploy/.env` | 为构建镜像、本地试跑和上传 ACR 准备配置 | 填 ACR 公网地址、镜像版本、正式 API 域名、图片上传地址和本地试跑的数据库配置 |
+| 第 3 步：Mac 的 `deploy/.env` | 为构建镜像、本地试跑和上传 ACR 准备配置 | 填 ACR 公网地址、镜像版本、API 与上传接口的完整 HTTPS 地址，以及本地试跑的数据库配置 |
 | 第 5 步：上传到服务器的 `.env` 副本 | 为服务器通过内网拉取镜像、运行容器提供配置 | ACR 改成 VPC 地址；数据库密码按需改为正式密码，并同步 `DATABASE_URL`；镜像版本和域名保持一致，Mac 原文件不动 |
 
 构建时，Compose 根据 `.env` 中的 ACR 地址和版本给镜像命名；上传时，`docker push` 使用这个完整镜像名，将镜像上传到同一个 ACR 公网地址。

@@ -63,7 +63,8 @@ ssh mini-cms-new 'hostname; uname -m; free -h; df -h /'
 
 - Compose 中三个服务的 `platform`：使用第 1 步确认的服务器架构，PostgreSQL 的下载和上传平台也要一致。
 - Mac 的 `IMAGE_PREFIX`：使用 ACR 公网域名与命名空间。
-- `ADMIN_DOMAIN`、`API_DOMAIN`：填写新环境的真实子域名。
+- `ADMIN_DOMAIN`：记录新环境的后台域名。
+- `NEXT_PUBLIC_API_BASE_URL`：填写新环境 API 的完整 HTTPS 地址，例如 `https://api-new.example.com`。
 - `ADMIN_WEB_ORIGIN`：填写新管理端的完整 HTTPS 来源，例如 `https://admin-new.example.com`。
 - `NEXT_PUBLIC_UPLOAD_URL`：填写本次使用的完整 HTTPS 图片上传接口，通过 20A 的 `build.args` 和 Dockerfile 传入管理端构建。
 - `IMAGE_TAG`：使用新的发布标签，例如 `v1-1panel`，保留旧环境的镜像标签。
