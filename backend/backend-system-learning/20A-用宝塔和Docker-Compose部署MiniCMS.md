@@ -1159,52 +1159,78 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml \
 
 ## 第 10 步：以后怎样更新
 
-以后每次发布都走同一条线：**Mac 构建、验证两个应用 → 通过公网上传 ACR → 宝塔备份并修改版本号 → ECS 通过 VPC 拉取并更新 → 浏览器验证。** PostgreSQL 复用 ACR 中已验证的版本，不随应用发布重复转存。
+下面以 `v1 → v2` 为例。API 和管理端共用 `IMAGE_TAG`，本次一起构建、上传和更新；PostgreSQL 保持原版本。
 
-先在 Mac 上准备新版：
+**① Mac：修改版本号**
 
-1. 完成本次修改，检查迁移文件，运行项目已有的测试和检查。
-2. 在编辑器中把本地 `deploy/.env` 的 `IMAGE_TAG` 从 `v1` 改成新版本，例如 `v2`。每次发布使用新标签，保留旧版供核对和回退。
-3. 按第 3.2～3.3 节重新制作两个应用镜像并本地试跑，跳过 PostgreSQL 的下载和改标签。Mac 的 `IMAGE_PREFIX` 保持公网地址，再执行第 3.5 节的 API、Admin 两条 `docker push --platform linux/amd64` 命令，**把命令中镜像名末尾的 `:v1` 改成 `:v2`**。确认 ACR 两个应用仓库都有 `v2`；源代码和配置提交到 Git，记录这次版本对应的 commit。
+完成功能修改和项目检查后，在本地 `deploy/.env` 中设置：
 
-再在宝塔准备服务器配置：
+```dotenv
+IMAGE_TAG=v2
+```
 
-1. 在 **计划任务** 中手动执行第 9.3 节的数据库导出任务，确认成功并记下本次备份路径。记录服务器当前的 `IMAGE_TAG`。
-2. 在 **文件** 中打开 `/opt/mini-cms/deploy/.env`，只把 `IMAGE_TAG` 改为刚上传的 `v2`，保留 VPC 镜像前缀、正式数据库密码等配置。
-3. 如果本次修改了 `deploy/docker-compose.yml`，按第 5 步上传并更新服务器上的同名文件。首次部署已经上传过 `.env`，后续更新直接修改服务器上的版本号，保留其余正式配置。
+`IMAGE_PREFIX` 保持 ACR 公网地址。构建前确认 `NEXT_PUBLIC_API_BASE_URL` 和 `NEXT_PUBLIC_UPLOAD_URL` 正确，这两个地址会写进管理端镜像。
 
-打开服务器终端，先检查配置：
+**② Mac：构建镜像**
+
+在 `mini-cms` 项目根目录执行：
+
+```bash
+docker compose --env-file deploy/.env \
+  -f deploy/docker-compose.yml -f deploy/docker-compose.build.yml build api admin_web_antd
+```
+
+成功后，Docker Desktop 的 Images 中应有 `mini-cms-api:v2` 和 `mini-cms-admin:v2`。需要本地试跑时沿用第 3.3 节。
+
+**③ Mac：上传到 ACR**
+
+把下面的示例域名和命名空间换成本地 `IMAGE_PREFIX` 的值，末尾标签与本次 `IMAGE_TAG` 一致：
+
+```bash
+docker push --platform linux/amd64 crpi-xxxx.cn-beijing.personal.cr.aliyuncs.com/mini-cms/mini-cms-api:v2
+docker push --platform linux/amd64 crpi-xxxx.cn-beijing.personal.cr.aliyuncs.com/mini-cms/mini-cms-admin:v2
+```
+
+在 ACR 的两个应用仓库中确认都有 `v2`，再操作服务器。
+
+**④ 服务器：修改版本号**
+
+先在宝塔手动执行第 9.3 节配置的数据库备份任务，确认成功，并记下当前版本号。
+
+打开 `/opt/mini-cms/deploy/.env`，把 `IMAGE_TAG` 改为 `v2`。保留服务器原有的 VPC 镜像地址、数据库账号和其他配置。
+
+若本次修改了运行用的 `deploy/docker-compose.yml`，也同步到服务器；新增的运行变量补到服务器 `.env`。
+
+**⑤ 服务器：拉取新镜像**
+
+在宝塔的服务器终端执行：
 
 ```bash
 cd /opt/mini-cms
-docker compose --env-file deploy/.env -f deploy/docker-compose.yml config
-```
-
-确认没有配置错误，两个应用都使用 ACR 的 VPC 地址和 `v2`，再下载新版镜像。服务器通常保留第 6 步的登录凭证；提示未授权时，按第 6 步重新登录同一个 VPC 域名：
-
-```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml pull api admin_web_antd
 ```
 
-`pull` 只下载，原来的容器此时还在运行。等待两个镜像全部拉取成功；下载失败时先解决错误。
+两个应用都显示 `Pulled` 后继续。`pull` 只下载镜像，此时原来的容器仍在运行。
 
-下载成功后，再执行更新：
+**⑥ 服务器：更新容器**
+
+保持在 `/opt/mini-cms` 目录，执行：
 
 ```bash
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d
 ```
 
-`up -d` 按新镜像更新容器，API 启动时仍会先执行迁移。这里仅拉取两个应用，PostgreSQL 的版本升级另行安排；更新前不用 `down`，服务器也不用重新 `build`。
+Compose 会用新镜像替换需要更新的容器，不用提前手动停止或执行 `down`。API 容器会先应用数据库迁移，成功后启动 Express。
 
-更新后通过界面检查三件事：
+**⑦ 验证新版**
 
-1. 在宝塔 **Docker → 容器** 中确认应用运行正常，API 日志中的迁移和启动没有错误。
-2. 在 Mac 的 Apifox 中请求正式 HTTPS 公开文章接口，确认返回正常。
-3. 在浏览器重新打开管理端，登录后确认本次修改已生效，更新前保存的文章仍能查看和编辑；涉及上传配置时，再上传一张图片并保存、重新打开验证。
+在宝塔的容器列表中确认两个应用使用 `v2`、没有反复重启，API 日志中的迁移和启动正常。再刷新管理后台，验证登录、本次修改和已有文章；涉及上传时，上传图片、保存文章，再重新打开检查。
 
-把本节更新命令与第 9 步实际使用的备份、恢复方法记到项目 README。后续接入代码推送后的自动发布时，可以复用这条已经验证过的流程。
+**⑧ 按需删除服务器上的旧镜像**
 
-需要回退应用时，在宝塔文件管理器中将 `IMAGE_TAG` 改回保留的旧版本，再执行相同的拉取、更新和验证步骤。**切回旧镜像不会撤销数据库迁移**；先确认旧程序还能使用更新后的表结构，不能把镜像回退当作数据库恢复。
+`up -d` 已用新版容器替换旧版容器，服务器上仍可能保留 `v1` 镜像。验证通过后，在宝塔的镜像列表中删除未被使用的 `v1` 镜像即可；ACR 中保留旧版，供需要时重新拉取。
+
+需要回退时，先确认旧版兼容当前数据库，再把服务器 `IMAGE_TAG` 改回旧版本，重新执行 `pull`、`up -d` 并验证。数据库迁移不会自动回退。
 
 ---
 
@@ -1228,7 +1254,7 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d
 | 面板打不开 | 宝塔服务、面板端口、云安全组、授权 IP、安全入口 |
 | Nginx 配置保存失败或网站异常 | 宝塔显示的配置错误、Nginx 服务状态、对应站点的错误日志、80 / 443 是否被占用 |
 | Mac 制作镜像失败 | Docker Desktop、Node 版本、lockfile、Dockerfile、正式 API 构建参数 |
-| 上传或拉取镜像失败 | VPC 连接失败时，核对 ECS 与 ACR 是否同地域、域名和网络是否正确；未授权时，核对登录域名和 ACR 密码；镜像不存在时，核对第 3.5 节的仓库和标签。Mac 使用公网地址 |
+| 上传或拉取镜像失败 | 未授权时，Mac 按第 3.5 节登录 ACR 公网域名，服务器按第 6 步登录 VPC 域名，再重试；VPC 连接失败时，核对 ECS 与 ACR 的地域、域名和网络；镜像不存在时，核对仓库和标签 |
 | 上传报 `unknown manifest class for application/vnd.oci.empty.v1+json` | 按第 3.5 节使用 `docker push --platform linux/amd64 完整镜像名:标签` 重新上传，跳过仓库不接受的附加证明信息 |
 | PostgreSQL 仍从 Docker Hub 下载 | 检查服务器 Compose 的 `postgres.image` 是否已改为 `${IMAGE_PREFIX}/postgres:18`，并确认 `IMAGE_PREFIX` 使用 ACR 的 VPC 域名 |
 | 提示架构不匹配或 `exec format error` | 服务器 `uname -m` 与镜像平台是否对应，是否按第 2～3 步重新制作了正确平台的镜像 |
