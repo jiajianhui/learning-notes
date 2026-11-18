@@ -32,7 +32,7 @@ Compose 把同名服务的配置组合起来，就知道：**用 `server/` 中�
 
 Docker 按各自的 Dockerfile 准备 Node.js、复制代码、安装依赖。后端还生成 Prisma Client；管理端执行 `next build`，把生成的 `.next/` 保存在镜像中。
 
-管理端需要的 API 地址也在这时写入：Mac 的 `.env` 中的 `API_DOMAIN` → Compose 的 `build.args` → Dockerfile 的 `ARG/ENV` → `next build`。以后更换 API 地址，需要重新构建管理端镜像。
+管理端需要的 API 地址和图片上传地址也在这时写入：Mac 的 `deploy/.env` 中的 `API_DOMAIN`、`NEXT_PUBLIC_UPLOAD_URL` → Compose 的 `build.args` → Dockerfile 的 `ARG/ENV` → `next build`。以后更换任一地址，都需要重新构建并部署管理端镜像；本地开发的 `.env.local` 不会进入镜像。
 
 PostgreSQL 使用下载的官方镜像。三个镜像在本地试跑通过后，就可以交付。
 

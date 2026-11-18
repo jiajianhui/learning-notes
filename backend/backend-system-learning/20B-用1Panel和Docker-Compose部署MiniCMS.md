@@ -65,9 +65,10 @@ ssh mini-cms-new 'hostname; uname -m; free -h; df -h /'
 - Mac 的 `IMAGE_PREFIX`：使用 ACR 公网域名与命名空间。
 - `ADMIN_DOMAIN`、`API_DOMAIN`：填写新环境的真实子域名。
 - `ADMIN_WEB_ORIGIN`：填写新管理端的完整 HTTPS 来源，例如 `https://admin-new.example.com`。
+- `NEXT_PUBLIC_UPLOAD_URL`：填写本次使用的完整 HTTPS 图片上传接口，通过 20A 的 `build.args` 和 Dockerfile 传入管理端构建。
 - `IMAGE_TAG`：使用新的发布标签，例如 `v1-1panel`，保留旧环境的镜像标签。
 
-**换成新的 API 域名后，必须重新构建管理端镜像。** `NEXT_PUBLIC_API_BASE_URL` 在 `next build` 时写入浏览器代码，不能只改服务器 `.env`。如果目标架构和所有构建参数都没变，可以直接复用已验证的镜像；换面板本身不要求重新构建。
+**更换 API 域名或图片上传地址后，必须重新构建管理端镜像。** `NEXT_PUBLIC_API_BASE_URL` 和 `NEXT_PUBLIC_UPLOAD_URL` 都在 `next build` 时写入浏览器代码，不能只改服务器 `.env`。如果目标架构和所有构建参数都没变，可以直接复用已验证的镜像；换面板本身不要求重新构建。
 
 本地试跑时完成迁移、公开 API 和管理端响应检查。沿用 20A 第 3.1～3.5 节的 ACR 配置和上传命令，将应用标签换成本次的 `v1-1panel`，PostgreSQL 仍使用 `18`。确认 ACR 的三个仓库都有对应标签后，再进入服务器部署；已有同架构的 PostgreSQL 镜像可以复用。
 
@@ -193,7 +194,7 @@ curl -I https://admin-new.example.com
 curl -i https://api-new.example.com/api/public/articles
 ```
 
-然后在浏览器完成登录、新建文章、保存、重新打开与退出登录。确认请求使用新环境 API，Cookie 带 `Secure`，公开 API 能读到已发布文章。需要验证个人网站时，使用它的预览环境或测试配置连接这个新 API，保留旧线上站点的地址。
+然后在浏览器完成登录、新建文章、上传图片、保存、重新打开与退出登录。确认请求使用新环境 API 和预期上传接口，Cookie 带 `Secure`，公开 API 能读到已发布文章。需要验证个人网站时，使用它的预览环境或测试配置连接这个新 API，保留旧线上站点的地址。
 
 ## 第 7 步：备份、恢复与后续更新
 
