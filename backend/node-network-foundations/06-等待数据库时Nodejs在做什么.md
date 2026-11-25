@@ -45,18 +45,33 @@ res.json({
 
 事件循环负责协调就绪工作，例如网络事件和计时器回调。Promise 的后续处理通过微任务机制调度；它不会打断一段正在执行的同步 JavaScript。
 
-对当前查询，可以沿着下面的顺序理解：
+对当前查询，关键是看请求 A 等待时，请求 B 在哪里得到处理。图中 Node.js 列上的窄条表示正在执行相应 JavaScript，等待数据库的间隔不占满这条执行线：
 
-```text
-执行路由中的校验与查询准备
-→ 发起查询，结果暂未就绪
-→ 当前异步函数在 await 处暂停后续步骤
-→ 调用栈腾出执行机会，主线程处理其他就绪工作
-→ 数据库结果到达，驱动处理结果并使 Promise 完成
-→ await 后续有机会继续，生成当前请求的响应
+```mermaid
+sequenceDiagram
+    participant A as 请求 A 的客户端
+    participant B as 请求 B 的客户端
+    participant N as Node.js 主线程
+    participant D as PostgreSQL
+    A->>N: 查询文章列表
+    activate N
+    N->>N: 校验输入，准备查询
+    N->>D: 通过驱动发起数据库查询
+    Note over N: A 在 await 处暂停后续步骤<br/>调用栈腾出执行机会
+    deactivate N
+    Note over D: 执行查询
+    B->>N: 请求健康检查
+    activate N
+    N-->>B: 返回健康检查结果
+    deactivate N
+    D-->>N: 查询结果就绪
+    activate N
+    N->>N: 驱动处理结果，Promise 完成<br/>继续 A 的 await 后续
+    N-->>A: 返回文章列表 JSON
+    deactivate N
 ```
 
-这是一张职责图，不是要求背诵所有事件循环阶段。先能用它预测“其他请求是否会被同步工作挡住”，再去看更细的阶段。[Node.js 事件循环说明](https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick)
+图中画的是 B 恰好在 A 等待期间到达的一种时序，重点是这段时间存在处理其他请求的机会。如果主线程改为执行长时间同步循环，B 的 JavaScript 处理就必须等循环结束。先能预测这个差别，再去看更细的事件循环阶段。[Node.js 事件循环说明](https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick)
 
 ## 4. 到底是谁在后台做事
 

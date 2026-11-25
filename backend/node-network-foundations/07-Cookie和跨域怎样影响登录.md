@@ -14,15 +14,29 @@ MiniCMS 给登录成功者一张随机编号的通行证：浏览器保存编号
 
 ## 2. 项目里的登录到底保存了什么
 
-对应 `server/src/modules/auth/auth-router.ts` 和 `session.ts`：
+对应 `server/src/modules/auth/auth-router.ts` 和 `session.ts`。下图先看登录，再看之后的身份查询；画的是验证成功的流程，重点比较浏览器与数据库各自保存的内容：
 
-```text
-浏览器提交 username、password
-→ 服务端查管理员，使用 argon2 验证密码
-→ 生成随机 Session Token
-→ 数据库保存 tokenHash、adminId、expiresAt
-→ 响应通过 Set-Cookie 让浏览器保存原始 Token
-→ 响应 JSON 另外返回用于显示的管理员信息
+```mermaid
+sequenceDiagram
+    participant B as 浏览器
+    participant A as Express API
+    participant D as PostgreSQL
+    Note over B,D: 第一次：登录并建立 Session
+    B->>A: POST /api/auth/login<br/>username、password
+    A->>D: 按用户名查询管理员
+    D-->>A: 管理员信息与 passwordHash
+    A->>A: argon2 验证密码<br/>生成随机 Token，计算 tokenHash
+    A->>D: 保存 Session<br/>tokenHash、adminId、expiresAt
+    D-->>A: 保存成功
+    A-->>B: Set-Cookie 设置 Token<br/>JSON 另外返回管理员信息
+    Note over B: Cookie 保存原始 Token<br/>页面状态使用管理员 JSON
+    Note over B,D: 后续请求：携带 Cookie，再核验 Session
+    B->>A: GET /api/auth/me<br/>Cookie 携带 Token
+    A->>A: RequestAuth 计算收到的 Token 的哈希
+    A->>D: 按 tokenHash 查询 Session 与管理员
+    D-->>A: 返回登录记录与管理员信息
+    A->>A: 确认 Session 有效<br/>写入 res.locals.admin，继续路由
+    A-->>B: 返回管理员 JSON
 ```
 
 数据库保存 Token 的哈希，浏览器 Cookie 保存原始 Token。后续验证时，服务器重新计算收到 Token 的哈希，再查登录记录。
@@ -111,11 +125,24 @@ cors({
 
 从 `localhost:3000` 向 `localhost:3001` 发送 `Content-Type: application/json` 的 POST，不属于可以直接按简单请求规则处理的跨来源请求。浏览器通常先发 OPTIONS 预检，询问这次方法和请求头是否允许；已有有效预检缓存时可能不重复发送。
 
-```text
-浏览器发 OPTIONS：这个来源可以发 POST，并使用 Content-Type 吗？
-→ 服务端返回允许的来源、方法、请求头等
-→ 浏览器判断允许后，才发真正的 POST
-→ POST 带正文，并按规则携带 Cookie
+这里要把页面 JavaScript 与浏览器的网络处理分开：代码调用一次 fetch，浏览器可能在实际 POST 前先发一次 OPTIONS。
+
+```mermaid
+sequenceDiagram
+    participant P as 页面 JavaScript
+    participant B as 浏览器网络处理
+    participant A as Express API
+    P->>B: fetch 发起跨来源 JSON POST<br/>credentials 为 include
+    B->>A: OPTIONS 预检<br/>询问来源、POST 与 Content-Type 是否允许
+    A-->>B: 返回 CORS 响应头
+    alt 浏览器判定预检通过
+        B->>A: 发送真正的 POST 与 JSON<br/>按 Cookie 规则携带凭证
+        A-->>B: 返回业务响应与 CORS 响应头
+        Note over B: 还要检查实际响应的 CORS 条件
+        B-->>P: 条件满足时交付 Response
+    else 浏览器判定预检不通过
+        B-->>P: fetch 失败，不发送这次 POST
+    end
 ```
 
 预检本身通常不带 Cookie，不能把它当作需要先登录的文章操作。MiniCMS 先注册 CORS，中间件会处理常规预检，再轮到后面的认证和业务路由。[CORS 与预检说明](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS)

@@ -66,14 +66,25 @@ MiniCMS 在路由之前注册：
 app.use(express.json({ limit: "1mb" }));
 ```
 
-对匹配 JSON 内容类型的请求，这个中间件读取正文、执行 JSON 解析，再把解析结果交给后续处理代码使用：
+对匹配 JSON 内容类型的请求，这个中间件读取正文、执行 JSON 解析，再把解析结果交给后续处理代码使用。把前后端连起来看，跨越网络的是字节，两个对象分别属于各自的内存：
 
-```text
-HTTP 请求体的字节
-→ 按内容类型读取、解码、解析
-→ 得到 JavaScript 值
-→ 放到 req.body
-→ 后续中间件与路由继续处理
+```mermaid
+flowchart TD
+    subgraph Browser["浏览器内存"]
+        A["文章输入 input<br/>JavaScript 对象"]
+        B["JSON 字符串"]
+        C["请求正文的 UTF-8 字节"]
+        A -->|JSON.stringify| B
+        B -->|浏览器编码| C
+    end
+    subgraph Server["Node.js 服务端内存"]
+        D["Node.js 提供请求体可读流<br/>正文可以分块到达"]
+        E["express.json<br/>读取、解码并解析 JSON"]
+        F["req.body<br/>服务端的 JavaScript 值"]
+        D --> E --> F
+    end
+    C -->|HTTP 传输| D
+    F --> G["后续中间件与路由<br/>继续认证、字段校验等处理"]
 ```
 
 `limit` 限制解析器接受的正文大小。收集完整正文和解析都需要资源，因此容量限制与服务器负载有关，不只是输入框的产品限制。

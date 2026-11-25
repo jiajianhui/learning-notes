@@ -75,15 +75,16 @@ Shell 要启动一个命令，首先需要找到可执行文件。`PATH` 是供�
 
 这行叫 shebang。macOS/Linux 执行这个入口文件时，会按它指定的方式启动解释器：这里由 `env` 在 PATH 中找到 `node`，让 Node.js 执行该文件。
 
-因此，启动入口的简化过程是：
+因此，启动入口可以按下面的图从上往下追。注意两个 `dev` 分别由谁解释：
 
-```text
-终端中的 Shell 启动 npm
-→ npm 读取 scripts.dev，得到 next dev
-→ npm 准备 PATH，通过脚本 Shell 执行这条命令
-→ Shell 找到 node_modules/.bin/next 对应的入口
-→ shebang 指定用 Node.js 执行 CLI 文件
-→ Next.js CLI 读取 dev 参数，启动开发服务
+```mermaid
+flowchart TD
+    A["终端中输入 npm run dev"] --> B["Shell 启动 npm"]
+    B --> C["npm 按脚本名 dev<br/>读取 scripts.dev：next dev"]
+    C --> D["npm 把本地 .bin 加入 PATH<br/>启动脚本 Shell"]
+    D --> E["Shell 找到 next 命令入口<br/>指向 Next.js 的 dist/bin/next"]
+    E --> F["shebang 指定 Node.js<br/>执行这个 CLI 文件"]
+    F --> G["Next.js CLI 解释子命令 dev<br/>启动开发服务"]
 ```
 
 `dev` 在第一处是 npm 脚本名，在第二处是 Next.js 的子命令。它们恰好同名，但交给了不同程序解释。

@@ -22,16 +22,24 @@ Node.js 中，V8 负责 JavaScript 的执行与内存管理；Node.js 还提供�
 
 ## 2. MiniCMS 同时存在几个执行现场
 
-先画本地开发的主要角色：
+下面每一列是一个执行现场，时间从上往下。先取得页面，再由浏览器里的代码发出文章请求：
 
-```text
-浏览器页面：表单交互、点击事件、请求 API、更新 React 状态
-
-Next.js 开发服务：准备并提供页面资源，执行相应的服务端渲染工作
-
-Express 服务：接收 API 请求，校验输入，查询数据库，生成响应
-
-PostgreSQL：执行 SQL，管理数据库中的数据
+```mermaid
+sequenceDiagram
+    participant B as 浏览器
+    participant W as Next.js 开发服务
+    participant A as Express API
+    participant D as PostgreSQL
+    Note over W,A: 两个分别启动的 Node.js 服务
+    B->>W: 请求页面与资源
+    W-->>B: 返回 HTML 与浏览器需要的 JavaScript
+    Note over B: 执行页面交互代码<br/>用户查看文章列表
+    B->>A: fetch 请求文章 API
+    A->>A: 校验输入、检查权限
+    A->>D: 通过数据库客户端查询
+    D-->>A: 查询结果
+    A-->>B: HTTP 响应，正文为 JSON
+    Note over B: 解析结果，更新 React 状态与页面
 ```
 
 Next.js 和 Express 是分别启动的服务。浏览器按钮触发的文章请求，在当前 MiniCMS 中直接访问配置好的 Express API 地址，不必先经过 Next.js 服务转发。
