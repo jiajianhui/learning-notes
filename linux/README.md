@@ -6,6 +6,8 @@
 
 已经读到后端 20A 时，可以按问题回看下面几章，理解后返回[20A 部署步骤](../backend/backend-system-learning/20A-用宝塔和Docker-Compose部署MiniCMS.md)继续操作。
 
+完成 MiniCMS 后，若想从 JavaScript 程序出发理解启动、HTTP、事件循环和 Cookie，可读[Node.js 与网络基础回顾](../backend/node-network-foundations/README.md)；本路线继续负责 Linux 操作、服务器和部署环境。
+
 | 当前疑惑 | 阅读位置 |
 |---|---|
 | `ssh aliyun` 怎样完成登录，密钥放哪里；服务器怎样访问 GitHub | [04：SSH 配置与认证](./04-SSH-从Mac安全连接Linux.md#一次-ssh-密钥登录怎样完成) |

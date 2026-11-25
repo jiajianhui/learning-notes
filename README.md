@@ -21,6 +21,7 @@
 - `frontend/前端常见术语关系速查.md`
 - `backend/backend-system-learning/README.md`
 - `backend/backend-system-learning/10-MiniCMS项目总览.md`
+- `backend/node-network-foundations/README.md`：完成 MiniCMS 后，用类比、小实验和费曼复述回顾 Node.js 与网络基础
 - `linux/README.md`
 - `tools/README.md`
 - `tools/终端、Shell、CLI、Node.js关系速查.md`

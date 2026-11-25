@@ -251,6 +251,8 @@ shadcn/ui 使用了更多章节，是因为 TanStack Table、React Hook Form 等
 
 完成 20A 后，用 [20C-Docker Compose 部署链路回顾](./20C-Docker-Compose部署链路回顾.md)把配置文件、镜像、容器、请求和数据串起来，不增加实操任务。
 
+已经完成 Mini CMS，想进一步解释“程序为什么能运行、请求怎样到达、等待数据库时发生什么”，可以进入独立专题[从 MiniCMS 理解 Node.js 与网络基础](../node-network-foundations/README.md)。它用现有项目代码、原生 Node.js 小实验和费曼复述回顾底层机制，不增加项目阶段；与第 02～05 章的第一次入门衔接。
+
 ### 第 10 章怎样使用
 
 ```text
