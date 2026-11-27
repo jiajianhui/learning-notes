@@ -19,7 +19,7 @@
 - `ai/AI应用开发实践.md`
 - `github/GitHub核心功能速查.md`
 - `frontend/前端常见术语关系速查.md`
-- [frontend/web3d-learning/README.md](./frontend/web3d-learning/README.md)：从 Blender 材质迁移到 Next.js，逐步完成可交互的 3D 数字手办
+- [frontend/web3d-learning/README.md](./frontend/web3d-learning/README.md)：Web3D 通识、iPhone Duo 展示实践，再进阶到 Blender 自制数字手办
 - `backend/backend-system-learning/README.md`
 - `backend/backend-system-learning/10-MiniCMS项目总览.md`
 - `backend/node-network-foundations/README.md`：完成 MiniCMS 后，用类比、小实验和费曼复述回顾 Node.js 与网络基础

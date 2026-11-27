@@ -23,7 +23,7 @@
 
 README 只做入口和导航，不重复展开完整路线。
 
-如果想在 Next.js 网站中加入有质感的 3D 产品展示，继续看独立的 [Web3D 学习路线](../web3d-learning/README.md)。它从 Blender 资产、PBR 材质和网页渲染开始，最终练习可交互的数字手办。
+如果想在 Next.js 网站中加入有质感的 3D 产品展示，继续看独立的 [Web3D 学习路线](../web3d-learning/README.md)。它先建立 Web3D 通识，以 iPhone Duo 展示练开发流程与跟手交互，再用 Blender 制作自己的数字手办。
 
 ---
 
