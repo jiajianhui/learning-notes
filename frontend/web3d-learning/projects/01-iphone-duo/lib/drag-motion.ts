@@ -1,5 +1,7 @@
 import { motionConfig as config } from './viewer-config';
 
+import { nearestView } from './reference-views';
+
 export type DragState = {
   pointerId: number | null;
   x: number;
@@ -69,8 +71,11 @@ export function endDrag(state: DragState, now: number, cancelled: boolean) {
   }
   // 先预测惯性自然停下的位置，再选附近停靠点，避免快速甩动被提前截住。
   const rest = state.targetYaw + state.velocityYaw / config.inertiaDecay;
-  const anchor = Math.round(rest / config.snapStep) * config.snapStep;
-  state.snapTarget = Math.abs(anchor - rest) <= config.snapThreshold ? anchor : null;
+  const anchor = nearestView(rest);
+  if (Math.abs(anchor.yaw - rest) <= config.snapThreshold) {
+    state.snapTarget = anchor.yaw;
+    state.targetPitch = anchor.pitch;
+  }
 }
 
 export function resetDrag(state: DragState) {
@@ -98,8 +103,11 @@ export function stepDrag(state: DragState, delta: number) {
     return;
   }
 
-  [state.pitch, state.velocityPitch] = spring(state.pitch, state.velocityPitch, 0, config.pitchReturnRate, dt);
-  if (Math.abs(state.pitch) < 0.0001 && Math.abs(state.velocityPitch) < 0.0001) state.pitch = state.velocityPitch = 0;
+  [state.pitch, state.velocityPitch] = spring(state.pitch, state.velocityPitch, state.targetPitch, config.pitchReturnRate, dt);
+  if (Math.abs(state.pitch - state.targetPitch) < 0.0001 && Math.abs(state.velocityPitch) < 0.0001) {
+    state.pitch = state.targetPitch;
+    state.velocityPitch = 0;
+  }
 
   if (state.snapTarget !== null && Math.abs(state.velocityYaw) < config.snapStartVelocity) state.snapping = true;
   if (state.snapping && state.snapTarget !== null) {

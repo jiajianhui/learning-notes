@@ -6,7 +6,7 @@ import { createStudioLighting, lightingBlend } from '../lib/studio-lighting';
 
 assert.equal(lightingBlend(0).from, 'front');
 assert.equal(lightingBlend(Math.PI).from, 'back');
-assert.equal(lightingBlend(-Math.PI / 2).from, 'left');
+assert.equal(lightingBlend(3 * Math.PI - 4.716).from, 'left');
 assert.deepEqual(lightingBlend(0), lightingBlend(2 * Math.PI));
 const geometry = new PlaneGeometry();
 const material = new MeshStandardMaterial({ name: 'card', emissive: 'white' });

@@ -326,7 +326,7 @@
         "sha256": "f96e72c7282f3ca0add0c810d58e22582bb1f28149c302d29d88876a0b808c19"
       }
     ],
-    "adaptation": "Original meshes and gradient masks; source view state transforms/emission retained in scene extras. Quaternion/node and emission interpolation; 256px half-float cube capture and PMREM reuse, max 15 updates/sec while moving. Body/detail use the same transform interpolation approximation, not original texture crossfade. Vertical presets and proprietary shaders not reproduced.",
+    "adaptation": "Body and details crossfade filtered studio captures. Current frame and hinge use a static Three.js RoomEnvironment PMREM. Metal studio assets remain in the local delivery for the earlier experiment.",
     "files": [
       {
         "file": "studio/HIBNFTIRMmbKPzu.bin",
@@ -411,5 +411,11 @@
         "sha256": "3162dd7ff45154708af8a8a25e23caea98b46754d5a99573755414d1e299d9aa"
       }
     ]
+  },
+  "studyReference": {
+    "repository": "https://github.com/akashtdev/iphone-duo-animation",
+    "revision": "6a670ad",
+    "license": "notices/akashtdev-MIT.txt",
+    "adaptation": "Next.js/R3F, local glTF Slider rig, seven highlights, RoomEnvironment, 1.15-second interruptible cubic transition."
   }
 }

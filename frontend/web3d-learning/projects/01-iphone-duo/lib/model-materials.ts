@@ -11,6 +11,19 @@ export function prepareMaterials(model: Object3D, hardwareAnisotropy: number, en
   const textures = new Map<Texture, Texture>();
   const hiddenOverlays = new Map<Object3D, boolean>();
 
+  const hingeMaterials: Material[] = [];
+
+  function matchFrame(material: MeshStandardMaterial) {
+    material.color.setHex(0xe3d9c8);
+    material.metalness = 1;
+    material.roughness = 0.16;
+    material.map = material.aoMap = material.roughnessMap = material.metalnessMap = null;
+    material.envMap = environments?.metal ?? null;
+    material.envMapRotation.set(0, 0, 0);
+    material.envMapIntensity = materialConfig.metalEnvironmentIntensity;
+    material.userData.fixedStudio = true;
+  }
+
   function localMaterial(source: Material) {
     const cached = materials.get(source);
     if (cached) return cached;
@@ -45,7 +58,7 @@ export function prepareMaterials(model: Object3D, hardwareAnisotropy: number, en
         }
         if (layer === 2) {
           material.envMap = environments?.metal ?? null;
-          material.envMapRotation.set(0, Math.PI, 0);
+          material.envMapRotation.set(0, 0, 0);
           material.envMapIntensity = materialConfig.metalEnvironmentIntensity;
         }
         // 环境在资产坐标系中生成；产品转动时同步它的世界朝向。
@@ -55,6 +68,10 @@ export function prepareMaterials(model: Object3D, hardwareAnisotropy: number, en
       if (polishedMetal.has(material.name)) {
         material.roughness = Math.min(1, Math.max(0, material.roughness * materialConfig.metalRoughnessScale));
       }
+      if (['lrXfpZcYrByzvym', 'mAvfMvCzYIPKaNG', 'jeFtQmHBLCfgIkY'].includes(material.name)) {
+        matchFrame(material);
+      }
+      material.userData.fixedStudio = Boolean(environments && material.envMap === environments.metal);
       if (material.name === 'ZgMnqnyPATyacDv') {
         material.color.multiplyScalar(materialConfig.logoBaseColorScale);
       }
@@ -98,10 +115,18 @@ export function prepareMaterials(model: Object3D, hardwareAnisotropy: number, en
       object.visible = false;
     }
     object.material = Array.isArray(object.material) ? object.material.map(localMaterial) : localMaterial(object.material);
+    // 铰链内衬与其它机身网格共享源材质，只给中央窄条单独换表面。
+    if (object.name === 'TZjfnhYrtCYbdCh' && object.material instanceof MeshStandardMaterial) {
+      const liner = object.material.clone();
+      matchFrame(liner);
+      hingeMaterials.push(liner);
+      object.material = liner;
+    }
   });
 
   return () => {
     for (const [object, visible] of hiddenOverlays) object.visible = visible;
+    for (const material of hingeMaterials) material.dispose();
     for (const material of materials.values()) material.dispose();
     for (const texture of textures.values()) texture.dispose();
   };

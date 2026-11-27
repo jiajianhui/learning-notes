@@ -1,6 +1,7 @@
+import { motionConfig } from "../lib/viewer-config";
 import assert from 'node:assert/strict';
 import { createDragState, beginDrag, moveDrag, endDrag, stepDrag, resetDrag } from '../lib/drag-motion';
-import { motionConfig } from '../lib/viewer-config';
+import { nearestView, referenceViews } from '../lib/reference-views';
 
 const tilt = createDragState();
 beginDrag(tilt, 1, 0, 0, 0);
@@ -60,8 +61,8 @@ for (const fps of [30, 60, 120]) {
   stepDrag(s, 1 / fps);
   assert.ok(s.yaw > released, 'release preserves visible momentum');
   for (let i = 0; i < fps * 3; i++) stepDrag(s, 1 / fps);
-  assert.equal(s.pitch, 0);
-  assert.ok(Math.abs(s.yaw / motionConfig.snapStep - Math.round(s.yaw / motionConfig.snapStep)) < .0001, 'settles at a 45 degree anchor');
+  assert.equal(s.pitch, nearestView(s.yaw).pitch);
+  assert.ok(Math.abs(s.yaw - nearestView(s.yaw).yaw) < .0001, 'settles at a 45 degree anchor');
 }
 
 const snap = createDragState();
@@ -75,3 +76,12 @@ assert.ok(snap.targetYaw > Math.PI, 'drag immediately releases the anchor');
 assert.equal(snap.snapTarget, null);
 
 console.log('Passed: tilt return/limit/reversal, release/cancel, inertia and snapping at 30/60/120 Hz, zero-motion events, reset interruption.');
+
+for (const view of referenceViews) {
+  const s = createDragState();
+  s.yaw = s.targetYaw = 4 * Math.PI + view.yaw + .03;
+  endDrag(s, 0, false);
+  for (let i = 0; i < 240; i++) stepDrag(s, 1 / 60);
+  assert.equal(s.yaw, 4 * Math.PI + view.yaw);
+  assert.equal(s.pitch, view.pitch);
+}

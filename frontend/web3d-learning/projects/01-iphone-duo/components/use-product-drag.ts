@@ -15,13 +15,19 @@ export function useProductDrag() {
 
   function move(event: PointerEvent<HTMLDivElement>) {
     if (input.current.pointerId !== event.pointerId) return;
-    moveDrag(input.current, event.clientX, event.clientY,
-      event.currentTarget.clientWidth, event.currentTarget.clientHeight,
-      event.timeStamp, event.pointerType === 'touch');
+    const native = event.nativeEvent;
+    const samples = native.getCoalescedEvents?.() ?? [];
+    const { clientWidth, clientHeight } = event.currentTarget;
+    const touch = event.pointerType === 'touch';
+    for (const sample of samples) {
+      moveDrag(input.current, sample.clientX, sample.clientY, clientWidth, clientHeight, sample.timeStamp, touch);
+    }
+    moveDrag(input.current, event.clientX, event.clientY, clientWidth, clientHeight, event.timeStamp, touch);
   }
 
   function finish(event: PointerEvent<HTMLDivElement>, cancelled: boolean) {
     if (input.current.pointerId !== event.pointerId) return;
+    if (!cancelled) move(event);
     endDrag(input.current, event.timeStamp, cancelled);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);

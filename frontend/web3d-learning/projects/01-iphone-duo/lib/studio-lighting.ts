@@ -1,12 +1,17 @@
+import { referenceViews } from './reference-views';
 import { Euler, Mesh, MeshStandardMaterial, Quaternion, Vector3 } from 'three';
 import type { Group, Object3D } from 'three';
 
 type States = Record<string, Record<string, Record<string, number>>>;
-const views = ['front', 'frontRight', 'right', 'backRight', 'back', 'backLeft', 'left', 'frontLeft'];
 export function lightingBlend(yaw: number) {
-  const step = ((yaw / (Math.PI / 4)) % 8 + 8) % 8;
-  const index = Math.floor(step);
-  return { from: views[index], to: views[(index + 1) % 8], weight: step - index };
+  const turn = Math.PI * 2;
+  const remainder = yaw % turn;
+  const angle = remainder < 0 ? remainder + turn : remainder;
+  const next = referenceViews.findIndex(view => view.yaw > angle);
+  const fromIndex = next < 0 ? referenceViews.length - 1 : next - 1;
+  const from = referenceViews[fromIndex], to = referenceViews[(fromIndex + 1) % referenceViews.length];
+  return { from: from.name, to: to.name, fromYaw: from.yaw, toYaw: to.yaw,
+    weight: (angle - from.yaw) / ((to.yaw || turn) - from.yaw) };
 }
 
 // 读取资产附带的视角布光。节点名只在资产里，代码解释通用变换和发光参数。
