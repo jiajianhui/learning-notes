@@ -1,69 +1,16 @@
-# 第一阶段：iPhone Duo 3D 展示
+# iPhone Duo 3D 展示
 
-从“模型已经准备好”开始，用 Apple 的公开模型跟读一套代码侧开发流程：接收资产、检查格式、接入 Next.js、建立灯光、组织状态与动画、调试拖动手感，最后做视觉和性能对照。
+基于 Next.js、React Three Fiber 和 Three.js 的折叠手机展示。页面参考 Akash 的折叠展台，支持七个姿态切换、滑块开合、拖动旋转和松手吸附。屏幕使用静态合成图。[Akash 原项目](https://github.com/akashtdev/iphone-duo-animation/tree/6a670ad)
 
-参考是 [Apple iPhone Duo 的 Take a closer look](https://www.apple.com/iphone-duo/)。本目录的实现是学习基线，目标是逐步接近参考的展示质量和操作感，不代表 Apple 的源码或完整效果还原。
+## 本地运行
 
-## 开始前
-
-先读通识中的 [工具与开发流程](../../01-目标效果与工具选择.md)。会 React 的组件、state、ref 即可开始；暂时不用重新建模或烘焙。
-
-先读第 06 篇，对照 Akash 的折叠展示和本地 Next.js 实现；第 01–04 篇可按环节查阅，第 05 篇保留历次调校记录。
-
-1. [01-参考拆解与资产接入](./01-参考拆解与资产接入.md)：资源是什么，如何变成浏览器可用的资产。
-2. [02-从页面到每一帧](./02-从页面到每一帧.md)：沿真实文件串起页面、模型、材质、姿态按钮和动画。
-3. [03-跟手交互与项目验收](./03-跟手交互与项目验收.md)：指针输入、阻尼、惯性、限位与验收。
-4. [04-材质灯光与清晰度调校](./04-材质灯光与清晰度调校.md)：具体调节入口、参数作用、单变量对照。
-5. [05-展示效果与交互调校复盘](./05-展示效果与交互调校复盘.md)：角度、拖动、惯性、吸附、金属反射和清晰度的原因与验证方法。
-
-6. [06-拆解折叠展示与Nextjs实现](./06-拆解折叠展示与Nextjs实现.md)：从材质、环境和姿态时间线理解参考项目的质感与交互。
-
-## 跑起已有基线
-
-在本项目目录执行，Node.js 使用 20.9 以上、与 Next.js 16 兼容的版本：
+使用 Node.js 20.9 或更高的兼容版本。先将完整资产目录放到 `public/models/iphone-duo/`，其中包括 `phone.gltf`、模型引用的二进制文件与图片、EXR 环境图和 `studio/`。资产单独交付，新克隆后需自行准备。Apple 素材用于本地学习，公开展示时请使用有相应授权的资产。[资产清单](./asset-manifest.json)
 
 ```bash
 npm ci
 npm run dev
 ```
 
-打开终端显示的 localhost 地址。当前工作区已有交付好的模型与图片，网页直接加载它们，不需要安装图片处理工具。
+打开终端显示的本地地址。类型与构建检查使用 `npm run typecheck` 和 `npm run build`，交互与布光检查使用 `npm run check:interaction` 和 `npm run check:studio`。
 
-资产目录是 `public/models/iphone-duo/`，包含 `phone.gltf`、它引用的 bin、PNG、两张 EXR 和 studio 子目录。它不纳入 Git；**新克隆仓库后，需要单独复制完整资产目录**，或按第 01 篇接入自己有权使用的模型。仅运行 `npm ci` 不会获得模型。来源、大小与校验记录在 `asset-manifest.json`；素材制作和格式转换在工程外完成。
-
-## 当前完成到哪里
-
-已有代码覆盖：本地模型加载、环境反射、姿态按钮、折叠动画采样、带水平惯性、45° 停靠吸附、上下限位与松手回正的拖动、复位、加载和错误反馈。屏幕使用官网公开图层合成的静态学习版，保留内外屏各自比例和 UI 分辨率；纵向姿态仍随模型转动，尚未重排屏幕 UI，也未复刻动态壁纸的 Shader、LUT、视差、Durability 展示、专用材质扩展和全部镜头运动。
-
-页面沿用 Akash 的展台布局，桌面从左侧姿态栏操作，窄屏从底部横向按钮带操作。当前从合拢正面开始，支持七个展示姿态、上下按钮与方向键，以及「折叠设计」的手动开合。外框使用静态 RoomEnvironment；背板和细节层使用两套棚拍环境，镜头使用独立 EXR。上游运行方法、迁移取舍和验证动作见第 06 篇。
-
-这是代码对照和实验起点。阶段完成要求见第 03 篇；运行成功不等于已经达到官网质感。移动端手感与真实性能必须用自己的设备记录。
-
-## 文件入口
-
-```text
-app/page.tsx                  页面内容与入口
-components/viewer.tsx         浏览器加载边界
-components/product-demo.tsx   按钮、画布和业务状态
-components/phone-scene.tsx     模型、变换层级与动画
-components/studio.tsx         可见背景
-components/use-studio-maps.ts  离屏棚拍环境生成
-components/use-product-drag.ts 指针事件接入
-lib/drag-motion.ts            拖动、惯性、限位与复位计算
-lib/model-materials.ts        材质复制、角色映射与适配
-lib/asset-materials.ts        资产附带的分层与透明混合配置
-lib/viewer-config.ts          渲染、灯光、材质、运动参数
-lib/poses.ts                  练习姿态配置
-lib/studio-lighting.ts        视角与开合的灯棚插值
-scripts/check-studio.ts       布光插值、共享缓存与资产检查
-scripts/check-interaction.ts  使用 import 的交互数值检查
-public/models/iphone-duo/     已交付的网页资产（本地，不入 Git）
-```
-
-版本锁在 `package-lock.json`。常规检查是 `npm run check:interaction`、`npm run check:studio`、`npm run typecheck` 和 `npm run build`；本项目未配置 lint，不需要照抄其他项目的 lint 命令。
-
-2026-11-26 验证记录：安装基线已通过 `npm ci`；本轮 `check:interaction`、TypeScript 和生产构建通过。运动检查覆盖限位、边界反向、30/60/120 Hz 惯性、停稳释放、取消与复位接管。浏览器此前检查了鼠标俯仰限制、姿态取景及 390 像素窄屏布局；本次复查了展开、合拢、侧边和机背的材质反射，无控制台错误或警告。手机真机手势、帧耗时、限速与缺失资源专项测试仍留在项目验收中，尚未完成。
-
-2026-11-27 更新：默认合拢正面，按姿态适配取景；新增松手俯仰回正、惯性后的角度吸附、分层棚拍环境和镜头透明混合。交互检查覆盖 30/60/120 Hz、重复静止事件和吸附接管；类型检查、生产构建通过。浏览器复查了默认视角、拖动后的停靠、侧面及纵向取景，无控制台错误或警告。灯光环境的视角混合、专用 Shader 和真机性能仍未完整复现或验证。
-
-Apple 模型与纹理仍属于原权利人，本仓库未获得开放再分发许可。这里保存本地学习副本；自己的公开作品应换用自制或已获授权的资产。
+[工程学习文档](./docs/学习路线.md)

@@ -19,7 +19,7 @@ flowchart LR
 ## 现在从哪里开始
 
 1. 读 [01-目标效果与工具选择](./01-目标效果与工具选择.md)，理解一帧画面和一条交互是怎么产生的。
-2. 进入 [第一阶段：iPhone Duo 3D 展示](./projects/01-iphone-duo/README.md)，运行已有学习基线，再分步改动。
+2. 进入 [第一阶段：iPhone Duo 3D 展示](./projects/01-iphone-duo/README.md)，启动展台，再按[工程学习路线](./projects/01-iphone-duo/docs/学习路线.md)跟读源码。
 3. 遇到材质问题查 [04-材质灯光与色彩校准](./04-材质灯光与色彩校准.md)；需要把变量隔离时再做 [03-Nextjs材质实验台](./03-Nextjs材质实验台.md)。
 4. 第一阶段完成后，进入 [第二阶段：CHAZ 方向数字手办](./projects/02-chaz-digital-toy/README.md)。
 
